@@ -3,7 +3,6 @@
 
 use strict;
 use lib 'lib';
-
 use Fcntl;
 use Getopt::Long;
 
@@ -63,9 +62,9 @@ if ($option{'allversions'} || !$option{'version'}) {
     @versions = $option{'version'};
 }
 
-foreach (@versions) {
-  genindex('/', $_);
-  genrefs('/', $_);
+foreach my $version (@versions) {
+  genindex('/', $version);
+  genrefs('/', $version);
 }
 
 sub genindex {
