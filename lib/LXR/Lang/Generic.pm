@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.10 2001/12/06 14:36:43 mbox Exp $
+# $Id: Generic.pm,v 1.11 2002/02/26 15:56:23 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.10 2001/12/06 14:36:43 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.11 2002/02/26 15:56:23 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -52,6 +52,9 @@ sub new {
   return $self;
 }
 
+# This is only executed once, saving the overhead of processing the
+# config file each time.  Because it is only done once, we also use
+# this to check the version of ctags.
 sub read_config {
 	open (CONF, $config->genericconf) || die "Can't open ".$config->genericconf.", $!";
 	
@@ -71,6 +74,13 @@ sub read_config {
 			  $index->getdecid($langmap->{$lang}{'langid'},
 												$typemap->{$type});
 		}
+	}
+	
+	my $ctags = $config->ectagsbin;
+	my $version = `$ctags --version`;
+	$version=~ /Exuberant ctags +(\d+)/i;
+	if($1 < 5 ) {
+	  die "Exuberant ctags version 5 or above required, found $version\n";
 	}
 }
 
@@ -99,6 +109,10 @@ sub indexfile {
 	  $line =~ s/;\"$//;
 	  $ext =~ /language:(\w+)/;
 	  $type = $typemap->{$type};
+	  if(!defined $type) {
+		print "Warning: Unknown type ", (split(/\t/,$_))[3], "\n"; 
+		next;
+	  }
 		
 	  # TODO: can we make it more generic in parsing the extension fields?
 	  if (defined($ext) && $ext =~ /^(struct|union|class|enum):(.*)/) {
