@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: source,v 1.18 1999/06/01 08:08:16 pergj Exp $
+#!/local/bin/perl5.004
+# $Id: source,v 1.19 1999/08/07 18:15:20 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.18 1999/06/01 08:08:16 pergj Exp $ ';
+$CVSID = '$Id: source,v 1.19 1999/08/07 18:15:20 argggh Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -234,9 +234,7 @@ sub printfile {
 #		      "</pre>");
 #	    } 
 	    else {
-		print("<pre>");
 		markupfile($fileh, sub { print shift });
-		print("</pre>");
 	    }
 
 	} 

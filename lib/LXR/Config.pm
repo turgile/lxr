@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.19 1999/08/04 09:04:27 argggh Exp $
+# $Id: Config.pm,v 1.20 1999/08/07 18:16:23 argggh Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.19 1999/08/04 09:04:27 argggh Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.20 1999/08/07 18:16:23 argggh Exp $ ';
 
 use strict;
 
@@ -154,13 +154,13 @@ sub AUTOLOAD {
     my $self = shift;
     (my $var = $AUTOLOAD) =~ s/.*:://;
 
-	my $val = $self->value($var);
+	my @val = $self->value($var);
 	
-	if (ref($val) eq 'CODE') {
-		return &$val(@_);
+	if (ref($val[0]) eq 'CODE') {
+		return $val[0]->(@_);
 	}
 	else {
-		return $val;
+		return wantarray ? @val : $val[0];
 	} 
 }
 

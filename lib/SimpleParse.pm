@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.7 1999/05/29 19:38:59 argggh Exp $
+# $Id: SimpleParse.pm,v 1.8 1999/08/07 18:15:54 argggh Exp $
 
 package SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.7 1999/05/29 19:38:59 argggh Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.8 1999/08/07 18:15:54 argggh Exp $ ';
 
 use strict;
 use integer;
@@ -71,7 +71,7 @@ sub nextfrag {
 #	    my $line = $1 if $buffer =~ s/([^\n]*\n*)//;
 			$line = $fileh->getline;
 			
-			if ($. == 1 &&
+			if ($. <= 2 &&
 				$line =~ /^.*-[*]-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-[*]-/) {
 				$tabwidth = $1;
 			}
@@ -89,9 +89,8 @@ sub nextfrag {
 		
 		unless ($frags[0]) {
 			shift(@frags);
-
 		}
-		elsif (defined($frag)) {
+		if (defined($frag)) {
 			if (defined($btype)) {
 				my $next = shift(@frags);
 				
@@ -113,11 +112,13 @@ sub nextfrag {
 
 				my $i = 1;
 				$btype = grep { $i &&= !defined($_) } @_;
+				last unless $term[$btype];
 			}
 		}
     }
     $btype = $bodyid[$btype] if defined($btype);
     
+#    print(STDERR "$btype: $frag\n");
     return($btype, $frag);
 }
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.12 1999/08/04 09:04:28 argggh Exp $
+# $Id: Lang.pm,v 1.13 1999/08/07 18:16:27 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.12 1999/08/04 09:04:28 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.13 1999/08/07 18:16:27 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -35,12 +35,31 @@ sub new {
 	return $lang;
 }
 
+sub processinclude {
+	my ($self, $frag, $dir) = @_;
+
+	$$frag =~ s#(\")(.*?)(\")#
+		$1.&LXR::Common::incref($2, '', $dir).$3#e;
+	$$frag =~ s#(\0<)(.*?)(\0>)#
+		$1.&LXR::Common::incref($2, '').$3#e;
+}
+
+sub processcomment {
+	my ($self, $frag) = @_;
+
+	$$frag = "<b><i>$$frag</i></b>";
+	$$frag =~ s#\n#</i></b>\n<b><i>#g;
+}
+
 
 # C
 package LXR::Lang::C;
 
 use strict;
 use LXR::Common;
+
+use vars qw(@ISA);
+@ISA = ('LXR::Lang');
 
 my @spec = ('atom'		=> ('\\\\.',	''),
 			'comment'	=> ('/\*',		'\*/'),
@@ -76,6 +95,9 @@ sub processcode {
 
 # Java
 package LXR::Lang::Java;    
+
+use vars qw(@ISA);
+@ISA = ('LXR::Lang');
 
 my @spec = ('atom',		'\\\\.',	'',
 			'comment',	'/\*',		'\*/',
@@ -288,9 +310,15 @@ Da Perl package, man!
 
 use strict;
 use LXR::Common;
+use Pod::Html;
 
-my @spec = ('atom'		=> ('\\$\\\\',	'',), # '),
+use vars qw(@ISA);
+@ISA = ('LXR::Lang');
+
+my @spec = (
+			'atom'		=> ('\$.',		''),
 			'atom'		=> ('\\\\.',	''),
+			'include'	=> ('\buse',	';'),
 			'string'	=> ('"',		'"'),
 			'comment'	=> ('#',		"\$"),
 			'comment'	=> ("^=\\w+",	"^=cut"),
@@ -322,5 +350,35 @@ sub processcode {
 			: $sym).$4#geis;
 }
 
+sub processinclude {
+	my ($self, $frag, $dir) = @_;
+	
+	$$frag =~ s/(use\s*)(\w+)/$1.&LXR::Common::incref($2, ".pm")/e;
+}
+
+sub processcomment {
+	my ($self, $comm) = @_;
+
+	if ($$comm =~ /^=/s) {
+		# Pod text
+
+		$$comm =~ s/^=head(\d)\s*(.*)/
+			"<font size=\"+".(4-$1)."\">$2<\/font>"/gme;
+
+		$$comm =~ s/^=item\s*(.*)/
+			"<span class=podhead>* $1 ".("*" x (67 - length($1)))."<\/span>"/gme;
+
+		$$comm =~ s/^=(pod|cut)/"<span class=podhead>".("*" x 70)."<\/span>"/gme;
+		
+		$$comm =~ s/^=.*//gm;
+
+		$$comm =~ s|^((?!\<span).*)$|<span class=pod>$1</span>|gm;
+
+		$$comm =~ s/C\0\<(.*?)\0\>/<code>$1<\/code>/g;
+	}
+	else {
+		$$comm =~ s|^(.*)$|<b><i>$1</i></b>|gm;
+	}
+}
 
 1;

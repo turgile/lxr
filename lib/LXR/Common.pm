@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.17 1999/08/04 09:04:27 argggh Exp $
+# $Id: Common.pm,v 1.18 1999/08/07 18:16:14 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.17 1999/08/04 09:04:27 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.18 1999/08/07 18:16:14 argggh Exp $ ';
 
 use strict;
 
@@ -150,14 +150,14 @@ sub idref {
 
 
 sub incref {
-	my ($name, @paths) = @_;
+	my ($name, $ext, @paths) = @_;
 	my $file;
 
 	push(@paths, $config->incprefix);
 
 	foreach $file (@paths) {
 		$file =~ s/\/+$//;
-		$file = $config->mappath($file."/".$name);
+		$file = $config->mappath($file."/".$name.$ext);
 		return &fileref($name, $file) if $files->isfile($file, $release);
 		
 	}
@@ -253,7 +253,7 @@ sub htmlquote {
 
 sub freetextmarkup {
 	$_[0] =~ s#((ftp|http)://\S*[^\s.])#<a href=\"$1\">$1</a>#g;
-	$_[0] =~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+	$_[0] =~ s/(\0\<(.*@.*)\0\>)/<a href=\"mailto:$2\">$1<\/a>/g;
 }
 
 
@@ -264,7 +264,7 @@ sub markupfile {
 	my $line = '001';
 	my @ltag = &fileref(1, $pathname, 1) =~ /^(<a)(.*\#)1(\">)1(<\/a>)$/;
 	$ltag[0] .= ' name=';
-	$ltag[3] .= ' ';
+	$ltag[3] .= " ";
 	
 	my @itag = &idref(1, 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 
@@ -276,6 +276,7 @@ sub markupfile {
 
 		my ($btype, $frag) = &SimpleParse::nextfrag;
 
+		&$outfun("<pre>");
 		&$outfun(join($line++, @ltag)) if defined($frag);
 		
 		while (defined($frag)) {
@@ -285,8 +286,7 @@ sub markupfile {
 				# Comment
 				# Convert mail adresses to mailto:
 				&freetextmarkup($frag);
-				$frag = "<b><i>$frag</i></b>";
-				$frag =~ s#\n#</i></b>\n<b><i>#g;
+				$lang->processcomment(\$frag);
 			} 
 			elsif ($btype eq 'string') {
 				# String
@@ -294,10 +294,7 @@ sub markupfile {
 			} 
 			elsif ($btype eq 'include') { 
 				# Include directive
-				$frag =~ s#(\")(.*?)(\")#
-					$1.&incref($2, $dir).$3#e;
-				$frag =~ s#(\0<)(.*?)(\0>)#
-					$1.&incref($2).$3#e;
+				$lang->processinclude(\$frag, $dir);
 			} 
 			else {
 				# Code
@@ -305,20 +302,20 @@ sub markupfile {
 			}
 
 			&htmlquote($frag);
-
 			$frag =~ s/\n/"\n".join($line++, @ltag)/ge;
+
 			&$outfun($frag);
 			
 			($btype, $frag) = &SimpleParse::nextfrag;
 		}
+		&$outfun("</pre>");
 	} 
 	elsif ($pathname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
-		&$outfun("</pre>");
 		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
 		&$outfun("<img src=\"$config->{virtroot}/source/".$dir. 
 				 &urlargs("raw=1").
 				 "\" border=\"0\" alt=\"$pathname\">\n");
-		&$outfun("</tr></td></table></ul><pre>");
+		&$outfun("</tr></td></table></ul>");
 	} 
 	elsif ($pathname =~ m|/CREDITS$|) {
 		while (defined($_ = $fileh->getline)) {
@@ -341,7 +338,6 @@ sub markupfile {
 			(length($_) > 132 || /[\000-\010\013\014\016-\037\200-Ÿ]/)) 
 		{
 			# We postulate that it's a binary file.
-			&$outfun("</pre>");
 			&$outfun("<ul><b>Binary File: ");
 			
 			# jwz: URL-quote any special characters.
@@ -351,15 +347,15 @@ sub markupfile {
 			&$outfun("<a href=\"$config->{virtroot}/source".$uname.
 					 &urlargs("raw=1")."\">");
 			&$outfun("$pathname</a></b>");
-			&$outfun("</ul><pre>");
+			&$outfun("</ul>");
 			
 		} 
 		else {
 			do {
 				&SimpleParse::untabify($_);
 				&markspecials($_);
-				&htmlquote($_);
 				&freetextmarkup($_);
+				&htmlquote($_);
 				#		&$outfun("<a name=\"L$.\"><\/a>".$_);
 				&$outfun(join($line++, @ltag).$_);
 			} while (defined($_ = $fileh->getline));
