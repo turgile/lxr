@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.10 2001/10/17 23:52:42 mbox Exp $
+# $Id: Mysql.pm,v 1.11 2001/11/14 15:41:37 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.10 2001/10/17 23:52:42 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.11 2001/11/14 15:41:37 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -47,14 +47,14 @@ sub new {
 	$self->{files_select} = $self->{dbh}->prepare
 		("select fileid from files where  filename = ? and  revision = ?");
 	$self->{files_insert} = $self->{dbh}->prepare
-		("insert into files values (?, ?, NULL)");
+		("insert into files (filename, revision, fileid) values (?, ?, NULL)");
 
 	$self->{symbols_byname} = $self->{dbh}->prepare
 		("select symid from symbols where  symname = ?");
 	$self->{symbols_byid} = $self->{dbh}->prepare
 		("select symname from symbols where symid = ?");
 	$self->{symbols_insert} = $self->{dbh}->prepare
-		("insert into symbols values ( ?, NULL)");
+		("insert into symbols (symname, symid) values ( ?, NULL)");
 	$self->{symbols_remove} = $self->{dbh}->prepare
 		("delete from symbols where symname = ?");
 
@@ -65,25 +65,25 @@ sub new {
 		 "and f.fileid = r.fileid ".
 		 "and  s.symname = ? and  r.release = ?");
 	$self->{indexes_insert} = $self->{dbh}->prepare
-		("insert into indexes values (?, ?, ?, ?, ?)");
+		("insert into indexes (symid, fileid, line, type, relsym) values (?, ?, ?, ?, ?)");
 
 	$self->{releases_select} = $self->{dbh}->prepare
 		("select * from releases where fileid = ? and  release = ?");
 	$self->{releases_insert} = $self->{dbh}->prepare
-		("insert into releases values (?, ?)");
+		("insert into releases (fileid, release) values (?, ?)");
 
 	$self->{status_get} = $self->{dbh}->prepare
 		("select status from status where fileid = ?");
 
 	$self->{status_insert} = $self->{dbh}->prepare
 #		("insert into status select ?, 0 except select fileid, 0 from status");
-		("insert into status values (?, ?)");
+		("insert into status (fileid, status) values (?, ?)");
 
 	$self->{status_update} = $self->{dbh}->prepare
 		("update status set status = ? where fileid = ? and status <= ?");
 
 	$self->{usage_insert} = $self->{dbh}->prepare
-		("insert into useage values (?, ?, ?)");
+		("insert into useage (fileid, line, symid) values (?, ?, ?)");
 	$self->{usage_select} = $self->{dbh}->prepare
 		("select f.filename, u.line ".
 		 "from symbols s, files f, releases r, useage u ".
