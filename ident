@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.11 2001/10/16 20:38:37 pergj Exp $
+# $Id: ident,v 1.12 2001/11/18 03:31:33 mbox Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.11 2001/10/16 20:38:37 pergj Exp $ ';
+$CVSID = '$Id: ident,v 1.12 2001/11/18 03:31:33 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -52,12 +52,11 @@ sub refexpand {
     my $def;
     foreach my $def (@refs) {
 	my ($file, $line, $type, $rel) = @$def;
-	
 	$rel &&= "(member of ".idref($rel, "search-member", $rel).")";
 	$ret .= expandtemplate($templ,
 			       (file => sub { $file },
 				line => sub { $line },
-				type => sub { $type_names{$type} },
+				type => sub { $type },
 				rel  => sub { $rel },
 				fileref  => sub {
 				    fileref("$file, line $line", 

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.36 2001/11/17 03:06:19 mbox Exp $
+# $Id: Common.pm,v 1.37 2001/11/18 03:31:34 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.36 2001/11/17 03:06:19 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.37 2001/11/18 03:31:34 mbox Exp $ ';
 
 use strict;
 
@@ -28,13 +28,13 @@ require Exporter;
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS 
 			$files $index $config $pathname $identifier $release
-			$HTTP %type_names $wwwdebug $tmpcounter);
+			$HTTP $wwwdebug $tmpcounter);
 
 @ISA		= qw(Exporter);
 
 @EXPORT		= qw($files $index $config &fatal);
 @EXPORT_OK	= qw($files $index $config $pathname $identifier $release
-				 $HTTP %type_names
+				 $HTTP
 				 &warning &fatal &abortall &fflush &urlargs &fileref
 				 &idref &incref &htmlquote &freetextmarkup &markupfile
 				 &markupstring &httpinit &makeheader &makefooter
@@ -52,21 +52,6 @@ require LXR::Lang;
 
 
 $wwwdebug = 1;
-
-%type_names = ('c' => 'class',
-			   'd' => 'macro (un)definition',
-			   'e' => 'enumerator',
-			   'f' => 'function definition',
-			   'g' => 'enumeration name',
-			   'm' => 'class, struct, or union member',
-			   'n' => 'namespace',
-			   'p' => 'function prototype or declaration',
-			   's' => 'structure name',
-			   't' => 'typedef',
-			   'u' => 'union names',
-			   'v' => 'variable definition',
-			   'x' => 'extern or forward variable declaration',
-			   'i' => 'interface');
 
 $tmpcounter = 23;
 
@@ -296,7 +281,8 @@ sub markupfile {
 	
 	# A source code file
 	if ($lang) {
-	    my $language = $lang->language;  # To get back to the key to lookup the tabwidth.
+		my $language = $lang->language;  # To get back to the key to lookup the tabwidth.
+	  
 	    &LXR::SimpleParse::init($fileh, $config->filetype->{$language}[3], $lang->parsespec);
 
 		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;

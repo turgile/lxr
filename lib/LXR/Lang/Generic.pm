@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.7 2001/11/17 04:00:55 mbox Exp $
+# $Id: Generic.pm,v 1.8 2001/11/18 03:31:34 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,17 +22,15 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.7 2001/11/17 04:00:55 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.8 2001/11/18 03:31:34 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
 use LXR::Lang;
-require Exporter;
 
+use vars qw($AUTOLOAD);
 
-use vars qw(@ISA $AUTOLOAD $langconf);
-
-@ISA = ('LXR::Lang');
+@LXR::Lang::Generic::ISA = ('LXR::Lang');
 
 sub new {
   my ($proto, $pathname, $release, $lang) = @_;
@@ -52,11 +50,25 @@ sub new {
   close X;
   %$self= (%$self, %$cfg);
 
+  # Set langid
+  $$self{'langid'} = $self->langinfo('langid');
+  die "No langid for language $lang" if !defined $self->langid;
+  
+  # Setup the ctags to declid mapping
+  my $typemap =\%{$self->langinfo('typemap')};
+  
+  foreach my $type (keys %$typemap) {
+	$typemap->{$type}=$index->getdecid($self->langid, $typemap->{$type});
+  }
+
   return $self;
 }
 
 sub indexfile {
   my ($self, $name, $path, $fileid, $index, $config) = @_;
+
+  my $typemap = $self->langinfo('typemap');
+  
   my $langforce = $ {$self->eclangnamemapping}{$self->language};
   if (!defined $langforce) {
 	$langforce = $self->language;
@@ -76,6 +88,7 @@ sub indexfile {
 	  my ($sym, $file, $line, $type,$ext) = split(/\t/, $_);
 	  $line =~ s/;\"$//;
 	  $ext =~ /language:(\w+)/;
+	  $type = $typemap->{$type};
 		
 	  # TODO: can we make it more generic in parsing the extension fields?
 	  if (defined($ext) && $ext =~ /^(struct|union|class|enum):(.*)/) {
@@ -85,7 +98,7 @@ sub indexfile {
 		$ext = undef;
 	  }
 		
-	  $index->index($sym, $fileid, $line, $type, $ext);
+	  $index->index($sym, $fileid, $line, $self->langid, $type, $ext);
 	}
 	close(CTAGS);
 	
@@ -240,18 +253,16 @@ sub langinfo {
   if (exists $$map{$self->language}) {
 	$val = $$map{$self->language};
   } else {
-	$val = undef;
+	return undef;
   }
 
   if (defined $val && defined $$val{$item}) {
-	if (ref($$val{$item})) {
-	  return wantarray ? @{$$val{$item}} : $$val{$item};
-	}
-	else {
+	  if (ref($$val{$item}) eq 'ARRAY') {
+		  return wantarray ? @{$$val{$item}} : $$val{$item};
+	  }
 	  return $$val{$item};
-	}
   } else {
-	return undef;
+	  return undef;
   }
 }
 

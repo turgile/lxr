@@ -9,6 +9,7 @@ drop table status;
 
 create sequence filenum cache 50;
 create sequence symnum cache 50;
+create sequence declnum cache 10;
 
 create table files (
 	filename	varchar,
@@ -31,7 +32,8 @@ create table indexes (
 	symid		int		references symbols,
 	fileid		int		references files,
 	line		int,
-	type		varchar,
+	langid		tinyint not null references declarations,
+	type		smallint not null references declarations,
 	relsym		int		references symbols
 );
 
@@ -49,9 +51,15 @@ create table usage
 
 create table status
 	(fileid		int		references files,
-	status		int,
+	status		smallint,
 	primary key	(fileid)
 );
+create table declarations
+	(declid     smallint not null,
+	langid		tinyint not null,
+	declaration	char(255) not null,
+	primary key (declid, langid)
+); 
 
 create index indexindex on indexes using btree (symid);
 create index symbolindex on symbols using btree (symname);

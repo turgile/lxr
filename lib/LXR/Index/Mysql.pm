@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.11 2001/11/14 15:41:37 mbox Exp $
+# $Id: Mysql.pm,v 1.12 2001/11/18 03:31:34 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.11 2001/11/14 15:41:37 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.12 2001/11/18 03:31:34 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -59,13 +59,14 @@ sub new {
 		("delete from symbols where symname = ?");
 
 	$self->{indexes_select} = $self->{dbh}->prepare
-		("select f.filename, i.line, i.type, i.relsym ".
-		 "from symbols s, indexes i, files f, releases r ".
+		("select f.filename, i.line, d.declaration, i.relsym ".
+		 "from symbols s, indexes i, files f, releases r, declarations d ".
 		 "where s.symid = i.symid and i.fileid = f.fileid ".
 		 "and f.fileid = r.fileid ".
+		 "and i.langid = d.langid and i.type = d.declid ".
 		 "and  s.symname = ? and  r.release = ?");
 	$self->{indexes_insert} = $self->{dbh}->prepare
-		("insert into indexes (symid, fileid, line, type, relsym) values (?, ?, ?, ?, ?)");
+		("insert into indexes (symid, fileid, line, langid, type, relsym) values (?, ?, ?, ?, ?, ?)");
 
 	$self->{releases_select} = $self->{dbh}->prepare
 		("select * from releases where fileid = ? and  release = ?");
@@ -89,21 +90,27 @@ sub new {
 		 "from symbols s, files f, releases r, useage u ".
 		 "where s.symid = u.symid ".
 		 "and f.fileid = u.fileid ".
-		 "and u.fileid = r.fileid and ".
-		 "s.symname = ? and  r.release = ? ".
+		 "and u.fileid = r.fileid ".
+		 "and s.symname = ? and  r.release = ? ".
 		 "order by f.filename");
+	$self->{decl_select} = $self->{dbh}->prepare
+	  ("select declid from declarations where langid = ? and ".
+	   "declaration = ?");
+	$self->{decl_insert} = $self->{dbh}->prepare
+	  ("insert into declarations (declid, langid, declaration) values (NULL, ?, ?)");
 
 	return $self;
 }
 
 sub index {
-	my ($self, $symname, $fileid, $line, $type, $relsym) = @_;
+	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
 	$self->{indexes_insert}->execute($self->symid($symname),
-							 $fileid,
-							 $line,
-							 $type,
-							 $relsym ? $self->symid($relsym) : undef);
+									 $fileid,
+									 $line,
+									 $langid,
+									 $type,
+									 $relsym ? $self->symid($relsym) : undef);
 }
 
 sub reference {
@@ -145,17 +152,6 @@ sub getreference {
 	$self->{usage_select}->finish();
 
 	return @ret;
-}
-
-sub relate {
-	my ($self, $symname, $release, $rsymname, $reltype) = @_;
-
-#	$relation{$self->symid($symname, $release)} .=
-#		join("\t", $self->symid($rsymname, $release), $reltype, '');
-}
-
-sub getrelations {
-	my ($self, $symname, $release) = @_;
 }
 
 sub fileid {
@@ -268,6 +264,24 @@ sub empty_cache {
 	%symcache = ();
 }
 
+sub getdecid {
+  my ($self, $lang, $string) = @_;
+
+  my $rows = $self->{decl_select}->execute($lang, $string);
+  $self->{decl_select}->finish();
+  
+  unless ($rows > 0) {
+	$self->{decl_insert}->execute($lang, $string);
+  }
+
+  $self->{decl_select}->execute($lang, $string);
+  my $id = $self->{decl_select}->fetchrow_array();
+  $self->{decl_select}->finish();
+
+  return $id;
+}
+	
+
 sub DESTROY {
 	my ($self) = @_;
 	$self->{files_select} = undef;
@@ -281,7 +295,9 @@ sub DESTROY {
 	$self->{status_update} = undef;
 	$self->{usage_insert} = undef;
 	$self->{usage_select} = undef;
-
+	$self->{decl_select} = undef;
+	$self->{decl_insert} = undef;
+	
 	if($self->{dbh}) {
 		$self->{dbh}->disconnect();
 		$self->{dbh} = undef;
