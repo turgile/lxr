@@ -29,6 +29,11 @@ sub getfiletime {
 	return (stat($self->toreal($filename, $release)))[9];
 }
 
+sub getfilesize {
+	my ($self, $filename, $release) = @_;
+
+	return -s $self->toreal($filename, $release);
+}
 
 sub getfile {
 	my ($self, $filename, $release) = @_;
@@ -60,7 +65,7 @@ sub getdir {
 	}
 	closedir(DIR);
 
-	return sort @dirs, sort @files;
+	return sort(@dirs), sort(@files);
 }
 
 # This function should not be used outside this module

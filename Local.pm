@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.4 1999/05/13 22:57:16 argggh Exp $
+# $Id: Local.pm,v 1.5 1999/05/14 17:31:29 argggh Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -200,7 +200,8 @@ sub fdescexpand {
 
     if ($desc) {
 	return($desc);
-    }else{
+    }
+    else {
 	return("\&nbsp\;");
     }
 }
@@ -215,13 +216,14 @@ sub fdescexpand {
 # like the ones used in source code: "directoryname --- A short description"
 sub descexpand {
     my $templ = shift;
-
-    if ($index{$filename}) {
-	return(&expandtemplate($templ,
-			       ('desctext', sub {return($index{$filename})})
-			       ));
-    } else {
-	return("\&nbsp\;");
+    
+    if ($main::index{$main::filename}) {
+	return &expandtemplate($templ,
+			       ('desctext', 
+				sub { return($main::index{$main::filename })}));
+    }
+    else {
+	return "\&nbsp\;";
     }
 }
 

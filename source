@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.6 1999/05/14 12:45:29 argggh Exp $
+# $Id: source,v 1.7 1999/05/14 17:31:30 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -84,7 +84,7 @@ sub filename {
 
 sub filesize {
     my $templ = shift;
-    my $s = (-s $Path->{'real'}.$filename);
+    my $s = $files->getfilesize($parentdir.$filename, $release);
     my $str;
 
     if ($s < 1<<10) {
@@ -105,7 +105,7 @@ sub filesize {
 
 sub modtime {
     my $current_time = time;
-    my $file_time = $files->getfiletime($filename, $release);
+    my $file_time = $files->getfiletime($parentdir.$filename, $release);
     
     my @t = gmtime($file_time);
     
@@ -127,7 +127,7 @@ sub modtime {
 }
 
 sub bgcolor {
-    return ((($line - 1) / 3) % 2) ? "#FFFFFF" : "#EEEEEE";
+    return ((($line - 1) / 3) % 2) ? "#FFFFFF" : "#CCCCCC";
 }
 
 sub direxpand {
@@ -152,8 +152,8 @@ sub direxpand {
     }
 	
     foreach $filename (@files) {
-	$line++;
 	next if $filename =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
+	$line++;
 	$direx .= &expandtemplate($templ,
 				  ('iconlink',		\&fileicon),
 				  ('namelink',		\&filename),
@@ -169,6 +169,7 @@ sub direxpand {
 sub printdir {
     my $template;
     my $index;
+    my @nodes;
     local %index;
     local @dirs;
     local @files;
@@ -186,8 +187,12 @@ sub printdir {
 	}
     }
     
-    if (!defined(@dirs = $files->getdir($filename, $release))) {
-	print("<p align=center>\n<i>The directory ".$files->toreal($filename, $release)." does not exist.</i>\n");
+    $parentdir = $filename;
+    @nodes = $files->getdir($filename, $release);
+    unless (@nodes) {
+	print("<p align=center>\n<i>The directory ".
+	      $files->toreal($filename, $release).
+	      " does not exist.</i>\n");
 	#FIXME what does this do?
 	if ($files->toreal($filename, $release) =~ m#(.+[^/])[/]*$# ) {
 	    if (-e $1) {
@@ -197,15 +202,15 @@ sub printdir {
 	return;
     }
        
+    @dirs  = grep { $files->isdir($filename.$_, $release) } @nodes;
+    @files = grep { ! $files->isdir($filename.$_, $release) } @nodes;
+
     %index = $files->getindex($filename, $release);
-       
-    if ($Path->{'virt'} =~ m#^(.*/)[^/]*/$#) {
-	$parentdir = $1;
-	unshift(@dirs, '..');
-    }
+
+    unshift(@dirs, '..') unless $parentdir eq '/';
     
     # print the description of the current directory
-    dirdesc($Path->{'virt'});
+    dirdesc($parentdir);
     
     # print the listing itself
     print(&expandtemplate($template,

@@ -1,6 +1,17 @@
 # Configuration file.  -*- perl -*-
 
 {
+    'glimpsebin'	=> '/info/lxr/bin/glimpse',
+    'ctagsbin'		=> '/usr/bin/etags',
+    'ectagsbin'		=> '/local/bin/ctags',
+
+    'tmpdir'		=> '/tmp',
+},
+
+{
+    'baseurl'		=> 'http://karsk.ping.uio.no/~argggh/lxr',
+    'virtroot'		=> '/~argggh/lxr',
+    
     'variables' => {
 	# Define typed variable "v", read valueset from file.
 	'v' => {'name'    => 'Version',
@@ -17,9 +28,6 @@
 	'/arch/[^\/]+/'       => '/arch/$a/',
     },
 
-    'baseurl'		=> 'http://karsk.ping.uio.no/',
-    'virtroot'		=> '/~argggh/lxr',
-    
     'htmlhead'		=> 'template-head',
     'htmltail'		=> 'template-tail',
     'htmldir'		=> 'template-dir',
@@ -36,11 +44,5 @@
 
     # dbtype db or dbi
 #    'dbtype'		=> 'dbi',
-    
-    'glimpsebin'	=> '/info/lxr/bin/glimpse',
-    'ctagsbin'		=> '/usr/bin/etags',
-    'ectagsbin'		=> '/local/bin/ctags',
-
-    'tmpdir'		=> '/tmp',
 }
 

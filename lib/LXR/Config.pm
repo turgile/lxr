@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.5 1999/05/14 12:45:30 argggh Exp $
+# $Id: Config.pm,v 1.6 1999/05/14 17:31:30 argggh Exp $
 
 package LXR::Config;
 
@@ -55,10 +55,33 @@ sub _initialize {
     local($SIG{'__DIE__'}) = 'IGNORE';
     local($/) = undef;
 	
-    %$self = (%$self,
-	      %{eval(<CONFIG>)});
-
+    my @config = eval(<CONFIG>);
     &fatal("Error in configuration file: ".$@) if $@;
+
+#    %$self = (%$self,
+#	      %{eval(<CONFIG>)});
+
+    use Data::Dumper;
+
+    print(STDERR "Foo: \n");
+
+    my $url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
+    $url =~ s/:80$//;
+    $url .= $ENV{'SCRIPT_NAME'};
+
+    my $config;
+    foreach $config (@config) {
+	if ($config->{baseurl}) {
+	    my $root = quotemeta($config->{baseurl});
+	    next unless $url =~ /^$root/;
+	}
+	
+	%$self = (%$self, %$config);
+	
+	print(STDERR "Foo: \n");
+	print(STDERR Dumper($self));
+    }
+
 }
 
 
