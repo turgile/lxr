@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.29 2004/07/15 14:55:00 brondsem Exp $
+# $Id: Config.pm,v 1.30 2004/07/15 20:20:12 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.29 2004/07/15 14:55:00 brondsem Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.30 2004/07/15 20:20:12 brondsem Exp $ ';
 
 use strict;
 
@@ -64,6 +64,7 @@ sub _initialize {
     }
     
     $url =~ s|^http://([^/]*):443/|https://$1/|;
+	$url .= '/' unless $url =~ m#/$#; # append / if necessary
 
     unless ($confpath) {
 		($confpath) = ($0 =~ /(.*?)[^\/]*$/);
