@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 
 use strict;
-use lib '/home/pergj/src/lxr2/lxr2/lib';
+use lib '/local/lxr/http/lxr2/lib';
 
 use LXR::Files::Plain;
 use LXR::Index;
