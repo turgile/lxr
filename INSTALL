@@ -122,8 +122,10 @@ want to index and browse.
 You may also want to configure the 'graphicfile', 'filetype' and
 'incprefix' variables, but the defaults should be reasonable for most setups.
 
-Getting lxr to work with CVS
+Getting LXR to work with CVS
 ----------------------------
+Currently LXR cannot index CVS files with glimpse.  You must use swish-e.
+
 If you want lxr to work on files that are located in a CVS repository, edit
 lxr.conf and set the range variable so that it uses a subroutine instead
 of the default setting that reads the src/cvsversions file.
@@ -149,7 +151,6 @@ in /path/to/cvs/repository and your cvs module is called lxr then set
 
 Using Swish-e with LXR
 ----------------------
-
 Create a directory for the swish index files to go in, and put the
 path of this directory in the 'swishdir' variable.
 
@@ -160,7 +161,6 @@ path of this directory in the 'glimpsedir' variable.
 
 Generate index.
 ---------------
-
 It is now time to generate the index. This is done using the program
 "genxref". genxref takes two arguments --url= and --version= where is
 the url where the lxr cgi scripts are found.
@@ -211,7 +211,6 @@ of your source tree.
 
 Getting help if it doesn't work:
 --------------------------------
-
 If you can't get LXR to work then you can try asking on the mailing
 list or the support forums.  Do check the archives of both first
 though - your question may already have been answered.
@@ -219,11 +218,8 @@ though - your question may already have been answered.
 By web:	   http://sourceforge.net/forum/forum.php?forum_id=86145
 By email:  Send a mail to lxr-general@lists.sf.net
 
-
-
 Troubleshooting:
 ---------------
-
 ** Fatal: Can't find database
 
 This message comes from the DB backend. The likely cause is that the
