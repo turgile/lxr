@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.31 2002/03/18 14:55:43 mbox Exp $
+# $Id: source,v 1.32 2002/07/29 01:23:03 mbox Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.31 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: source,v 1.32 2002/07/29 01:23:03 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -110,24 +110,12 @@ sub modtime {
     my $file_time = $files->getfiletime($dir.$node, $release);
 
     return '-' unless defined($file_time);
-    
+
     my @t = gmtime($file_time);
-    
-    my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
     my ($sec, $min, $hour, $mday, $mon, $year) = @t;
-    $year += 1900;
-    $mon = $months[$mon];
-    
-    my $one_hour = (60 * 60);
-    my $six_months = $one_hour * 24 * int(365/2);
-    
-    if ($file_time <= ($current_time - $six_months) ||
-	$file_time >= ($current_time + $one_hour)) {
-	return sprintf("%s %2d  %04d", $mon, $mday, $year);
-    } else {
-	return sprintf("%s %2d %02d:%02d", $mon, $mday, $hour, $min);
-    }
+    return sprintf("%04d-%02d-%02d %02d:%02d:%02d",
+				   $year + 1900,
+				   $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub bgcolor {
