@@ -1,0 +1,21 @@
+<p align="center">
+<form method="get" action="search">
+    $variables{<input type="hidden" name="$variable" value="$value">}
+    
+    <b>Search for: </b><input type="text" name="string" value="$searchtext" size="50">
+    <input type="submit" value="search">
+    <br><br>
+    Supported operators: AND, OR, NOT, ( ) boolean grouping, trailing *, " " phrase grouping<br>
+    Example: (book* OR magazine*) NOT "my magazine"<br>
+    Powered by <a href="http://swish-e.org" target="_blank">Swish-E</a>.  <a href="http://swish-e.org/current/docs/SWISH-SEARCH.html" target="_blank">Full search syntax</a>
+</form>
+<hr>
+
+$maxhits_message
+$resultcount files found.<br>
+
+<h1>$searchtext</h1>
+
+$results{
+    $score $fileref<br>
+}
