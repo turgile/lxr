@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.41 2002/03/18 14:55:43 mbox Exp $
+# $Id: Common.pm,v 1.42 2002/07/29 00:50:32 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.41 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.42 2002/07/29 00:50:32 mbox Exp $ ';
 
 use strict;
 
@@ -608,7 +608,7 @@ sub pathname {
 sub titleexpand {
 	my ($templ, $who) = @_;
 
-	if ($who eq 'source' || $who eq 'diff') {
+	if ($who eq 'source' || $who eq 'diff' || $who eq 'sourcedir') {
 		return $config->sourcerootname.$pathname;
 	} 
 	elsif ($who eq 'ident') {
