@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Java.pm,v 1.4 2001/11/14 15:27:36 mbox Exp $
+# $Id: Java.pm,v 1.5 2004/07/19 19:50:21 brondsem Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -21,8 +21,7 @@
 
 package LXR::Lang::Java;
 
-
-my $CVSID = '$Id: Java.pm,v 1.4 2001/11/14 15:27:36 mbox Exp $ ';
+my $CVSID = '$Id: Java.pm,v 1.5 2004/07/19 19:50:21 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -32,11 +31,12 @@ require LXR::Lang::Generic;
 @LXR::Lang::Java::ISA = ('LXR::Lang::Generic');
 
 # Only override the include handling.  For java, this is really package
-# handling, as there is no include mechanism, so deals with "package" 
+# handling, as there is no include mechanism, so deals with "package"
 # and "import" keywords
 
 sub processinclude {
-	my ($self, $frag, $dir) = @_;
+	my ( $self, $frag, $dir ) = @_;
+
 	# Deal with package declaration of the form
 	# "package java.lang.util"
 	$$frag =~ s#(package\s+)([\w.]+)#
@@ -44,6 +44,7 @@ sub processinclude {
 	    ($index->issymbol($2, $$self{'release'}) ?
 		join($2, @{$$self{'itag'}}) : $2)
 	    #e;
+
 	# Deal with import declaration of the form
 	# "import java.awt.*" by providing link to the package
 	$$frag =~ s#(import\s+)([\w.]+)(\.\*)#
@@ -51,21 +52,18 @@ sub processinclude {
 			($index->issymbol($2, $$self{'release'}) ?
 			 join($2, @{$$self{'itag'}}) : $2) . 
 				 $3 #e;
-	
-  	# Deal with import declaration of the form
-  	# "import java.awt.classname" by providing links to the
+
+	# Deal with import declaration of the form
+	# "import java.awt.classname" by providing links to the
 	# package and the class
-  	$$frag =~ s#(import\s+)([\w.]+)\.(\w+)(\W)#
+	$$frag =~ s#(import\s+)([\w.]+)\.(\w+)(\W)#
   		$1.
   			($index->issymbol($2, $$self{'release'}) ?
   			 join($2, @{$$self{'itag'}}) : $2) . "." .
 				 ($index->issymbol($3, $$self{'release'}) ?
 				  join($3, @{$$self{'itag'}}) : $3) . $4#e;
-			
-	  }
 
-
+}
 
 1;
-
 

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.22 2004/07/15 15:08:04 brondsem Exp $
+# $Id: Plain.pm,v 1.23 2004/07/19 19:50:21 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,23 +11,23 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.22 2004/07/15 15:08:04 brondsem Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.23 2004/07/19 19:50:21 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
 use LXR::Common;
 
 sub new {
-	my ($self, $rootpath) = @_;
+	my ( $self, $rootpath ) = @_;
 
-	$self = bless({}, $self);
+	$self = bless( {}, $self );
 	$self->{'rootpath'} = $rootpath;
 	$self->{'rootpath'} =~ s@/*$@/@;
 
@@ -35,56 +35,57 @@ sub new {
 }
 
 sub filerev {
-	my ($self, $filename, $release) = @_;
+	my ( $self, $filename, $release ) = @_;
 
-#	return $release;
-	return join("-", $self->getfiletime($filename, $release),
-				$self->getfilesize($filename, $release));
-}								
+	#	return $release;
+	return join( "-",
+		$self->getfiletime( $filename, $release ),
+		$self->getfilesize( $filename, $release ) );
+}
 
 sub getfiletime {
-	my ($self, $filename, $release) = @_;
+	my ( $self, $filename, $release ) = @_;
 
-	return (stat($self->toreal($filename, $release)))[9];
+	return ( stat( $self->toreal( $filename, $release ) ) )[9];
 }
 
 sub getfilesize {
-	my ($self, $filename, $release) = @_;
+	my ( $self, $filename, $release ) = @_;
 
-	return -s $self->toreal($filename, $release);
+	return -s $self->toreal( $filename, $release );
 }
 
 sub getfile {
-	my ($self, $filename, $release) = @_;
+	my ( $self, $filename, $release ) = @_;
 	my ($buffer);
 	local ($/) = undef;
 
-	open(FILE, "<", $self->toreal($filename, $release)) || return undef;
+	open( FILE, "<", $self->toreal( $filename, $release ) ) || return undef;
 	$buffer = <FILE>;
 	close(FILE);
 	return $buffer;
 }
 
 sub getfilehandle {
-	my ($self, $filename, $release) = @_;
+	my ( $self, $filename, $release ) = @_;
 	my ($fileh);
 
-	$fileh = new FileHandle($self->toreal($filename, $release));
+	$fileh = new FileHandle( $self->toreal( $filename, $release ) );
 	return $fileh;
 }
 
 sub tmpfile {
-	my ($self, $filename, $release) = @_;
-	my ($tmp, $tries);
+	my ( $self, $filename, $release ) = @_;
+	my ( $tmp, $tries );
 	local ($/) = undef;
 
-	$tmp = $config->tmpdir.'/lxrtmp.'.time.'.'.$$.'.'.&LXR::Common::tmpcounter;
-	open(TMP, "> $tmp") || return undef;
-	open(FILE, "<", $self->toreal($filename, $release)) || return undef;
-	print(TMP <FILE>);
+	$tmp = $config->tmpdir . '/lxrtmp.' . time . '.' . $$ . '.' . &LXR::Common::tmpcounter;
+	open( TMP, "> $tmp" ) || return undef;
+	open( FILE, "<", $self->toreal( $filename, $release ) ) || return undef;
+	print( TMP <FILE> );
 	close(FILE);
 	close(TMP);
-	
+
 	return $tmp;
 }
 
@@ -97,23 +98,22 @@ sub getauthor {
 }
 
 sub getdir {
-	my ($self, $pathname, $release) = @_;
-	my ($dir, $node, @dirs, @files);
+	my ( $self, $pathname, $release ) = @_;
+	my ( $dir, $node, @dirs, @files );
 
-	$dir = $self->toreal($pathname, $release);
-	opendir(DIR, $dir) || return ();
-	FILE: while (defined($node = readdir(DIR))) {
+	$dir = $self->toreal( $pathname, $release );
+	opendir( DIR, $dir ) || return ();
+  FILE: while ( defined( $node = readdir(DIR) ) ) {
 		next if $node =~ /^\.|~$|\.orig$/;
 		next if $node eq 'CVS';
 
-		if (-d $dir.$node) {
-			foreach my $ignoredir ($config->ignoredirs) {
+		if ( -d $dir . $node ) {
+			foreach my $ignoredir ( $config->ignoredirs ) {
 				next FILE if $node eq $ignoredir;
 			}
-			push(@dirs, $node.'/');
-		}
-		else {
-			push(@files, $node);
+			push( @dirs, $node . '/' );
+		} else {
+			push( @files, $node );
 		}
 	}
 	closedir(DIR);
@@ -127,37 +127,37 @@ sub getdir {
 # other possible File classes.)
 
 sub toreal {
-	my ($self, $pathname, $release) = @_;
-	
-	# nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
-	foreach my $ignoredir ($config->ignoredirs) {
+	my ( $self, $pathname, $release ) = @_;
+
+# nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
+	foreach my $ignoredir ( $config->ignoredirs ) {
 		return undef if $pathname =~ m|/$ignoredir/|;
 	}
 
-	return ($self->{'rootpath'}.$release.$pathname);
+	return ( $self->{'rootpath'} . $release . $pathname );
 }
 
 sub isdir {
-	my ($self, $pathname, $release) = @_;
+	my ( $self, $pathname, $release ) = @_;
 
-	return -d $self->toreal($pathname, $release);
+	return -d $self->toreal( $pathname, $release );
 }
 
 sub isfile {
-	my ($self, $pathname, $release) = @_;
+	my ( $self, $pathname, $release ) = @_;
 
-	return -f $self->toreal($pathname, $release);
+	return -f $self->toreal( $pathname, $release );
 }
 
 sub getindex {
-	my ($self, $pathname, $release) = @_;
-	my ($index, %index);
-	my $indexname = $self->toreal($pathname, $release)."00-INDEX";
+	my ( $self, $pathname, $release ) = @_;
+	my ( $index, %index );
+	my $indexname = $self->toreal( $pathname, $release ) . "00-INDEX";
 
-	if (-f $indexname) {
-		open(INDEX, "<", $indexname) || 
-			warning("Existing $indexname could not be opened.");
-		local($/) = undef;
+	if ( -f $indexname ) {
+		open( INDEX, "<", $indexname )
+		  || warning("Existing $indexname could not be opened.");
+		local ($/) = undef;
 		$index = <INDEX>;
 
 		%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
@@ -166,14 +166,13 @@ sub getindex {
 }
 
 sub allreleases {
-	my ($self, $filename) = @_;
+	my ( $self, $filename ) = @_;
 
-	opendir(SRCDIR, $self->{'rootpath'});
+	opendir( SRCDIR, $self->{'rootpath'} );
 	my @dirs = readdir(SRCDIR);
 	closedir(SRCDIR);
 
-	return grep { /^[^\.]/ && -r $self->toreal($filename, $_) } @dirs;
+	return grep { /^[^\.]/ && -r $self->toreal( $filename, $_ ) } @dirs;
 }
-
 
 1;

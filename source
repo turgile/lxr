@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.41 2004/07/15 15:29:35 brondsem Exp $
+# $Id: source,v 1.42 2004/07/19 19:50:20 brondsem Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -17,14 +17,14 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.41 2004/07/15 15:29:35 brondsem Exp $ ';
+$CVSID = '$Id: source,v 1.42 2004/07/19 19:50:20 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -33,272 +33,287 @@ use LXR::Common qw(:html);
 use Local;
 
 sub diricon {
-    my ($templ, $node, $dir) = @_;
-    my $img;
+	my ( $templ, $node, $dir ) = @_;
+	my $img;
 
-    if ($node eq '../') {
-        $img = "/icons/back.gif";
-    } else {
-        $img = "/icons/folder.gif";
-    }
+	if ( $node eq '../' ) {
+		$img = "/icons/back.gif";
+	} else {
+		$img = "/icons/folder.gif";
+	}
 
-    return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"folder\">", "",
-		   $dir.$node);
+	return fileref( "<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"folder\">", "",
+		$dir . $node );
 }
-
 
 sub dirname {
-    my ($templ, $node, $dir) = @_;
+	my ( $templ, $node, $dir ) = @_;
 
-    if ($node eq '../') {
-	return fileref("Parent directory", "dirfolder", $dir.$node);
-    } else {
-	return fileref($node, "dirfolder", $dir.$node);
-    }
+	if ( $node eq '../' ) {
+		return fileref( "Parent directory", "dirfolder", $dir . $node );
+	} else {
+		return fileref( $node, "dirfolder", $dir . $node );
+	}
 }
 
-
 sub fileicon {
-    my ($templ, $node, $dir) = @_;
-    my $img;
+	my ( $templ, $node, $dir ) = @_;
+	my $img;
 
-    if ($node =~ /^.*\.[ch]$/) {
-        $img = "/icons/c.gif";
-    } elsif ($node =~ /^.*\.(cpp|cc|java)$/) {
-        # TODO: Find a nice icon for c++ files (KDE?)
-        $img = "/icons/c.gif";
-    } elsif ($node =~ /^.*\.(txt)$/) {
-        $img = "/icons/text.gif";
-    } elsif ($node =~ /^.*\.(jar|war|ear|zip|tar|gz|tgz|cab)$/) {
-        $img = "/icons/compressed.gif";
-    } elsif ($node =~ /^.*\.(jpg|jpeg|gif|bmp|png)$/) {
-        $img = "/icons/image2.gif";
-    } else {
-        $img = "/icons/generic.gif";
-    }
-    return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"\">",
-                   "", $dir.$node);
+	if ( $node =~ /^.*\.[ch]$/ ) {
+		$img = "/icons/c.gif";
+	} elsif ( $node =~ /^.*\.(cpp|cc|java)$/ ) {
+
+		# TODO: Find a nice icon for c++ files (KDE?)
+		$img = "/icons/c.gif";
+	} elsif ( $node =~ /^.*\.(txt)$/ ) {
+		$img = "/icons/text.gif";
+	} elsif ( $node =~ /^.*\.(jar|war|ear|zip|tar|gz|tgz|cab)$/ ) {
+		$img = "/icons/compressed.gif";
+	} elsif ( $node =~ /^.*\.(jpg|jpeg|gif|bmp|png)$/ ) {
+		$img = "/icons/image2.gif";
+	} else {
+		$img = "/icons/generic.gif";
+	}
+	return fileref( "<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"\">", "", $dir . $node );
 }
 
 sub filename {
-    my ($templ, $node, $dir) = @_;
-    return fileref($node, "dirfile", $dir.$node);
+	my ( $templ, $node, $dir ) = @_;
+	return fileref( $node, "dirfile", $dir . $node );
 }
 
 sub filesize {
-    my ($templ, $node, $dir) = @_;
+	my ( $templ, $node, $dir ) = @_;
 
-    my $s = $files->getfilesize($dir.$node, $release);
-    my $str;
+	my $s = $files->getfilesize( $dir . $node, $release );
+	my $str;
 
-    if ($s < 1<<10) {
-	$str = "$s";
-    } else {
-#      if ($s < 1<<20) {
-	$str = ($s>>10) . "k";
-#      } else {
-#          $str = ($s>>20) . "M";
-#      }
-    }
-    return expandtemplate($templ,
-			  ('bytes'  => sub { return $str },
-			   'kbytes' => sub { return $str },
-			   'mbytes' => sub { return $str }));
+	if ( $s < 1 << 10 ) {
+		$str = "$s";
+	} else {
+
+		#      if ($s < 1<<20) {
+		$str = ( $s >> 10 ) . "k";
+
+		#      } else {
+		#          $str = ($s>>20) . "M";
+		#      }
+	}
+	return expandtemplate(
+		$templ,
+		(
+			'bytes'  => sub { return $str },
+			'kbytes' => sub { return $str },
+			'mbytes' => sub { return $str }
+		)
+	);
 }
 
 sub modtime {
-    my ($templ, $node, $dir) = @_;
+	my ( $templ, $node, $dir ) = @_;
 
-    my $current_time = time;
-    my $file_time = $files->getfiletime($dir.$node, $release);
+	my $current_time = time;
+	my $file_time    = $files->getfiletime( $dir . $node, $release );
 
-    return '-' unless defined($file_time);
+	return '-' unless defined($file_time);
 
-    my @t = gmtime($file_time);
-    my ($sec, $min, $hour, $mday, $mon, $year) = @t;
-    return sprintf("%04d-%02d-%02d %02d:%02d:%02d",
-				   $year + 1900,
-				   $mon + 1, $mday, $hour, $min, $sec);
+	my @t = gmtime($file_time);
+	my ( $sec, $min, $hour, $mday, $mon, $year ) = @t;
+	return
+	  sprintf( "%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec );
 }
 
 sub bgcolor {
-    my ($templ, $line) = @_;
-    return ((($line - 1) / 3) % 2) ? "#FFFFFF" : "#EEEEEE";
+	my ( $templ, $line ) = @_;
+	return ( ( ( $line - 1 ) / 3 ) % 2 ) ? "#FFFFFF" : "#EEEEEE";
 }
 
 sub rowclass {
-    my ($templ, $line) = @_;
-    return ((($line - 1) / 3) % 2) ? "dirrow2" : "dirrow1";
+	my ( $templ, $line ) = @_;
+	return ( ( ( $line - 1 ) / 3 ) % 2 ) ? "dirrow2" : "dirrow1";
 }
 
 sub direxpand {
-    my ($templ, $dir) = @_;
-    my $direx = '';
-    my $line  = 1;
-    my %index;
-    my @nodes;
-    my $node;
-    
+	my ( $templ, $dir ) = @_;
+	my $direx = '';
+	my $line  = 1;
+	my %index;
+	my @nodes;
+	my $node;
 
-    @nodes = $files->getdir($dir, $release);
-    unless (@nodes) {
-	print("<p align=\"center\">\n<i>The directory ".
-	      $files->toreal($dir, $release).
-	      " does not exist.</i>\n");
-	print("\<p align=\"center\">\n<i>This directory might exist in other versions, try 'Show attic files' or select a different Version.</i>\n")
-		if $files->isa("LXR::Files::CVS") and !$HTTP->{'param'}->{'showattic'};
-	#FIXME what does this do?
-	if ($files->toreal($dir, $release) =~ m#(.+[^/])[/]*$# ) {
-	    if (-e $1) {
-		warning("Unable to open ".
-			$files->toreal($dir, $release));
-	    }
-	}
-	return;
-    }
-    
-    unshift(@nodes, '../') unless $dir eq '/';
+	@nodes = $files->getdir( $dir, $release );
+	unless (@nodes) {
+		print(  "<p align=\"center\">\n<i>The directory "
+			  . $files->toreal( $dir, $release )
+			  . " does not exist.</i>\n" );
+		print(
+"\<p align=\"center\">\n<i>This directory might exist in other versions, try 'Show attic files' or select a different Version.</i>\n"
+		  )
+		  if $files->isa("LXR::Files::CVS")
+		  and !$HTTP->{'param'}->{'showattic'};
 
-    #CSS checked _PH_
-    foreach $node (@nodes) {
-	if ($node =~ /\/$/) {
-	    $direx .= expandtemplate
-		($templ,
-		 ('iconlink'	=> sub { diricon(@_, $node, $dir) },
-		  'namelink'	=> sub { dirname(@_, $node, $dir) },
-		  'filesize'	=> sub { '-' },
-		  'modtime'	=> sub { modtime(@_, $node, $dir) },
-		  'bgcolor'	=> sub { bgcolor(@_, $line++) },
-		  'css'	        => sub { rowclass(@_, $line++) },
-		  'description'	=> sub { descexpand(@_, $node, $dir, $release) }
-		  ));
+		#FIXME what does this do?
+		if ( $files->toreal( $dir, $release ) =~ m#(.+[^/])[/]*$# ) {
+			if ( -e $1 ) {
+				warning( "Unable to open " . $files->toreal( $dir, $release ) );
+			}
+		}
+		return;
 	}
-	else {
-	    next if $node =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
-	    $direx .= expandtemplate
-		($templ,
-		 ('iconlink'	=> sub { fileicon(@_, $node, $dir) },
-		  'namelink'	=> sub { filename(@_, $node, $dir) },
-		  'filesize'	=> sub { filesize(@_, $node, $dir) },
-		  'modtime'	=> sub { modtime(@_, $node, $dir) },
-		  'bgcolor'	=> sub { bgcolor(@_, $line++) },
-		  'css'	        => sub { rowclass(@_, $line++) },
-		  'description'	=> sub { ($files->toreal($dir.$node, $release) =~ m|/Attic/| ? "<i>In Attic</i>  " : "") . descexpand(@_, $node, $dir, $release) }
-		  ));
-	}
-    }
 
-    return($direx);
+	unshift( @nodes, '../' ) unless $dir eq '/';
+
+	#CSS checked _PH_
+	foreach $node (@nodes) {
+		if ( $node =~ /\/$/ ) {
+			$direx .= expandtemplate(
+				$templ,
+				(
+					'iconlink' => sub { diricon( @_, $node, $dir ) },
+					'namelink' => sub { dirname( @_, $node, $dir ) },
+					'filesize' => sub { '-' },
+					'modtime'  => sub { modtime( @_, $node, $dir ) },
+					'bgcolor' => sub { bgcolor( @_,  $line++ ) },
+					'css'     => sub { rowclass( @_, $line++ ) },
+					'description' => sub { descexpand( @_, $node, $dir, $release ) }
+				)
+			);
+		} else {
+			next if $node =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
+			$direx .= expandtemplate(
+				$templ,
+				(
+					'iconlink'    => sub { fileicon( @_, $node, $dir ) },
+					'namelink'    => sub { filename( @_, $node, $dir ) },
+					'filesize'    => sub { filesize( @_, $node, $dir ) },
+					'modtime'     => sub { modtime( @_,  $node, $dir ) },
+					'bgcolor'     => sub { bgcolor( @_,  $line++ ) },
+					'css'         => sub { rowclass( @_, $line++ ) },
+					'description' => sub {
+						( $files->toreal( $dir . $node, $release ) =~ m|/Attic/|
+							? "<i>In Attic</i>  "
+							: "" )
+						  . descexpand( @_, $node, $dir, $release );
+					}
+				)
+			);
+		}
+	}
+
+	return ($direx);
 }
 
 sub printdir {
-    my $dir = shift;
-    my $templ;
-    
-    $templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
-    if ($config->htmldir) {
-	unless (open(TEMPL, $config->htmldir)) {
-	    warning("Template ".$config->htmldir." does not exist.");
-	} else {
-	    local($/) = undef;
-	    $templ = <TEMPL>;
-	    close(TEMPL);
-	}
-    }
-    
-    # print the description of the current directory
-    print dirdesc($dir, $release);
-    
-    # print the listing itself
-    print(expandtemplate($templ,
-			 ('files' => sub { direxpand(@_, $dir) })));
-}
+	my $dir = shift;
+	my $templ;
 
+	$templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
+	if ( $config->htmldir ) {
+		unless ( open( TEMPL, $config->htmldir ) ) {
+			warning( "Template " . $config->htmldir . " does not exist." );
+		} else {
+			local ($/) = undef;
+			$templ = <TEMPL>;
+			close(TEMPL);
+		}
+	}
+
+	# print the description of the current directory
+	print dirdesc( $dir, $release );
+
+	# print the listing itself
+	print( expandtemplate( $templ, ( 'files' => sub { direxpand( @_, $dir ) } ) ) );
+}
 
 sub printfile {
-    my $raw = shift;
+	my $raw = shift;
 
-    if ($pathname =~ m|/$|) {
-	printdir($pathname);
-    }
-    else {
-	my $fileh = $files->getfilehandle($pathname, $release);
+	if ( $pathname =~ m|/$| ) {
+		printdir($pathname);
+	} else {
+		my $fileh = $files->getfilehandle( $pathname, $release );
 
-	if ($fileh) {
-	    if ($raw) {
-		print($fileh->getlines);
-	    } 
-#	    elsif ($node =~ /README$/) {
-#		print("<pre>",
-#		      markupstring($fileh, $node, $index), # FIXME
-#		      "</pre>");
-#	    } 
-	    else {
-		if ($config->cvswebprefix) {
-		    my $revtarget = "";
-		    $revtarget = "#rev$release" if lc($release) ne "head";
-		    print "<a href='" . $config->cvswebprefix . $pathname . $config->cvswebpostfix . $revtarget . "'>View CVS Log</a>";
-		}
-		my @ann = $files->getannotations($pathname, $release);
-
-		if (@ann) {
-		    my ($a, $b);
-		    foreach $a (@ann) {
-			if ($a eq $b) {
-			    $a = ' ' x 16;
-			    next;
+		if ($fileh) {
+			if ($raw) {
+				print( $fileh->getlines );
 			}
 
-			$b = $a;
-			$a .= ' ' x (6 - length($a)).
-			    $files->getauthor($pathname, $a);
-			$a .= ' ' x (16 - length($a));
-		    }
+			#	    elsif ($node =~ /README$/) {
+			#		print("<pre>",
+			#		      markupstring($fileh, $node, $index), # FIXME
+			#		      "</pre>");
+			#	    }
+			else {
+				if ( $config->cvswebprefix ) {
+					my $revtarget = "";
+					$revtarget = "#rev$release" if lc($release) ne "head";
+					print "<a href='"
+					  . $config->cvswebprefix
+					  . $pathname
+					  . $config->cvswebpostfix
+					  . $revtarget
+					  . "'>View CVS Log</a>";
+				}
+				my @ann = $files->getannotations( $pathname, $release );
+
+				if (@ann) {
+					my ( $a, $b );
+					foreach $a (@ann) {
+						if ( $a eq $b ) {
+							$a = ' ' x 16;
+							next;
+						}
+
+						$b = $a;
+						$a .= ' ' x ( 6 - length($a) ) . $files->getauthor( $pathname, $a );
+						$a .= ' ' x ( 16 - length($a) );
+					}
+				}
+
+				my $l;
+				my $outfun = sub {
+					$l = shift;
+					$l =~ s/(\n)/$1.shift(@ann)/ge;
+					print $l;
+				};
+				&$outfun("<pre class=\"file\">\n");
+				markupfile( $fileh, $outfun );
+				&$outfun("</pre>\n");
+			}
+
+		} else {
+			print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
+			print(
+"\<p align=\"center\">\n<i>This file might exist in other versions, try 'Show attic files' or select a different Version.</i>\n"
+			  )
+			  if $files->isa("LXR::Files::CVS")
+			  and !$HTTP->{'param'}->{'showattic'};
+			if ( -f $files->toreal( $pathname, $release ) ) {
+				warning( "Unable to open " . $files->toreal( $pathname, $release ) );
+			}
 		}
-
-		my $l;
-		my $outfun = sub {
-		    $l = shift;
-		    $l =~ s/(\n)/$1.shift(@ann)/ge;
-		    print $l;
-		};
-		&$outfun("<pre class=\"file\">\n");
-		markupfile($fileh, $outfun);
-		&$outfun("</pre>\n");
-	    }
-
-	} 
-	else {
-	    print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
-	    print("\<p align=\"center\">\n<i>This file might exist in other versions, try 'Show attic files' or select a different Version.</i>\n")
-		if $files->isa("LXR::Files::CVS") and !$HTTP->{'param'}->{'showattic'};
-	    if (-f $files->toreal($pathname, $release)) {
-		warning("Unable to open ".$files->toreal($pathname, $release));
-	    }
 	}
-    }
 }
-
 
 httpinit;
 
-if ($config->filter && $pathname !~ $config->filter) {
-    makeheader('source');
-    print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
-    makefooter('source');
-    exit;
+if ( $config->filter && $pathname !~ $config->filter ) {
+	makeheader('source');
+	print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
+	makefooter('source');
+	exit;
 }
 
 # If the file is html then simply pump it out.
-if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {
-    printfile(1);
-}
-else {
-    my $type = ($pathname !~ m|/$| ? 'source' : 'sourcedir');
-    
-    makeheader($type);
-    printfile(0);
-    makefooter($type);
+if ( $pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'} ) {
+	printfile(1);
+} else {
+	my $type = ( $pathname !~ m|/$| ? 'source' : 'sourcedir' );
+
+	makeheader($type);
+	printfile(0);
+	makefooter($type);
 }
 
 httpclean;

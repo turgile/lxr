@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.20 2004/04/21 22:52:08 mbox Exp $
+# $Id: Tagger.pm,v 1.21 2004/07/19 19:50:20 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,87 +11,90 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.20 2004/04/21 22:52:08 mbox Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.21 2004/07/19 19:50:20 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
 use LXR::Lang;
 
 sub processfile {
-	my ($pathname, $release, $config, $files, $index) = @_;
+	my ( $pathname, $release, $config, $files, $index ) = @_;
 
-	my $lang = new LXR::Lang($pathname, $release);
+	my $lang = new LXR::Lang( $pathname, $release );
 
 	return unless $lang;
 
-	my $revision = $files->filerev($pathname, $release);
+	my $revision = $files->filerev( $pathname, $release );
 
 	return unless $revision;
 
-	print(STDERR "--- $pathname $release $revision\n");
-	
+	print( STDERR "--- $pathname $release $revision\n" );
+
 	if ($index) {
-	  my $fileid = $index->fileid($pathname, $revision);
-	  
-	  $index->release($fileid, $release);
-	  
-	  if ($index->toindex($fileid)) {
-		$index->empty_cache();
-		print(STDERR "--- $pathname $fileid\n");
-		
-		my $path = $files->tmpfile($pathname, $release);
-		
-		$lang->indexfile($pathname, $path, $fileid, $index, $config);
-		$index->setindexed($fileid);
-		unlink($path);
-	  } else {
-		print(STDERR "$pathname was already indexed\n");
-	  }
-	} else { print(STDERR " **** FAILED ****\n"); }
-	$lang = undef;
+		my $fileid = $index->fileid( $pathname, $revision );
+
+		$index->release( $fileid, $release );
+
+		if ( $index->toindex($fileid) ) {
+			$index->empty_cache();
+			print( STDERR "--- $pathname $fileid\n" );
+
+			my $path = $files->tmpfile( $pathname, $release );
+
+			$lang->indexfile( $pathname, $path, $fileid, $index, $config );
+			$index->setindexed($fileid);
+			unlink($path);
+		} else {
+			print( STDERR "$pathname was already indexed\n" );
+		}
+	} else {
+		print( STDERR " **** FAILED ****\n" );
+	}
+	$lang     = undef;
 	$revision = undef;
 }
 
-
 sub processrefs {
-	my ($pathname, $release, $config, $files, $index) = @_;
+	my ( $pathname, $release, $config, $files, $index ) = @_;
 
-	my $lang = new LXR::Lang($pathname, $release);
+	my $lang = new LXR::Lang( $pathname, $release );
 
 	return unless $lang;
-	
-	my $revision = $files->filerev($pathname, $release);
+
+	my $revision = $files->filerev( $pathname, $release );
 
 	return unless $revision;
 
-	print(STDERR "--- $pathname $release $revision\n");
-	
-	if ($index) {
-	  my $fileid = $index->fileid($pathname, $revision);
-	  
-	  if ($index->toreference($fileid)) {
-		$index->empty_cache();
-		print(STDERR "--- $pathname $fileid\n");
-		
-		my $path = $files->tmpfile($pathname, $release);
-		
-		$lang->referencefile($pathname, $path, $fileid, $index, $config);
-		$index->setreferenced($fileid);
-		unlink($path);
-	  } else {
-		print STDERR "$pathname was already referenced\n";
-	  }
-	} else { print( STDERR " **** FAILED ****\n"); }
+	print( STDERR "--- $pathname $release $revision\n" );
 
-	$lang = undef;
+	if ($index) {
+		my $fileid = $index->fileid( $pathname, $revision );
+
+		if ( $index->toreference($fileid) ) {
+			$index->empty_cache();
+			print( STDERR "--- $pathname $fileid\n" );
+
+			my $path = $files->tmpfile( $pathname, $release );
+
+			$lang->referencefile( $pathname, $path, $fileid, $index, $config );
+			$index->setreferenced($fileid);
+			unlink($path);
+		} else {
+			print STDERR "$pathname was already referenced\n";
+		}
+	} else {
+		print( STDERR " **** FAILED ****\n" );
+	}
+
+	$lang     = undef;
 	$revision = undef;
-  }
+}
 
 1;
