@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.10 2004/06/28 13:17:17 brondsem Exp $
+# $Id: find,v 1.11 2004/06/28 14:05:09 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.10 2004/06/28 13:17:17 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.11 2004/06/28 14:05:09 brondsem Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -32,10 +32,26 @@ use LXR::Config;
 
 sub find {
 
-    print("<p align=\"center\">\n",
-	  "Search for files (by name) using regular expressions.\n",
-	  "<br>(Need some <a href=\"search-help.html\">Hints</a> ",
-	  "on performing searches?)</p>\n");
+print qq~
+<p align=\"center\">
+Search for files (by name) using regular expressions.
+</p>
+<H3>Quick tip:</H3>
+<P>
+The database that is searched has the form of the output of the
+"find" command. 
+</p><p>That is, each line is the absolute patch of a file
+If you want to search for a specific file(s), you use
+<ul>
+<li> /el.po search for all occurences of file "el.po".
+<li> .desktop search for all files ending with ".desktop".
+</ul>
+</p>
+<p>
+"\\" is for escaping characters (we escape
+characters "/" and "." while "$" denotes the end of the string.
+</p>
+~;
 
     print ("<form method=\"get\" action=\"find\">\n");
 
@@ -67,12 +83,15 @@ sub find {
     }
 	print("<hr>\n");
 	$sourceroot = $config->sourceroot;
+    my $hits = 0;
 	while($file = <FILELLISTING>) {
 	    $file =~ s/^$sourceroot//;
 	    if($file =~ /$searchtext/) {
 		print(&fileref("$file", "find-file", "/$file"),"<br>\n");
+        $hits++;
 	    }
 	}
+    print "<br>$hits files found.";
     }
 }
 
