@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.34 2001/10/31 13:21:58 mbox Exp $
+# $Id: Common.pm,v 1.35 2001/11/14 15:03:29 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.34 2001/10/31 13:21:58 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.35 2001/11/14 15:03:29 mbox Exp $ ';
 
 use strict;
 
@@ -81,6 +81,7 @@ sub warning {
 sub fatal {
 	my $c = join(", line ", (caller)[0,2]);
 	print(STDERR "[",scalar(localtime),"] fatal: $c: $_[0]\n");
+	print(STDERR '[@INC ', join(" ", @INC), ' $0 ', $0, "\n");
 	print("<h4 align=\"center\"><i>** Fatal: $_[0]</i></h4>\n") if $wwwdebug;
 	exit(1);
 }
@@ -292,10 +293,11 @@ sub markupfile {
 	
 	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 	my $lang = new LXR::Lang($pathname, $release, @itag);
-
+	my $language = $lang->language;  # To get back to the key to lookup the tabwidth.
+	
 	# A source code file
 	if ($lang) {
-		&LXR::SimpleParse::init($fileh, $lang->parsespec);
+		&LXR::SimpleParse::init($fileh, $config->filetype->{$language}[3], $lang->parsespec);
 
 		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.5 2001/08/15 15:50:27 mbox Exp $
+# $Id: Generic.pm,v 1.6 2001/11/14 15:03:29 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.5 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.6 2001/11/14 15:03:29 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -243,7 +243,12 @@ sub langinfo {
   }
 
   if (defined $val && defined $$val{$item}) {
-	return wantarray ? @{$$val{$item}} : $$val{$item};
+	if (ref($$val{$item})) {
+	  return wantarray ? @{$$val{$item}} : $$val{$item};
+	}
+	else {
+	  return $$val{$item};
+	}
   } else {
 	return undef;
   }
