@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.29 2004/07/20 20:40:21 brondsem Exp $
+# $Id: CVS.pm,v 1.30 2004/07/21 14:08:38 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.29 2004/07/20 20:40:21 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.30 2004/07/21 14:08:38 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -374,12 +374,25 @@ sub allreleases {
 	}
 }
 
+# sort by CVS version
+#   split rev numbers into arrays
+#   compare each array element, returning as soon as we find a difference
+sub byrevision {
+	my @one = split /\./, $a;
+	my @two = split /\./, $b;
+	for (my $i = 0; $i <= $#one; $i++) {
+		my $ret = $one[$i] <=> $two[$i];
+		return $ret if $ret;
+	}
+	return $#one <=> $#two;		# if still no difference after we ran through all elements of @one, compare the length of the array
+}
+
 sub allrevisions {
 	my ( $self, $filename ) = @_;
 
 	$self->parsecvs($filename);
 
-	return sort( keys( %{ $cvs{'branch'} } ) );
+	return sort byrevision keys( %{ $cvs{'branch'} } );
 }
 
 sub parsecvs {
