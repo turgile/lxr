@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.10 1999/05/16 23:48:25 argggh Exp $
+# $Id: Common.pm,v 1.11 1999/05/21 13:16:56 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.10 1999/05/16 23:48:25 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.11 1999/05/21 13:16:56 argggh Exp $ ';
 
 use strict;
 
@@ -329,6 +329,8 @@ sub markupfile {
 	else {
 		my $first_line = $fileh->getline;
 		my $is_binary = -1;
+
+		return unless defined($first_line);
 		
 		$_ = $first_line;
 		if ( m/^\#!/ ) {				# it's a script
@@ -606,7 +608,9 @@ sub thisurl {
 
 
 sub baseurl {
-	return($Conf->baseurl);
+	(my $url = $Conf->baseurl) =~ s|/*$|/|;
+
+	return $url;
 }
 
 sub dotdoturl {
