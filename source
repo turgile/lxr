@@ -1,5 +1,5 @@
 #!/local/bin/perl5.004
-# $Id: source,v 1.19 1999/08/07 18:15:20 argggh Exp $
+# $Id: source,v 1.20 1999/08/19 14:05:31 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.19 1999/08/07 18:15:20 argggh Exp $ ';
+$CVSID = '$Id: source,v 1.20 1999/08/19 14:05:31 argggh Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -250,6 +250,12 @@ sub printfile {
 
 httpinit;
 
+if ($config->filter && $pathname !~ $config->filter) {
+    makeheader('source');
+    print("\<p align=center>\n<i>The file $pathname does not exist.</i>\n");
+    makefooter('source');
+    exit;
+}
 
 # If the file is html then simply pump it out.
 if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {

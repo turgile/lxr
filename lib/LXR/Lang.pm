@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.14 1999/08/17 18:35:34 argggh Exp $
+# $Id: Lang.pm,v 1.15 1999/08/19 14:05:34 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.14 1999/08/17 18:35:34 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.15 1999/08/19 14:05:34 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -26,8 +26,7 @@ sub new {
 		$lang = new LXR::Lang::Perl($pathname, $release);
 	}
 	else {
-#		$lang = undef;
-		$lang = new LXR::Lang::Perl($pathname, $release);
+		$lang = undef;
 	}
 
 	$$lang{'itag'} = \@itag if $lang;

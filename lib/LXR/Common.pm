@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.19 1999/08/17 18:35:34 argggh Exp $
+# $Id: Common.pm,v 1.20 1999/08/19 14:05:33 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.19 1999/08/17 18:35:34 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.20 1999/08/19 14:05:33 argggh Exp $ ';
 
 use strict;
 
@@ -317,8 +317,8 @@ sub markupfile {
 	} 
 	elsif ($pathname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
 		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
-		&$outfun("<img src=\"$config->{virtroot}/source/".$dir. 
-				 &urlargs("raw=1").
+		&$outfun("<img src=\"$config->{virtroot}/source".
+				 $pathname.&urlargs("raw=1").
 				 "\" border=\"0\" alt=\"$pathname\">\n");
 		&$outfun("</tr></td></table></ul>");
 	} 
@@ -427,7 +427,15 @@ sub printhttp {
 	}
 
 	if ($HTTP->{'param'}->{'raw'}) {
-		print("Content-type: image/gif\n");	# FIXME: map exstension -> mime type
+		my %type = ('gif'	=> 'image/gif',
+					'html'	=> 'text/html');
+
+		if ($pathname =~ /\.([^.]+)$/ && $type{$1}) {
+			print("Content-type: ", $type{$1}, "\n");
+		}
+		else {
+			print("Content-Type: text/plain\n");
+		}
 	} 
 	else {
 		print("Content-Type: text/html; charset=iso-8859-1\n");
