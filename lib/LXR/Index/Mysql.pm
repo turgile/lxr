@@ -1,10 +1,10 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $
+# $Id: Mysql.pm,v 1.4 2001/05/23 01:08:19 mbox Exp $
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.4 2001/05/23 01:08:19 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -75,8 +75,9 @@ sub new {
 		 "from symbols s, files f, releases r, useage u ".
 		 "where s.symid = u.symid ".
 		 "and f.fileid = u.fileid ".
-		 "and f.fileid = r.fileid and ".
-		 " s.symname = ? and  r.release = ?");
+		 "and u.fileid = r.fileid and ".
+		 " s.symname = ? and  r.release = ?".
+		 " order by f.filename");
 
 	return $self;
 }
@@ -163,6 +164,7 @@ sub fileid {
 			($fileid) = $files_select->fetchrow_array();
 		}
 		$files{"$filename\t$revision"} = $fileid;
+		$files_select->finish();
 	}
 	return $fileid;
 }
