@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.45 2004/07/12 17:13:34 mbox Exp $
+# $Id: Common.pm,v 1.46 2004/07/13 13:39:44 brondsem Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.45 2004/07/12 17:13:34 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.46 2004/07/13 13:39:44 brondsem Exp $ ';
 
 use strict;
 
@@ -394,7 +394,6 @@ sub fixpaths {
 	return $node;
 }
 
-
 sub printhttp {
 
 	# Print out a Last-Modified date that is the larger of: the
@@ -407,8 +406,6 @@ sub printhttp {
 	# Made it stat all currently loaded modules.  -- agg.
 
 	# Todo: check lxr.conf.
-
-	print("HTTP/1.0 200 OK\n");
 
 	my $time = $files->getfiletime($pathname, $release);
 	my $time2 = (stat($config->confpath))[9];

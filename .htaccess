@@ -15,4 +15,5 @@ SetHandler perl-script
 PerlHandler Apache::Registry
 PerlSetEnv PERL5LIB lib
 ForceType text/html
+PerlSendHeader On
 </Files>
