@@ -1,10 +1,10 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.6 2001/08/04 19:09:43 mbox Exp $
+# $Id: Mysql.pm,v 1.7 2001/08/14 14:18:44 mbox Exp $
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.6 2001/08/04 19:09:43 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.7 2001/08/14 14:18:44 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -215,13 +215,6 @@ sub issymbol {
 	}
 
 	return $symid;
-}
-
-sub removesymbol {
-	my ($self, $symname) = @_;
-
-	delete $symcache{$symname};
-	$self->{symbols_remove}->execute($symname);
 }
 
 # If this file has not been indexed earlier, mark it as being indexed

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.5 2001/07/26 08:49:38 pok Exp $
+# $Id: Postgres.pm,v 1.6 2001/08/14 14:18:44 mbox Exp $
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.5 2001/07/26 08:49:38 pok Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.6 2001/08/14 14:18:44 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -229,13 +229,6 @@ sub issymbol {
 	}
 	
 	return $symcache{$symname};
-}
-
-sub removesymbol {
-	my ($self, $symname) = @_;
-
-	delete $symcache{$symname};
-	$symbols_remove->execute($symname);
 }
 
 # If this file has not been indexed earlier, mark it as being indexed

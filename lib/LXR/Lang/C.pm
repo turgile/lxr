@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.8 2001/08/04 18:27:28 mbox Exp $
+# $Id: C.pm,v 1.9 2001/08/14 14:18:44 mbox Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.8 2001/08/04 18:27:28 mbox Exp $ ';
+$CVSID = '$Id: C.pm,v 1.9 2001/08/14 14:18:44 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -49,15 +49,6 @@ sub processcode {
 			: $2)#ge;
 }
 
-sub removereserved {
-	my ($self) = @_;
-	my ($keyword);
-	
-	foreach $keyword (@reserved) {
-		$index->removesymbol($keyword);
-	}
-}
-
 sub indexfile {
 	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
@@ -99,7 +90,6 @@ sub indexfile {
 			   "--output=-",
 			   $path);
 	}
-#	$self->removereserved;
 }
 
 
