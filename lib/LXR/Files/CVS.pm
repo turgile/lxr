@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.10 1999/09/18 10:20:22 argggh Exp $
+# $Id: CVS.pm,v 1.11 1999/11/24 14:48:53 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.10 1999/09/18 10:20:22 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.11 1999/11/24 14:48:53 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -26,9 +26,13 @@ sub new {
 sub filerev {
 	my ($self, $filename, $release) = @_;
 
-	$self->parsecvs($filename);
-
-	return $cvs{'header'}{'symbols'}{$release};
+	if ($release =~ /rev_([\d\.]+)/) {
+		return $1;
+	}
+	else {
+		$self->parsecvs($filename);
+		return $cvs{'header'}{'symbols'}{$release};
+	}
 }								
 
 sub getfiletime {
@@ -38,7 +42,7 @@ sub getfiletime {
 
 	$self->parsecvs($filename);
 
-	my $rev = $cvs{'header'}{'symbols'}{$release};
+	my $rev = $self->filerev($filename, $release);
 
 	return undef unless defined($rev);
 
@@ -59,7 +63,7 @@ sub getfile {
 
 	$self->parsecvs($filename);
 
-	my $rev = $cvs{'header'}{'symbols'}{$release};
+	my $rev = $self->filerev($filename, $release);
 	return undef unless defined($rev);
 
 	my $hrev = $cvs{'header'}{'head'};
@@ -95,7 +99,7 @@ sub getannotations {
 
 	$self->parsecvs($filename);
 
-	my $rev = $cvs{'header'}{'symbols'}{$release};
+	my $rev = $self->filerev($filename, $release);
 	return undef unless defined($rev);
 
 	my $hrev = $cvs{'header'}{'head'};
@@ -209,8 +213,7 @@ sub dirempty {
 	closedir($DIRH);
 
 	foreach $node (@files) {
-		$self->parsecvs($pathname.$node);
-		return 0 if $cvs{'header'}{'symbols'}{$release};
+		return 0 if $self->filerev($pathname.$node, $release);
 	}
 
 	foreach $node (@dirs) {
