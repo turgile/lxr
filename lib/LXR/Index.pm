@@ -12,11 +12,11 @@ sub new {
     my ($index);
 
     if ($main::Conf->dbtype eq "dbi") {
-	$index = new LXR::Index::DBI($main::Conf->dbname);
+		$index = new LXR::Index::DBI($main::Conf->dbname);
     } elsif ($main::Conf->dbtype eq "db") {
-	$index = new LXR::Index::DB($main::Conf->dbname);
+		$index = new LXR::Index::DB($main::Conf->dbname);
     }
-    $index;
+    return $index;
 }
 
 1;

@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.2 1999/04/09 10:35:29 pergj Exp $
+# $Id: Local.pm,v 1.3 1999/05/11 20:50:47 pergj Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -11,8 +11,6 @@
 # different for each project.
 
 
-BEGIN { $_ = "/drivers/foo"; @_ = /(.)/g; print(STDERR "xxx2 ", join("*", @_), "\n"); }
-
 package Local;
 
 require Exporter;
@@ -22,7 +20,6 @@ require Exporter;
 use lib 'lib/';
 use LXR::Common;
 
-BEGIN { $_ = "/drivers/foo"; @_ = /(.)/g; print(STDERR "xxx3 ", join("*", @_), "\n"); }
 
 # dme: Create descriptions for a file in a directory listing
 # If no description, return the string "\&nbsp\;" to keep the

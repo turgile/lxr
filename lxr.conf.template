@@ -6,8 +6,8 @@
 # Define typed variable "arch".  First value is default.
 #variable: a, Architecture, (i386, alpha, m68k, mips, ppc, sparc, sparc64)
 
-baseurl: http://localhost
-virtroot: /~pergj/lxr2
+baseurl: http://lxr.linux.no/lxr2
+virtroot: /lxr2
 
 htmlhead: template-head
 htmltail: template-tail
@@ -16,16 +16,17 @@ htmldir:  template-dir
 sourcehead: template-source-head
 sourcedirhead: template-sourcedir-head
 
-sourceroot: /tmp/linux-src
+sourceroot: /local/lxr/lxr2/source
 srcrootname: Linux
 incprefix: /include
 
 #dbname: dbi:Pg:dbname=lxr
-dbname: /var/lxr
+dbname: /local/lxr/lxr2/
 #dbtype db or dbi
 dbtype: db
 
 glimpsebin: /info/lxr/bin/glimpse
+ctagsbin: /local/lxr/bin/ctags
 
 map: /include/asm[^\/]*/ /include/asm-$a/
 map: /arch/[^\/]+/ /arch/$a/

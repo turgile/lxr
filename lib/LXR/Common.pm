@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.2 1999/04/09 10:35:31 pergj Exp $
+# $Id: Common.pm,v 1.3 1999/05/11 20:50:48 pergj Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -645,8 +645,8 @@ sub init {
     foreach ($ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g) {
 	push(@a, &http_wash($_));
     }
-    $HTTP->{'param'} = {@a};
 
+    $HTTP->{'param'} = {@a};
     $HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'version'};
     $HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'arch'};
     $HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};

@@ -30,8 +30,7 @@ sub new {
 sub index {
 	my ($self, $symname, $release, $filename, $line, $type) = @_;
 
-	$$self{'index'}{$self->symid($symname, $release)} .=
-		join("\t", $filename, $line, $type, '');
+	join("", $$self{'index'}{$self->symid($symname, $release)}, join("\t", $filename, $line, $type, ''));
 }
 
 # Returns array of (fileid, line, type)
@@ -45,8 +44,8 @@ sub getindex {
 sub relate {
 	my ($self, $symname, $release, $rsymname, $reltype) = @_;
 
-	$$self{'relation'}{$self->symid($symname, $release)} .=
-		join("\t", $self->symid($rsymname, $release), $reltype, '');
+	join("", $$self{'relation'}{$self->symid($symname, $release)},
+		join("\t", $self->symid($rsymname, $release), $reltype, ''));
 }
 
 sub getrelations {
@@ -70,7 +69,8 @@ sub filename {
 sub release {
 	my ($self, $fileid) = @_;
 
-	return('2.0');
+	#FIXME
+	return('2.2.7');
 }
 
 sub symid {
@@ -87,3 +87,6 @@ sub issymbol {
 }
 
 1;
+
+
+

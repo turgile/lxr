@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.2 1999/04/09 10:35:30 pergj Exp $
+# $Id: source,v 1.3 1999/05/11 20:50:47 pergj Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -25,6 +25,7 @@
 
 use Local;
 use lib 'lib';
+use lib '/local/lxr/lib/perl5/site_perl';
 use SimpleParse;
 use LXR::Common;
 use LXR::Config;
@@ -103,7 +104,7 @@ sub filesize {
 
 sub modtime {
     my $current_time = time;
-    my $file_time = (stat($Path->{'real'}.$filename))[9];
+    my $file_time = $files->getfiletime($filename,$release);
     
     my @t = gmtime($file_time);
     
@@ -172,7 +173,7 @@ sub printdir {
     local @files;
     local $parentdir;
 
-
+    
     $template = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
     if ($Conf->htmldir) {
 	unless (open(TEMPL, $Conf->htmldir)) {
@@ -184,49 +185,32 @@ sub printdir {
 	    close(TEMPL);
 	}
     }
-	
-    if (opendir(DIR, $Path->{'real'})) {
-	foreach $f (sort(grep/^[^\.]/,readdir(DIR))) {
-	    if ($f eq "CVS") {
-		# skip it
-	    } elsif (-d $Path->{'real'}.$f) {
-		push(@dirs,"$f/");
-	    } else {
-		push(@files,$f);
-	    }
-	}
-	closedir(DIR);
-    } else {
-	print("<p align=center>\n<i>The directory $Path->{'real'} does not exist.</i>\n");
-	if ($Path->{'real'} =~ m#(.+[^/])[/]*$#) {
+    
+    if(!defined(@dirs = $files->getdir($pathname, $release)) {
+	print("<p align=center>\n<i>The directory $files->toreal($pathname, $release) does not exist.</i>\n");
+	#FIXME what does this do?
+	if ($files->toreal($pathname, $release) =~ m,(.+[^/])[/]*$, ) {
 	    if (-e $1) {
 		&warning("Unable to open ".$Path->{'real'});
 	    }
 	}
 	return;
     }
-    
-    if (-f $Path->{'real'}."00-INDEX") {
-	open(INDEX,$Path->{'real'}."00-INDEX") ||
-	    &warning("Existing \"00-INDEX\" could not be opened.");
-	$save = $/; undef($/);
-	$index = <INDEX>;
-	$/ = $save;
-	
-	%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
-    }
-
-    if ($Path->{'virt'} =~ m#^(.*/)[^/]*/$#) {
-	$parentdir = $1;
-	unshift(@dirs, '..');
-    }
-
-    # print the description of the current directory
-    dirdesc($Path->{'virt'});
-
-    # print the listing itself
-    print(&expandtemplate($template,
-			  ('files',	\&direxpand)));
+       
+       %index = $files->getindex($pathname, $release);
+       
+       if ($Path->{'virt'} =~ m#^(.*/)[^/]*/$#) {
+	   $parentdir = $1;
+	   unshift(@dirs, '..');
+       }
+       
+       # print the description of the current directory
+       dirdesc($Path->{'virt'});
+       
+       # print the listing itself
+       print(&expandtemplate($template,
+			     ('files',	\&direxpand)));
+   }
 }
 
 
@@ -265,14 +249,20 @@ sub printfile {
 
 ($Conf, $HTTP, $Path) = &init($0);
 
+my $files = new LXR::Files::Plain($Conf->sourceroot);
+my $index = new LXR::Index($Conf->dbname);
+
+$filename = $Path->{'virtf'};
+$release = $HTTP->{'param'}->{'version'};
+
 #if the file is html then don't print a header because the file
 #has its own 
 if (!($Path->{'file'} =~ /\.(html)$/)) {
     if ($Path->{'file'}) {
 	&makeheader('source');
-   } else {
+    } else {
 	&makeheader('sourcedir');
-   }
+    }
 }
 
 &printfile;

@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.2 1999/04/09 10:35:32 pergj Exp $
+# $Id: Config.pm,v 1.3 1999/05/11 20:50:48 pergj Exp $
 
 package LXR::Config;
 
@@ -105,6 +105,7 @@ sub _initialize {
 		     $dir eq 'dbtype' ||
 		     $dir eq 'bonsaihome' ||
 		     $dir eq 'glimpsebin' ||
+		     $dir eq 'ctagsbin' ||
 		     $dir eq 'htmlhead' ||
 		     $dir eq 'htmltail' ||
 		     $dir eq 'sourcehead' ||
@@ -233,6 +234,11 @@ sub dbtype {
 sub glimpsebin {
     my $self = shift;
     return($self->varexpand($self->{'glimpsebin'}));
+}
+
+sub ctagsbin {
+    my $self = shift;
+    return($self->varexpand($self->{'ctagsbin'}));
 }
 
 
