@@ -23,6 +23,7 @@ Pavel Hlavnicka <pavel@gingerall.cz>			CSS support
 Jason Dorie Short <jshort@devon.dhs.org>		File re-org
 Joseph Corral <joseph_corral@hp.com>
 Kristoffer Gleditsch <toffer@ping.uio.no>		Postgres patches
+Guido Sohne										Updated INSTALL document
 
 
 
@@ -31,4 +32,4 @@ To get your name added to this list, see:
  
    http://sf.net/projects/lxr
  
-Last updated: $Date: 2001/11/28 13:04:51 $
+Last updated: $Date: 2002/01/23 15:14:07 $
