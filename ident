@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.15 2002/03/18 14:55:43 mbox Exp $
+# $Id: ident,v 1.16 2004/07/01 14:24:16 brondsem Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.15 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: ident,v 1.16 2004/07/01 14:24:16 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -31,6 +31,8 @@ use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 use LXR::Common qw(:html);
 use Local;
 
+my $reference_hits;
+my $declare_hits;
 
 sub varinputs {
     my $ret = '';
@@ -49,9 +51,14 @@ sub refexpand {
 
     my @refs = $index->getindex($identifier, $release);
 
+    my $file_hits = 0;
+    my $last_file;
     my $def;
     foreach my $def (@refs) {
 	my ($file, $line, $type, $rel) = @$def;
+	$file_hits++ if $file ne $last_file;
+	$last_file = $file;
+	
 	$rel &&= "(member of ".idref($rel, "search-member", $rel).")";
 	$ret .= expandtemplate($templ,
 			       (file => sub { $file },
@@ -70,7 +77,7 @@ sub refexpand {
 # 		      $file, $line).
 # 	      " $rel</span>\n");
     }
-    
+    $declare_hits = "<br>" . scalar @refs . " declarations in $file_hits files.";
     return $ret;
 }
 
@@ -79,8 +86,12 @@ sub usesexpand {
     my $ret = '';
 
     my @uses = $index->getreference($identifier, $release);
+    my $file_hits = 0;
+    my $last_file;
     foreach my $ref (sort { $$a[0] cmp $$b[0] } @uses) {
 	my ($file, $line) = @$ref;
+	$file_hits++ if $file ne $last_file;
+	$last_file = $file;
 	$ret .= expandtemplate($templ,
 			       (
 				file => sub { $file },
@@ -91,7 +102,7 @@ sub usesexpand {
 				}
 			       ));
     }
-    
+    $reference_hits = "<br>" . scalar @uses . " references in $file_hits files.";
     return $ret;
 }
 
@@ -135,9 +146,11 @@ sub printident {
 						  identifier => sub { return $identifier },
 						  refs => sub { refexpand(@_) },
 						 )));
+    print $declare_hits;
 	print(expandtemplate($templ_refs,
 						 (uses => sub { usesexpand(@_) },
 						 )));
+    print $reference_hits;
 }
 
 
