@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.13 2000/07/26 07:50:21 pergj Exp $
+# $Id: Tagger.pm,v 1.14 2000/08/17 18:36:51 pergj Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.13 2000/07/26 07:50:21 pergj Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.14 2000/08/17 18:36:51 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -36,6 +36,8 @@ sub processfile {
 
 		$lang->indexfile($pathname, $path, $fileid, $index, $config);
 		unlink($path);
+	} else {
+		print(STDERR "$pathname was already indexed\n");
 	}
   } else { print(STDERR " **** FAILED ****\n"); }
 }

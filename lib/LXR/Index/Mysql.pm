@@ -1,10 +1,10 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.1 1999/12/25 21:58:28 pergj Exp $
+# $Id: Mysql.pm,v 1.2 2000/08/17 18:36:52 pergj Exp $
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.1 1999/12/25 21:58:28 pergj Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.2 2000/08/17 18:36:52 pergj Exp $ ';
 
 use strict;
 use DBI;
@@ -21,7 +21,7 @@ sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	$dbh = DBI->connect($dbname, "root");
+	$dbh = DBI->connect($dbname, "root") || die "Can't open connection to database\n";
 #	$$dbh{'AutoCommit'} = 0;
 #	$dbh->trace(1);
 
@@ -180,7 +180,8 @@ sub symid {
 	my ($self, $symname) = @_;
 	my ($symid);
 
-	unless (defined($symid = $symcache{$symname})) {
+	$symid = $symcache{$symname};
+	unless (defined($symid)) {
 		$symbols_byname->execute($symname);
 		($symid) = $symbols_byname->fetchrow_array();
 		unless ($symid) {
@@ -191,6 +192,7 @@ sub symid {
 		}
 		$symcache{$symname} = $symid;
 	}
+
 	return $symid;
 }
 
@@ -208,12 +210,13 @@ sub issymbol {
 	my ($self, $symname) = @_;
 	my ($symid);
 
-	unless (exists($symcache{$symname})) {
+	$symid = $symcache{$symname};
+	unless (defined($symid)) {
 		$symbols_byname->execute($symname);
 		($symid) = $symbols_byname->fetchrow_array();
-		$symcache{$symname}  = $symid;
+		$symcache{$symname} = $symid;
 	}
-	
+
 	return $symid;
 }
 
@@ -260,10 +263,11 @@ sub END {
 	$usage_select = undef;
 
 #	$dbh->commit();
-	$dbh->disconnect();
-	$dbh = undef;
+	if($dbh) {
+		$dbh->disconnect();
+		$dbh = undef;
+	}
 }
 
 
 1;
-

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.11 1999/12/25 21:58:28 pergj Exp $
+# $Id: SimpleParse.pm,v 1.12 2000/08/17 18:36:51 pergj Exp $
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.11 1999/12/25 21:58:28 pergj Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.12 2000/08/17 18:36:51 pergj Exp $ ';
 
 use strict;
 use integer;
@@ -73,9 +73,13 @@ sub nextfrag {
     my $frag = undef;
 	my $line = '';
 
+#	print "nextfrag called\n";
+
     while (1) {
+
+		# read one more line if we have processed 
+		# all of the previously read line
 		if ($#frags < 0) {
-#	    my $line = $1 if $buffer =~ s/([^\n]*\n*)//;
 			$line = $fileh->getline;
 			
 			if ($. <= 2 &&
@@ -84,42 +88,59 @@ sub nextfrag {
 			}
 			
 #			&untabify($line, $tabwidth); # We inline this for performance.
-
+			
 			# Optimize for common case.
-			$line =~ s/^(\t+)/' ' x ($tabwidth * length($1))/ge;
-			$line =~ s/([^\t]*)\t/$1.(' ' x ($tabwidth - (length($1) % $tabwidth)))/ge;
-
-			@frags = split(/($split)/, $line);
+			if(defined($line)) {
+				$line =~ s/^(\t+)/' ' x ($tabwidth * length($1))/ge;
+				$line =~ s/([^\t]*)\t/$1.(' ' x ($tabwidth - (length($1) % $tabwidth)))/ge;
+				
+				# split the line into fragments
+				@frags = split(/($split)/, $line);
+			}
 		}
 
 		last if $#frags < 0;
 		
+		# skip empty fragments
 		if ($frags[0] eq '') {
 			shift(@frags);
 		}
+
+		# check if we are inside a fragment
 		if (defined($frag)) {
 			if (defined($btype)) {
 				my $next = shift(@frags);
 				
+				# Add to the fragment
 				$frag .= $next;
+				# We are done if this was the terminator
 				last if $next =~ /^$term[$btype]$/;
 
 			}
 			else {
-				last if $frags[0] =~ /^$open$/;
+				if ($frags[0] =~ /^$open$/) {
+#					print "encountered open token while btype was $btype\n";
+					last;
+				}
 				$frag .= shift(@frags);
 			}
 		}
 		else {
+#			print "start of new fragment\n";
+			# Find the blocktype of the current block
 			$frag = shift(@frags);
 			if (defined($frag) && (@_ = $frag =~ /^$open$/)) {
+#				print "hit\n";
 				# grep in a scalar context returns the number of times
 				# EXPR evaluates to true, which is this case will be
 				# the index of the first defined element in @_.
 
 				my $i = 1;
 				$btype = grep { $i &&= !defined($_) } @_;
-				last unless $term[$btype];
+				if(!defined($term[$btype])) {
+					print "fragment without terminator\n";
+					last;
+				}
 			}
 		}
     }

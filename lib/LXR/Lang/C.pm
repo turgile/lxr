@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.4 2000/07/26 07:50:22 pergj Exp $
+# $Id: C.pm,v 1.5 2000/08/17 18:36:52 pergj Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.4 2000/07/26 07:50:22 pergj Exp $ ';
+$CVSID = '$Id: C.pm,v 1.5 2000/08/17 18:36:52 pergj Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -99,11 +99,12 @@ sub referencefile {
 	while (defined($frag)) {
 		@lines = ($frag =~ /(.*?\n)/g, $frag =~ /[^\n]*$/);
 
-		if (!defined($btype)) { 
-			print "\nBTYPE error in $frag"; 
-		}
-		if($btype eq 'comment' or $btype eq 'string' or $btype eq 'include') {
-			$linenum += @lines - 1;
+		if(defined($btype)) {
+			if($btype eq 'comment' or $btype eq 'string' or $btype eq 'include') {
+				$linenum += @lines - 1;
+			} else {
+				print "BTYPE was: $btype\n";
+			}
 		}
 		else {
 			my $l;
@@ -112,8 +113,12 @@ sub referencefile {
   						 (\~?_*[a-zA-Z][a-zA-Z0-9_]*) # The symbol.
   						 \b/ogx)
   				{
-  					$index->reference($_, $fileid, $linenum)
-  						if $index->issymbol($_);
+#					print "considering $_\n";
+					if($index->issymbol($_)) {
+#						print "adding $_ to references\n";
+						$index->reference($_, $fileid, $linenum);
+					}
+
 				}
 				
   				$linenum++;
