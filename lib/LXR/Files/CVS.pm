@@ -1,14 +1,17 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id $
+# $Id: CVS.pm,v 1.5 1999/05/24 21:53:38 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.4 1999/05/22 14:41:03 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.5 1999/05/24 21:53:38 argggh Exp $ ';
 
 use strict;
 use FileHandle;
+use Time::Local;
 use LXR::Common;
+
+use vars qw(%cvs @cacheinfo);
 
 sub new {
 	my ($self, $rootpath) = @_;
@@ -23,43 +26,49 @@ sub new {
 sub filerev {
 	my ($self, $filename, $release) = @_;
 
-	(my $rel = $release) =~ s/\./_/g; # Configurable?
-	$rel = 'v'.$rel;
+	$self->parsecvs($filename, $release);
 
-	my $cvs = $self->parsecvs($filename, $release);
-	return $$cvs{'header'}{'symbols'}{$rel};
+	return $cvs{'header'}{'symbols'}{$release};
 }								
 
 sub getfiletime {
 	my ($self, $filename, $release) = @_;
 
-	return (stat($self->toreal($filename, $release)))[9];
+	return 0 if $self->isdir($filename, $release);
+
+	$self->parsecvs($filename, $release);
+
+	my $rev = $cvs{'header'}{'symbols'}{$release};
+
+	return undef unless defined($rev);
+
+	my @t = reverse(split(/\./, $cvs{'branch'}{$rev}{'date'}));
+	$t[4]--;
+
+	return timegm(@t);
 }
 
 sub getfilesize {
 	my ($self, $filename, $release) = @_;
 
-	return -s $self->toreal($filename, $release);
+	return length($self->getfile($filename, $release));
 }
 
 sub getfile {
 	my ($self, $filename, $release) = @_;
 
-	my $cvs = $self->parsecvs($filename, $release);
+	$self->parsecvs($filename, $release);
 
-	(my $rel = $release) =~ s/\./_/g; # Configurable?
-	$rel = 'v'.$rel;
-
-	my $rev = $$cvs{'header'}{'symbols'}{$rel};
+	my $rev = $cvs{'header'}{'symbols'}{$release};
 	return undef unless defined($rev);
 
-	my $hrev = $$cvs{'header'}{'head'};
-	my @head = $$cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
+	my $hrev = $cvs{'header'}{'head'};
+	my @head = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
 
-	while ($hrev ne $rev && $$cvs{'branch'}{$hrev}{'branches'} ne $rev) {
-		$hrev = $$cvs{'branch'}{$hrev}{'next'};
-		my @diff = $$cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
-		my $off = 0;
+	while ($hrev ne $rev && $cvs{'branch'}{$hrev}{'branches'} ne $rev) {
+		$hrev = $cvs{'branch'}{$hrev}{'next'};
+		my @diff = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
+ 		my $off = 0;
 
 		while (@diff) {
 			my $dir = shift(@diff);
@@ -73,7 +82,7 @@ sub getfile {
 				$off += $2;
 			}
 			else {
-				warning("Oops!  Out of sync!");
+				warning("Oops! Out of sync!");
 			}
 		}
 	}
@@ -91,7 +100,7 @@ sub getfilehandle {
 
 	my $buffer = $self->getfile($filename, $release);
 
-	fflush;
+	&LXR::Common::fflush;
 	my ($readh, $writeh) = FileHandle::pipe;
 	unless (fork) {
 		$writeh->autoflush(1);
@@ -116,35 +125,62 @@ sub tmpfile {
 	return $tmp;
 }
 
-sub getdir {
+sub dirempty {
 	my ($self, $pathname, $release) = @_;
-	my ($dir, $node, @dirs, @files);
-	my ($DIR);
+	my ($node, @dirs, @files);
+	my $DIRH = new IO::Handle;
+	my $real = $self->toreal($pathname, $release);
 
-#	print(STDERR "Foo: $pathname $release\n");
-
-	$DIR = new IO::Handle;
-
-	$dir = $self->toreal($pathname, $release);
-	opendir($DIR, $dir) || return ();
-	while (defined($node = readdir($DIR))) {
+	opendir($DIRH, $real) || return 1;
+	while (defined($node = readdir($DIRH))) {
 		next if $node =~ /^\.|~$|\.orig$/;
 		next if $node eq 'CVS';
 
-		if (-d $dir.$node) {
+		if (-d $real.$node) {
+			push(@dirs, $node.'/'); 
+		}
+		elsif ($node =~ /(.*),v$/) {
+			push(@files, $1);
+		}
+	}
+	closedir($DIRH);
+
+	foreach $node (@files) {
+		$self->parsecvs($pathname.$node, $release);
+		return 0 if $cvs{'header'}{'symbols'}{$release};
+	}
+
+	foreach $node (@dirs) {
+		return 0 unless $self->dirempty($pathname.$node, $release);
+	}
+	return 1;
+}
+
+sub getdir {
+	my ($self, $pathname, $release) = @_;
+	my ($node, @dirs, @files);
+	my $DIRH = new IO::Handle;
+	my $real = $self->toreal($pathname, $release);
+
+	opendir($DIRH, $real) || return ();
+	while (defined($node = readdir($DIRH))) {
+		next if $node =~ /^\.|~$|\.orig$/;
+		next if $node eq 'CVS';
+
+		if (-d $real.$node) {
 			if ($node eq 'Attic') {
 				push(@files, $self->getdir($pathname.$node.'/', $release));
 			}
 			else {
 				push(@dirs, $node.'/') 
-					if ($self->getdir($pathname.$node.'/', $release))[0];
+					unless $self->dirempty($pathname.$node.'/', $release);
 			}
 		}
 		elsif ($node =~ /(.*),v$/) {
-			push(@files, $1); # if release.
+			push(@files, $1) if $self->getfiletime($pathname.$1, $release);
 		}
 	}
-	closedir($DIR);
+	closedir($DIRH);
 
 	return (sort(@dirs), sort(@files));
 }
@@ -178,51 +214,48 @@ sub isfile {
 
 sub getindex {
 	my ($self, $pathname, $release) = @_;
-	my ($save, $index, %index);
-	my $indexname = $self->toreal($pathname, $release)."00-INDEX";
 
-	if (-f $indexname) {
-		open(INDEX, $indexname) || &warning("Existing $indexname could not be opened.");
-		$save = $/; undef($/);
-		$index = <INDEX>;
-		$/ = $save;
+	my $index = $self->getfile($pathname, $release);
 
-		%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
-	}
-	return %index;
+	return $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
 }
-
 
 sub parsecvs {
 	my ($self, $filename, $release) = @_;
+
+	return if @cacheinfo == ($filename, $release);
+	@cacheinfo = ($filename, $release);
 
 	open(CVS, $self->toreal($filename, $release));
 	my @cvs = join('', <CVS>) =~ /((?:(?:[^\n@]+|@[^@]*@)\n?)+)/gs;
 	close(CVS);
 
-	my %ret;
-
-	$ret{'header'} = { map { s/^@|@($|@)/$1/gs; $_ }
+	$cvs{'header'} = { map { s/@@/@/gs; /^@/s && substr($_, 1, -1) || $_ }
 					   shift(@cvs) =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
-	$ret{'header'}{'symbols'}
-	= { $ret{'header'}{'symbols'} =~ /(\S+?):(\S+)/g };
+	$cvs{'header'}{'symbols'}
+	= { $cvs{'header'}{'symbols'} =~ /(\S+?):(\S+)/g };
+
+	my ($rel, $rev);
+	while (($rel, $rev) = each %{$cvs{'header'}{'symbols'}}) {
+		$rel =~ s/^v//;
+		$rel =~ s/_/./g;
+		$cvs{'header'}{'symbols'}{$rel} = $rev;
+	}
 
 	while (@cvs && $cvs[0] !~ /\s*desc/s) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$ret{'branch'}{$r} = { map { s/^@|@($|@)/$1/gs; $_ }
+		$cvs{'branch'}{$r} = { map { s/@@/@/gs; /^@/s && substr($_, 1, -1) || $_ }
 							   $v =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
 	}
 	
-	$ret{'desc'} = shift(@cvs) =~ /\s*desc\s+((?:[^\n@]+|@[^@]*@)*)\n/s;
-	$ret{'desc'} =~ s/^@|@($|@)/$1/gs;
+	$cvs{'desc'} = shift(@cvs) =~ /\s*desc\s+((?:[^\n@]+|@[^@]*@)*)\n/s;
+	$cvs{'desc'} =~ s/^@|@($|@)/$1/gs;
 
 	while (@cvs) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$ret{'history'}{$r} = { map { s/^@|@($|@)/$1/gs; $_ }
+		$cvs{'history'}{$r} = { map { s/@@/@/gs; /^@/s && substr($_, 1, -1) || $_ }
 								$v =~ /(\w+)\s*((?:[^\n@]+|@[^@]*@)*)\n/gs };
 	}
-
-	return \%ret;
 }
 
 

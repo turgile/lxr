@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.14 1999/05/22 14:41:00 argggh Exp $
+# $Id: source,v 1.15 1999/05/24 21:53:32 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,21 +23,13 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.14 1999/05/22 14:41:00 argggh Exp $ ';
+$CVSID = '$Id: source,v 1.15 1999/05/24 21:53:32 argggh Exp $ ';
 
 use strict;
-
-use Local;
 use lib 'lib';
-use lib '/local/lxr/lib/perl5/site_perl';
-use SimpleParse;
-use LXR::Common;
-use LXR::Config;
-use LXR::Files;
-use LXR::Index;
-use LXR::Lang;
 
-use vars qw($files $index $Path $HTTP $release);
+use LXR::Common qw(:html);
+use Local;
 
 sub diricon {
     my ($templ, $node, $dir) = @_;
@@ -157,7 +149,8 @@ sub direxpand {
 	#FIXME what does this do?
 	if ($files->toreal($dir, $release) =~ m#(.+[^/])[/]*$# ) {
 	    if (-e $1) {
-		warning("Unable to open ".$Path->{'real'});
+		warning("Unable to open ".
+			$files->toreal($dir, $release));
 	    }
 	}
 	return;
@@ -201,9 +194,9 @@ sub printdir {
     my $templ;
     
     $templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
-    if ($Conf->htmldir) {
-	unless (open(TEMPL, $Conf->htmldir)) {
-	    warning("Template ".$Conf->htmldir." does not exist.");
+    if ($config->htmldir) {
+	unless (open(TEMPL, $config->htmldir)) {
+	    warning("Template ".$config->htmldir." does not exist.");
 	} else {
 	    local($/) = undef;
 	    $templ = <TEMPL>;
@@ -221,13 +214,13 @@ sub printdir {
 
 
 sub printfile {
-    my ($node, $raw) = @_;
+    my $raw = shift;
 
-    if ($node =~ /\/$/) {
-	printdir($node);
+    if ($pathname =~ m|/$|) {
+	printdir($pathname);
     }
     else {
-	my $fileh = $files->getfilehandle($node, $release);
+	my $fileh = $files->getfilehandle($pathname, $release);
 
 	if ($fileh) {
 	    if ($raw) {
@@ -240,39 +233,32 @@ sub printfile {
 #	    } 
 	    else {
 		print("<pre>");
-		markupfile($fileh, $node, $index,
-			   $Path->{'file'}, sub { print shift });
+		markupfile($fileh, sub { print shift });
 		print("</pre>");
 	    }
 
 	} 
 	else {
-	    print("\<p align=center>\n<i>The file $node does not exist.</i>\n");
-	    if (-f $Path->{'real'}.$Path->{'file'}) {
-		warning("Unable to open ".$Path->{'realf'});
+	    print("\<p align=center>\n<i>The file $pathname does not exist.</i>\n");
+	    if (-f $files->toreal($pathname, $release)) {
+		warning("Unable to open ".$files->toreal($pathname, $release));
 	    }
 	}
     }
 }
 
-($Conf, $HTTP, $Path) = init($0);
 
-$files = new LXR::Files($Conf->sourceroot);
-$index = new LXR::Index($Conf->dbname);
-
-$release = $Conf->variable('v');
+httpinit;
 
 
-# If the file is html then don't print a header because the file
-# has its own .
-
-if ($Path->{'file'} =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {
-    printfile($Path->{'virtf'}, 1);
+# If the file is html then simply pump it out.
+if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {
+    printfile(1);
 }
 else {
-    my $type = ($Path->{'file'} ? 'source' : 'sourcedir');
+    my $type = ($pathname !~ m|/$| ? 'source' : 'sourcedir');
     
     makeheader($type);
-    printfile($Path->{'virtf'}, 0);
+    printfile(0);
     makefooter($type);
 }

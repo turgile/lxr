@@ -1,24 +1,25 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.2 1999/05/16 23:48:27 argggh Exp $
+# $Id: Lang.pm,v 1.3 1999/05/24 21:53:36 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.2 1999/05/16 23:48:27 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.3 1999/05/24 21:53:36 argggh Exp $ ';
 
 use strict;
+use LXR::Common;
 
 sub new {
-	my ($self, $fname, @itag) = @_;
+	my ($self, $pathname, $release, @itag) = @_;
 	my $lang;
 
-	if ($fname =~ /\.([ch]|cpp?|cc)$/i) {
+	if ($pathname =~ /\.([ch]|cpp?|cc)$/i) {
 #		require LXR::Lang::C;
-		$lang = new LXR::Lang::C($fname);
+		$lang = new LXR::Lang::C($pathname, $release);
 	}
-	elsif ($fname =~ /\.java$/i) {
+	elsif ($pathname =~ /\.java$/i) {
 #		require LXR::Lang::Java;
-		$lang = new LXR::Lang::Java($fname);
+		$lang = new LXR::Lang::Java($pathname, $release);
 	}
 	else {
 		$lang = undef;
@@ -33,10 +34,15 @@ sub new {
 # C
 package LXR::Lang::C;
 
+use strict;
+use LXR::Common;
+
 sub new {
-	my ($self, $fname) = @_;
+	my ($self, $pathname, $release) = @_;
 
 	$self = bless({}, $self);
+
+	$$self{'release'} = $release;
 
 	return $self;
 }
@@ -45,7 +51,7 @@ sub processcode {
 	my ($self, $code, @itag) = @_;
 
 	$$code =~ s#(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
-		$1.($main::index->issymbol($2, $main::release) 
+		$1.($index->issymbol($2, $$self{'release'}) 
 			? join($2, @{$$self{'itag'}})
 			: $2)#ge;
 }
@@ -91,20 +97,20 @@ sub processcode {
 	my ($self, $code, @itag) = @_;
 	
 	$$code =~ s/(?:\A|\b)import\s+($identdot\.)\*\s*\;/
-		push (@import_stars, $1); $&;
+		push (@import_stars, $1); # $&; # What's the point of this?
 	/goexs;
 
 	$$code =~ s/(?:\A|\b)import\s+($identdot\.)($ident)\s*\;/
-		$import_specifics{$2} = $1.$2; $&;
+		$import_specifics{$2} = $1.$2; # $&;
 	/goexs;
 
 	$$code =~ s/(?:\A|\b)package\s+($identdot)\s*\;/
-		$java_package = "$1."; push (@import_stars, $java_package); $&;
+		$java_package = "$1."; push (@import_stars, $java_package); # $&;
 	/goexs;
 
 	$$code =~ s/(?:\A|\b)(?:class|interface)\s+($ident)
 		(?:\s+extends\s+$identdot|\s+implements\s+$identdot)*\s+\{/
-			$java_class = $import_specifics{$1} = $java_package.$1; $&;
+			$java_class = $import_specifics{$1} = $java_package.$1; # $&;
 	/goexs;
 
 #	#fix vi % command: }

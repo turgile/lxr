@@ -17,16 +17,14 @@ GetOptions(\%option, "url=s", "version=s", "allurls!", "allversions!");
 die("URL and version must be specified") 
 	unless $option{'url'} && $option{'version'};
 
-$Conf = new LXR::Config($option{'url'});
+my $config = new LXR::Config($option{'url'});
 
-die("No matching configuration") unless $Conf->sourceroot;
+die("No matching configuration") unless $config->sourceroot;
 
-my $files = new LXR::Files($Conf->sourceroot);
-my $index = new LXR::Index($Conf->dbname);
+my $files = new LXR::Files($config->sourceroot);
+my $index = new LXR::Index($config->dbname);
 
 genxref('/', $option{'version'});
-
-$index->commit;
 
 sub genxref {
 	my ($pathname, $release) = @_;
@@ -40,7 +38,7 @@ sub genxref {
 	}
 	else {
 		&LXR::Tagger::processfile($pathname, $release, 
-								  $Conf, $files, $index);
+								  $config, $files, $index);
 	}
 }
 

@@ -1,32 +1,42 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.11 1999/05/21 13:16:56 argggh Exp $
+# $Id: Common.pm,v 1.12 1999/05/24 21:53:35 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.11 1999/05/21 13:16:56 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.12 1999/05/24 21:53:35 argggh Exp $ ';
 
 use strict;
 
-use lib '../..';
-use Local;
-
 require Exporter;
 
-use vars qw(@ISA @EXPORT $wwwdebug %type_names @cterm $Conf $Path $HTTP $identifier);
-@ISA = qw(Exporter);
-@EXPORT = qw(&warning &fatal &abortall &fflush &urlargs 
-			 &fileref &idref &incref &htmlquote &freetextmarkup &markupfile
-			 &markupstring &init &makeheader &makefooter &expandtemplate
-			 %type_names);
+use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS 
+			$files $index $config $pathname $identifier $release
+			$HTTP %type_names $wwwdebug @cterm);
+
+@ISA		= qw(Exporter);
+
+@EXPORT		= qw($files $index);
+@EXPORT_OK	= qw($files $index $config $pathname $identifier $release
+				 $HTTP %type_names
+				 &warning &fatal &abortall &fflush &urlargs &fileref
+				 &idref &incref &htmlquote &freetextmarkup &markupfile
+				 &markupstring &httpinit &makeheader &makefooter
+				 &expandtemplate);
+%EXPORT_TAGS = ('html' => [ @EXPORT_OK ]);
+
+
+require Local;
+require SimpleParse;
+require LXR::Config;
+require LXR::Files;
+require LXR::Index;
+require LXR::Lang;
 
 
 $wwwdebug = 1;
-
-$SIG{__WARN__} = 'warning';
-$SIG{__DIE__}  = 'fatal';
 
 %type_names = 
 	(
@@ -96,9 +106,9 @@ sub urlargs {
 	}
 	@args = ();
 
-	foreach ($Conf->allvariables) {
-		$val = $args{$_} || $Conf->variable($_);
-		push(@args, "$_=$val") unless ($val eq $Conf->vardefault($_));
+	foreach ($config->allvariables) {
+		$val = $args{$_} || $config->variable($_);
+		push(@args, "$_=$val") unless ($val eq $config->vardefault($_));
 		delete($args{$_});
 	}
 
@@ -116,7 +126,7 @@ sub fileref {
 	# jwz: URL-quote any special characters.
 	$path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 	
-	return ("<a href=\"$Conf->{virtroot}/source$path".
+	return ("<a href=\"$config->{virtroot}/source$path".
 			&urlargs(@args).
 			($line > 0 ? "#$line" : "").
 			"\"\>$desc</a>");
@@ -128,7 +138,7 @@ sub diffref {
 	my $dval;
 
 	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
-	return ("<a href=\"$Conf->{virtroot}/diff$path".
+	return ("<a href=\"$config->{virtroot}/diff$path".
 			&urlargs(($darg ? "diffvar=$darg" : ""),
 					 ($dval ? "diffval=$dval" : "")).
 			"\"\>$desc</a>");
@@ -137,7 +147,7 @@ sub diffref {
 
 sub idref {
 	my ($desc, $id, @args) = @_;
-	return ("<a href=\"$Conf->{virtroot}/ident".
+	return ("<a href=\"$config->{virtroot}/ident".
 			&urlargs(($id ? "i=$id" : ""),
 					 @args).
 			"\"\>$desc</a>");
@@ -148,12 +158,12 @@ sub incref {
 	my ($name, @paths) = @_;
 	my $file;
 
-	push(@paths, $Conf->incprefix);
+	push(@paths, $config->incprefix);
 
 	foreach $file (@paths) {
 		$file =~ s/\/+$//;
-		$file = $Conf->mappath($file."/".$name);
-		return &fileref($name, $file) if $main::files->isfile($file, $main::release);
+		$file = $config->mappath($file."/".$name);
+		return &fileref($name, $file) if $files->isfile($file, $release);
 		
 	}
 	
@@ -209,7 +219,7 @@ sub markupstring {
 	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
 	
 	# HTMLify file names, assuming file is in the current directory.
-	$string =~ s#\b(([\w-_\/]+\.(c|h|cc|cp|cpp|java))|README)\b#<a href=\"$Conf->{virtroot}/source$virtp$1\">$1</a>#g;
+	$string =~ s#\b(([\w-_\/]+\.(c|h|cc|cp|cpp|java))|README)\b#<a href=\"$config->{virtroot}/source$virtp$1\">$1</a>#g;
 	
 	return($string);
 }
@@ -253,24 +263,25 @@ sub freetextmarkup {
 
 
 sub markupfile {
-	my ($fileh, $virtp, $index, $fname, $outfun) = @_;
+	my ($fileh, $outfun) = @_;
+	my ($dir) = $pathname =~ m|^(.*/)|;
 
 	my $line = '001';
-	my @ltag = &fileref(1, $virtp.$fname, 1) =~ /^(<a)(.*\#)1(\">)1(<\/a>)$/;
+	my @ltag = &fileref(1, $pathname, 1) =~ /^(<a)(.*\#)1(\">)1(<\/a>)$/;
 	$ltag[0] .= ' name=';
 	$ltag[3] .= ' ';
 	
 	my @itag = &idref(1, 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 
-	my $lang = new LXR::Lang($fname, @itag);
+	my $lang = new LXR::Lang($pathname, $release, @itag);
 
 	# A source code file
 	if ($lang) {
 		&SimpleParse::init($fileh, @cterm);
 
-		&$outfun(join($line++, @ltag));
-
 		my ($btype, $frag) = &SimpleParse::nextfrag;
+
+		&$outfun(join($line++, @ltag)) if defined($frag);
 		
 		while (defined($frag)) {
 			&markspecials($frag);
@@ -289,7 +300,7 @@ sub markupfile {
 			elsif ($btype eq 'include') { 
 				# Include directive
 				$frag =~ s#(\")(.*?)(\")#
-					$1.&incref($2, $virtp).$3#e;
+					$1.&incref($2, $dir).$3#e;
 				$frag =~ s#(\0<)(.*?)(\0>)#
 					$1.&incref($2).$3#e;
 			} 
@@ -306,15 +317,15 @@ sub markupfile {
 			($btype, $frag) = &SimpleParse::nextfrag;
 		}
 	} 
-	elsif ($fname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
+	elsif ($pathname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
 		&$outfun("</pre>");
 		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
-		&$outfun("<img src=\"$Conf->{virtroot}/source/".$virtp. 
+		&$outfun("<img src=\"$config->{virtroot}/source/".$dir. 
 				 &urlargs("raw=1").
-				 "\" border=\"0\" alt=\"$fname\">\n");
+				 "\" border=\"0\" alt=\"$pathname\">\n");
 		&$outfun("</tr></td></table></ul><pre>");
 	} 
-	elsif ($fname eq 'CREDITS') {
+	elsif ($pathname =~ m|/CREDITS$|) {
 		while (defined($_ = $fileh->getline)) {
 			&SimpleParse::untabify($_);
 			&markspecials($_);
@@ -327,44 +338,28 @@ sub markupfile {
 		}
 	} 
 	else {
-		my $first_line = $fileh->getline;
-		my $is_binary = -1;
+		return unless defined ($_ = $fileh->getline);
 
-		return unless defined($first_line);
-		
-		$_ = $first_line;
-		if ( m/^\#!/ ) {				# it's a script
-			$is_binary = 0;
-		} 
-		elsif ( m/-\*-.*mode:/i ) {		# has an emacs mode spec
-			$is_binary = 0;
-		} 
-		elsif (length($_) > 132) {		# no linebreaks
-			$is_binary = 1;
-		} 
-		elsif ( m/[\000-\010\013\014\016-\037\200-Ÿ]/ ) {	# ctrl or ctrl+
-			$is_binary = 1;
-		} 
-		else {							# no idea, but assume text.
-			$is_binary = 0;
-		}
-		
-		if ($is_binary ) {
+		# If it's not a script or something with an Emacs spec header and
+		# the first line is very long or containts control characters...
+		if (! /^\#!/ && ! /-\*-.*-\*-/i &&
+			(length($_) > 132 || /[\000-\010\013\014\016-\037\200-Ÿ]/)) 
+		{
+			# We postulate that it's a binary file.
 			&$outfun("</pre>");
 			&$outfun("<ul><b>Binary File: ");
 			
 			# jwz: URL-quote any special characters.
-			my $uname = $fname;
+			my $uname = $pathname;
 			$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 			
-			&$outfun("<a href=\"$Conf->{virtroot}/source".$virtp.$uname.
+			&$outfun("<a href=\"$config->{virtroot}/source".$uname.
 					 &urlargs("raw=1")."\">");
-			&$outfun("$fname</a></b>");
+			&$outfun("$pathname</a></b>");
 			&$outfun("</ul><pre>");
 			
 		} 
 		else {
-			$_ = $first_line;
 			do {
 				&SimpleParse::untabify($_);
 				&markspecials($_);
@@ -379,29 +374,76 @@ sub markupfile {
 
 
 sub fixpaths {
-	$Path->{'virtf'} = '/'.shift;
-	$Path->{'root'} = $Conf->sourceroot;
+	my $node = '/'.shift;
 	
-	while ($Path->{'virtf'} =~ s|/[^/]+/\.\./|/|g) {}
-	$Path->{'virtf'} =~ s|/\.\./|/|g;
+	while ($node =~ s|/[^/]+/\.\./|/|g) {}
+	$node =~ s|/\.\./|/|g;
 	
-	$Path->{'virtf'} .= '/' if (-d $Path->{'root'}.$Path->{'virtf'});
-	$Path->{'virtf'} =~ s|//+|/|g;
+	$node .= '/' if $files->isdir($node);
+	$node =~ s|//+|/|g;
 	
-	($Path->{'virt'}, $Path->{'file'}) = $Path->{'virtf'} =~ m|^(.*/)([^/]*)$|;
-
-	$Path->{'real'} = $Path->{'root'}.$Path->{'virt'};
-	$Path->{'realf'} = $Path->{'root'}.$Path->{'virtf'};
+	return $node;
 }
 
 
-# init - Returns the array ($Conf, $HTTP, $Path)
+sub printhttp {
+
+	# Print out a Last-Modified date that is the larger of: the
+	# underlying file that we are presenting; and the "source" script
+	# itself (passed in as an argument to this function.)  If we can't
+	# stat either of them, don't print out a L-M header.  (Note that this
+	# stats lxr/source but not lxr/lib/LXR/Common.pm.  Oh well, I can
+	# live with that I guess...)	-- jwz, 16-Jun-98
+	
+	# Made it stat all currently loaded modules.  -- agg.
+
+	my $time = $files->getfiletime($pathname, $release);
+	my %mods = ('main' => $0, %INC);
+	my ($mod, $path, $time2);
+	
+	while (($mod, $path) = each %mods) {
+		$mod  =~ s/.pm$//;
+		$mod  =~ s|/|::|g;
+		$path =~ s|/+|/|g;
+
+		no strict 'refs';
+		next unless $ {$mod.'::CVSID'};
+
+		$time2 = (stat($path))[9];
+		$time = $time2 if $time2 > $time;
+	}
+
+	if ($time > 0) {
+		my ($sec, $min, $hour, $mday, $mon, $year,$wday) = gmtime($time);
+		my @days = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+		my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+					  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+		$year += 1900;
+		$wday = $days[$wday];
+		$mon = $months[$mon];
+		# Last-Modified: Wed, 10 Dec 1997 00:55:32 GMT
+		printf("Last-Modified: %s, %2d %s %d %02d:%02d:%02d GMT\n",
+			   $wday, $mday, $mon, $year, $hour, $min, $sec);
+	}
+
+	if ($HTTP->{'param'}->{'raw'}) {
+		print("Content-type: image/gif\n");	# FIXME: map exstension -> mime type
+	} 
+	else {
+		print("Content-Type: text/html; charset=iso-8859-1\n");
+	}
+
+	# Close the HTTP header block.
+	print("\n");
+}
+
+# init - Returns the array ($config, $HTTP, $Path)
 #
 # Path:
 # file	- Name of file without path
 # realf - The current file
 # real	- The directory portion of the current file
-# root	- The root of the sourcecode, same as sourceroot in $Conf
+# root	- The root of the sourcecode, same as sourceroot in $config
 # virtf - Name of file within the sourcedir 
 # virt	- Directory portion of same
 # xref	- Links to the different portions of the patname
@@ -411,10 +453,10 @@ sub fixpaths {
 # param		- Array of parameters
 # this_url	- The current url
 #
-# Conf:
+# config:
 # maplist -		A list of the different mappings 
 #				that are applied to the filename
-# sourcedirhead - Corresponds to the config options
+# sourcedirhead - Corresponds to the configig options
 # sourcehead -
 # htmldir -
 # dbdir -
@@ -426,92 +468,40 @@ sub fixpaths {
 # srcrootname -
 # baseurl -
 # htmltail -					  
-sub init {
-	my ($argv_0) = @_;
-	my @a;
+sub httpinit {
+	$SIG{__WARN__} = \&warning;
+	$SIG{__DIE__}  = \&fatal;
 
-	$HTTP->{'path_info'} = &http_wash($ENV{'PATH_INFO'});
-	$HTTP->{'this_url'} = &http_wash(join('', 'http://',
-										  $ENV{'SERVER_NAME'},
-										  ':', $ENV{'SERVER_PORT'},
-										  $ENV{'SCRIPT_NAME'},
-										  $ENV{'PATH_INFO'},
-										  '?', $ENV{'QUERY_STRING'}));
+	$HTTP->{'path_info'} = http_wash($ENV{'PATH_INFO'});
 
-	foreach ($ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g) {
-		push(@a, &http_wash($_));
-	}
+	$HTTP->{'this_url'}	 = 'http://'.$ENV{'SERVER_NAME'};
+	$HTTP->{'this_url'}	.= ':'.$ENV{'SERVER_PORT'} if
+		$ENV{'SERVER_PORT'} != 80;
+	$HTTP->{'this_url'}	.= $ENV{'SCRIPT_NAME'}.$ENV{'PATH_INFO'};
+	$HTTP->{'this_url'}	.= '?'.$ENV{'QUERY_STRING'} if
+		$ENV{'QUERY_STRING'};
 
-	$HTTP->{'param'} = {@a};
+	$HTTP->{'param'} = { map { http_wash($_) }
+						 $ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g };
+
 	$HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'version'};
 	$HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'arch'};
 	$HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};
 
 	$identifier = $HTTP->{'param'}->{'i'};
 	
-	$Conf = new LXR::Config;
+	$config = new LXR::Config($HTTP->{'this_url'});
+	$files  = new LXR::Files($config->sourceroot);
+	$index  = new LXR::Index($config->dbname);
 
-	foreach ($Conf->allvariables) {
-		$Conf->variable($_, $HTTP->{'param'}->{$_}) if $HTTP->{'param'}->{$_};
+	foreach ($config->allvariables) {
+		$config->variable($_, $HTTP->{'param'}->{$_}) if $HTTP->{'param'}->{$_};
 	}
 
-	&fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
+	$release  = $config->variable('v');
+	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
 
-	if ($HTTP->{'param'}->{'raw'}) {
-		print("Content-type: image/gif\n\n");
-	} 
-	else {
-		print("Content-Type: text/html; charset=iso-8859-1\n");
-
-		#
-		# Print out a Last-Modified date that is the larger of: the
-		# underlying file that we are presenting; and the "source" script
-		# itself (passed in as an argument to this function.)  If we can't
-		# stat either of them, don't print out a L-M header.  (Note that this
-		# stats lxr/source but not lxr/lib/LXR/Common.pm.  Oh well, I can
-		# live with that I guess...)	-- jwz, 16-Jun-98
-		#
-		my $file1 = $Path->{'realf'};
-		my $file2 = $argv_0;
-
-		# make sure the thing we call stat with doesn't end in /.
-		if ($file1) { $file1 =~ s@/$@@; }
-		if ($file2) { $file2 =~ s@/$@@; }
-
-		my $time1 = 0; 
-		my $time2 = 0;
-		if ($file1) { $time1 = (stat($file1))[9]; }
-		if ($file2) { $time2 = (stat($file2))[9]; }
-
-		my $time = ($time1 > $time2 ? $time1 : $time2);
-		if ($time > 0) {
-			my @t = gmtime($time);
-			my ($sec, $min, $hour, $mday, $mon, $year,$wday) = @t;
-			my @days = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
-			my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-						  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
-			$year += 1900;
-			$wday = $days[$wday];
-			$mon = $months[$mon];
-			# Last-Modified: Wed, 10 Dec 1997 00:55:32 GMT
-			#print sprintf("Last-Modified: %s, %2d %s %d %02d:%02d:%02d GMT\n",
-			#		  $wday, $mday, $mon, $year, $hour, $min, $sec);
-		}
-
-		# Close the HTTP header block.
-		print("\n");
-	}
-
-#	 if (defined($readraw)) {
-#	open(RAW, $Path->{'realf'});
-#	while (<RAW>) {
-#		print;
-#	}
-#	close(RAW);
-#	exit;
-#	 }
-
-	return($Conf, $HTTP, $Path);
+	printhttp;
 }
 
 
@@ -552,9 +542,9 @@ sub bannerexpand {
 
 	if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 		my $fpath = '';
-		my $furl  = fileref($Conf->sourcerootname.'/', '/');
+		my $furl  = fileref($config->sourcerootname.'/', '/');
 		
-		foreach ($Path->{'virtf'} =~ m|([^/]+/?)|g) {
+		foreach ($pathname =~ m|([^/]+/?)|g) {
 			$fpath .= $_;
 
 			# jwz: put a space after each / in the banner so that it's
@@ -575,26 +565,26 @@ sub bannerexpand {
 }
 
 sub pathname {
-	return $Path->{'virtf'};
+	return $pathname;
 }
 
 sub titleexpand {
 	my ($templ, $who) = @_;
 
 	if ($who eq 'source' || $who eq 'diff') {
-		return $Conf->sourcerootname.$Path->{'virtf'};
+		return $config->sourcerootname.$pathname;
 	} 
 	elsif ($who eq 'ident') {
 		my $i = $HTTP->{'param'}->{'i'};
-		return $Conf->sourcerootname.' identfier search'.($i ? " \"$i\"" : '');
+		return $config->sourcerootname.' identfier search'.($i ? " \"$i\"" : '');
 	} 
 	elsif ($who eq 'search') {
 		my $s = $HTTP->{'param'}->{'string'};
-		return $Conf->sourcerootname.' freetext search'.($s ? " \"$s\"" : '');
+		return $config->sourcerootname.' freetext search'.($s ? " \"$s\"" : '');
 	} 
 	elsif ($who eq 'find') {
 		my $s = $HTTP->{'param'}->{'string'};
-		return $Conf->sourcerootname.' file search'.($s ? " \"$s\"" : '');
+		return $config->sourcerootname.' file search'.($s ? " \"$s\"" : '');
 	}
 }
 
@@ -608,13 +598,13 @@ sub thisurl {
 
 
 sub baseurl {
-	(my $url = $Conf->baseurl) =~ s|/*$|/|;
+	(my $url = $config->baseurl) =~ s|/*$|/|;
 
 	return $url;
 }
 
 sub dotdoturl {
-	my $url = $Conf->baseurl;
+	my $url = $config->baseurl;
 	$url =~ s@/$@@;
 	$url =~ s@/[^/]*$@@;
 	return($url);
@@ -633,14 +623,14 @@ sub modeexpand {
 		push(@mlist, "<b><i>source navigation</i></b>");
 	} 
 	else {
-		push(@mlist, fileref("source navigation", $Path->{'virtf'}));
+		push(@mlist, fileref("source navigation", $pathname));
 	}
 	
 	if ($who eq 'diff') {
 		push(@mlist, "<b><i>diff markup</i></b>");
 	} 
-	elsif ($who eq 'source' && $Path->{'file'}) {
-		push(@mlist, diffref("diff markup", $Path->{'virtf'}));
+	elsif ($who eq 'source' && $pathname !~ m|/$|) {
+		push(@mlist, diffref("diff markup", $pathname));
 	}
 	
 	if ($who eq 'ident') {
@@ -654,7 +644,7 @@ sub modeexpand {
 		push(@mlist, "<b><i>freetext search</i></b>");
 	} 
 	else {
-		push(@mlist, "<a href=\"$Conf->{virtroot}/search".
+		push(@mlist, "<a href=\"$config->{virtroot}/search".
 			 urlargs."\">freetext search</a>");
 	}
 	
@@ -662,7 +652,7 @@ sub modeexpand {
 		push(@mlist, "<b><i>file search</i></b>");
 	} 
 	else {
-		push(@mlist, "<a href=\"$Conf->{virtroot}/find".
+		push(@mlist, "<a href=\"$config->{virtroot}/find".
 			 urlargs."\">file search</a>");
 	}
 	
@@ -683,34 +673,34 @@ sub varlinks {
 	my ($val, $oldval);
 	my $vallink;
 	
-	$oldval = $Conf->variable($var);
-	foreach $val ($Conf->varrange($var)) {
+	$oldval = $config->variable($var);
+	foreach $val ($config->varrange($var)) {
 		if ($val eq $oldval) {
 			$vallink = "<b><i>$val</i></b>";
 		} 
 		else {
 			if ($who eq 'source' || $who eq 'sourcedir') {
 				$vallink = &fileref($val, 
-									$Conf->mappath($Path->{'virtf'},
-												   "$var=$val"),
+									$config->mappath($pathname,
+													 "$var=$val"),
 									0,
 									"$var=$val");
 
 			} 
 			elsif ($who eq 'diff') {
-				$vallink = &diffref($val, $Path->{'virtf'}, "$var=$val");
+				$vallink = &diffref($val, $pathname, "$var=$val");
 			}
 			elsif ($who eq 'ident') {
 				$vallink = &idref($val, $identifier, "$var=$val");
 			} 
 			elsif ($who eq 'search') {
-				$vallink = "<a href=\"$Conf->{virtroot}/search".
+				$vallink = "<a href=\"$config->{virtroot}/search".
 					&urlargs("$var=$val",
 							 "string=".$HTTP->{'param'}->{'string'}).
 								 "\">$val</a>";
 			} 
 			elsif ($who eq 'find') {
-				$vallink = "<a href=\"$Conf->{virtroot}/find".
+				$vallink = "<a href=\"$config->{virtroot}/find".
 					&urlargs("$var=$val",
 							 "string=".$HTTP->{'param'}->{'string'}).
 								 "\">$val</a>";
@@ -730,10 +720,10 @@ sub varexpand {
 	my $varex = '';
 	my $var;
 	
-	foreach $var ($Conf->allvariables) {
+	foreach $var ($config->allvariables) {
 		$varex .= expandtemplate
 			($templ,
-			 ('varname'	 => sub { $Conf->vardescription($var) },
+			 ('varname'	 => sub { $config->vardescription($var) },
 			  'varlinks' => sub { varlinks(@_, $who, $var) }));
 	}
 	return($varex);
@@ -745,13 +735,12 @@ sub devinfo {
 	my (@mods, $mod, $path);
 	my %mods = ('main' => $0, %INC);
 
-	no strict 'refs';
-	
 	while (($mod, $path) = each %mods) {
 		$mod  =~ s/.pm$//;
 		$mod  =~ s|/|::|g;
 		$path =~ s|/+|/|g;
 
+		no strict 'refs';
 		next unless $ {$mod.'::CVSID'};
 
 		push(@mods, [ $ {$mod.'::CVSID'}, $path, (stat($path))[9] ]);
@@ -775,21 +764,21 @@ sub makeheader {
 
 	$tmplname = $who."head";
 	
-	unless ($who ne "sourcedir" || $Conf->sourcedirhead) {
+	unless ($who ne "sourcedir" || $config->sourcedirhead) {
 		$tmplname = "sourcehead";
 	}
-	unless ($Conf->value($tmplname)) {
+	unless ($config->value($tmplname)) {
 		$tmplname = "htmlhead";
 	}
 
-	if ($Conf->value($tmplname)) {
-		if (open(TEMPL, $Conf->value($tmplname))) {
+	if ($config->value($tmplname)) {
+		if (open(TEMPL, $config->value($tmplname))) {
 			local($/) = undef;
 			$template = <TEMPL>;
 			close(TEMPL);
 		}
 		else {
-			warning("Template ".$Conf->value($tmplname)." does not exist.");
+			warning("Template ".$config->value($tmplname)." does not exist.");
 		}
 	}
 
@@ -813,21 +802,21 @@ sub makefooter {
 
 	$tmplname = $who."tail";
 	
-	unless ($who ne "sourcedir" || $Conf->sourcedirhead) {
+	unless ($who ne "sourcedir" || $config->sourcedirhead) {
 		$tmplname = "sourcetail";
 	}
-	unless ($Conf->value($tmplname)) {
+	unless ($config->value($tmplname)) {
 		$tmplname = "htmltail";
 	}
 
-	if ($Conf->value($tmplname)) {
-		if (open(TEMPL, $Conf->value($tmplname))) {
+	if ($config->value($tmplname)) {
+		if (open(TEMPL, $config->value($tmplname))) {
 			local($/) = undef;
 			$template = <TEMPL>;
 			close(TEMPL);
 		}
 		else {
-			warning("Template ".$Conf->value($tmplname)." does not exist.");
+			warning("Template ".$config->value($tmplname)." does not exist.");
 		}
 	}
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.6 1999/05/17 23:43:51 argggh Exp $
+# $Id: DB.pm,v 1.7 1999/05/24 21:53:40 argggh Exp $
 
 package LXR::Index::DB;
 
-$CVSID = '$Id ';
+$CVSID = '$Id: DB.pm,v 1.7 1999/05/24 21:53:40 argggh Exp $ ';
 
 use strict;
 use DB_File;

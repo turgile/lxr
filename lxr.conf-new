@@ -94,4 +94,7 @@
      
      'dbname'		=> 'dbi:Pg:dbname=lxr',
 #    'dbname'		=> '/var/lxr',
+
+#     'ctagsbin'		=> '/usr/bin/gctags',
+     'ectagsbin'	=> '/usr/bin/ectags',
  })

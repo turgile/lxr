@@ -51,4 +51,4 @@ create table releases
 create index symbolindex on symbols using btree (symname);
 
 grant select on symbols to public;
-grant select on symbolindex to public;
+grant all on symbols to argggh;

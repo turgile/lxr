@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.9 1999/05/17 23:43:50 argggh Exp $
+# $Id: Plain.pm,v 1.10 1999/05/24 21:53:38 argggh Exp $
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.9 1999/05/17 23:43:50 argggh Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.10 1999/05/24 21:53:38 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -120,14 +120,14 @@ sub isfile {
 
 sub getindex {
 	my ($self, $pathname, $release) = @_;
-	my ($save, $index, %index);
+	my ($index, %index);
 	my $indexname = $self->toreal($pathname, $release)."00-INDEX";
 
 	if (-f $indexname) {
-		open(INDEX, $indexname) || &warning("Existing $indexname could not be opened.");
-		$save = $/; undef($/);
+		open(INDEX, $indexname) || 
+			warning("Existing $indexname could not be opened.");
+		local($/) = undef;
 		$index = <INDEX>;
-		$/ = $save;
 
 		%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
 	}
