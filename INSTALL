@@ -22,7 +22,7 @@ The current version of the lxr depends on the following things:
    database you're using.  If you don't already have these, they can be
    installed via CPAN.  See http://dbi.perl.org/index.html for more info.
 
-6) The Perl MMagic module, available from CPAN
+6) The Perl File::MMagic module, available from CPAN
 
 7) If using the CVS support, you will need rcs installed as well.
 
