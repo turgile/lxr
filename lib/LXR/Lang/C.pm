@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.1 1999/09/17 09:37:45 argggh Exp $
+# $Id: C.pm,v 1.2 1999/09/18 10:27:07 argggh Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.1 1999/09/17 09:37:45 argggh Exp $ ';
+$CVSID = '$Id: C.pm,v 1.2 1999/09/18 10:27:07 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -88,11 +88,11 @@ sub indexfile {
 sub referencefile {
 	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
-	require SimpleParse;
-	&SimpleParse::init(new FileHandle($path), $self->parsespec);
+	require LXR::SimpleParse;
+	&LXR::SimpleParse::init(new FileHandle($path), $self->parsespec);
 
 	my $linenum = 1;
-	my ($btype, $frag) = &SimpleParse::nextfrag;
+	my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 	my @lines;
 	my $ls;
 
@@ -117,7 +117,7 @@ sub referencefile {
 			}
 			$linenum--;
 		}
-		($btype, $frag) = &SimpleParse::nextfrag;
+		($btype, $frag) = &LXR::SimpleParse::nextfrag;
 	}
 	print("+++ $linenum\n");
 

@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.22 1999/09/18 10:20:18 argggh Exp $
+# $Id: Common.pm,v 1.23 1999/09/18 10:27:04 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.22 1999/09/18 10:20:18 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.23 1999/09/18 10:27:04 argggh Exp $ ';
 
 use strict;
 
@@ -29,7 +29,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
 
 
 require Local;
-require SimpleParse;
+require LXR::SimpleParse;
 require LXR::Config;
 require LXR::Files;
 require LXR::Index;
@@ -277,9 +277,9 @@ sub markupfile {
 
 	# A source code file
 	if ($lang) {
-		&SimpleParse::init($fileh, $lang->parsespec);
+		&LXR::SimpleParse::init($fileh, $lang->parsespec);
 
-		my ($btype, $frag) = &SimpleParse::nextfrag;
+		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
 		&$outfun("<pre>\n");
 		&$outfun(join($line++, @ltag)) if defined($frag);
@@ -309,7 +309,7 @@ sub markupfile {
 			&htmlquote($frag);
 			my $ofrag = $frag;
 
-			($btype, $frag) = &SimpleParse::nextfrag;
+			($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
 			$ofrag =~ s/\n$// unless defined($frag);
 			$ofrag =~ s/\n/"\n".join($line++, @ltag)/ge;
@@ -327,7 +327,7 @@ sub markupfile {
 	} 
 	elsif ($pathname =~ m|/CREDITS$|) {
 		while (defined($_ = $fileh->getline)) {
-			&SimpleParse::untabify($_);
+			&LXR::SimpleParse::untabify($_);
 			&markspecials($_);
 			&htmlquote($_);
 			s/^N:\s+(.*)/<strong>$1<\/strong>/gm;
@@ -361,7 +361,7 @@ sub markupfile {
 		else {
 			&$outfun("<pre>\n");
 			do {
-				&SimpleParse::untabify($_);
+				&LXR::SimpleParse::untabify($_);
 				&markspecials($_);
 				&freetextmarkup($_);
 				&htmlquote($_);

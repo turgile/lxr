@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.9 1999/09/17 09:37:39 argggh Exp $
+# $Id: SimpleParse.pm,v 1.10 1999/09/18 10:27:04 argggh Exp $
 
-package SimpleParse;
+package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.9 1999/09/17 09:37:39 argggh Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.10 1999/09/18 10:27:04 argggh Exp $ ';
 
 use strict;
 use integer;
