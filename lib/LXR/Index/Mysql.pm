@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.8 2001/08/15 15:50:27 mbox Exp $
+# $Id: Mysql.pm,v 1.9 2001/10/16 20:25:32 pergj Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.8 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.9 2001/10/16 20:25:32 pergj Exp $ ';
 
 use strict;
 use DBI;
@@ -32,7 +32,14 @@ sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	$self->{dbh} = DBI->connect($dbname, "lxr") || fatal "Can't open connection to database\n";
+	if(defined($config->{dbpass}) {
+		$self->{dbh} = DBI->connect($dbname, $config->{dbuser}, 
+									$config->{dbpass})
+			|| fatal "Can't open connection to database\n";
+	} else {
+		$self->{dbh} = DBI->connect($dbname, "lxr", $config->{dbpass})
+			|| fatal "Can't open connection to database\n";
+	}
 
 	%files = ();
 	%symcache = ();
@@ -262,7 +269,7 @@ sub empty_cache {
 }
 
 sub DESTROY {
-  my ($self) = @_;
+	my ($self) = @_;
 	$self->{files_select} = undef;
 	$self->{files_insert} = undef;
 	$self->{symbols_byname} = undef;
