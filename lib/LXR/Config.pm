@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.11 1999/05/16 23:48:26 argggh Exp $
+# $Id: Config.pm,v 1.12 1999/05/28 11:59:57 pergj Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.11 1999/05/16 23:48:26 argggh Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.12 1999/05/28 11:59:57 pergj Exp $ ';
 
 use strict;
 
@@ -17,7 +17,7 @@ use vars qw($AUTOLOAD @ISA @EXPORT $confname $Conf);
 @ISA = qw(Exporter);
 @EXPORT = qw($Conf);
 
-$confname = 'lxr.conf-new';
+$confname = 'lxr.conf';
 
 
 sub new {
