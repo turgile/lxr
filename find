@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: find,v 1.19 2004/07/15 15:29:35 brondsem Exp $
+# $Id: find,v 1.20 2004/07/19 17:56:43 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.19 2004/07/15 15:29:35 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.20 2004/07/19 17:56:43 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -64,7 +64,7 @@ sub dofind {
     my @ret;
     
     if ($searchtext ne "") {
-	my $sourceroot = $config->sourceroot;
+	my $sourceroot = $config->sourceroot . '/' . $release . '/';
 	while(my $file = <$FILELISTING>) {
 	    chomp $file;
 	    $file =~ s/^$sourceroot//;
@@ -115,7 +115,7 @@ sub find {
             &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->swishdir."/$release.filenames.");
             return;
         }
-    } elsif ($config->glimpsedir and $config->glimpseindex) {
+    } elsif ($config->glimpsedir and $config->glimpsebin) {
         unless ($FILELISTING = new IO::File($config->glimpsedir."/".$release."/.glimpse_filenames")) {
             &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
             return;

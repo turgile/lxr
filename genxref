@@ -148,10 +148,11 @@ sub gensearch {
 	my ($release) = @_;
 	my $string;
 
-	if ($config->glimpsebin and $config->glimpseindex) {
+	if ($config->glimpsedir and $config->glimpseindex) {
 		# Make sure the directory that the glimpse results go into
 		# already exists as glimpse won't work if the directory does
 		# not exist
+		die $config->glimpsedir . " does not exist" unless -d $config->glimpsedir;
 		$string = $config->glimpsedir."/".$release;
 		mkdir $string;
 		system("chmod 755 $string");
@@ -172,6 +173,7 @@ sub gensearch {
 
 	if ($config->swishdir and $config->swishindex) {
 	    my $swish = new IO::Handle;
+	    die $config->swishdir . " does not exist" unless -d $config->swishdir;
 	    my $filelist = new IO::File $config->swishdir."/$release.filenames", "w" or die "can't open $release.filenames for writing";
 	    
 	    # execute swish, as a pipe we can write to

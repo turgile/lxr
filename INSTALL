@@ -82,6 +82,7 @@ Go through the config file and fill in the relevant values.
 If you have glimpse installed, you should set
 
  'glimpsebin' => '/path/to/your/glimpse/executable'
+ 'glimpseindex' => '/path/to/your/glimpseindex/executable'
  
 If you have swish-e installed, you should set
 
@@ -152,34 +153,8 @@ path of this directory in the 'swishdir' variable.
 
 Using Glimpse with LXR
 --------------------------------
-Create a directory in your LXR directory called glimpse
-
-  mkdir /usr/local/lxr/glimpse
-
-If you are using CVS, checkout a copy of your project in the
-LXR directory, for example
-
-  cd /usr/local/lxr
-  cvs checkout my_project
-
-otherwise just use the path to your project instead in the
-example below
-
-  find /usr/local/lxr/my_project/ -name *.java | 
-    glimpseindex -H /usr/local/lxr/glimpse -o -F
-
-Be sure that the glimpse indexes are readable by the user
-that Apache is running as. You can do
-
-  chmod a+x /usr/local/lxr/glimpse/.*
-
-Now edit lxr.conf again and add the following variable for
-the URL section that you configured earlier
-
-  'strip' => '/usr/local/lxr/sikasem'
-
-This munges the output of glimpse so that you can go straight
-to the file that contains a match for a search term.
+Create a directory for the swish index files to go in, and put the
+path of this directory in the 'glimpsedir' variable.
 
 Generate index.
 ---------------
