@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.9 2004/10/18 19:09:32 brondsem Exp $
+# $Id: Oracle.pm,v 1.10 2004/10/18 20:42:45 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,11 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.9 2004/10/18 19:09:32 brondsem Exp $ ';
+BEGIN {
+    $ENV{'ORACLE_HOME'}='/lcl/apps/oracle';
+}
+    
+$CVSID = '$Id: Oracle.pm,v 1.10 2004/10/18 20:42:45 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -49,12 +53,12 @@ sub new {
 
 	$self->{files_select} =
 	  $self->{dbh}
-	  ->prepare("select fileid from ${prefix}files where  filename = ? and  revision = ?");
+	  ->prepare("select fileid from ${prefix}files where filename = ? and revision = ?");
 	$self->{files_insert} =
 	  $self->{dbh}->prepare("insert into ${prefix}files values (?, ?, ${prefix}filenum.nextval)");
 
 	$self->{symbols_byname} =
-	  $self->{dbh}->prepare("select symid from ${prefix}symbols where  symname = ?");
+	  $self->{dbh}->prepare("select symid from ${prefix}symbols where symname = ?");
 	$self->{symbols_byid} =
 	  $self->{dbh}->prepare("select symname from ${prefix}symbols where symid = ?");
 	$self->{symbols_insert} =
@@ -63,18 +67,21 @@ sub new {
 	  $self->{dbh}->prepare("delete from ${prefix}symbols where symname = ?");
 
 	$self->{indexes_select} =
-	  $self->{dbh}->prepare("select f.filename, i.line, i.type, i.relsym "
-		  . "from ${prefix}symbols s, ${prefix}indexes i, ${prefix}files f, ${prefix}releases r "
+	  $self->{dbh}->prepare("select f.filename, i.line, d.declaration, i.relsym "
+		  . "from ${prefix}symbols s, ${prefix}indexes i, ${prefix}files f, ${prefix}releases r, ${prefix}declarations d "
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
+		  . "and i.langid = d.langid and i.type = d.declid "
 		  . "and  s.symname = ? and  r.release = ? ");
 	$self->{indexes_insert} =
-	  $self->{dbh}->prepare("insert into ${prefix}indexes values (?, ?, ?, ?, ?, ?)");
+	  $self->{dbh}->prepare(
+		"insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) values (?, ?, ?, ?, ?, ?)"
+	  );
 
 	$self->{releases_select} =
 	  $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and  release = ?");
-
-	$self->{releases_insert} = $self->{dbh}->prepare("insert into ${prefix}releases values (?, ?)");
+	$self->{releases_insert} =
+	  $self->{dbh}->prepare("insert into ${prefix}releases (fileid, release) values (?, ?)");
 
 	$self->{status_get} =
 	  $self->{dbh}->prepare("select status from ${prefix}status where fileid = ?");
@@ -82,20 +89,21 @@ sub new {
 	$self->{status_insert} = $self->{dbh}->prepare
 
 	  #		("insert into status select ?, 0 except select fileid, 0 from status");
-	  ("insert into ${prefix}status values (?, ?)");
+	  ("insert into ${prefix}status (fileid, status) values (?, ?)");
 
 	$self->{status_update} =
 	  $self->{dbh}
 	  ->prepare("update ${prefix}status set status = ? where fileid = ? and status <= ?");
 
-	$self->{usage_insert} = $self->{dbh}->prepare("insert into ${prefix}usage values (?, ?, ?)");
+	$self->{usage_insert} =
+	  $self->{dbh}->prepare("insert into ${prefix}usage (fileid, line, symid) values (?, ?, ?)");
 	$self->{usage_select} =
 	  $self->{dbh}->prepare("select f.filename, u.line "
 		  . "from ${prefix}symbols s, ${prefix}files f, ${prefix}releases r, ${prefix}usage u "
 		  . "where s.symid = u.symid "
 		  . "and f.fileid = u.fileid "
-		  . "and u.fileid = r.fileid and "
-		  . "s.symname = ? and  r.release = ? "
+		  . "and u.fileid = r.fileid "
+		  . "and s.symname = ? and  r.release = ? "
 		  . "order by f.filename");
 	$self->{decl_select} =
 	  $self->{dbh}->prepare(
@@ -192,9 +200,7 @@ sub fileid {
 			$self->{files_insert}->execute($filename, $revision);
 			$self->{files_select}->execute($filename, $revision);
 			($fileid) = $self->{files_select}->fetchrow_array();
-
 		}
-
 		$files{"$filename\t$revision"} = $fileid;
 		$self->{files_select}->finish();
 	}
@@ -204,15 +210,12 @@ sub fileid {
 # Indicate that this filerevision is part of this release
 sub release {
 	my ($self, $fileid, $release) = @_;
-	my (@row);
+
 	my $rows = $self->{releases_select}->execute($fileid + 0, $release);
-	while (@row = $self->{releases_select}->fetchrow_array) {
-		$rows = 1;
-	}
 	$self->{releases_select}->finish();
 
 	unless ($rows > 0) {
-		$self->{releases_insert}->execute($fileid + 0, $release);
+		$self->{releases_insert}->execute($fileid, $release);
 		$self->{releases_insert}->finish();
 	}
 }
@@ -252,22 +255,22 @@ sub symname {
 }
 
 sub issymbol {
-	my ($self, $symname) = @_;
+	my ($self, $symname, $release, $lang) = @_;
 	my ($symid);
 
-	$symid = $symcache{$symname};
+	$symid = $symcache{$release}{$lang}{$symname};
 	unless (defined($symid)) {
 		$self->{symbols_byname}->execute($symname);
 		($symid) = $self->{symbols_byname}->fetchrow_array();
 		$self->{symbols_byname}->finish();
-		$symcache{$symname} = $symid;
+		$symcache{$release}{$lang}{$symname} = $symid;
 	}
 
 	return $symid;
 }
 
-# If this file has not been indexed earlier, mark it as being indexed
-# now and return true.  Return false if already indexed.
+# If this file has not been indexed earlier return true.  Return false
+# if already indexed.
 sub toindex {
 	my ($self, $fileid) = @_;
 	my ($status);
@@ -279,7 +282,8 @@ sub toindex {
 	if (!defined($status)) {
 		$self->{status_insert}->execute($fileid + 0, 0);
 	}
-	return $self->{status_update}->execute(1, $fileid, 0) > 0;
+
+	return $status == 0;
 }
 
 sub setindexed {
@@ -289,9 +293,13 @@ sub setindexed {
 
 sub toreference {
 	my ($self, $fileid) = @_;
-	my ($rv);
+	my ($status);
 
-	return $self->{status_update}->execute(2, $fileid, 1) > 0;
+	$self->{status_get}->execute($fileid);
+	$status = $self->{status_get}->fetchrow_array();
+	$self->{status_get}->finish();
+
+	return $status < 2;
 }
 
 sub setreferenced {
@@ -323,7 +331,6 @@ sub getdecid {
 	return $id;
 }
 
-
 sub purge {
 	my ($self, $version) = @_;
 
@@ -349,8 +356,10 @@ sub DESTROY {
 	$self->{status_update}   = undef;
 	$self->{usage_insert}    = undef;
 	$self->{usage_select}    = undef;
+	$self->{decl_select}     = undef;
+	$self->{decl_insert}     = undef;
 	$self->{delete_indexes}  = undef;
-	$self->{delete_useage}   = undef;
+	$self->{delete_usage}   = undef;
 	$self->{delete_status}   = undef;
 	$self->{delete_releases} = undef;
 	$self->{delete_files}    = undef;
