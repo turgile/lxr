@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.9 2001/11/28 12:59:51 mbox Exp $
+# $Id: Generic.pm,v 1.10 2001/12/06 14:36:43 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.9 2001/11/28 12:59:51 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.10 2001/12/06 14:36:43 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -53,7 +53,7 @@ sub new {
 }
 
 sub read_config {
-	open (CONF, $config->genericconf) || die "Can't open $config->genericconf, $!";
+	open (CONF, $config->genericconf) || die "Can't open ".$config->genericconf.", $!";
 	
 	local($/) = undef;
 	
