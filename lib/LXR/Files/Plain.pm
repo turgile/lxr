@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.16 2001/08/15 15:50:27 mbox Exp $
+# $Id: Plain.pm,v 1.17 2002/02/03 08:12:53 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.16 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.17 2002/02/03 08:12:53 mbox Exp $ ';
 
 use strict;
 use FileHandle;
+use LXR::Common;
 
 sub new {
 	my ($self, $rootpath) = @_;
@@ -74,10 +75,15 @@ sub getfilehandle {
 
 sub tmpfile {
 	my ($self, $filename, $release) = @_;
-	my ($tmp);
+	my ($tmp, $tries);
 	local ($/) = undef;
 
-	$tmp = '/tmp/lxrtmp.'.time.'.'.$$;
+	$tmp = $config->tmpdir.'/lxrtmp.'.time.'.'.$$;
+	$tries=0;
+	while ( -e $tmp.$tries) {
+		$tries++;
+	}
+	$tmp.=$tries;
 	open(TMP, "> $tmp") || return undef;
 	open(FILE, $self->toreal($filename, $release)) || return undef;
 	print(TMP <FILE>);
