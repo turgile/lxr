@@ -6,7 +6,7 @@ create database lxr;
 use lxr;
 
 /* symnum filenum */
-create table files (
+create table lxr_files (
         filename        char(255) binary not null,
         revision        char(255) binary not null,
         fileid          int not null auto_increment,
@@ -15,7 +15,7 @@ create table files (
 
 );
 
-create table symbols (
+create table lxr_symbols (
         symname         char(255) binary not null,
         symid           int not null auto_increment,
         primary key     (symid),
@@ -23,34 +23,34 @@ create table symbols (
 
 );
 
-create table indexes (
-        symid           int not null references symbols,
-        fileid          int not null references files,
+create table lxr_indexes (
+        symid           int not null references lxr_symbols,
+        fileid          int not null references lxr_files,
         line            int not null,
-		langid          tinyint not null references declarations,
-        type            smallint not null references declarations,
-        relsym          int          references symbols
+		langid          tinyint not null references lxr_declarations,
+        type            smallint not null references lxr_declarations,
+        relsym          int          references lxr_symbols
 );
 
-create table releases 
-        (fileid         int not null references files,
+create table lxr_releases 
+        (fileid         int not null references lxr_files,
         release         char(255) binary not null,
         primary key     (fileid,release)
 );
 
-create table useage
-        (fileid         int not null    references files,
+create table lxr_useage
+        (fileid         int not null    references lxr_files,
         line            int not null,
-        symid           int not null    references symbols
+        symid           int not null    references lxr_symbols
 );
 
-create table status
-        (fileid         int not null references files,
+create table lxr_status
+        (fileid         int not null references lxr_files,
         status          tinyint not null,
         primary key     (fileid)
 );
 
-create table declarations
+create table lxr_declarations
 		(declid  		smallint not null auto_increment,
 		 langid         tinyint not null,
 		 declaration    char(255) not null,
@@ -58,9 +58,9 @@ create table declarations
 );
 
 
-create index indexindex on indexes  (symid) ;
-create unique index symbolindex on symbols  (symname) ;
-create index useageindex on useage  (symid) ;
-create index filelookup on files (filename);
+create index lxr_indexindex on lxr_indexes  (symid) ;
+create unique index lxr_symbolindex on lxr_symbols  (symname) ;
+create index lxr_useageindex on lxr_useage  (symid) ;
+create index lxr_filelookup on lxr_files (filename);
 
 grant all on lxr.* to lxr@localhost;

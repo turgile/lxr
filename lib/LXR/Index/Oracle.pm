@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.5 2004/07/19 19:50:21 brondsem Exp $
+# $Id: Oracle.pm,v 1.6 2004/07/20 15:31:25 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.5 2004/07/19 19:50:21 brondsem Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.6 2004/07/20 15:31:25 brondsem Exp $ ';
 
 use strict;
 use DBI;
 use LXR::Common;
 
-use vars qw(%files %symcache @ISA);
+use vars qw(%files %symcache @ISA $prefix);
 
 @ISA = ("LXR::Index");
 
@@ -38,47 +38,60 @@ sub new {
 		{ RaiseError => 1, AutoCommit => 1 } )
 	  || fatal "Can't open connection to database\n";
 
+	if ( $config->{'dbprefix'} ) {
+		$prefix = $config->{'dbprefix'};
+	} else {
+		$prefix = "lxr_";
+	}
+
 	%files    = ();
 	%symcache = ();
 
 	$self->{files_select} =
-	  $self->{dbh}->prepare("select fileid from files where  filename = ? and  revision = ?");
+	  $self->{dbh}
+	  ->prepare("select fileid from ${prefix}files where  filename = ? and  revision = ?");
 	$self->{files_insert} =
-	  $self->{dbh}->prepare("insert into files values (?, ?, filenum.nextval)");
+	  $self->{dbh}->prepare("insert into ${prefix}files values (?, ?, filenum.nextval)");
 
-	$self->{symbols_byname} = $self->{dbh}->prepare("select symid from symbols where  symname = ?");
-	$self->{symbols_byid}   = $self->{dbh}->prepare("select symname from symbols where symid = ?");
+	$self->{symbols_byname} =
+	  $self->{dbh}->prepare("select symid from ${prefix}symbols where  symname = ?");
+	$self->{symbols_byid} =
+	  $self->{dbh}->prepare("select symname from ${prefix}symbols where symid = ?");
 	$self->{symbols_insert} =
-	  $self->{dbh}->prepare("insert into symbols values ( ?, symnum.nextval)");
-	$self->{symbols_remove} = $self->{dbh}->prepare("delete from symbols where symname = ?");
+	  $self->{dbh}->prepare("insert into ${prefix}symbols values ( ?, symnum.nextval)");
+	$self->{symbols_remove} =
+	  $self->{dbh}->prepare("delete from ${prefix}symbols where symname = ?");
 
 	$self->{indexes_select} =
 	  $self->{dbh}->prepare( "select f.filename, i.line, i.type, i.relsym "
-		  . "from symbols s, indexes i, files f, releases r "
+		  . "from ${prefix}symbols s, ${prefix}indexes i, ${prefix}files f, ${prefix}releases r "
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
 		  . "and  s.symname = ? and  r.release = ? " );
-	$self->{indexes_insert} = $self->{dbh}->prepare("insert into indexes values (?, ?, ?, ?, ?)");
+	$self->{indexes_insert} =
+	  $self->{dbh}->prepare("insert into ${prefix}indexes values (?, ?, ?, ?, ?)");
 
 	$self->{releases_select} =
-	  $self->{dbh}->prepare("select * from releases where fileid = ? and  release = ?");
+	  $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and  release = ?");
 
-	$self->{releases_insert} = $self->{dbh}->prepare("insert into releases values (?, ?)");
+	$self->{releases_insert} = $self->{dbh}->prepare("insert into ${prefix}releases values (?, ?)");
 
-	$self->{status_get} = $self->{dbh}->prepare("select status from status where fileid = ?");
+	$self->{status_get} =
+	  $self->{dbh}->prepare("select status from ${prefix}status where fileid = ?");
 
 	$self->{status_insert} = $self->{dbh}->prepare
 
 	  #		("insert into status select ?, 0 except select fileid, 0 from status");
-	  ("insert into status values (?, ?)");
+	  ("insert into ${prefix}status values (?, ?)");
 
 	$self->{status_update} =
-	  $self->{dbh}->prepare("update status set status = ? where fileid = ? and status <= ?");
+	  $self->{dbh}
+	  ->prepare("update ${prefix}status set status = ? where fileid = ? and status <= ?");
 
-	$self->{usage_insert} = $self->{dbh}->prepare("insert into usage values (?, ?, ?)");
+	$self->{usage_insert} = $self->{dbh}->prepare("insert into ${prefix}usage values (?, ?, ?)");
 	$self->{usage_select} =
 	  $self->{dbh}->prepare( "select f.filename, u.line "
-		  . "from symbols s, files f, releases r, usage u "
+		  . "from ${prefix}symbols s, ${prefix}files f, ${prefix}releases r, ${prefix}usage u "
 		  . "where s.symid = u.symid "
 		  . "and f.fileid = u.fileid "
 		  . "and u.fileid = r.fileid and "
@@ -86,23 +99,23 @@ sub new {
 		  . "order by f.filename" );
 
 	$self->{delete_indexes} =
-	  $self->{dbh}->prepare( "delete from indexes "
+	  $self->{dbh}->prepare( "delete from ${prefix}indexes "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 	$self->{delete_usage} =
-	  $self->{dbh}->prepare( "delete from usage "
+	  $self->{dbh}->prepare( "delete from ${prefix}usage "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 	$self->{delete_status} =
-	  $self->{dbh}->prepare( "delete from status "
+	  $self->{dbh}->prepare( "delete from ${prefix}status "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 	$self->{delete_releases} =
-	  $self->{dbh}->prepare( "delete from releases " . "where release = ?" );
+	  $self->{dbh}->prepare( "delete from ${prefix}releases " . "where release = ?" );
 	$self->{delete_files} =
-	  $self->{dbh}->prepare( "delete from files "
+	  $self->{dbh}->prepare( "delete from ${prefix}files "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 
 	return $self;
 }
@@ -283,10 +296,10 @@ sub purge {
 	# we don't delete symbols, because they might be used by other versions
 	# so we can end up with unused symbols, but that doesn't cause any problems
 	$self->{delete_indexes}->execute($version);
-	$self->{$delete_usage}->execute($version);
-	$self->{$delete_status}->execute($version);
-	$self->{$delete_releases}->execute($version);
-	$self->{$delete_files}->execute($version);
+	$self->{delete_usage}->execute($version);
+	$self->{delete_status}->execute($version);
+	$self->{delete_files}->execute($version);
+	$self->{delete_releases}->execute($version);
 }
 
 sub DESTROY {

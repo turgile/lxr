@@ -31,7 +31,10 @@ Installing the database
 You will need to create a database for lxr, and possibly create a user
 as well.  If you are unsure how to do this, or don't have admin rights
 to the database, consult the documentation or your sysadmin
-respectively.  The steps below assume you know what you're doing.
+respectively.  If you want a custom prefix for the table names, you must
+manually edit the initdb script by replaceing every 'lxr_' with your prefix.
+Don't forget to set the 'dbprefix' in lxr.conf.
+The steps below assume you know what you're doing.
 
 For Postgresql:
 Create a user for lxr and give the user permission to create databases:

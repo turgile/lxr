@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.15 2004/07/19 19:50:21 brondsem Exp $
+# $Id: Postgres.pm,v 1.16 2004/07/20 15:31:25 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.15 2004/07/19 19:50:21 brondsem Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.16 2004/07/20 15:31:25 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -31,7 +31,7 @@ use vars qw($dbh $transactions %files %symcache $commitlimit
   $releases_select $releases_insert $status_insert
   $status_update $usage_insert $usage_select $decl_select
   $declid_nextnum $decl_insert $delete_indexes $delete_usage
-  $delete_status $delete_releases $delete_files);
+  $delete_status $delete_releases $delete_files $prefix);
 
 sub new {
 	my ( $self, $dbname ) = @_;
@@ -44,47 +44,56 @@ sub new {
 
 	#	$dbh->trace(1);
 
+	if ( $config->{'dbprefix'} ) {
+		$prefix = $config->{'dbprefix'};
+	} else {
+		$prefix = "lxr_";
+	}
+
 	$commitlimit  = 100;
 	$transactions = 0;
 	%files        = ();
 	%symcache     = ();
 
-	$files_select = $dbh->prepare("select fileid from files where filename = ? and revision = ?");
+	$files_select =
+	  $dbh->prepare("select fileid from ${prefix}files where filename = ? and revision = ?");
 	$filenum_nextval = $dbh->prepare("select nextval('filenum')");
-	$files_insert    = $dbh->prepare("insert into files values (?, ?, ?)");
+	$files_insert    = $dbh->prepare("insert into ${prefix}files values (?, ?, ?)");
 
-	$symbols_byname = $dbh->prepare("select symid from symbols where symname = ?");
-	$symbols_byid   = $dbh->prepare("select symname from symbols where symid = ?");
+	$symbols_byname = $dbh->prepare("select symid from ${prefix}symbols where symname = ?");
+	$symbols_byid   = $dbh->prepare("select symname from ${prefix}symbols where symid = ?");
 	$symnum_nextval = $dbh->prepare("select nextval('symnum')");
-	$symbols_insert = $dbh->prepare("insert into symbols values (?, ?)");
-	$symbols_remove = $dbh->prepare("delete from symbols where symname = ?");
+	$symbols_insert = $dbh->prepare("insert into ${prefix}symbols values (?, ?)");
+	$symbols_remove = $dbh->prepare("delete from ${prefix}symbols where symname = ?");
 
 	$indexes_select =
 	  $dbh->prepare( "select f.filename, i.line, d.declaration, i.relsym "
-		  . "from symbols s, indexes i, files f, releases r, declarations d "
+		  . "from ${prefix}symbols s, ${prefix}indexes i, ${prefix}files f, ${prefix}releases r, ${prefix}declarations d "
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
 		  . "and i.langid = d.langid and i.type = d.declid "
 		  . "and s.symname = ? and r.release = ?" );
 	$indexes_insert =
-	  $dbh->prepare( "insert into indexes (symid, fileid, line, langid, type, relsym) "
+	  $dbh->prepare( "insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) "
 		  . "values (?, ?, ?, ?, ?, ?)" );
 
-	$releases_select = $dbh->prepare("select * from releases where fileid = ? and release = ?");
-	$releases_insert = $dbh->prepare("insert into releases values (?, ?)");
+	$releases_select =
+	  $dbh->prepare("select * from ${prefix}releases where fileid = ? and release = ?");
+	$releases_insert = $dbh->prepare("insert into ${prefix}releases values (?, ?)");
 
 	$status_insert = $dbh->prepare
 
 	  #		("insert into status select ?, 0 except select fileid, 0 from status");
-	  (     "insert into status select ?, 0 where not exists "
-		  . "(select * from status where fileid = ?)" );
+	  (     "insert into ${prefix}status select ?, 0 where not exists "
+		  . "(select * from ${prefix}status where fileid = ?)" );
 
-	$status_update = $dbh->prepare("update status set status = ? where fileid = ? and status <= ?");
+	$status_update =
+	  $dbh->prepare("update ${prefix}status set status = ? where fileid = ? and status <= ?");
 
-	$usage_insert = $dbh->prepare("insert into usage values (?, ?, ?)");
+	$usage_insert = $dbh->prepare("insert into ${prefix}usage values (?, ?, ?)");
 	$usage_select =
 	  $dbh->prepare( "select f.filename, u.line "
-		  . "from symbols s, files f, releases r, usage u "
+		  . "from ${prefix}symbols s, ${prefix}files f, ${prefix}releases r, ${prefix}usage u "
 		  . "where s.symid = u.symid "
 		  . "and f.fileid = u.fileid "
 		  . "and f.fileid = r.fileid and "
@@ -93,27 +102,29 @@ sub new {
 	$declid_nextnum = $dbh->prepare("select nextval('declnum')");
 
 	$decl_select =
-	  $dbh->prepare( "select declid from declarations where langid = ? and " . "declaration = ?" );
+	  $dbh->prepare(
+		"select declid from ${prefix}declarations where langid = ? and " . "declaration = ?" );
 	$decl_insert =
-	  $dbh->prepare("insert into declarations (declid, langid, declaration) values (?, ?, ?)");
+	  $dbh->prepare(
+		"insert into ${prefix}declarations (declid, langid, declaration) values (?, ?, ?)");
 
 	$delete_indexes =
-	  $dbh->prepare( "delete from indexes "
+	  $dbh->prepare( "delete from ${prefix}indexes "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 	$delete_usage =
-	  $dbh->prepare( "delete from usage "
+	  $dbh->prepare( "delete from ${prefix}usage "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 	$delete_status =
-	  $dbh->prepare( "delete from status "
+	  $dbh->prepare( "delete from ${prefix}status "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
-	$delete_releases = $dbh->prepare( "delete from releases " . "where release = ?" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
+	$delete_releases = $dbh->prepare( "delete from ${prefix}releases " . "where release = ?" );
 	$delete_files    =
-	  $dbh->prepare( "delete from files "
+	  $dbh->prepare( "delete from ${prefix}files "
 		  . "where fileid in "
-		  . "  (select fileid from releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)" );
 
 	return $self;
 }
@@ -304,8 +315,8 @@ sub purge {
 	$delete_indexes->execute($version);
 	$delete_usage->execute($version);
 	$delete_status->execute($version);
-	$delete_releases->execute($version);
 	$delete_files->execute($version);
+	$delete_releases->execute($version);
 	commit_if_limit();
 }
 
