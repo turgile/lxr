@@ -31,9 +31,9 @@ user called lxr with access rights to the database.
 
 Edit the lxr config file
 ------------------------
-When the database is initialized, copy lxr.conf.template to lxr.conf.
+When the database is initialized, copy templates/* to . ("cp templates/* .").
 Then edit lxr.conf, it should contain enough comments to get you
-started.
+started.  You may also wish to edit the lxr HTML files.
 
 Generate index.
 ---------------
