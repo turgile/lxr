@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.5 1999/05/14 17:31:29 argggh Exp $
+# $Id: Local.pm,v 1.6 1999/05/16 09:53:15 argggh Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -15,7 +15,7 @@ package Local;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(&fdescexpand &descexpand &dirdesc &convertwhitespace );
+@EXPORT = qw(&fdescexpand &descexpand &dirdesc &convertwhitespace);
 
 use lib 'lib/';
 use LXR::Common;
@@ -215,12 +215,12 @@ sub fdescexpand {
 # In Mozilla, if the directory has a README file look in it for lines 
 # like the ones used in source code: "directoryname --- A short description"
 sub descexpand {
-    my $templ = shift;
+    my ($templ, $node, $dir, $index) = @_;
     
-    if ($main::index{$main::filename}) {
-	return &expandtemplate($templ,
-			       ('desctext', 
-				sub { return($main::index{$main::filename })}));
+    if ($$index{$node}) {
+	return expandtemplate($templ,
+			      ('desctext', 
+			       sub { return $$index{$node} }));
     }
     else {
 	return "\&nbsp\;";

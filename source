@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.8 1999/05/15 14:11:59 argggh Exp $
+# $Id: source,v 1.9 1999/05/16 09:53:16 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -34,39 +34,42 @@ use LXR::Config;
 use LXR::Files;
 use LXR::Index;
 
-use vars qw($files $index $Path $HTTP $filename $release $parentdir $line $color @dirs @files %index);
+use vars qw($files $index $Path $HTTP $release);
 
 sub diricon {
+    my ($templ, $node, $dir) = @_;
     my $img;
 
-    if ($filename eq '..') {
+    if ($node eq '../') {
 	$img = "/icons/back.gif";
     } else {
 #      $img = "/icons/folder.gif";
 	$img = "internal-gopher-menu";
     }
 
-    return &fileref("<img align=absbottom border=0 src=\"$img\">",
-		    $parentdir.$filename);
+    return fileref("<img align=absbottom border=0 src=\"$img\">", $dir.$node);
 }
 
 
 sub dirname {
-    if ($filename eq '..') {
-	return(&fileref("Parent directory", $parentdir.$filename));
+    my ($templ, $node, $dir) = @_;
+
+    if ($node eq '../') {
+	return fileref("Parent directory", $dir.$node);
     } else {
-	return(&fileref($filename, $parentdir.$filename));
+	return fileref($node, $dir.$node);
     }
 }
 
 
 sub fileicon {
+    my ($templ, $node, $dir) = @_;
     my $img;
 
-    if ($filename =~ /^.*\.[ch]$/) {
+    if ($node =~ /^.*\.[ch]$/) {
 #      $img = "/icons/c.gif";
 	$img = "internal-gopher-text";
-    } elsif ($filename =~ /^.*\.(cpp|cc|java)$/) {
+    } elsif ($node =~ /^.*\.(cpp|cc|java)$/) {
 	# TODO: Find a nice icon for c++ files (KDE?)
 #      $img = "/icons/c.gif";
 	$img = "internal-gopher-text";
@@ -74,39 +77,40 @@ sub fileicon {
 	#      $img = "/icons/text.gif";
 	$img = "internal-gopher-unknown";
     }
-    return(&fileref("<img align=absbottom border=0 src=\"$img\">",
-		    $Path->{'virt'}.$filename));
+    return fileref("<img align=absbottom border=0 src=\"$img\">", $dir.$node);
 }
 
 sub filename {
-    return(&fileref($filename,
-		    $Path->{'virt'}.$filename));
+    my ($templ, $node, $dir) = @_;
+    return fileref($node, $dir.$node);
 }
 
 sub filesize {
-    my $templ = shift;
-    my $s = $files->getfilesize($parentdir.$filename, $release);
+    my ($templ, $node, $dir) = @_;
+
+    my $s = $files->getfilesize($dir.$node, $release);
     my $str;
 
     if ($s < 1<<10) {
-       $str = "$s";
-   } else {
+	$str = "$s";
+    } else {
 #      if ($s < 1<<20) {
 	$str = ($s>>10) . "k";
 #      } else {
 #          $str = ($s>>20) . "M";
 #      }
     }
-    return(&expandtemplate($templ,
-			   ('bytes',    sub {return($str)}),
-			   ('kbytes',   sub {return($str)}),
-			   ('mbytes',   sub {return($str)})
-                           ));
+    return expandtemplate($templ,
+			  ('bytes'  => sub { return $str },
+			   'kbytes' => sub { return $str },
+			   'mbytes' => sub { return $str }));
 }
 
 sub modtime {
+    my ($templ, $node, $dir) = @_;
+
     my $current_time = time;
-    my $file_time = $files->getfiletime($parentdir.$filename, $release);
+    my $file_time = $files->getfiletime($dir.$node, $release);
     
     my @t = gmtime($file_time);
     
@@ -128,150 +132,144 @@ sub modtime {
 }
 
 sub bgcolor {
+    my ($templ, $line) = @_;
+
     return ((($line - 1) / 3) % 2) ? "#FFFFFF" : "#EEEEEE";
 }
 
 sub direxpand {
-    my $templ = shift;
+    my ($templ, $dir) = @_;
     my $direx = '';
-    local $line = 0;
-    local $filename;
-    local $color="#FFFFFF";
-    my $virtpath = $Path->{'virt'};
-    my $realpath = $Path->{'real'};
+    my $line  = 1;
+    my %index;
+    my @nodes;
+    my $node;
+    
 
-
-    foreach $filename (@dirs) {
-	$line++;
-	$direx .= &expandtemplate($templ,
-				  ('iconlink',		\&diricon),
-				  ('namelink',		\&dirname),
-				  ('filesize',		sub {return('-')}),
-				  ('modtime',		\&modtime),
-				  ('bgcolor',		\&bgcolor),
-				  ('description',	\&descexpand));
+    @nodes = $files->getdir($dir, $release);
+    unless (@nodes) {
+	print("<p align=center>\n<i>The directory ".
+	      $files->toreal($dir, $release).
+	      " does not exist.</i>\n");
+	#FIXME what does this do?
+	if ($files->toreal($dir, $release) =~ m#(.+[^/])[/]*$# ) {
+	    if (-e $1) {
+		warning("Unable to open ".$Path->{'real'});
+	    }
+	}
+	return;
     }
-	
-    foreach $filename (@files) {
-	next if $filename =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
-	$line++;
-	$direx .= &expandtemplate($templ,
-				  ('iconlink',		\&fileicon),
-				  ('namelink',		\&filename),
-				  ('filesize',		\&filesize),
-				  ('modtime',		\&modtime),
-				  ('bgcolor',		\&bgcolor),
-				  ('description',	\&descexpand));
+    
+    %index = $files->getindex($dir, $release);
+
+    unshift(@nodes, '../') unless $dir eq '/';
+    
+    foreach $node (@nodes) {
+	if ($node =~ /\/$/) {
+	    $direx .= expandtemplate
+		($templ,
+		 ('iconlink'	=> sub { diricon(@_, $node, $dir) },
+		  'namelink'	=> sub { dirname(@_, $node, $dir) },
+		  'filesize'	=> sub { '-' },
+		  'modtime'	=> sub { modtime(@_, $node, $dir) },
+		  'bgcolor'	=> sub { bgcolor(@_, $line++) },
+		  'description'	=> sub { descexpand(@_, $node, $dir, \%index) }
+		  ));
+	}
+	else {
+	    next if $node =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
+	    $direx .= expandtemplate
+		($templ,
+		 ('iconlink'	=> sub { fileicon(@_, $node, $dir) },
+		  'namelink'	=> sub { filename(@_, $node, $dir) },
+		  'filesize'	=> sub { filesize(@_, $node, $dir) },
+		  'modtime'	=> sub { modtime(@_, $node, $dir) },
+		  'bgcolor'	=> sub { bgcolor(@_, $line++) },
+		  'description'	=> sub { descexpand(@_, $node, $dir, \%index) }
+		  ));
+	}
     }
 
     return($direx);
 }
 
 sub printdir {
-    my $template;
-    my $index;
-    my @nodes;
-    local %index;
-    local @dirs;
-    local @files;
-    local $parentdir;
-
+    my $dir = shift;
+    my $templ;
     
-    $template = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
+    $templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
     if ($Conf->htmldir) {
 	unless (open(TEMPL, $Conf->htmldir)) {
-	    &warning("Template ".$Conf->htmldir." does not exist.");
+	    warning("Template ".$Conf->htmldir." does not exist.");
 	} else {
 	    local($/) = undef;
-	    $template = <TEMPL>;
+	    $templ = <TEMPL>;
 	    close(TEMPL);
 	}
     }
     
-    $parentdir = $filename;
-    @nodes = $files->getdir($filename, $release);
-    unless (@nodes) {
-	print("<p align=center>\n<i>The directory ".
-	      $files->toreal($filename, $release).
-	      " does not exist.</i>\n");
-	#FIXME what does this do?
-	if ($files->toreal($filename, $release) =~ m#(.+[^/])[/]*$# ) {
-	    if (-e $1) {
-		&warning("Unable to open ".$Path->{'real'});
-	    }
-	}
-	return;
-    }
-       
-    @dirs  = grep { $files->isdir($filename.$_, $release) } @nodes;
-    @files = grep { ! $files->isdir($filename.$_, $release) } @nodes;
-
-    %index = $files->getindex($filename, $release);
-
-    unshift(@dirs, '..') unless $parentdir eq '/';
-    
     # print the description of the current directory
-    dirdesc($parentdir);
+    dirdesc($dir);
     
     # print the listing itself
-    print(&expandtemplate($template,
-			  ('files',	\&direxpand)));
+    print(expandtemplate($templ,
+			 ('files' => sub { direxpand(@_, $dir) })));
 }
 
 
 sub printfile {
-    unless ($Path->{'file'}) {
-	&printdir;
-    } else {
-	my $buffer = $files->getfilehandle($filename, $release);
+    my ($node, $raw) = @_;
 
-	if ($buffer) {
-	    if ($filename =~ /\.(html)$/) {
-		print($buffer);
-	    } elsif ($filename =~ /README$/) {
+    if ($node =~ /\/$/) {
+	printdir($node);
+    }
+    else {
+	my $fileh = $files->getfilehandle($node, $release);
+
+	if ($fileh) {
+	    if ($raw) {
+		print($fileh->getlines);
+	    } 
+	    elsif ($node =~ /README$/) {
 		print("<pre>",
-		      markupstring($buffer, $filename, $index),
+		      markupstring($fileh, $node, $index), # FIXME
 		      "</pre>");
-	    } else {
+	    } 
+	    else {
 		print("<pre>");
-		markupfile($buffer, $Path->{'virt'}, $index,
+		markupfile($fileh, $node, $index,
 			   $Path->{'file'}, sub { print shift });
 		print("</pre>");
 	    }
 
-	} else {
-	    print("\<p align=center>\n<i>The file $filename does not exist.</i>\n");
+	} 
+	else {
+	    print("\<p align=center>\n<i>The file $node does not exist.</i>\n");
 	    if (-f $Path->{'real'}.$Path->{'file'}) {
-		&warning("Unable to open ".$Path->{'realf'});
+		warning("Unable to open ".$Path->{'realf'});
 	    }
 	}
     }
 }
 
-($Conf, $HTTP, $Path) = &init($0);
+($Conf, $HTTP, $Path) = init($0);
 
 $files = new LXR::Files($Conf->sourceroot);
 $index = new LXR::Index($Conf->dbname);
 
-$filename = $Path->{'virtf'};
 $release = $Conf->variable('v');
 
-#if the file is html then don't print a header because the file
-#has its own 
-if (!($Path->{'file'} =~ /\.(html)$/)) {
-    if ($Path->{'file'}) {
-	&makeheader('source');
-    } else {
-	&makeheader('sourcedir');
-    }
+
+# If the file is html then don't print a header because the file
+# has its own .
+
+if ($Path->{'file'} =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {
+    printfile($Path->{'virtf'}, 1);
 }
-
-&printfile;
-
-if (!($Path->{'file'} =~ /\.(html)$/)) {
-    if ($Path->{'file'}) {
-	&makefooter('source');
-    } else {
-	&makefooter('sourcedir');
-   }
+else {
+    my $type = ($Path->{'file'} ? 'source' : 'sourcedir');
+    
+    makeheader($type);
+    printfile($Path->{'virtf'}, 0);
+    makefooter($type);
 }

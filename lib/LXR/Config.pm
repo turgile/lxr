@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.8 1999/05/15 18:40:30 pergj Exp $
+# $Id: Config.pm,v 1.9 1999/05/16 09:53:19 argggh Exp $
 
 package LXR::Config;
 
@@ -56,11 +56,9 @@ sub _initialize {
     local($SIG{'__DIE__'}) = 'IGNORE';
     local($/) = undef;
 	
-    my @config = eval(<CONFIG>);
-    &fatal("Error in configuration file: ".$@) if $@;
-
-#    %$self = (%$self,
-#	      %{eval(<CONFIG>)});
+    my @config = eval("\n#line 1 \"configuration file\"\n".
+		      <CONFIG>);
+    &fatal($@) if $@;
 
     my $url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
     $url =~ s/:80$//;
