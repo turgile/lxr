@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.5 1999/05/29 18:57:15 toffer Exp $
+# $Id: Lang.pm,v 1.6 1999/05/29 19:39:00 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.5 1999/05/29 18:57:15 toffer Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.6 1999/05/29 19:39:00 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -14,11 +14,9 @@ sub new {
 	my $lang;
 
 	if ($pathname =~ /\.([ch]|cpp?|cc)$/i) {
-#		require LXR::Lang::C;
 		$lang = new LXR::Lang::C($pathname, $release);
 	}
 	elsif ($pathname =~ /\.java$/i) {
-#		require LXR::Lang::Java;
 		$lang = new LXR::Lang::Java($pathname, $release);
 	}
 	elsif ($pathname =~ /\.py$/i) {
@@ -40,12 +38,12 @@ package LXR::Lang::C;
 use strict;
 use LXR::Common;
 
-my @spec = ('atom',		'\\\\.',	'',
-			'comment',	'/\*',		'\*/',
-			'comment',	'//',		"\n",
-			'string',	'"',		'"',
-			'string',	"'",		"'",
-			'include',	'#include',	"\n");
+my @spec = ('atom'		=> ('\\\\.',	''),
+			'comment'	=> ('/\*',		'\*/'),
+			'comment'	=> ('//',		"\n"),
+			'string'	=> ('"',		'"'),
+			'string'	=> ("'",		"'"),
+			'include'	=> ('#include',	"\n"));
 
 sub new {
 	my ($self, $pathname, $release) = @_;
@@ -237,10 +235,10 @@ package LXR::Lang::Python;
 use strict;
 use LXR::Common;
 
-my @spec = ('comment',	'#',		"\n",
-			'string',	'"',		'"',
-			'string',	"'",		"'",
-			'atom',		'\\\\.',	'');
+my @spec = ('comment'	=> ('#',		"\n"),
+			'string'	=> ('"',		'"'),
+			'string'	=> ("'",		"'"),
+			'atom'		=> ('\\\\.',	''));
 
 sub new {
 	my ($self, $pathname, $release) = @_;

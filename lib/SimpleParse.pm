@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.6 1999/05/24 21:53:34 argggh Exp $
+# $Id: SimpleParse.pm,v 1.7 1999/05/29 19:38:59 argggh Exp $
 
 package SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.6 1999/05/24 21:53:34 argggh Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.7 1999/05/29 19:38:59 argggh Exp $ ';
 
 use strict;
 use integer;
@@ -107,12 +107,16 @@ sub nextfrag {
 		else {
 			$frag = shift(@frags);
 			if (defined($frag) && (@_ = $frag =~ /^$open$/o)) {
+				# grep in a scalar context returns the number of times
+				# EXPR evaluates to true, which is this case will be
+				# the index of the first defined element in @_.
+
 				my $i = 1;
-				$btype = grep { $i = ($i && !defined($_)) } @_;
+				$btype = grep { $i &&= !defined($_) } @_;
 			}
 		}
     }
-    $btype = $bodyid[$btype] if $btype;
+    $btype = $bodyid[$btype] if defined($btype);
     
     return($btype, $frag);
 }
