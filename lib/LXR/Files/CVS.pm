@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.8 1999/08/04 09:04:29 argggh Exp $
+# $Id: CVS.pm,v 1.9 1999/09/17 16:33:53 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.8 1999/08/04 09:04:29 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.9 1999/09/17 16:33:53 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -86,6 +86,40 @@ sub getfile {
 			}
 		}
 	}
+
+
+	my $lrev;
+	my $hrev = $cvs{'header'}{'head'};
+	my @file = (1..scalar(@head));
+	my @blame = ();
+
+	while (1) {
+		$lrev = $hrev;
+		$hrev = $cvs{'branch'}{$hrev}{'next'} || last;
+		my @diff = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
+ 		my $off = 0;
+
+		while (@diff) {
+			my $dir = shift(@diff);
+
+			if ($dir =~ /^a(\d+)\s+(\d+)/) {
+				splice(@diff, 0, $2);
+				splice(@file, $1-$off, 0, ((0) x $2));
+				$off -= $2;
+			}
+			elsif ($dir =~ /^d(\d+)\s+(\d+)/) {
+				map { $blame[$_] = $lrev if $_ } splice(@file, $1-$off-1, $2);
+				$off += $2;
+			}
+			else {
+				warn("Oops! Out of sync!");
+			}
+		}
+	}
+
+	map { $blame[$_] = $lrev if $_ } @file;
+
+	print(STDERR "** Blame: ".scalar(@blame).join("\n", @blame, ''));
 
 	return join('', @head);
 }

@@ -1,5 +1,5 @@
-#!/local/bin/perl
-# $Id: ident,v 1.5 1999/09/17 09:37:37 argggh Exp $
+#!/usr/bin/perl
+# $Id: ident,v 1.6 1999/09/17 16:33:52 argggh Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.5 1999/09/17 09:37:37 argggh Exp $ ';
+$CVSID = '$Id: ident,v 1.6 1999/09/17 16:33:52 argggh Exp $ ';
 
 use strict;
 use lib 'lib';

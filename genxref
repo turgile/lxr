@@ -1,4 +1,4 @@
-#!/local/bin/perl -d:SmallProf
+#!/usr/bin/perl
 # -*- tab-width: 4 -*-
 
 use strict;
