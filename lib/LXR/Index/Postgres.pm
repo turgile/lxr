@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.10 2002/01/23 15:48:52 mbox Exp $
+# $Id: Postgres.pm,v 1.11 2004/07/15 20:16:03 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.10 2002/01/23 15:48:52 mbox Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.11 2004/07/15 20:16:03 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -298,6 +298,15 @@ sub getdecid {
   return $id;
 }
 
+
+sub setindexed {
+	my ($self, $fileid) = @_;
+		$status_update->execute(1, $fileid, 0);
+	}
+sub setreferenced {
+ 	my ($self, $fileid) = @_;
+	$status_update->execute(2, $fileid, 1);
+}
 
 sub END {
 
