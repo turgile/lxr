@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.22 1999/09/17 16:33:52 argggh Exp $
+# $Id: source,v 1.23 1999/09/18 10:20:16 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.22 1999/09/17 16:33:52 argggh Exp $ ';
+$CVSID = '$Id: source,v 1.23 1999/09/18 10:20:16 argggh Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -234,7 +234,28 @@ sub printfile {
 #		      "</pre>");
 #	    } 
 	    else {
-		markupfile($fileh, sub { print shift });
+		my @ann = $files->getannotations($pathname, $release);
+
+		my ($a, $b);
+		foreach $a (@ann) {
+		    if ($a eq $b) {
+			$a = ' ' x 16;
+			next;
+		    }
+
+		    $b = $a;
+		    $a .= ' ' x (8 - length($a)).
+			$files->getauthor($pathname, $a);
+		    $a .= ' ' x (16 - length($a));
+		}
+
+		my $l;
+		markupfile($fileh,
+			   sub {
+			       $l = shift;
+			       $l =~ s/(\n)/$1.shift(@ann)/ge;
+			       print $l;
+			   });
 	    }
 
 	} 

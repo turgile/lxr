@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.9 1999/09/17 16:33:53 argggh Exp $
+# $Id: CVS.pm,v 1.10 1999/09/18 10:20:22 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.9 1999/09/17 16:33:53 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.10 1999/09/18 10:20:22 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -26,7 +26,7 @@ sub new {
 sub filerev {
 	my ($self, $filename, $release) = @_;
 
-	$self->parsecvs($filename, $release);
+	$self->parsecvs($filename);
 
 	return $cvs{'header'}{'symbols'}{$release};
 }								
@@ -36,7 +36,7 @@ sub getfiletime {
 
 	return undef if $self->isdir($filename, $release);
 
-	$self->parsecvs($filename, $release);
+	$self->parsecvs($filename);
 
 	my $rev = $cvs{'header'}{'symbols'}{$release};
 
@@ -57,7 +57,7 @@ sub getfilesize {
 sub getfile {
 	my ($self, $filename, $release) = @_;
 
-	$self->parsecvs($filename, $release);
+	$self->parsecvs($filename);
 
 	my $rev = $cvs{'header'}{'symbols'}{$release};
 	return undef unless defined($rev);
@@ -87,15 +87,30 @@ sub getfile {
 		}
 	}
 
+	return join('', @head);
+}
 
-	my $lrev;
+sub getannotations {
+	my ($self, $filename, $release) = @_;
+
+	$self->parsecvs($filename);
+
+	my $rev = $cvs{'header'}{'symbols'}{$release};
+	return undef unless defined($rev);
+
 	my $hrev = $cvs{'header'}{'head'};
-	my @file = (1..scalar(@head));
-	my @blame = ();
+	my $lrev;
+	my @anno;
+	my @head = $cvs{'history'}{$hrev}{'text'} =~ /\n()/gs;
 
 	while (1) {
+		if ($rev eq $hrev) {
+			@head = 0..$#head;
+		}
+
 		$lrev = $hrev;
 		$hrev = $cvs{'branch'}{$hrev}{'next'} || last;
+
 		my @diff = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
  		my $off = 0;
 
@@ -104,11 +119,14 @@ sub getfile {
 
 			if ($dir =~ /^a(\d+)\s+(\d+)/) {
 				splice(@diff, 0, $2);
-				splice(@file, $1-$off, 0, ((0) x $2));
+				splice(@head, $1-$off, 0, ('') x $2);
 				$off -= $2;
 			}
 			elsif ($dir =~ /^d(\d+)\s+(\d+)/) {
-				map { $blame[$_] = $lrev if $_ } splice(@file, $1-$off-1, $2);
+				map {
+					$anno[$_] = $lrev if $_ ne '';
+				} splice(@head, $1-$off-1, $2);
+
 				$off += $2;
 			}
 			else {
@@ -117,11 +135,20 @@ sub getfile {
 		}
 	}
 
-	map { $blame[$_] = $lrev if $_ } @file;
+	map {
+		$anno[$_] = $lrev if $_ ne '';
+	} @head;
 
-	print(STDERR "** Blame: ".scalar(@blame).join("\n", @blame, ''));
+#	print(STDERR "** Anno: ".scalar(@anno).join("\n", '', @anno, ''));
+	return @anno;
+}
 
-	return join('', @head);
+sub getauthor {
+	my ($self, $filename, $revision) = @_;
+
+	$self->parsecvs($filename);
+
+	return $cvs{'branch'}{$revision}{'author'};
 }
 
 sub getfilehandle {
@@ -182,7 +209,7 @@ sub dirempty {
 	closedir($DIRH);
 
 	foreach $node (@files) {
-		$self->parsecvs($pathname.$node, $release);
+		$self->parsecvs($pathname.$node);
 		return 0 if $cvs{'header'}{'symbols'}{$release};
 	}
 
@@ -262,24 +289,25 @@ sub getindex {
 sub allreleases {
 	my ($self, $filename) = @_;
 
-	$self->parsecvs($filename, undef);
+	$self->parsecvs($filename);
 
 	return sort(keys(%{$cvs{'header'}{'symbols'}}));
 }
 
 sub parsecvs {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename) = @_;
 
 	return if $cache_filename eq $filename;
 	$cache_filename = $filename;
 
-	open(CVS, $self->toreal($filename, $release));
+	open(CVS, $self->toreal($filename, undef));
 	my @cvs = join('', <CVS>) =~ /((?:(?:[^\n@]+|@[^@]*@)\n?)+)/gs;
 	close(CVS);
 
 	$cvs{'header'} = { map { s/@@/@/gs;
 							 /^@/s && substr($_, 1, -1) || $_ }
 					   shift(@cvs) =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
+
 	$cvs{'header'}{'symbols'}
 	= { $cvs{'header'}{'symbols'} =~ /(\S+?):(\S+)/g };
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Perl.pm,v 1.1 1999/09/17 09:37:45 argggh Exp $
+# $Id: Perl.pm,v 1.2 1999/09/18 10:20:24 argggh Exp $
 
 package LXR::Lang::Perl;
 
-$CVSID = '$Id: Perl.pm,v 1.1 1999/09/17 09:37:45 argggh Exp $ ';
+$CVSID = '$Id: Perl.pm,v 1.2 1999/09/18 10:20:24 argggh Exp $ ';
 
 =head1 LXR::Lang::Perl
 
@@ -23,6 +23,7 @@ my @spec = (
 			'atom'		=> ('\$\W?',	''),
 			'atom'		=> ('\\\\.',	''),
 			'include'	=> ('\buse\s+',	';'),
+			'include'	=> ('\brequire\s+',	';'),
 			'string'	=> ('"',		'"'),
 			'comment'	=> ('#',		"\$"),
 			'comment'	=> ("^=\\w+",	"^=cut"),
@@ -59,10 +60,20 @@ sub processcode {
 		 : $1)#geis;
 }
 
+sub modref {
+	my $mod = shift;
+	my $file = $mod;
+
+	$file =~ s,::,/,g;
+	$file .= ".pm";
+
+	return &LXR::Common::incref($mod, $file);
+}
+
 sub processinclude {
 	my ($self, $frag, $dir) = @_;
 	
-	$$frag =~ s/(use\s*)(\w+)/$1.&LXR::Common::incref($2, ".pm")/e;
+	$$frag =~ s/(use\s+|require\s+)([\w:]+)/$1.modref($2)/e;
 }
 
 sub processcomment {

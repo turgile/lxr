@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.21 1999/09/17 09:37:40 argggh Exp $
+# $Id: Common.pm,v 1.22 1999/09/18 10:20:18 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.21 1999/09/17 09:37:40 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.22 1999/09/18 10:20:18 argggh Exp $ ';
 
 use strict;
 
@@ -155,15 +155,15 @@ sub idref {
 
 
 sub incref {
-	my ($name, $ext, @paths) = @_;
-	my $file;
+	my ($name, $file, @paths) = @_;
+	my ($dir, $path);
 
 	push(@paths, $config->incprefix);
 
-	foreach $file (@paths) {
-		$file =~ s/\/+$//;
-		$file = $config->mappath($file."/".$name.$ext);
-		return &fileref($name, $file) if $files->isfile($file, $release);
+	foreach $dir (@paths) {
+		$dir =~ s/\/+$//;
+		$path = $config->mappath($dir."/".$file);
+		return &fileref($name, $path) if $files->isfile($path, $release);
 		
 	}
 	
@@ -281,7 +281,7 @@ sub markupfile {
 
 		my ($btype, $frag) = &SimpleParse::nextfrag;
 
-		&$outfun("<pre>");
+		&$outfun("<pre>\n");
 		&$outfun(join($line++, @ltag)) if defined($frag);
 		
 		while (defined($frag)) {
@@ -305,13 +305,16 @@ sub markupfile {
 				# Code
 				$lang->processcode(\$frag);
 			}
-
+		
 			&htmlquote($frag);
-			$frag =~ s/\n/"\n".join($line++, @ltag)/ge;
+			my $ofrag = $frag;
 
-			&$outfun($frag);
-			
 			($btype, $frag) = &SimpleParse::nextfrag;
+
+			$ofrag =~ s/\n$// unless defined($frag);
+			$ofrag =~ s/\n/"\n".join($line++, @ltag)/ge;
+
+			&$outfun($ofrag);
 		}
 		&$outfun("</pre>");
 	} 
@@ -356,7 +359,7 @@ sub markupfile {
 			
 		} 
 		else {
-			&$outfun("<pre>");
+			&$outfun("<pre>\n");
 			do {
 				&SimpleParse::untabify($_);
 				&markspecials($_);

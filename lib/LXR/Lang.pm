@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.16 1999/09/17 09:37:41 argggh Exp $
+# $Id: Lang.pm,v 1.17 1999/09/18 10:20:19 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.16 1999/09/17 09:37:41 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.17 1999/09/18 10:20:19 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -42,9 +42,9 @@ sub processinclude {
 	my ($self, $frag, $dir) = @_;
 
 	$$frag =~ s#(\")(.*?)(\")#
-		$1.&LXR::Common::incref($2, '', $dir).$3#e;
+		$1.&LXR::Common::incref($2, $2, $dir).$3#e;
 	$$frag =~ s#(\0<)(.*?)(\0>)#
-		$1.&LXR::Common::incref($2, '').$3#e;
+		$1.&LXR::Common::incref($2, $2).$3#e;
 }
 
 sub processcomment {
