@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.20 2004/07/15 15:29:35 brondsem Exp $
+# $Id: search,v 1.21 2004/07/19 18:05:56 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.20 2004/07/15 15:29:35 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.21 2004/07/19 18:05:56 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -82,7 +82,7 @@ sub glimpsesearch {
     
     if ($retval == 0) {
 	my @ret;
-	my $sourceroot = $config->sourceroot;
+	my $sourceroot = $config->sourceroot . '/' . $release . '/';
 	my $i = 0;
 	foreach my $glimpseline (@glimpselines) {
 	    last if ($i > $maxhits);
