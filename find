@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.6 2001/10/16 20:38:37 pergj Exp $
+# $Id: find,v 1.7 2002/02/03 05:31:32 mbox Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.6 2001/10/16 20:38:37 pergj Exp $ ';
+$CVSID = '$Id: find,v 1.7 2002/02/03 05:31:32 mbox Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -53,7 +53,7 @@ sub find {
 
 
     if ($searchtext ne "") {
-	unless (open(FILELLISTING,$config->dbdir."/.glimpse_filenames")) {
+	unless (open(FILELLISTING,$config->glimpsedir."/.glimpse_filenames")) {
 	    &warning("Could not open .glimpse_filenames.");
 	    return;
 	}
