@@ -52,3 +52,4 @@ create index symbolindex on symbols using btree (symname);
 
 grant select on symbols to public;
 grant all on symbols to argggh;
+grant all on symbols to toffer;

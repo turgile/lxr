@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.7 1999/05/24 21:53:40 argggh Exp $
+# $Id: DB.pm,v 1.8 1999/05/29 18:57:16 toffer Exp $
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.7 1999/05/24 21:53:40 argggh Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.8 1999/05/29 18:57:16 toffer Exp $ ';
 
 use strict;
 use DB_File;
@@ -52,10 +52,7 @@ sub relate {
 	my ($self, $symname, $release, $rsymname, $reltype) = @_;
 	my $symid = $self->symid($symname, $release);
 
-#	join("", $$self{'relation'}{$self->symid($symname, $release)},
-#		join("\t", $self->symid($rsymname, $release), $reltype, ''));
-	$$self{'relation'}{$symid} =
-		join("\t", $self->$symid, $reltype, '');
+	$$self{''}{$symid} = join("", $$self{'relation'}{$self->symid($symname, $release)}, 	join("\t", $self->symid($rsymname, $release), $reltype, ''));
 }
 
 sub getrelations {

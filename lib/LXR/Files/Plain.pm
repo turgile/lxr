@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.10 1999/05/24 21:53:38 argggh Exp $
+# $Id: Plain.pm,v 1.11 1999/05/29 18:57:15 toffer Exp $
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.10 1999/05/24 21:53:38 argggh Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.11 1999/05/29 18:57:15 toffer Exp $ ';
 
 use strict;
 use FileHandle;
@@ -78,7 +78,7 @@ sub getdir {
 	my ($dir, $node, @dirs, @files);
 
 	$dir = $self->toreal($pathname, $release);
-	opendir(DIR, $dir) || return ();
+	opendir(DIR, $dir) || die ("Can't open $dir");
 	while (defined($node = readdir(DIR))) {
 		next if $node =~ /^\.|~$|\.orig$/;
 		next if $node eq 'CVS';
@@ -102,7 +102,7 @@ sub getdir {
 
 sub toreal {
 	my ($self, $pathname, $release) = @_;
-
+	
 	return ($self->{'rootpath'}.$release.$pathname);
 }
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.4 1999/05/25 21:39:57 argggh Exp $
+# $Id: Lang.pm,v 1.5 1999/05/29 18:57:15 toffer Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.4 1999/05/25 21:39:57 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.5 1999/05/29 18:57:15 toffer Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -20,6 +20,9 @@ sub new {
 	elsif ($pathname =~ /\.java$/i) {
 #		require LXR::Lang::Java;
 		$lang = new LXR::Lang::Java($pathname, $release);
+	}
+	elsif ($pathname =~ /\.py$/i) {
+		$lang = new LXR::Lang::Python($pathname, $release);
 	}
 	else {
 		$lang = undef;
@@ -68,8 +71,9 @@ sub processcode {
 }
 
 
+
 # Java
-package LXR::Lang::Java;
+package LXR::Lang::Java;    
 
 my @spec = ('atom',		'\\\\.',	'',
 			'comment',	'/\*',		'\*/',
@@ -225,6 +229,51 @@ sub find_java_xrefs {
 
 	$_;
 }
+
+
+# Python
+package LXR::Lang::Python;
+
+use strict;
+use LXR::Common;
+
+my @spec = ('comment',	'#',		"\n",
+			'string',	'"',		'"',
+			'string',	"'",		"'",
+			'atom',		'\\\\.',	'');
+
+sub new {
+	my ($self, $pathname, $release) = @_;
+
+	$self = bless({}, $self);
+
+	$$self{'release'} = $release;
+	
+	return $self;
+}
+	
+sub parsespec {
+	return @spec;
+}
+
+sub processcode {
+	my ($self, $code, @itag) = @_;
+	
+	$$code =~ s/([a-zA-Z_][a-zA-Z0-9_]*)/
+		($index->issymbol($1, $$self{'release'}) 
+		 ? join($1, @{$$self{'itag'}})
+		 : $1)/ge;
+}
+
+sub find_python_xrefs {
+	
+	
+	
+	
+	
+}
+
+
 
 
 1;

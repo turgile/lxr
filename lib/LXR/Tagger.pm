@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.5 1999/05/22 14:41:02 argggh Exp $
+# $Id: Tagger.pm,v 1.6 1999/05/29 18:57:15 toffer Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.5 1999/05/22 14:41:02 argggh Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.6 1999/05/29 18:57:15 toffer Exp $ ';
 
 use strict;
 use FileHandle;
@@ -75,6 +75,39 @@ sub processfile {
 		}
 		close(CTAGS);
 	}
+
+	elsif (ref($lang) =~ /LXR::Lang::Python/) {
+		
+		my (@ptag_lines, @single_ptag, $module_name);
+		
+		if ($pathname =~ m|/(\w+)\.py$|) {
+			$module_name = $1;
+		}
+		
+		open(PYTAG, $path);
+		
+		while (<PYTAG>) {
+			chomp;
+
+			# Function definitions
+			if ( $_ =~ /^\s*def\s+([^\(]+)/ ) {
+				$index->index($module_name."\.$1", $fileid, $., "f");
+			}
+			# Class definitions 
+			elsif ( $_ =~ /^\s*class\s+([^\(:]+)/ ) {
+				$index->index($module_name."\.$1", $fileid, $., "c");
+			}
+			# Targets that are identifiers if occurring in an assignment..
+			elsif ( $_ =~ /^(\w+) *=.*/ ) {
+				$index->index($module_name."\.$1", $fileid, $., "v");
+			}
+			# ..for loop header.
+			elsif ( $_ =~ /^for\s+(\w+)\s+in.*/ ) {
+				$index->index($module_name."\.$1", $fileid, $., "v");
+			}
+		}
+		close(PYTAG);
+	}
 	else {
 		system($config->ctagsbin, 
 			   "-x",
@@ -84,7 +117,7 @@ sub processfile {
 			   "--language=c++", 
 			   "--output=-",
 			   $path);
-
+		
 	}
 	unlink($path);
 }
