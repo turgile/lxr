@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.13 2004/06/28 18:35:54 brondsem Exp $
+# $Id: find,v 1.14 2004/07/07 20:31:45 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,31 +23,15 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.13 2004/06/28 18:35:54 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.14 2004/07/07 20:31:45 brondsem Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
+
 
 use LXR::Common qw(:html);
 use LXR::Config;
 
 sub find {
-
-print q~
-<p align=\"center\">
-Search for files (by name) using <a href="http://www.perldoc.com/perl5.8.4/pod/perlrequick.html">perl regular expressions</a>.
-</p>
-<H3>Quick tip:</H3>
-<P>
-The database that is searched has the form of the output of the
-"find" command. 
-</p><p>That is, each line is the absolute patch of a file
-If you want to search for a specific file(s), you use
-<ul>
-<li> /el\.po to search for all occurences of file "el.po".
-<li> \.desktop$ to search for all files ending with ".desktop".
-</ul>
-</p>
-~;
 
     print ("<form method=\"get\" action=\"find\">\n");
 
@@ -61,6 +45,8 @@ If you want to search for a specific file(s), you use
     print("<b>Find file: </b><input type=\"text\" name=\"string\" ",
 	  "value=\"",$searchtext,"\" size=\"50\">\n",
 	  "<input type=\"submit\" value=\"search\">\n",
+	  "<br><input type=\"checkbox\" name=\"advanced\"", $advanced ? " checked" : "", " value=\"1\"/> Advanced (allow <a href=\"http://www.perldoc.com/perl5.8.4/pod/perlrequick.html\" target=\"_blank\">regex</a>)\n",
+	  "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"casesensitive\"", $casesensitive ? " checked" : "", " value=\"1\"/> Case-sensitive\n",
 	  "</form>\n");
 
 
@@ -79,12 +65,29 @@ If you want to search for a specific file(s), you use
     }
 	print("<hr>\n");
 	$sourceroot = $config->sourceroot;
-    my $hits = 0;
+	my $hits = 0;
 	while($file = <FILELLISTING>) {
 	    $file =~ s/^$sourceroot//;
-	    if($file =~ /$searchtext/) {
-		print(&fileref("$file", "find-file", "/$file"),"<br>\n");
-        $hits++;
+	    if ($advanced) {
+		if ($casesensitive) {
+		    if ($file =~ /$searchtext/) {
+			print(&fileref("$file", "find-file", "/$file"),"<br>\n");
+			$hits++;
+		    }
+		} elsif ($file =~ /$searchtext/i) {
+		    print(&fileref("$file", "find-file", "/$file"),"<br>\n");
+		    $hits++;
+		}
+	    } else {
+		if ($casesensitive) {
+		    if (index($file,$searchtext) != -1) {
+			print(&fileref("$file", "find-file", "/$file"),"<br>\n");
+			$hits++;
+		    }
+		} elsif (index(lc($file),lc($searchtext)) != -1) {
+		    print(&fileref("$file", "find-file", "/$file"),"<br>\n");
+		    $hits++;
+		}
 	    }
 	}
     print "<br>$hits files found.";
@@ -94,6 +97,8 @@ If you want to search for a specific file(s), you use
 httpinit;
 
 $searchtext = $HTTP->{'param'}->{'string'};
+$advanced = $HTTP->{'param'}->{'advanced'};
+$casesensitive = $HTTP->{'param'}->{'casesensitive'};
 
 &makeheader('find');
 &find;
