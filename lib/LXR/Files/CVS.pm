@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.25 2004/07/19 19:50:20 brondsem Exp $
+# $Id: CVS.pm,v 1.26 2004/07/20 17:30:54 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.25 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.26 2004/07/20 17:30:54 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
 use Time::Local;
 use LXR::Common;
 
-use vars qw(%cvs $cache_filename);
+use vars qw(%cvs $cache_filename $gnu_diff);
 
 sub new {
 	my ( $self, $rootpath ) = @_;
@@ -33,6 +33,14 @@ sub new {
 	$self = bless( {}, $self );
 	$self->{'rootpath'} = $rootpath;
 	$self->{'rootpath'} =~ s@/*$@/@;
+
+	# the rcsdiff command (used in getdiff) uses parameters only supported by GNU diff
+	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+	if ( `diff --version` =~ /GNU/ ) {
+		$gnu_diff = 1;
+	} else {
+		$gnu_diff = 0;
+	}
 
 	return $self;
 }
@@ -89,7 +97,7 @@ sub getannotations {
 	$self->parsecvs($filename);
 
 	my $rev = $self->filerev( $filename, $release );
-	return undef unless defined($rev);
+	return () unless defined($rev);
 
 	my $hrev = $cvs{'header'}{'head'};
 	my $lrev;
@@ -106,6 +114,7 @@ sub getannotations {
 		$hrev = $cvs{'branch'}{$hrev}{'next'} || last;
 
 		my @diff = $self->getdiff( $filename, $lrev, $hrev );
+		return () unless scalar @diff;
 		my $off  = 0;
 
 		while (@diff) {
@@ -166,14 +175,16 @@ sub getfilehandle {
 sub getdiff {
 	my ( $self, $filename, $release1, $release2 ) = @_;
 	my ($fileh);
+	
+	return () if $gnu_diff == 0;
 
 	$self->parsecvs($filename);
 
 	my $rev1 = $self->filerev( $filename, $release1 );
-	return undef unless defined($rev1);
+	return () unless defined($rev1);
 
 	my $rev2 = $self->filerev( $filename, $release2 );
-	return undef unless defined($rev2);
+	return () unless defined($rev2);
 
 	$rev1 =~ /([\d\.]*)/;
 	$rev1 = $1;    # untaint
