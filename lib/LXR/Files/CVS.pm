@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.12 2001/07/26 08:49:38 pok Exp $
+# $Id: CVS.pm,v 1.13 2001/07/30 20:30:17 pergj Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.12 2001/07/26 08:49:38 pok Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.13 2001/07/30 20:30:17 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -145,6 +145,7 @@ sub getfilehandle {
 	$fileh = new FileHandle("co -q -p$rev ".
 							$self->toreal($filename, $release).
 							" |"); # FIXME: Exploitable?
+	die("Error execting \"co\", rcs not installed?") unless $fileh;
 	return $fileh;
 }
 
@@ -163,6 +164,7 @@ sub getdiff {
 	$fileh = new FileHandle("rcsdiff -q -a -n -r$rev1 -r$rev2 ".
 							$self->toreal($filename, $release1).
 							" |"); # FIXME: Exploitable?
+	die("Error execting \"rcsdiff\", rcs not installed?") unless $fileh;
 	return $fileh->getlines;
 }
 
