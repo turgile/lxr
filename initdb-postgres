@@ -1,11 +1,13 @@
 drop sequence filenum;
 drop sequence symnum;
+drop sequence declnum;
 drop table files;
 drop table symbols;
 drop table indexes;
 drop table releases;
 drop table usage;
 drop table status;
+drop table declarations;
 
 create sequence filenum cache 50;
 create sequence symnum cache 50;
@@ -28,13 +30,21 @@ create table symbols (
 
 );
 
+create table declarations (
+	declid     	smallint not null,
+	langid		smallint not null,
+	declaration	char(255) not null,
+	primary key (declid, langid)
+); 
+
 create table indexes (
 	symid		int		references symbols,
 	fileid		int		references files,
 	line		int,
-	langid		tinyint not null references declarations,
-	type		smallint not null references declarations,
-	relsym		int		references symbols
+	langid		smallint not null,
+	type		smallint not null,
+	relsym		int		references symbols,
+	foreign key (langid, type) references declarations (langid, declid)
 );
 
 create table releases 
@@ -54,12 +64,6 @@ create table status
 	status		smallint,
 	primary key	(fileid)
 );
-create table declarations
-	(declid     smallint not null,
-	langid		tinyint not null,
-	declaration	char(255) not null,
-	primary key (declid, langid)
-); 
 
 create index indexindex on indexes using btree (symid);
 create index symbolindex on symbols using btree (symname);
@@ -72,4 +76,4 @@ grant select on indexes to public;
 grant select on releases to public;
 grant select on usage to public;
 grant select on status to public;
-
+grant select on declarations to public;

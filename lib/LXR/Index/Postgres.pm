@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.8 2001/11/18 03:31:34 mbox Exp $
+# $Id: Postgres.pm,v 1.9 2001/11/28 12:59:02 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.8 2001/11/18 03:31:34 mbox Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.9 2001/11/28 12:59:02 mbox Exp $ ';
 
 use strict;
 use DBI;
+use LXR::Common;
 
 use vars qw($dbh $transactions %files %symcache $commitlimit
 			$files_select $filenum_nextval $files_insert
@@ -36,7 +37,7 @@ sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	$dbh ||= DBI->connect($dbname);
+	$dbh ||= DBI->connect($dbname, $config->{'dbuser'}, $config->{'dbpass'});
 	die($DBI::errstr) unless $dbh;
 
 	$$dbh{'AutoCommit'} = 0;
@@ -66,7 +67,7 @@ sub new {
 		("delete from symbols where symname = ?");
 
 	$indexes_select = $dbh->prepare
-		("select f.filename, i.line, d.type, i.relsym ".
+		("select f.filename, i.line, d.declaration, i.relsym ".
 		 "from symbols s, indexes i, files f, releases r, declarations d ".
 		 "where s.symid = i.symid and i.fileid = f.fileid ".
 		 "and f.fileid = r.fileid ".
@@ -115,6 +116,12 @@ sub empty_cache {
   %symcache = ();
 }
 
+sub commit_if_limit {
+	unless (++$transactions % $commitlimit) {
+		$dbh->commit();
+	}
+}
+
 sub index {
 	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
@@ -124,9 +131,7 @@ sub index {
 							 $langid,
 							 $type,
 							 $relsym ? $self->symid($relsym) : undef);
-	unless (++$transactions % $commitlimit) {
-		$dbh->commit();
-	}
+	commit_if_limit();
 }
 
 sub reference {
@@ -135,10 +140,7 @@ sub reference {
 	$usage_insert->execute($fileid,
 						   $line,
 						   $self->symid($symname));
-
-	unless (++$transactions % $commitlimit) {
-		$dbh->commit();
-	}
+	commit_if_limit();
 }
 
 sub getindex {
@@ -200,6 +202,7 @@ sub fileid {
 		}
 		$files{"$filename\t$revision"} = $fileid;
 	}
+	commit_if_limit();
 	return $fileid;
 }
 
@@ -217,6 +220,7 @@ sub release {
 	unless ($firstrow) {
 		$releases_insert->execute($fileid+0, $release);
 	}
+	commit_if_limit();
 }
 
 sub symid {
@@ -233,7 +237,7 @@ sub symid {
 		}
 		$symcache{$symname} = $symid;
 	}
-
+	commit_if_limit();
 	return $symid;
 }
 
@@ -264,6 +268,7 @@ sub toindex {
 	my ($self, $fileid) = @_;
 
 	$status_insert->execute($fileid+0, $fileid+0);
+	commit_if_limit();
 	return $status_update->execute(1, $fileid+0, 0) > 0;
 }
 
@@ -286,9 +291,10 @@ sub getdecid {
   }
 
   $decl_select->execute($lang, $string);
-  my $id = decl_select->fetchrow_array();
+	my $id = $decl_select->fetchrow_array();
   $decl_select->finish();
 
+	commit_if_limit();
   return $id;
 }
 
