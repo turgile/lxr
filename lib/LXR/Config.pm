@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.6 1999/05/14 17:31:30 argggh Exp $
+# $Id: Config.pm,v 1.7 1999/05/15 14:12:01 argggh Exp $
 
 package LXR::Config;
 
@@ -61,27 +61,20 @@ sub _initialize {
 #    %$self = (%$self,
 #	      %{eval(<CONFIG>)});
 
-    use Data::Dumper;
-
-    print(STDERR "Foo: \n");
-
     my $url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
     $url =~ s/:80$//;
     $url .= $ENV{'SCRIPT_NAME'};
 
     my $config;
     foreach $config (@config) {
+	print(STDERR Dumper($config));
 	if ($config->{baseurl}) {
 	    my $root = quotemeta($config->{baseurl});
 	    next unless $url =~ /^$root/;
 	}
 	
 	%$self = (%$self, %$config);
-	
-	print(STDERR "Foo: \n");
-	print(STDERR Dumper($self));
     }
-
 }
 
 

@@ -5,7 +5,7 @@
 package LXR::Files::Plain;
 
 use strict;
-
+use FileHandle;
 
 sub new {
 	my ($self, $rootpath) = @_;
@@ -44,6 +44,14 @@ sub getfile {
 	$buffer = <FILE>;
 	close(FILE);
 	return $buffer;
+}
+
+sub getfilehandle {
+	my ($self, $filename, $release) = @_;
+	my ($fileh);
+
+	$fileh = new FileHandle($self->toreal($filename, $release));
+	return $fileh;
 }
 
 sub getdir {

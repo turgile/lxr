@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.6 1999/05/14 12:45:29 argggh Exp $
+# $Id: Common.pm,v 1.7 1999/05/15 14:12:00 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -275,18 +275,22 @@ sub linetag {
 }
 
 sub markupfile {
-    my ($buffer, $virtp, $index, $fname, $outfun) = @_;
+    my ($fileh, $virtp, $index, $fname, $outfun) = @_;
 
-     $line = 1;
+    my @ltag = &fileref(1, $virtp.$fname, 1) =~ /^(<a)(.*\#)1(\">)1(<\/a>)$/;
+    $ltag[0] .= ' name=';
+    $ltag[3] .= ' ';
+    
+    $line = '001';
 
-     # A C/C++ file 
-     if ($fname =~ /\.([ch]|cpp?|cc)$/i) { # Duplicated in genxref.
+    my @itag = &idref(1, 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 
- 	&SimpleParse::init($buffer, @cterm);
+    # A C/C++ file 
+    if ($fname =~ /\.([ch]|cpp?|cc)$/i) { # Duplicated in genxref.
 
- 	&$outfun(# "<pre>\n".
- 		 #"<a name=\"L".$line++.'"></a>');
- 		 &linetag($virtp.$fname, $line++));
+ 	&SimpleParse::init($fileh, @cterm);
+
+ 	&$outfun(join($line++, @ltag));
 
  	($btype, $frag) = &SimpleParse::nextfrag;
 	
@@ -302,7 +306,7 @@ sub markupfile {
  	    } elsif ($btype eq 'string') {
  		# String
  		$frag = "<i>$frag</i>";
-	
+		
  	    } elsif ($btype eq 'include') { 
  		# Include directive
  		$frag =~ s#(\")(.*?)(\")#
@@ -311,17 +315,21 @@ sub markupfile {
  		    $1.&incref($2).$3#e;
  	    } else {
  		# Code
- 		$frag =~ s#(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
- 		    $1.($index->issymbol($2, '2.0') ? &idref($2,$2) : $2)#ge;
+		$frag =~ s#(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
+		    $1.($index->issymbol($2, $main::release) 
+			? join($2, @itag) 
+			: $2
+			)#ge;
  	    }
 
  	    &htmlquote($frag);
- 	    $frag =~ s/\n/"\n".&linetag($virtp.$fname, $line++)/ge;
+# 	    $frag =~ s/\n/"\n".&linetag($virtp.$fname, $line++)/ge;
+ 	    $frag =~ s/\n/"\n".join($line++, @ltag)/ge;
  	    &$outfun($frag);
-    
+	    
  	    ($btype, $frag) = &SimpleParse::nextfrag;
  	}
-	    
+	
 #	&$outfun("</pre>\n");
 #	untie(%xref);
 

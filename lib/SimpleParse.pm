@@ -1,4 +1,4 @@
-# $Id: SimpleParse.pm,v 1.3 1999/05/14 12:45:29 argggh Exp $
+# $Id: SimpleParse.pm,v 1.4 1999/05/15 14:12:00 argggh Exp $
 
 use strict;
 
@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
 @EXPORT = qw(&doparse &untabify &init &nextfrag);
 
-my $buffer;			# File contents
+my $fileh;			# File handle
 my @frags;			# Fragments in queue
 my @bodyid;			# Array of body type ids
 my @open;			# Fragment opening delimiters
@@ -23,8 +23,7 @@ my $tabwidth;			# Tab width
 sub init {
     my @blksep;
 
-    ($buffer, @blksep) = @_;
-    $buffer = $$buffer;
+    ($fileh, @blksep) = @_;
 
     while (@_ = splice(@blksep,0,3)) {
 	push(@bodyid, $_[0]);
@@ -51,6 +50,7 @@ sub init {
 sub untabify {
     my $t = $_[1] || 8;
 
+    $_[0] =~ s/^(\t+)/(' ' x ($t * length($1)))/ge; # Optimize for common case.
     $_[0] =~ s/([^\t]*)\t/$1.(' ' x ($t - (length($1) % $t)))/ge;
     return($_[0]);
 }
@@ -62,7 +62,8 @@ sub nextfrag {
 
     while (1) {
 	if ($#frags < 0) {
-	    my $line = $1 if $buffer =~ s/([^\n]*\n*)//;
+#	    my $line = $1 if $buffer =~ s/([^\n]*\n*)//;
+	    my $line = $fileh->getline;
 	    
 	    if ($. == 1 &&
 		$line =~ /^.*-[*]-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-[*]-/) {

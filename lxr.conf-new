@@ -1,48 +1,88 @@
 # Configuration file.  -*- perl -*-
-
-{
-    'glimpsebin'	=> '/info/lxr/bin/glimpse',
-    'ctagsbin'		=> '/usr/bin/etags',
-    'ectagsbin'		=> '/local/bin/ctags',
-
-    'tmpdir'		=> '/tmp',
-},
-
-{
-    'baseurl'		=> 'http://karsk.ping.uio.no/~argggh/lxr',
-    'virtroot'		=> '/~argggh/lxr',
+# 
+(
+ {
+    # Global configuration
     
-    'variables' => {
-	# Define typed variable "v", read valueset from file.
-	'v' => {'name'    => 'Version',
-		'range'   => [ readfile('src/versions') ], 
-		'default' => readfile('src/defversion')},
-    
-	# Define typed variable "a".  First value is default.
-	'a' => {'name'    => 'Architecture',
-		'range'   => [qw(i386 alpha m68k mips ppc sparc sparc64)]},
-    },
-    
-    'maps' => {
-	'/include/asm[^\/]*/' => '/include/asm-$a/',
-	'/arch/[^\/]+/'       => '/arch/$a/',
-    },
+     'glimpsebin'	=> '/info/lxr/bin/glimpse',
+     'ctagsbin'		=> '/usr/bin/etags',
+     'ectagsbin'	=> '/local/bin/ctags',
+     
+     'tmpdir'		=> '/tmp',
+ },
 
-    'htmlhead'		=> 'template-head',
-    'htmltail'		=> 'template-tail',
-    'htmldir'		=> 'template-dir',
-    
-    'sourcehead'	=> 'template-source-head',
-    'sourcedirhead'	=> 'template-sourcedir-head',
-    
-    'sourceroot'	=> './src',
-    'sourcerootname'	=> 'Linux',
-    'incprefix'		=> ['/include', '/include/linux'],
-    
-    'dbname'		=> 'dbi:Pg:dbname=lxr',
-#    'dbname'		=> 'db:/var/lxr',
+ {
+     # Configuration for http://karsk.ping.uio.no/~argggh/lxr.
+     # baseurl is used to select configuration block.
 
-    # dbtype db or dbi
-#    'dbtype'		=> 'dbi',
-}
+     'baseurl'		=> 'http://karsk.ping.uio.no/~argggh/lxr',
+     'virtroot'		=> '/~argggh/lxr',
+     
+     'variables' => {
+	 # Define typed variable "v", read valueset from file.
+	 'v' => {'name'    => 'Version',
+		 'range'   => [ readfile('src/versions') ], 
+		 'default' => readfile('src/defversion')},
+	 
+	 # Define typed variable "a".  First value is default.
+	 'a' => {'name'    => 'Architecture',
+		 'range'   => [qw(i386 alpha m68k mips ppc sparc sparc64)]},
+     },
+     
+     'maps' => {
+	 '/include/asm[^\/]*/' => '/include/asm-$a/',
+	 '/arch/[^\/]+/'       => '/arch/$a/',
+     },
 
+     'htmlhead'		=> 'template-head',
+     'htmltail'		=> 'template-tail',
+     'htmldir'		=> 'template-dir',
+     
+     'sourcehead'	=> 'template-source-head',
+     'sourcedirhead'	=> 'template-sourcedir-head',
+     
+     'sourceroot'	=> './src',
+     'sourcerootname'	=> 'Linux',
+     'incprefix'	=> ['/include', '/include/linux'],
+     
+     'dbname'		=> 'dbi:Pg:dbname=lxr',
+     # 'dbname'		=> 'db:/var/lxr',
+
+     # dbtype db or dbi
+     # 'dbtype'		=> 'dbi',
+ },
+
+ {
+     'baseurl'		=> 'http://rivendell.lnet/lxr/',
+     'virtroot'		=> '/lxr',
+
+     'variables' => {
+	 # Define typed variable "v", read valueset from file.
+	 'v' => {'name'    => 'Version',
+		 'range'   => [ readfile('src/versions') ], 
+		 'default' => readfile('src/defversion')},
+	 
+	 # Define typed variable "a".  First value is default.
+	 'a' => {'name'    => 'Architecture',
+		 'range'   => [qw(i386 alpha m68k mips ppc sparc sparc64)]},
+     },
+
+     'maps' => {
+	 '/include/asm[^\/]*/' => '/include/asm-$a/',
+	 '/arch/[^\/]+/'       => '/arch/$a/',
+     },
+
+     'htmlhead'		=> 'templ-lxr-head',
+     'htmltail'		=> 'templ-lxr-tail',
+     'htmldir'		=> 'templ-lxr-dir',
+     
+     'sourcehead'	=> 'templ-lxr-head',
+     'sourcedirhead'	=> 'templ-lxr-head',
+     
+     'sourceroot'	=> 'src',
+     'sourcerootname'	=> 'Linux',
+     'incprefix'	=> ['/include', '/include/linux'],
+     
+     'dbname'		=> 'dbi:Pg:dbname=lxr',
+#    'dbname'		=> '/var/lxr',
+ })

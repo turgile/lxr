@@ -21,5 +21,7 @@ create table relation (symid int,
 		       rsymid int,
 		       reltype varchar);
 
-create unique index symbolindex on symbols(symname);
+create index symbolindex on symbols using btree (symname);
+
 grant select on symbols to public;
+grant select on symbolindex to public;
