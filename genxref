@@ -55,50 +55,58 @@ die("No matching configuration") unless $config->sourceroot;
 $files = new LXR::Files($config->sourceroot);
 $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 
-my @versions;
+my $version;
 if ($option{'allversions'} || !$option{'version'}) {
-  # is this really the best way to get the full list of versions?
-  @versions = $files->allreleases('/');
+    $version = undef;
 } else {
-  @versions = ($option{'version'});
+    $version = $option{'version'};
 }
 
-foreach my $version (@versions) {
-  genindex('/', $version);
-  genrefs('/', $version);
-}
-
+genindex('/', $version);
+genrefs('/', $version);
 
 sub genindex {
-	my ($pathname, $release) = @_;
-
-	print(STDERR "*** $pathname $release \n");
-
-	if ($pathname =~ m|/$|) {
-		map { 
-			genindex($pathname.$_, $release) 
-			} $files->getdir($pathname, $release);
-	} else {
-	    &LXR::Tagger::processfile($pathname, $release,
-								$config, $files, $index)
-	}
+    my ($pathname, $release) = @_;
+    
+    print(STDERR "*** $pathname $release \n");
+    
+    if ($pathname =~ m|/$|) {
+	map { 
+	    genindex($pathname.$_, $release) 
+	    } $files->getdir($pathname, $release);
+    } else {
+	# You generally don't know in advance what versions
+	# exist for a specific file until you ask it.
+	my @releases = ($release 
+			? ($release)
+			: $files->allreleases($pathname));
+	
+	map {
+	    &LXR::Tagger::processfile($pathname, $_,
+				      $config, $files, $index)
+	    } @releases;
+    }
 }
 
 sub genrefs {
-	my ($pathname, $release) = @_;
-
-	print(STDERR "### $pathname $release \n");
-
-	if ($pathname =~ m|/$|) {
-		map {
-			genrefs($pathname.$_, $release)
-			} $files->getdir($pathname, $release);
-	} else {
-		&LXR::Tagger::processrefs($pathname, $release,
-								  $config, $files, $index)
-	}
+    my ($pathname, $release) = @_;
+    
+    print(STDERR "### $pathname $release \n");
+    
+    if ($pathname =~ m|/$|) {
+	map {
+	    genrefs($pathname.$_, $release)
+	    } $files->getdir($pathname, $release);
+    } else {
+	# You generally don't know in advance what versions
+	# exist for a specific file until you ask it.
+	my @releases = ($release 
+			? ($release)
+			: $files->allreleases($pathname));
+	
+	map {
+	    &LXR::Tagger::processrefs($pathname, $_,
+				      $config, $files, $index)
+	    } @releases;
+    }
 }
-
-
-
-
