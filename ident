@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.10 2001/09/27 16:12:20 mbox Exp $
+# $Id: ident,v 1.11 2001/10/16 20:38:37 pergj Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.10 2001/09/27 16:12:20 mbox Exp $ ';
+$CVSID = '$Id: ident,v 1.11 2001/10/16 20:38:37 pergj Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -196,4 +196,5 @@ httpinit;
 makeheader('ident');
 printident;
 makefooter('ident');
+httpclean;
 

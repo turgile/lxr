@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: diff,v 1.7 2001/09/27 16:12:20 mbox Exp $
+# $Id: diff,v 1.8 2001/10/16 20:38:37 pergj Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.7 2001/09/27 16:12:20 mbox Exp $ ';
+$CVSID = '$Id: diff,v 1.8 2001/10/16 20:38:37 pergj Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -204,5 +204,7 @@ httpinit;
 makeheader('diff');
 printdiff($$HTTP{'param'}{'diffvar'}, $$HTTP{'param'}{'diffval'});
 makefooter('diff');
+
+httpclean;
 
 

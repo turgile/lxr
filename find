@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.5 2001/09/27 16:12:20 mbox Exp $
+# $Id: find,v 1.6 2001/10/16 20:38:37 pergj Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.5 2001/09/27 16:12:20 mbox Exp $ ';
+$CVSID = '$Id: find,v 1.6 2001/10/16 20:38:37 pergj Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -75,4 +75,6 @@ $searchtext = $HTTP->{'param'}->{'string'};
 &makeheader('find');
 &find;
 &makefooter('find');
+
+httpclean;
 

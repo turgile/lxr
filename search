@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.6 2001/09/27 16:12:20 mbox Exp $
+# $Id: search,v 1.7 2001/10/16 20:38:37 pergj Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.6 2001/09/27 16:12:20 mbox Exp $ ';
+$CVSID = '$Id: search,v 1.7 2001/10/16 20:38:37 pergj Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -116,11 +116,13 @@ sub search {
     }
 }
 
-&httpinit;
+httpinit;
 $searchtext = $HTTP->{'param'}->{'string'};
 
 &makeheader('search');
 &search;
 &makefooter('search');
+
+httpclean;
 
 

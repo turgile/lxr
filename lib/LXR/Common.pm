@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.32 2001/09/27 16:12:20 mbox Exp $
+# $Id: Common.pm,v 1.33 2001/10/16 20:38:37 pergj Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.32 2001/09/27 16:12:20 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.33 2001/10/16 20:38:37 pergj Exp $ ';
 
 use strict;
 
@@ -38,7 +38,8 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
 				 &warning &fatal &abortall &fflush &urlargs &fileref
 				 &idref &incref &htmlquote &freetextmarkup &markupfile
 				 &markupstring &httpinit &makeheader &makefooter
-				 &expandtemplate);
+				 &expandtemplate &httpclean);
+
 %EXPORT_TAGS = ('html' => [ @EXPORT_OK ]);
 
 
@@ -534,6 +535,12 @@ sub httpinit {
 	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
 
 	printhttp;
+}
+
+sub httpclean {
+	$config = undef;
+	$files = undef;
+	$index = undef;
 }
 
 
