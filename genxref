@@ -66,7 +66,9 @@ $config = new LXR::Config($option{'url'});
 die("No matching configuration") unless $config->sourceroot;
 
 $files = new LXR::Files($config->sourceroot);
+die "Can't create file access object ".$config->sourceroot if !defined($files);
 $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
+die "Can't create Index ".$config->dbname if !defined($index);
 
 my @versions;
 
