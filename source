@@ -1,5 +1,5 @@
-#!/usr/bin/perl -d:SmallProf
-# $Id: source,v 1.13 1999/05/22 10:51:59 argggh Exp $
+#!/usr/bin/perl
+# $Id: source,v 1.14 1999/05/22 14:41:00 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.13 1999/05/22 10:51:59 argggh Exp $ ';
+$CVSID = '$Id: source,v 1.14 1999/05/22 14:41:00 argggh Exp $ ';
 
 use strict;
 

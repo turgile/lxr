@@ -26,6 +26,8 @@ my $index = new LXR::Index($Conf->dbname);
 
 genxref('/', $option{'version'});
 
+$index->commit;
+
 sub genxref {
 	my ($pathname, $release) = @_;
 	
@@ -39,45 +41,6 @@ sub genxref {
 	else {
 		&LXR::Tagger::processfile($pathname, $release, 
 								  $Conf, $files, $index);
-
-#  		my $tagger = new LXR::Tagger($pathname, $Conf);
-#  		if ($tagger) {
-#  			print(STDERR "*** $pathname $release \n");
-			
-#  			$tagger->
-#  			open(TMP, "> /tmp/lxrref");
-#  			print(TMP $files->getfile($pathname, $release));
-#  			close(TMP);
-			
-#  			open(CTAGS, $Conf->ctagsbin." --excmd=number --lang=c++ --c-types=cdefgmnpstuvx -f - /tmp/lxrref |") 
-#  				|| die "Can't run ctags";
-#  #		open(CTAGS, "ctags-3.2/ctags --excmd=number --sort=no --lang=c++ --c-types=cdefgmnpstuvx -f - ".$$files{'rootpath'}.$release.$pathname." |");
-#  			while (<CTAGS>) {
-#  				chomp;
-#  				@_ = split(/\t/, $_);
-#  				$_[2] =~ s/;\"$//;
-				
-#  				$index->index($_[0], $release, $pathname, $_[2], $_[3]);
-				
-#  				if ($_[4] eq '') {
-#  				}
-#  				elsif ($_[4] =~ /^file:/) {
-#  				}
-#  				elsif ($_[4] =~ /^struct:(.*)/) {
-#  					$index->relate($_[0], $release, $1, 'struct member');
-#  				}
-#  				elsif ($_[4] =~ /^union:(.*)/) {
-#  					$index->relate($_[0], $release, $1, 'union member');
-#  				}
-#  				elsif ($_[4] =~ /^class:(.*)/) {
-#  					$index->relate($_[0], $release, $1, 'class member');
-#  				}
-#  				else {
-#  					print(STDERR "** Unknown : $_\n");
-#  				}
-#  			}
-#  			close(CTAGS);
-#  		}
 	}
 }
 

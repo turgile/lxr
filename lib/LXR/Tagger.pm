@@ -1,15 +1,14 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.4 1999/05/16 23:48:28 argggh Exp $
+# $Id: Tagger.pm,v 1.5 1999/05/22 14:41:02 argggh Exp $
+
+package LXR::Tagger;
+
+$CVSID = '$Id: Tagger.pm,v 1.5 1999/05/22 14:41:02 argggh Exp $ ';
 
 use strict;
 use FileHandle;
 use LXR::Lang;
-
-package LXR::Tagger;
-
-$CVSID = '$Id: Tagger.pm,v 1.4 1999/05/16 23:48:28 argggh Exp $ ';
-
 
 sub processfile {
 	my ($pathname, $release, $config, $files, $index) = @_;
@@ -20,6 +19,24 @@ sub processfile {
 
 	return unless $lang;
 	
+	my $revision = $files->filerev($pathname, $release);
+
+	return unless $revision;
+
+	print(STDERR "--- $pathname $release $revision\n");
+	
+	my $fileid = $index->fileid($pathname, $revision);
+
+	if ($fileid) {
+		$index->release($fileid, $release);
+		return;			# Already indexed.
+	}
+
+	$fileid = $index->fileid($pathname, $revision, 1);
+	$index->release($fileid, $release);
+
+	print(STDERR "--- $pathname $fileid\n");
+
 	my $path = $files->tmpfile($pathname, $release);
 
 	if (ref($lang) =~ /LXR::Lang::(C|Eiffel|Fortran|Java)/
@@ -37,7 +54,7 @@ sub processfile {
 			@_ = split(/\t/, $_);
 			$_[2] =~ s/;\"$//;
 			
-			$index->index($_[0], $release, $pathname, $_[2], $_[3]);
+			$index->index($_[0], $fileid, $_[2], $_[3]);
 				
 			if ($_[4] eq '') {
 			}

@@ -4,7 +4,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.3 1999/05/22 10:52:03 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.4 1999/05/22 14:41:03 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -23,9 +23,11 @@ sub new {
 sub filerev {
 	my ($self, $filename, $release) = @_;
 
-#	return $release;
-	return join("-", $self->getfiletime($filename, $release),
-				$self->getfilesize($filename, $release));
+	(my $rel = $release) =~ s/\./_/g; # Configurable?
+	$rel = 'v'.$rel;
+
+	my $cvs = $self->parsecvs($filename, $release);
+	return $$cvs{'header'}{'symbols'}{$rel};
 }								
 
 sub getfiletime {
@@ -83,13 +85,12 @@ sub getfilehandle {
 	my ($self, $filename, $release) = @_;
 	my ($fileh);
 
-#	$release =~ s/\./_/g;
 #	$fileh = new FileHandle("co -q -pv$release ".
 #							$self->toreal($filename, $release).
 #							" |"); # FIXME: Exploitable?
 
-
 	my $buffer = $self->getfile($filename, $release);
+
 	fflush;
 	my ($readh, $writeh) = FileHandle::pipe;
 	unless (fork) {
@@ -109,9 +110,7 @@ sub tmpfile {
 
 	$tmp = '/tmp/lxrtmp.'.time.'.'.$$;
 	open(TMP, "> $tmp") || return undef;
-	open(FILE, $self->toreal($filename, $release)) || return undef;
-	print(TMP <FILE>);
-	close(FILE);
+	print(TMP $self->getfile($filename, $release));
 	close(TMP);
 	
 	return $tmp;
@@ -122,7 +121,7 @@ sub getdir {
 	my ($dir, $node, @dirs, @files);
 	my ($DIR);
 
-	print(STDERR "Foo: $pathname $release\n");
+#	print(STDERR "Foo: $pathname $release\n");
 
 	$DIR = new IO::Handle;
 
@@ -210,7 +209,7 @@ sub parsecvs {
 
 	while (@cvs && $cvs[0] !~ /\s*desc/s) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$ret{'branch'}{$r} = { # map { s/^@|@($|@)/$1/gs; $_ }
+		$ret{'branch'}{$r} = { map { s/^@|@($|@)/$1/gs; $_ }
 							   $v =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
 	}
 	
@@ -219,7 +218,7 @@ sub parsecvs {
 
 	while (@cvs) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$ret{'history'}{$r} = { # map { s/^@|@($|@)/$1/gs; $_ }
+		$ret{'history'}{$r} = { map { s/^@|@($|@)/$1/gs; $_ }
 								$v =~ /(\w+)\s*((?:[^\n@]+|@[^@]*@)*)\n/gs };
 	}
 

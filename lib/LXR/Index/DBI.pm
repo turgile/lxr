@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.5 1999/05/17 23:43:52 argggh Exp $
+# $Id: DBI.pm,v 1.6 1999/05/22 14:41:05 argggh Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.5 1999/05/17 23:43:52 argggh Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.6 1999/05/22 14:41:05 argggh Exp $ ';
 
 use strict;
 use DBI;
@@ -16,6 +16,7 @@ sub new {
 	$self = bless({}, $self);
 	$$self{'dbh'} = DBI->connect($dbname);
 	$$self{'dbh'}{'AutoCommit'} = 0;
+#	$$self{'dbh'}->trace(2);
 	
 	$$self{'transactions'} = 0;
 	$$self{'filecache'} = [];
@@ -39,7 +40,7 @@ sub new {
 		("insert into indexes values (?, ?, ?, ?)");
 
 	$$self{'rst'} = $$self{'dbh'}->prepare
-		("select release from releases where fileid = ?");
+		("select * from releases where fileid = ? and release = ?");
 	$$self{'rup'} = $$self{'dbh'}->prepare
 		("insert into releases values (?, ?)");
 
@@ -47,10 +48,10 @@ sub new {
 }
 
 sub index {
-	my ($self, $symname, $release, $filename, $line, $type) = @_;
+	my ($self, $symname, $fileid, $line, $type) = @_;
 
-	$$self{'iup'}->execute($self->symid($symname, $release),
-						   $self->fileid($filename, $release),
+	$$self{'iup'}->execute($self->symid($symname),
+						   $fileid,
 						   $line, $type);
 	unless (++$$self{'transactions'} % 500) {
 		$$self{'dbh'}->commit();
@@ -73,39 +74,45 @@ sub getrelations {
 }
 
 sub fileid {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $revision, $update) = @_;
 	my ($fileid);
 
-	# FIXME: There's some release/revision mixup here.  Has to be fixed.
-	# Ask the Files object which revision the file has in this release.
-	# Remember to update releases table.
+	# CAUTION: $revision is not $release!
 
-	unless (defined($fileid = $$self{'files'}{"$filename\t$release"})) {
-		$$self{'fst'}->execute($filename, $release);
+	unless (defined($fileid = $$self{'files'}{"$filename\t$revision"})) {
+		$$self{'fst'}->execute($filename, $revision);
 		($fileid) = $$self{'fst'}->fetchrow_array();
 		unless ($fileid) {
+			return undef unless $update;
+
 			$$self{'fsq'}->execute();
 			($fileid) = $$self{'fsq'}->fetchrow_array();
-			$$self{'fup'}->execute($filename, $release, $fileid);
+			$$self{'fup'}->execute($filename, $revision, $fileid);
 		}
-		$$self{'files'}{"$filename\t$release"} = $fileid;
+		$$self{'files'}{"$filename\t$revision"} = $fileid;
 	}
 	return $fileid;
 }
 
+# Indicate that this filerevision is part of this release
+sub release {
+	my ($self, $fileid, $release) = @_;
+
+	my $rows = $$self{'rst'}->execute($fileid+0, $release);
+	$$self{'rst'}->finish();
+
+	unless ($rows > 0) {
+		$$self{'rup'}->execute($fileid, $release);
+	}
+}
 
 # Convert from fileid to filename
 sub filename {
 	my ($self, $fileid) = @_;
 }
 
-# Convert from fileid to release
-sub release {
-	my ($self, $fileid) = @_;
-}
-
 sub symid {
-	my ($self, $symname, $release) = @_;
+	my ($self, $symname) = @_;
 	my ($symid);
 
 	unless (defined($symid = $$self{'symbols'}{$symname})) {
@@ -133,7 +140,7 @@ sub issymbol {
 	return $$self{'symcache'}{$symname};
 }
 
-sub DESTROY {
+sub commit {
 	my ($self) = @_;
 
 	$$self{'fst'} = undef;
