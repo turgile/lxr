@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.9 1999/06/01 11:52:59 toffer Exp $
+# $Id: Lang.pm,v 1.10 1999/06/01 16:49:06 toffer Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.9 1999/06/01 11:52:59 toffer Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.10 1999/06/01 16:49:06 toffer Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -247,14 +247,13 @@ sub new {
 
 	$$self{'release'} = $release;
 
-	if ($pathname =~ /(\w+)\.py$/) || ($pathname =~ /(\w+)$/) { 
-		print STDERR "Pathname: $pathname \n modname: $1\n";
+	if ($pathname =~ /(\w+)\.py$/ || $pathname =~ /(\w+)$/) { 
 		$$self{'modulename'} = $1;
 	}
 
-	return $self;
+   	return $self;
 }
-	
+
 sub parsespec {
 	return @spec;
 }
@@ -264,9 +263,15 @@ sub processcode {
 	
 	$$code =~ s/([a-zA-Z_][a-zA-Z0-9_\.]*)/
 		($index->issymbol( $$self{'modulename'}.".".$1, $$self{'release'} )
-		 ? join($1, @{$$self{'itag'}})
+		 ? join('', 
+				$$self{'itag'}[0], 
+				$$self{'modulename'}.".".$1,
+				$$self{'itag'}[1],
+				$1,
+				$$self{'itag'}[2])
 		 : $1)/ge;
 	
 }
+
 
 1;

@@ -50,6 +50,17 @@ create table releases
 
 create index symbolindex on symbols using btree (symname);
 
+grant select on files to public;
 grant select on symbols to public;
+grant select on indexes to public;
+grant select on relations to public;
+grant select on releases to public;
+
 grant all on symbols to argggh;
+
+grant all on releases to toffer;
 grant all on symbols to toffer;
+grant all on indexes to toffer;
+grant all on files to toffer;
+grant all on relations to toffer;
+
