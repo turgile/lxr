@@ -1,10 +1,10 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: DBI.pm,v 1.16 2000/07/26 07:50:21 pergj Exp $
+# $Id: DBI.pm,v 1.17 2000/07/26 19:12:35 pergj Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.16 2000/07/26 07:50:21 pergj Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.17 2000/07/26 19:12:35 pergj Exp $ ';
 
 use strict;
 
@@ -17,7 +17,7 @@ sub new {
 		$index = new LXR::Index::Mysql($dbname);
 	} elsif($dbname =~ /^dbi:Pg:/) {
 		require LXR::Index::Postgres;
-		$index = new LXR::Index::Posgres($dbname);
+		$index = new LXR::Index::Postgres($dbname);
 	} elsif($dbname =~ /^dbi:sybase:/) {
 		require LXR::Index::Sybase;
 		$index = new LXR::Index::Sybase($dbname);
