@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.18 1999/06/20 12:10:06 argggh Exp $
+# $Id: Config.pm,v 1.19 1999/08/04 09:04:27 argggh Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.18 1999/06/20 12:10:06 argggh Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.19 1999/08/04 09:04:27 argggh Exp $ ';
 
 use strict;
 
@@ -60,6 +60,8 @@ sub _initialize {
     unless (open(CONFIG, $confpath)) {
 		die("Couldn't open configuration file \"$confpath\".");
     }
+
+	$$self{'confpath'} = $confpath;
     
     local($/) = undef;
     my @config = eval("\n#line 1 \"configuration file\"\n".

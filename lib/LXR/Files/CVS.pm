@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.7 1999/05/29 23:35:03 argggh Exp $
+# $Id: CVS.pm,v 1.8 1999/08/04 09:04:29 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.7 1999/05/29 23:35:03 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.8 1999/08/04 09:04:29 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -259,6 +259,8 @@ sub parsecvs {
 			$cvs{'header'}{'symbols'}{$nrel} = $rev if $nrel;
 		}
 	}
+
+	$cvs{'header'}{'symbols'}{'head'} = $cvs{'header'}{'head'};
 
 	while (@cvs && $cvs[0] !~ /\s*desc/s) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;

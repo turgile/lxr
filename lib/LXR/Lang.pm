@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.11 1999/06/01 17:09:27 toffer Exp $
+# $Id: Lang.pm,v 1.12 1999/08/04 09:04:28 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.11 1999/06/01 17:09:27 toffer Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.12 1999/08/04 09:04:28 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -22,8 +22,12 @@ sub new {
 	elsif ($pathname =~ /\.py$/i) {
 		$lang = new LXR::Lang::Python($pathname, $release);
 	}
+	elsif ($pathname =~ /\.p[lmh]$/i) {
+		$lang = new LXR::Lang::Perl($pathname, $release);
+	}
 	else {
-		$lang = undef;
+#		$lang = undef;
+		$lang = new LXR::Lang::Perl($pathname, $release);
 	}
 
 	$$lang{'itag'} = \@itag if $lang;
@@ -40,10 +44,10 @@ use LXR::Common;
 
 my @spec = ('atom'		=> ('\\\\.',	''),
 			'comment'	=> ('/\*',		'\*/'),
-			'comment'	=> ('//',		"\n"),
+			'comment'	=> ('//',		"\$"),
 			'string'	=> ('"',		'"'),
 			'string'	=> ("'",		"'"),
-			'include'	=> ('#include',	"\n"));
+			'include'	=> ('#include',	"\$"));
 
 sub new {
 	my ($self, $pathname, $release) = @_;
@@ -75,10 +79,10 @@ package LXR::Lang::Java;
 
 my @spec = ('atom',		'\\\\.',	'',
 			'comment',	'/\*',		'\*/',
-			'comment',	'//',		"\n",
+			'comment',	'//',		"\$",
 			'string',	'"',		'"',
 			'string',	"'",		"'",
-			'include',	'#include',	"\n");
+			'include',	'#include',	"\$");
 
 # May  8 1998 jmason java keywords
 my @java_reserved = ('break', 'case', 'continue', 'default', 'do', 'else',
@@ -235,7 +239,7 @@ package LXR::Lang::Python;
 use strict;
 use LXR::Common;
 
-my @spec = ('comment'	=> ('#',		"\n"),
+my @spec = ('comment'	=> ('#',		"\$"),
 			'string'	=> ('"',		'"'),
 			'string'	=> ("'",		"'"),
 			'atom'		=> ('\\\\.',	''));
@@ -270,6 +274,52 @@ sub processcode {
 				$1,
 				$$self{'itag'}[2])
 		 : $1)/ge;
+}
+
+
+# Perl
+package LXR::Lang::Perl;
+
+=head1 LXR::Lang::Perl
+
+Da Perl package, man!
+
+=cut
+
+use strict;
+use LXR::Common;
+
+my @spec = ('atom'		=> ('\\$\\\\',	'',), # '),
+			'atom'		=> ('\\\\.',	''),
+			'string'	=> ('"',		'"'),
+			'comment'	=> ('#',		"\$"),
+			'comment'	=> ("^=\\w+",	"^=cut"),
+			'string'	=> ("'",		"'"));
+
+
+sub new {
+	my ($self, $pathname, $release) = @_;
+
+	$self = bless({}, $self);
+
+	$$self{'release'} = $release;
+
+   	return $self;
+}
+
+sub parsespec {
+	return @spec;
+}
+
+sub processcode {
+	my ($self, $code, @itag) = @_;
+	my $sym;
+
+	$$code =~ s#([\$\@\%\&\*])([a-z0-9_]+)|\b([a-z0-9_]+)(\s*\()#
+		$sym = $2 || $3;
+		$1.($index->issymbol($sym, $$self{'release'})
+			? join($sym, @{$$self{'itag'}})
+			: $sym).$4#geis;
 }
 
 

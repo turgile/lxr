@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.16 1999/06/01 08:08:18 pergj Exp $
+# $Id: Common.pm,v 1.17 1999/08/04 09:04:27 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.16 1999/06/01 08:08:18 pergj Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.17 1999/08/04 09:04:27 argggh Exp $ ';
 
 use strict;
 
@@ -392,10 +392,14 @@ sub printhttp {
 	
 	# Made it stat all currently loaded modules.  -- agg.
 
+	# Todo: check lxr.conf.
+
 	my $time = $files->getfiletime($pathname, $release);
+	my $time2 = (stat($config->confpath))[9];
+	$time = $time2 if $time2 > $time;
+
 	my %mods = ('main' => $0, %INC);
-	my ($mod, $path, $time2);
-	
+	my ($mod, $path);
 	while (($mod, $path) = each %mods) {
 		$mod  =~ s/.pm$//;
 		$mod  =~ s|/|::|g;
