@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.15 1999/06/01 08:08:18 pergj Exp $
+# $Id: Config.pm,v 1.16 1999/06/16 12:24:38 pergj Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.15 1999/06/01 08:08:18 pergj Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.16 1999/06/16 12:24:38 pergj Exp $ ';
 
 use strict;
 
@@ -42,7 +42,7 @@ sub readfile {
 
 
 sub _initialize {
-    my ($self, $url, $conf) = @_;
+    my ($self, $url, $confpath) = @_;
     my ($dir, $arg);
 
     unless ($url) {
@@ -51,20 +51,20 @@ sub _initialize {
 		$url .= $ENV{'SCRIPT_NAME'};
     }
     
-    unless ($conf) {
-		($conf = $0) =~ s#/[^/]+$#/#;
-		$conf .= $confname;
+    unless ($confpath) {
+		($confpath = $0) =~ s#/[^/]+$#/#;
+		$confpath .= $confname;
     }
     
-    unless (open(CONFIG, $conf)) {
-		fatal("Couldn't open configuration file \"$conf\".");
+    unless (open(CONFIG, $confpath)) {
+		die("Couldn't open configuration file \"$confpath\".");
     }
     
 #    local($SIG{'__DIE__'}) = 'IGNORE';
     local($/) = undef;
     my @config = eval("\n#line 1 \"configuration file\"\n".
 					  <CONFIG>);
-    fatal($@) if $@;
+    die($@) if $@;
 
     my $config;
     foreach $config (@config) {
