@@ -25,4 +25,11 @@
     </td>
   </tr>
 </table>
+
+<hr>
+<b>Loaded modules:</b>
+<table>$devinfo{
+  <tr><td>$modpath</td><td>[ $modtime ]</td><td>$moduleid</td></tr>}
+</table>
+
 </body>

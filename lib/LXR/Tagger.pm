@@ -1,12 +1,14 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.3 1999/05/16 16:49:17 argggh Exp $
+# $Id: Tagger.pm,v 1.4 1999/05/16 23:48:28 argggh Exp $
 
 use strict;
 use FileHandle;
 use LXR::Lang;
 
 package LXR::Tagger;
+
+$CVSID = '$Id: Tagger.pm,v 1.4 1999/05/16 23:48:28 argggh Exp $ ';
 
 
 sub processfile {
@@ -109,7 +111,6 @@ package LXR::Tagger::ectags;
 #  				}
 #  			}
 #  			close(CTAGS);
-
 
 
 1;

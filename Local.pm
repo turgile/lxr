@@ -1,5 +1,7 @@
-#!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.6 1999/05/16 09:53:15 argggh Exp $
+# -*- tab-width: 4 -*- ###############################################
+#
+# $Id: Local.pm,v 1.7 1999/05/16 23:48:21 argggh Exp $
+#
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -10,8 +12,9 @@
 # and directory description snarfing mechanism is likely to be
 # different for each project.
 
-
 package Local;
+
+$CVSID = '$Id: Local.pm,v 1.7 1999/05/16 23:48:21 argggh Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -401,3 +404,5 @@ sub convertwhitespace {
     return($string);
 }
 
+
+1;

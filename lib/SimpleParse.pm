@@ -1,8 +1,12 @@
-# $Id: SimpleParse.pm,v 1.4 1999/05/15 14:12:00 argggh Exp $
-
-use strict;
+# -*- tab-width: 4 -*- ###############################################
+#
+# $Id: SimpleParse.pm,v 1.5 1999/05/16 23:48:23 argggh Exp $
 
 package SimpleParse;
+
+$CVSID = '$Id: SimpleParse.pm,v 1.5 1999/05/16 23:48:23 argggh Exp $ ';
+
+use strict;
 
 require Exporter;
 
@@ -105,5 +109,6 @@ sub nextfrag {
     
     return($btype, $frag);
 }
+
 
 1;

@@ -1,8 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.3 1999/05/14 12:45:31 argggh Exp $
+# $Id: DBI.pm,v 1.4 1999/05/16 23:48:32 argggh Exp $
 
 package LXR::Index::DBI;
+
+$CVSID = '$Id: DBI.pm,v 1.4 1999/05/16 23:48:32 argggh Exp $ ';
 
 use strict;
 use DBI;
@@ -136,5 +138,6 @@ sub DESTROY {
 	$$self{'dbh'}->commit();
 	$$self{'dbh'}->disconnect();
 }
+
 
 1;

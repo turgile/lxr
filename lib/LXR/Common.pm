@@ -1,10 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.9 1999/05/16 16:49:16 argggh Exp $
+# $Id: Common.pm,v 1.10 1999/05/16 23:48:25 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
+
+$CVSID = '$Id: Common.pm,v 1.10 1999/05/16 23:48:25 argggh Exp $ ';
 
 use strict;
 
@@ -734,54 +736,59 @@ sub varexpand {
 }
 
 
+sub devinfo {
+	my ($templ) = @_;
+	my (@mods, $mod, $path);
+	my %mods = ('main' => $0, %INC);
+
+	no strict 'refs';
+	
+	while (($mod, $path) = each %mods) {
+		$mod  =~ s/.pm$//;
+		$mod  =~ s|/|::|g;
+		$path =~ s|/+|/|g;
+
+		next unless $ {$mod.'::CVSID'};
+
+		push(@mods, [ $ {$mod.'::CVSID'}, $path, (stat($path))[9] ]);
+	}
+
+	return join('', 
+				map { expandtemplate
+						  ($templ, 
+						   ('moduleid'	=> sub { $$_[0] },
+							'modpath'	=> sub { $$_[1] },
+							'modtime' 	=> sub { scalar(localtime($$_[2])) }));
+				  }
+				sort { $$b[2] <=> $$a[2] } @mods);
+}
+
+
 sub makeheader {
 	my $who = shift;
-	my $template = undef;
-	my $def_templ = "<html><body>\n<hr>\n";
+	my $tmplname;
+	my $template = "<html><body>\n<hr>\n";
 
-	if ($who eq "sourcedir" && $Conf->sourcedirhead) {
-		if (!open(TEMPL, $Conf->sourcedirhead)) {
-			&warning("Template ".$Conf->sourcedirhead." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif (($who eq "source" || $who eq 'sourcedir') && $Conf->sourcehead) {
-		if (!open(TEMPL, $Conf->sourcehead)) {
-			&warning("Template ".$Conf->sourcehead." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($who eq "find" && $Conf->findhead) {
-		if (!open(TEMPL, $Conf->findhead)) {
-			&warning("Template ".$Conf->findhead." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($who eq "ident" && $Conf->identhead) {
-		if (!open(TEMPL, $Conf->identhead)) {
-			&warning("Template ".$Conf->identhead." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($who eq "search" && $Conf->searchhead) {
-		if (!open(TEMPL, $Conf->searchhead)) {
-			&warning("Template ".$Conf->searchhead." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($Conf->htmlhead) {
-		if (!open(TEMPL, $Conf->htmlhead)) {
-			&warning("Template ".$Conf->htmlhead." does not exist.");
-			$template = $def_templ;
-		}
-	}
-
-	if (!$template) {
-		local($/) = undef;
-		$template = <TEMPL>;
-		close(TEMPL);
-	}
+	$tmplname = $who."head";
 	
+	unless ($who ne "sourcedir" || $Conf->sourcedirhead) {
+		$tmplname = "sourcehead";
+	}
+	unless ($Conf->value($tmplname)) {
+		$tmplname = "htmlhead";
+	}
+
+	if ($Conf->value($tmplname)) {
+		if (open(TEMPL, $Conf->value($tmplname))) {
+			local($/) = undef;
+			$template = <TEMPL>;
+			close(TEMPL);
+		}
+		else {
+			warning("Template ".$Conf->value($tmplname)." does not exist.");
+		}
+	}
+
 	print(expandtemplate($template,
 						 ('title'		=> sub { titleexpand(@_, $who) },
 						  'banner'		=> sub { bannerexpand(@_, $who) },
@@ -790,64 +797,44 @@ sub makeheader {
 						  'thisurl'		=> sub { thisurl(@_) },
 						  'pathname'	=> sub { pathname(@_) },
 						  'modes'		=> sub { modeexpand(@_, $who) },
-						  'variables'	=> sub { varexpand(@_, $who) })));
+						  'variables'	=> sub { varexpand(@_, $who) },
+						  'devinfo'		=> sub { devinfo(@_) })));
 }
 
 
 sub makefooter {
 	my $who = shift;
-	my $template = undef;
-	my $def_templ = "<hr>\n</body>\n";
+	my $tmplname;
+	my $template = "<hr>\n</body>\n";
 
-	if ($who eq "sourcedir" && $Conf->sourcedirtail) {
-		if (!open(TEMPL, $Conf->sourcedirtail)) {
-			&warning("Template ".$Conf->sourcedirtail." does not exist.");
-			$template = $def_templ;
-		}
-	}
-	elsif (($who eq "source" || $who eq 'sourcedir') && $Conf->sourcetail) {
-		if (!open(TEMPL, $Conf->sourcetail)) {
-			&warning("Template ".$Conf->sourcetail." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($who eq "find" && $Conf->findtail) {
-		if (!open(TEMPL, $Conf->findtail)) {
-			&warning("Template ".$Conf->findtail." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($who eq "ident" && $Conf->identtail) {
-		if (!open(TEMPL, $Conf->identtail)) {
-			&warning("Template ".$Conf->identtail." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($who eq "search" && $Conf->searchtail) {
-		if (!open(TEMPL, $Conf->searchtail)) {
-			&warning("Template ".$Conf->searchtail." does not exist.");
-			$template = $def_templ;
-		}
-	} 
-	elsif ($Conf->htmltail) {
-		if (!open(TEMPL, $Conf->htmltail)) {
-			&warning("Template ".$Conf->htmltail." does not exist.");
-			$template = $def_templ;
-		}
-	}
+	$tmplname = $who."tail";
 	
-	if (!$template) {
-		local($/) = undef;
-		$template = <TEMPL>;
-		close(TEMPL);
+	unless ($who ne "sourcedir" || $Conf->sourcedirhead) {
+		$tmplname = "sourcetail";
 	}
-	
+	unless ($Conf->value($tmplname)) {
+		$tmplname = "htmltail";
+	}
+
+	if ($Conf->value($tmplname)) {
+		if (open(TEMPL, $Conf->value($tmplname))) {
+			local($/) = undef;
+			$template = <TEMPL>;
+			close(TEMPL);
+		}
+		else {
+			warning("Template ".$Conf->value($tmplname)." does not exist.");
+		}
+	}
+
 	print(expandtemplate($template,
 						 ('banner'		=> sub { bannerexpand(@_, $who) },
 						  'thisurl'		=> sub { thisurl(@_) },
 						  'modes'		=> sub { modeexpand(@_, $who) },
-						  'variables'	=> sub { varexpand(@_, $who) })),
+						  'variables'	=> sub { varexpand(@_, $who) },
+						  'devinfo'		=> sub { devinfo(@_) })),
 		  "</html>\n");
 }
+
 
 1;

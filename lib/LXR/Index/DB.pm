@@ -1,8 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-#
+# $Id: DB.pm,v 1.5 1999/05/16 23:48:32 argggh Exp $
 
 package LXR::Index::DB;
+
+$CVSID = '$Id ';
 
 use strict;
 use DB_File;
@@ -90,7 +92,5 @@ sub issymbol {
 	return $$self{'index'}{$self->symid($symname, $release)};
 }
 
+
 1;
-
-
-

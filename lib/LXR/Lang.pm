@@ -1,11 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.1 1999/05/16 16:49:17 argggh Exp $
-
-use strict;
+# $Id: Lang.pm,v 1.2 1999/05/16 23:48:27 argggh Exp $
 
 package LXR::Lang;
 
+$CVSID = '$Id: Lang.pm,v 1.2 1999/05/16 23:48:27 argggh Exp $ ';
+
+use strict;
 
 sub new {
 	my ($self, $fname, @itag) = @_;
@@ -196,5 +197,6 @@ sub find_java_xrefs {
 
 	$_;
 }
+
 
 1;

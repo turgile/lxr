@@ -1,8 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-#
+# $Id: Plain.pm,v 1.8 1999/05/16 23:48:29 argggh Exp $
 
 package LXR::Files::Plain;
+
+$CVSID = '$Id: Plain.pm,v 1.8 1999/05/16 23:48:29 argggh Exp $ ';
 
 use strict;
 use FileHandle;

@@ -1,8 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.1 1999/05/14 20:27:09 argggh Exp $
+# $Id: Files.pm,v 1.2 1999/05/16 23:48:27 argggh Exp $
 
 package LXR::Files;
+
+$CVSID = '$Id: Files.pm,v 1.2 1999/05/16 23:48:27 argggh Exp $ ';
 
 use strict;
 
@@ -20,5 +22,6 @@ sub new {
 	}
 	return $files;
 }
+
 
 1;

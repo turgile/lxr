@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.10 1999/05/16 16:49:15 argggh Exp $
+# $Id: source,v 1.11 1999/05/16 23:48:22 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -22,6 +22,8 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ######################################################################
+
+$CVSID = '$Id: source,v 1.11 1999/05/16 23:48:22 argggh Exp $ ';
 
 use strict;
 

@@ -82,7 +82,7 @@
      'htmlhead'		=> 'templ-lxr-head',
      'htmltail'		=> 'templ-lxr-tail',
      'htmldir'		=> 'templ-lxr-dir',
-     
+
      'sourcehead'	=> 'templ-lxr-head',
      'sourcedirhead'	=> 'templ-lxr-head',
      
