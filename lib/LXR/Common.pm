@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.26 2000/10/31 12:52:11 argggh Exp $
+# $Id: Common.pm,v 1.27 2001/01/07 19:37:04 pergj Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.26 2000/10/31 12:52:11 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.27 2001/01/07 19:37:04 pergj Exp $ ';
 
 use strict;
 
@@ -219,7 +219,7 @@ sub markupstring {
 	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
 	
 	# HTMLify file names, assuming file is in the current directory.
-	$string =~ s#\b(([\w\-_\/]+\.(c|h|cc|cp|cpp|java))|README)\b#<a href=\"$config->{virtroot}/source$virtp$1\">$1</a>#g;
+	$string =~ s#\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b#<a href=\"$config->{virtroot}/source$virtp$1\">$1</a>#g;
 	
 	return($string);
 }
