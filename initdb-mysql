@@ -45,7 +45,7 @@ create table useage
 
 create table status
         (fileid         int not null references files,
-        status          int,
+        status          tinyint not null,
         primary key     (fileid)
 );
 
@@ -53,5 +53,6 @@ create table status
 create index indexindex on indexes  (symid) ;
 create unique index symbolindex on symbols  (symname) ;
 create index useageindex on useage  (symid) ;
+create index filelookup on files (filename);
 
 grant all on lxr.* to lxr@localhost;

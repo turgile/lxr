@@ -56,6 +56,7 @@ create table status
 create index indexindex on indexes using btree (symid);
 create index symbolindex on symbols using btree (symname);
 create index usageindex on usage using btree (symid);
+create index filelookup on files using btree (filename);
 
 grant select on files to public;
 grant select on symbols to public;
