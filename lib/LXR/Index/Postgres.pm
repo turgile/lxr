@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.18 2004/07/27 08:05:45 mbox Exp $
+# $Id: Postgres.pm,v 1.19 2004/10/18 20:45:37 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.18 2004/07/27 08:05:45 mbox Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.19 2004/10/18 20:45:37 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -315,8 +315,8 @@ sub purge {
 	$delete_indexes->execute($version);
 	$delete_usage->execute($version);
 	$delete_status->execute($version);
-	$delete_files->execute($version);
 	$delete_releases->execute($version);
+	$delete_files->execute($version);
 	commit_if_limit();
 }
 

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.19 2004/07/27 08:05:45 mbox Exp $
+# $Id: Mysql.pm,v 1.20 2004/10/18 20:45:37 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.19 2004/07/27 08:05:45 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.20 2004/10/18 20:45:37 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -334,8 +334,8 @@ sub purge {
 	$self->{delete_indexes}->execute($version);
 	$self->{delete_useage}->execute($version);
 	$self->{delete_status}->execute($version);
-	$self->{delete_files}->execute($version);
 	$self->{delete_releases}->execute($version);
+	$self->{delete_files}->execute($version);
 }
 
 sub DESTROY {
