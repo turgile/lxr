@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.14 2001/08/01 08:08:20 pok Exp $
+# $Id: CVS.pm,v 1.15 2001/08/02 11:45:31 pok Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.14 2001/08/01 08:08:20 pok Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.15 2001/08/02 11:45:31 pok Exp $ ';
 
 use strict;
 use FileHandle;
@@ -304,6 +304,8 @@ sub parsecvs {
 
 	return if $cache_filename eq $filename;
 	$cache_filename = $filename;
+
+	%cvs = ();
 
 	my $file = '';
 	open (CVS, $self->toreal($filename, undef));
