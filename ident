@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.13 2001/11/20 15:34:00 mbox Exp $
+# $Id: ident,v 1.14 2002/03/07 15:44:31 mbox Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.13 2001/11/20 15:34:00 mbox Exp $ ';
+$CVSID = '$Id: ident,v 1.14 2002/03/07 15:44:31 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -97,31 +97,47 @@ sub usesexpand {
 
 sub printident {
     my $dir = shift;
-    my $templ;
+    my ($templ, $templ_refs);
     
     #$templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
     if ($config->htmlident) {
-	unless (open(TEMPL, $config->htmlident)) {
-	    warning("Template ".$config->htmlident." does not exist.");
-	} else {
-	    local($/) = undef;
-	    $templ = <TEMPL>;
-	    close(TEMPL);
+		unless (open(TEMPL, $config->htmlident)) {
+			warning("Template ".$config->htmlident." does not exist.");
+		} else {
+			local($/) = undef;
+			$templ = <TEMPL>;
+			close(TEMPL);
+		}
+    } else {
+		die "Ident template not configured";
 	}
-    }
+	
+	
+	if ($config->htmlident_refs) {
+		unless (open(TEMPL, $config->htmlident_refs)) {
+			warning("Template ".$config->htmlident_refs." does not exist.");
+		} else {
+			local($/) = undef;
+			$templ_refs = <TEMPL>;
+			close(TEMPL);
+		}
+    } else {
+		die "Ident refs template not configured";
+	}
+	
     
     # print the description of the current directory
     #dirdesc($dir);
     
     # print the listing itself
     print(expandtemplate($templ,
-			 (test => sub { "testik" },
-			  variables => \&varinputs,
-			  identifier => sub { return $identifier },
-			  refs => sub { refexpand(@_) },
-			  uses => sub { usesexpand(@_) },
-			 )
-			));
+						 (variables => \&varinputs,
+						  identifier => sub { return $identifier },
+						  refs => sub { refexpand(@_) },
+						 )));
+	print(expandtemplate($templ_refs,
+						 (uses => sub { usesexpand(@_) },
+						 )));
 }
 
 
