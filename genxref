@@ -174,7 +174,7 @@ sub gensearch {
 	    
 	    # execute swish, as a pipe we can write to
 	    
-	    open($swish, "| " . $config->swishindex . " -S prog -i stdin -v 1 -f " . $config->swishdir."/".$release.".index")
+	    open($swish, "| " . $config->swishindex . " -S prog -i stdin -v 1 -c swish-e.conf -f " . $config->swishdir."/".$release.".index")
 		or die "Couldn't exec ".$config->swishindex.": $!\n";
 	    
 	    feedswish("/", $release, $swish, $filelist);
