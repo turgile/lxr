@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.13 2004/04/21 22:52:11 mbox Exp $
+# $Id: Mysql.pm,v 1.14 2004/07/15 20:29:56 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.13 2004/04/21 22:52:11 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.14 2004/07/15 20:29:56 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -98,6 +98,30 @@ sub new {
 	   "declaration = ?");
 	$self->{decl_insert} = $self->{dbh}->prepare
 	  ("insert into declarations (declid, langid, declaration) values (NULL, ?, ?)");
+
+	$self->{delete_indexes} = $self->{dbh}->prepare
+	  ("delete from indexes ".
+		 "using indexes i, releases r ".
+		 "where i.fileid = r.fileid ".
+		 "and r.release = ?");
+	$self->{delete_useage} = $self->{dbh}->prepare
+	  ("delete from useage ".
+		 "using useage u, releases r ".
+		 "where u.fileid = r.fileid ".
+		 "and r.release = ?");
+	$self->{delete_status} = $self->{dbh}->prepare
+	  ("delete from status ".
+		 "using status s, releases r ".
+		 "where s.fileid = r.fileid ".
+		 "and r.release = ?");
+	$self->{delete_releases} = $self->{dbh}->prepare
+		("delete from releases ".
+		 "where release = ?");
+	$self->{delete_files} = $self->{dbh}->prepare
+		("delete from files ".
+		 "using files f, releases r ".
+		 "where f.fileid = r.fileid ".
+		 "and r.release = ?");
 
 	return $self;
 }
@@ -296,7 +320,18 @@ sub getdecid {
 
   return $id;
 }
-	
+
+sub purge {
+	my ($self, $version) = @_;
+	# we don't delete symbols, because they might be used by other versions
+    # so we can end up with unused symbols, but that doesn't cause any problems
+	$self->{delete_indexes}->execute($version);
+	$self->{delete_useage}->execute($version);
+	$self->{delete_status}->execute($version);
+	$self->{delete_releases}->execute($version);
+	$self->{delete_files}->execute($version);
+	}
+
 
 sub DESTROY {
 	my ($self) = @_;

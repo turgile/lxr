@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.11 2004/07/15 20:16:03 brondsem Exp $
+# $Id: Postgres.pm,v 1.12 2004/07/15 20:29:56 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.11 2004/07/15 20:16:03 brondsem Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.12 2004/07/15 20:29:56 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -108,6 +108,27 @@ sub new {
 	   "declaration = ?");
 	$decl_insert = $dbh->prepare
 	  ("insert into declarations (declid, langid, declaration) values (?, ?, ?)");
+
+
+	$delete_indexes = $dbh->prepare
+	  ("delete from indexes ".
+		 "where fileid in ".
+		 "  (select fileid from releases where release = ?)");
+	$delete_useage = $dbh->prepare
+	  ("delete from useage ".
+		 "where fileid in ".
+		 "  (select fileid from releases where release = ?)");
+	$delete_status = $dbh->prepare
+	  ("delete from status ".
+		 "where fileid in ".
+		 "  (select fileid from releases where release = ?)");
+	$delete_releases = $dbh->prepare
+		("delete from releases ".
+		 "where release = ?");
+	$delete_files = $dbh->prepare
+		("delete from files ".
+		 "where fileid in ".
+		 "  (select fileid from releases where release = ?)");
 
 	return $self;
 }
@@ -298,6 +319,16 @@ sub getdecid {
   return $id;
 }
 
+sub purge {
+	my ($self, $version) = @_;
+	# we don't delete symbols, because they might be used by other versions
+    # so we can end up with unused symbols, but that doesn't cause any problems
+	$delete_indexes->execute($version);
+	$delete_useage->execute($version);
+	$delete_status->execute($version);
+	$delete_releases->execute($version);
+	$delete_files->execute($version);
+	}
 
 sub setindexed {
 	my ($self, $fileid) = @_;

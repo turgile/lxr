@@ -30,7 +30,7 @@ use LXR::Common;
 
 
 my %option;
-GetOptions(\%option, "help!", "url=s", "version=s", "allurls!", "allversions!");
+GetOptions(\%option, "help!", "url=s", "version=s", "allurls!", "allversions!", "reindexall!");
 
 if ($option{'help'}) {
   # this may not be the best way to implement this, but at least it's something
@@ -50,6 +50,7 @@ Valid options are:
   --allurls          Generate tokens for all URL configuration blocks.
   --version=VERSION  Generate tokens for the given version of the code.
   --allversions      Generate tokens for all versions of the code (default).
+  --reindexall       Purges existing index data
 Report bugs at http://sourceforge.net/projects/lxr/.
 END_HELP
   exit 0;
@@ -84,6 +85,7 @@ if ($option{'allversions'} || !$option{'version'}) {
 }
 
 foreach my $version (@versions) {
+  $index->purge($version) if $option{'reindexall'};
   gensearch($version);
   genindex('/', $version);
   genrefs('/', $version);
