@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.13 2001/07/30 20:30:17 pergj Exp $
+# $Id: CVS.pm,v 1.14 2001/08/01 08:08:20 pok Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.13 2001/07/30 20:30:17 pergj Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.14 2001/08/01 08:08:20 pok Exp $ ';
 
 use strict;
 use FileHandle;
@@ -29,7 +29,7 @@ sub filerev {
 	if ($release =~ /rev_([\d\.]+)/) {
 		return $1;
 	}
-	elsif ($release =~ /([\d\.]+)/) {
+	elsif ($release =~ /^([\d\.]+)$/) {
 		return $1;
 	}
 	else {
