@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.9 2001/11/28 12:59:02 mbox Exp $
+# $Id: Postgres.pm,v 1.10 2002/01/23 15:48:52 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.9 2001/11/28 12:59:02 mbox Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.10 2002/01/23 15:48:52 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -300,23 +300,27 @@ sub getdecid {
 
 
 sub END {
-	$files_select = undef;
-	$filenum_nextval = undef;
+
+	$files_select= undef;
+	$filenum_nextval= undef;
 	$files_insert = undef;
-	$symbols_byname = undef;
-	$symbols_byid = undef;
+	$symbols_byname= undef;
+	$symbols_byid= undef;
 	$symnum_nextval = undef;
-	$symbols_insert = undef;
+	$symbols_remove= undef;
+	$symbols_insert= undef;
+	$indexes_select= undef;
 	$indexes_insert = undef;
-	$releases_insert = undef;
+	$releases_select= undef;
+	$releases_insert= undef;
 	$status_insert = undef;
-	$status_update = undef;
-	$usage_insert = undef;
-	$usage_select = undef;
-	$declid_nextnum = undef;
+	$status_update= undef;
+	$usage_insert= undef;
+	$usage_select= undef;
 	$decl_select = undef;
+	$declid_nextnum= undef;
 	$decl_insert = undef;
-	
+
 	$dbh->commit();
 	$dbh->disconnect();
 	$dbh = undef;
