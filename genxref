@@ -10,19 +10,23 @@ use LXR::Files;
 use LXR::Index;
 use LXR::Config;
 use LXR::Tagger;
+use LXR::Common;
 
 my %option;
 GetOptions(\%option, "url=s", "version=s", "allurls!", "allversions!");
 
-die("URL and version must be specified") 
-	unless $option{'url'} && $option{'version'};
+die("URL must be specified") 
+	unless $option{'url'};
 
-my $config = new LXR::Config($option{'url'});
+die("Version must be specified") 
+	unless $option{'version'} || $option{'allversions'};
+
+$config = new LXR::Config($option{'url'});
 
 die("No matching configuration") unless $config->sourceroot;
 
-my $files = new LXR::Files($config->sourceroot);
-my $index = new LXR::Index($config->dbname);
+$files = new LXR::Files($config->sourceroot);
+$index = new LXR::Index($config->dbname);
 
 genxref('/', $option{'version'});
 
@@ -37,8 +41,14 @@ sub genxref {
 			} $files->getdir($pathname, $release);
 	}
 	else {
-		&LXR::Tagger::processfile($pathname, $release, 
-								  $config, $files, $index);
+		my @releases = ($release 
+						? ($release)
+						: $files->allreleases($pathname));
+
+		map {
+			&LXR::Tagger::processfile($pathname, $_, 
+									  $config, $files, $index)
+			} @releases;
 	}
 }
 

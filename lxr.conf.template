@@ -92,6 +92,12 @@
      'sourcerootname'	=> 'Linux',
      'incprefix'	=> ['/include', '/include/linux'],
      
+     'cvsversion'	=> sub { my $tag = shift; 
+				 $tag =~ s/^v//;
+				 $tag =~ s/_/./g;
+				 $tag =~ /^\d/ ? $tag : '';
+			     },
+
      'dbname'		=> 'dbi:Pg:dbname=lxr',
 #    'dbname'		=> '/var/lxr',
 

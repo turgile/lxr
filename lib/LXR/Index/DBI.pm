@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.9 1999/05/25 21:40:00 argggh Exp $
+# $Id: DBI.pm,v 1.10 1999/05/29 23:35:04 argggh Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.9 1999/05/25 21:40:00 argggh Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.10 1999/05/29 23:35:04 argggh Exp $ ';
 
 use strict;
 use DBI;
@@ -70,7 +70,8 @@ sub getindex {
 	my ($self, $symname, $release) = @_;
 	my ($rows, @ret);
 
-	$rows = $ist->execute($symname, $release);
+	print(STDERR "$symname, $release\n");
+	$rows = $ist->execute("$symname", "$release");
 
 	while ($rows-- > 0) {
 		push(@ret, [ $ist->fetchrow_array ]);

@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.13 1999/05/25 21:39:57 argggh Exp $
+# $Id: Common.pm,v 1.14 1999/05/29 23:35:00 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.13 1999/05/25 21:39:57 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.14 1999/05/29 23:35:00 argggh Exp $ ';
 
 use strict;
 
@@ -18,7 +18,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
 
 @ISA		= qw(Exporter);
 
-@EXPORT		= qw($files $index);
+@EXPORT		= qw($files $index $config);
 @EXPORT_OK	= qw($files $index $config $pathname $identifier $release
 				 $HTTP %type_names
 				 &warning &fatal &abortall &fflush &urlargs &fileref

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.12 1999/05/28 11:59:57 pergj Exp $
+# $Id: Config.pm,v 1.13 1999/05/29 23:35:00 argggh Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.12 1999/05/28 11:59:57 pergj Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.13 1999/05/29 23:35:00 argggh Exp $ ';
 
 use strict;
 
@@ -12,20 +12,15 @@ use LXR::Common;
 
 require Exporter;
 
-use vars qw($AUTOLOAD @ISA @EXPORT $confname $Conf);
-
-@ISA = qw(Exporter);
-@EXPORT = qw($Conf);
+use vars qw($AUTOLOAD $confname);
 
 $confname = 'lxr.conf';
-
 
 sub new {
     my ($class, @parms) = @_;
     my $self = {};
     bless($self);
     $self->_initialize(@parms);
-    $Conf = $self;
     return($self);
 }
 
@@ -140,6 +135,9 @@ sub value {
 		if (ref($val) eq 'ARRAY') {
 			return map { $self->varexpand($_) } @$val;
 		}
+		elsif (ref($val) eq 'CODE') {
+			return $val;
+		}
 		else {
 			return $self->varexpand($val);
 		}
@@ -154,7 +152,14 @@ sub AUTOLOAD {
     my $self = shift;
     (my $var = $AUTOLOAD) =~ s/.*:://;
 
-	return $self->value($var);
+	my $val = $self->value($var);
+	
+	if (ref($val) eq 'CODE') {
+		return &$val(@_);
+	}
+	else {
+		return $val;
+	} 
 }
 
 

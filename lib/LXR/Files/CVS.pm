@@ -1,17 +1,17 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.6 1999/05/25 21:39:59 argggh Exp $
+# $Id: CVS.pm,v 1.7 1999/05/29 23:35:03 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.6 1999/05/25 21:39:59 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.7 1999/05/29 23:35:03 argggh Exp $ ';
 
 use strict;
 use FileHandle;
 use Time::Local;
 use LXR::Common;
 
-use vars qw(%cvs @cacheinfo);
+use vars qw(%cvs $cache_filename);
 
 sub new {
 	my ($self, $rootpath) = @_;
@@ -175,11 +175,14 @@ sub getdir {
 			}
 			else {
 				push(@dirs, $node.'/') 
-					unless $self->dirempty($pathname.$node.'/', $release);
+					unless defined($release) 
+						&& $self->dirempty($pathname.$node.'/', $release);
 			}
 		}
 		elsif ($node =~ /(.*),v$/) {
-			push(@files, $1) if $self->getfiletime($pathname.$1, $release);
+			push(@files, $1) 
+				if ! defined($release) 
+					|| $self->getfiletime($pathname.$1, $release);
 		}
 	}
 	closedir($DIRH);
@@ -222,31 +225,45 @@ sub getindex {
 	return $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
 }
 
+sub allreleases {
+	my ($self, $filename) = @_;
+
+	$self->parsecvs($filename, undef);
+
+	return sort(keys(%{$cvs{'header'}{'symbols'}}));
+}
+
 sub parsecvs {
 	my ($self, $filename, $release) = @_;
 
-	return if @cacheinfo == ($filename, $release);
-	@cacheinfo = ($filename, $release);
+	return if $cache_filename eq $filename;
+	$cache_filename = $filename;
 
 	open(CVS, $self->toreal($filename, $release));
 	my @cvs = join('', <CVS>) =~ /((?:(?:[^\n@]+|@[^@]*@)\n?)+)/gs;
 	close(CVS);
 
-	$cvs{'header'} = { map { s/@@/@/gs; /^@/s && substr($_, 1, -1) || $_ }
+	$cvs{'header'} = { map { s/@@/@/gs;
+							 /^@/s && substr($_, 1, -1) || $_ }
 					   shift(@cvs) =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
 	$cvs{'header'}{'symbols'}
 	= { $cvs{'header'}{'symbols'} =~ /(\S+?):(\S+)/g };
 
-	my ($rel, $rev);
-	while (($rel, $rev) = each %{$cvs{'header'}{'symbols'}}) {
-		$rel =~ s/^v//;
-		$rel =~ s/_/./g;
-		$cvs{'header'}{'symbols'}{$rel} = $rev;
+	my ($orel, $nrel, $rev);
+	while (($orel, $rev) = each %{$cvs{'header'}{'symbols'}}) {
+		$nrel = $config->cvsversion($orel);
+		next unless defined($nrel);
+
+		if ($nrel ne $orel) {
+			delete($cvs{'header'}{'symbols'}{$orel});
+			$cvs{'header'}{'symbols'}{$nrel} = $rev if $nrel;
+		}
 	}
 
 	while (@cvs && $cvs[0] !~ /\s*desc/s) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$cvs{'branch'}{$r} = { map { s/@@/@/gs; /^@/s && substr($_, 1, -1) || $_ }
+		$cvs{'branch'}{$r} = { map { s/@@/@/gs;
+									 /^@/s && substr($_, 1, -1) || $_ }
 							   $v =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
 	}
 	
@@ -255,7 +272,8 @@ sub parsecvs {
 
 	while (@cvs) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$cvs{'history'}{$r} = { map { s/@@/@/gs; /^@/s && substr($_, 1, -1) || $_ }
+		$cvs{'history'}{$r} = { map { s/@@/@/gs; 
+									  /^@/s && substr($_, 1, -1) || $_ }
 								$v =~ /(\w+)\s*((?:[^\n@]+|@[^@]*@)*)\n/gs };
 	}
 }
