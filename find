@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: find,v 1.18 2004/07/15 14:41:04 brondsem Exp $
+#!/usr/bin/perl -T
+# $Id: find,v 1.19 2004/07/15 15:29:35 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.18 2004/07/15 14:41:04 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.19 2004/07/15 15:29:35 brondsem Exp $ ';
 
 use strict;
 use lib '.';
