@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.17 1999/06/17 08:39:03 pergj Exp $
+# $Id: Config.pm,v 1.18 1999/06/20 12:10:06 argggh Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.17 1999/06/17 08:39:03 pergj Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.18 1999/06/20 12:10:06 argggh Exp $ ';
 
 use strict;
 
@@ -22,6 +22,7 @@ sub new {
     bless($self);
     $self->_initialize(@parms);
     return($self);
+	die("Foo!\n");
 }
 
 
@@ -45,7 +46,6 @@ sub _initialize {
     my ($self, $url, $confpath) = @_;
     my ($dir, $arg);
 
-	$0 = "";
     unless ($url) {
 		$url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
 		$url =~ s/:80$//;
@@ -53,7 +53,7 @@ sub _initialize {
     }
     
     unless ($confpath) {
-		($confpath = $0) =~ s#/[^/]+$#/#;
+		($confpath) = ($0 =~ /(.*?)[^\/]*$/);
 		$confpath .= $confname;
     }
     
@@ -61,7 +61,6 @@ sub _initialize {
 		die("Couldn't open configuration file \"$confpath\".");
     }
     
-#    local($SIG{'__DIE__'}) = 'IGNORE';
     local($/) = undef;
     my @config = eval("\n#line 1 \"configuration file\"\n".
 					  <CONFIG>);
