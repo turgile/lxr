@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.15 2004/07/08 13:41:46 brondsem Exp $
+# $Id: find,v 1.16 2004/07/12 14:39:44 mbox Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.15 2004/07/08 13:41:46 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.16 2004/07/12 14:39:44 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -117,13 +117,16 @@ sub find {
             &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->swishdir."/$release.filenames.");
             return;
         }
-    }
-    if ($config->glimpsedir and $config->glimpseindex) {
+    } elsif ($config->glimpsedir and $config->glimpseindex) {
         unless ($FILELISTING = new IO::File($config->glimpsedir."/".$release."/.glimpse_filenames")) {
             &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
             return;
         }
+    } else {
+    	warning("Freetext search engine required for file search, and no freetext search engine is configured");
+	return;
     }
+
     my @results = dofind($searchtext, $FILELISTING, $advanced, $casesensitive);
     close($FILELISTING);
 
