@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.12 2004/07/15 20:29:56 brondsem Exp $
+# $Id: Postgres.pm,v 1.13 2004/07/15 20:42:41 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.12 2004/07/15 20:29:56 brondsem Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.13 2004/07/15 20:42:41 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -30,7 +30,8 @@ use vars qw($dbh $transactions %files %symcache $commitlimit
 			$symbols_remove $symbols_insert $indexes_select $indexes_insert
 			$releases_select $releases_insert $status_insert
 			$status_update $usage_insert $usage_select $decl_select
-		    $declid_nextnum $decl_insert);
+			$declid_nextnum $decl_insert $delete_indexes $delete_usage
+			$delete_status $delete_releases $delete_files);
 
 
 sub new {
@@ -109,13 +110,12 @@ sub new {
 	$decl_insert = $dbh->prepare
 	  ("insert into declarations (declid, langid, declaration) values (?, ?, ?)");
 
-
 	$delete_indexes = $dbh->prepare
 	  ("delete from indexes ".
 		 "where fileid in ".
 		 "  (select fileid from releases where release = ?)");
-	$delete_useage = $dbh->prepare
-	  ("delete from useage ".
+	$delete_usage = $dbh->prepare
+	  ("delete from usage ".
 		 "where fileid in ".
 		 "  (select fileid from releases where release = ?)");
 	$delete_status = $dbh->prepare
@@ -324,10 +324,11 @@ sub purge {
 	# we don't delete symbols, because they might be used by other versions
     # so we can end up with unused symbols, but that doesn't cause any problems
 	$delete_indexes->execute($version);
-	$delete_useage->execute($version);
+	$delete_usage->execute($version);
 	$delete_status->execute($version);
 	$delete_releases->execute($version);
 	$delete_files->execute($version);
+	commit_if_limit();
 	}
 
 sub setindexed {
@@ -360,7 +361,12 @@ sub END {
 	$decl_select = undef;
 	$declid_nextnum= undef;
 	$decl_insert = undef;
-
+	$delete_indexes = undef;
+	$delete_usage = undef;
+	$delete_status = undef;
+	$delete_releases = undef;
+	$delete_files = undef;
+	
 	$dbh->commit();
 	$dbh->disconnect();
 	$dbh = undef;

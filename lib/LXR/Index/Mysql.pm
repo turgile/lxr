@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.14 2004/07/15 20:29:56 brondsem Exp $
+# $Id: Mysql.pm,v 1.15 2004/07/15 20:42:41 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.14 2004/07/15 20:29:56 brondsem Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.15 2004/07/15 20:42:41 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -348,6 +348,11 @@ sub DESTROY {
 	$self->{usage_select} = undef;
 	$self->{decl_select} = undef;
 	$self->{decl_insert} = undef;
+	$self->{delete_indexes} = undef;
+	$self->{delete_useage} = undef;
+	$self->{delete_status} = undef;
+	$self->{delete_releases} = undef;
+	$self->{delete_files} = undef;
 	
 	if($self->{dbh}) {
 		$self->{dbh}->disconnect();

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.3 2004/07/15 20:29:56 brondsem Exp $
+# $Id: Oracle.pm,v 1.4 2004/07/15 20:42:41 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.3 2004/07/15 20:29:56 brondsem Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.4 2004/07/15 20:42:41 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -93,8 +93,8 @@ sub new {
 	  ("delete from indexes ".
 		 "where fileid in ".
 		 "  (select fileid from releases where release = ?)");
-	$self->{delete_useage} = $self->{dbh}->prepare
-	  ("delete from useage ".
+	$self->{delete_usage} = $self->{dbh}->prepare
+	  ("delete from usage ".
 		 "where fileid in ".
 		 "  (select fileid from releases where release = ?)");
 	$self->{delete_status} = $self->{dbh}->prepare
@@ -292,7 +292,7 @@ sub purge {
 	# we don't delete symbols, because they might be used by other versions
     # so we can end up with unused symbols, but that doesn't cause any problems
 	$self ->{delete_indexes}->execute($version);
-	$self ->{$delete_useage}->execute($version);
+	$self ->{$delete_usage}->execute($version);
 	$self ->{$delete_status}->execute($version);
 	$self ->{$delete_releases}->execute($version);
 	$self ->{$delete_files}->execute($version);
@@ -311,6 +311,11 @@ sub DESTROY {
 	$self->{status_update} = undef;
 	$self->{usage_insert} = undef;
 	$self->{usage_select} = undef;
+	$self->{delete_indexes} = undef;
+	$self->{delete_useage} = undef;
+	$self->{delete_status} = undef;
+	$self->{delete_releases} = undef;
+	$self->{delete_files} = undef;
 
 	if($self->{dbh}) {
 		$self->{dbh}->disconnect();
