@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.23 1999/09/18 10:27:04 argggh Exp $
+# $Id: Common.pm,v 1.24 1999/09/22 10:32:52 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.23 1999/09/18 10:27:04 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.24 1999/09/22 10:32:52 argggh Exp $ ';
 
 use strict;
 
@@ -257,8 +257,10 @@ sub htmlquote {
 
 
 sub freetextmarkup {
-	$_[0] =~ s#((ftp|http)://\S*[^\s.])#<a href=\"$1\">$1</a>#g;
-	$_[0] =~ s/(\0\<(.*@.*)\0\>)/<a href=\"mailto:$2\">$1<\/a>/g;
+	$_[0] =~ s{((f|ht)tp://[^\s<>\0]*[^\s<>\0.])}
+			  {<a href="$1">$1</a>}g;
+	$_[0] =~ s{(\0<([^\s<>\0]+@[^\s<>\0]+)\0>)}
+			  {<a href="mailto:$2">$1</a>}g;
 }
 
 

@@ -6,7 +6,7 @@ if [ -z "$1" ]; then
 fi
 
 for f in `ls -ld ./* | grep '^-..x' | cut -d/ -f2`; do
-    sed -e "1s,^#!/.*perl.*,#!$1," < $f > $f.new
+    sed -e "1s,^#!.*perl.*,#!$1," < $f > $f.new
     cp $f.new $f
     rm $f.new
 done
