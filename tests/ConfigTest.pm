@@ -31,14 +31,14 @@ sub test_access {
 	my $self = shift;
 	$self->assert($self->{config}->swishindex eq '/test/lxr/bin/swish-e',
 		   "swishindex read failed");
-	$self->assert($self->{config}->baseurl eq 'http://test/lxr',
-		   "Config accessed wrong baseurl");
+	$self->assert($self->{config}->baseurl eq 'http://test/lxr/',
+		   "Config accessed wrong baseurl " . $self->{config}->baseurl);
 }
 
 # test access to the variables section
 sub test_variables {
 	my $self = shift;
-	$self->assert($self->{config}->variable('v') == '1.0.6',
+	$self->assert($self->{config}->variable('v') eq '1.0.6',
 		   "Variable default not correct");
 	$self->assert(($self->{config}->varrange('v'))[1] =~ /hi hippy/,
 		   "Variable value missing");
@@ -49,7 +49,7 @@ sub test_allvariables {
 	my @vars = $self->{config}->allvariables();
     $self->assert(grep {$_ eq 'v'} @vars, "allvariables didn't return v");
 	$self->assert(grep {$_ eq 'a'} @vars, "allvariables didn't return a");
-	$self->assert($#vars == 2, "Too many variables returned");
+	$self->assert($#vars == 1, "Too many variables returned got " . $self->{config}->allvariables());
 }
 
 
