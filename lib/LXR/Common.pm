@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.44 2004/06/30 19:49:38 brondsem Exp $
+# $Id: Common.pm,v 1.45 2004/07/12 17:13:34 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.44 2004/06/30 19:49:38 brondsem Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.45 2004/07/12 17:13:34 mbox Exp $ ';
 
 use strict;
 
@@ -51,7 +51,7 @@ require LXR::Index;
 require LXR::Lang;
 
 
-$wwwdebug = 1;
+$wwwdebug = 0;
 
 $tmpcounter = 23;
 
