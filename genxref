@@ -19,6 +19,7 @@ use strict;
 use lib 'lib';
 use Fcntl;
 use Getopt::Long;
+use IO::Handle;
 
 use LXR::Files;
 use LXR::Index;
@@ -78,6 +79,7 @@ if ($option{'allversions'} || !$option{'version'}) {
 foreach my $version (@versions) {
   genindex('/', $version);
   genrefs('/', $version);
+  gensearch($version);
 }
 
 
@@ -109,4 +111,42 @@ sub genrefs {
 	  &LXR::Tagger::processrefs($pathname, $release,
 								$config, $files, $index)
     }
+}
+
+sub feedswish {
+	my ($pathname, $release, $swish) = @_;
+
+    print(STDERR "&&& $pathname $release \n");
+    
+    if ($pathname =~ m|/$|) {
+	map {
+	    feedswish($pathname.$_, $release, $swish)
+	    } $files->getdir($pathname, $release);
+    } else {
+		my $contents = $files->getfile($pathname, $release);
+		$swish->print("Path-Name: $pathname\n",
+					  "Content-Length: ".length($contents)."\n",
+					  "Document-Type: TXT\n",
+					  "\n",
+					  $contents)
+			if length($contents) > 0;
+    }
+}
+
+sub gensearch {
+	my ($release) = @_;
+
+	if ($config->swishdir and $config->swishindex) {
+		my $swish = new IO::Handle;
+		my $pid = open($swish, "|-");
+		if ($pid == 0) {
+			exec($config->swishindex,
+				 "-S", "prog", "-i", "/bin/cat", "-v", "1",
+				 "-f", $config->swishdir."/".$release.".index");
+			print(STDERR "Couldn't exec ".$config->swishindex.": $!\n");
+			kill(9, $$);
+		}
+		feedswish("/", $release, $swish);
+		$swish->close();
+	}
 }

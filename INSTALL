@@ -7,11 +7,14 @@ The current version of the lxr depends on three things:
 
 2) A relational database - MySQL (http://www.mysql.com) and Postgresql
    (http://www.postgresql.org) are supported.
+
 3) Apache with mod_perl - http://www.apache.org
 
-If you want to be able to do free text searchs of your repository as
-well as browse it you will have to obtain and install glimpse from
-http://glimpse.cs.arizona.edu
+4) For freetext searching, either Glimpse (http://glimpse.cs.arizona.edu) or
+   Swish-e (http://swish-e.org).  You need the development version of
+   swish-e (i.e. 2.1.x or later).
+   Swish-e is fully GPL'ed, while Glimpse is only free for
+   non-commercial use.
 
 Installing the database
 -----------------------
@@ -109,6 +112,24 @@ in /path/to/cvs/repository and your cvs module is called lxr then set
 
   'sourceroot' => 'cvs:/path/to/cvs/repository/lxr'
   'sourcerootname' => 'A Friendly Name For Your Repository'
+
+Using Swish-e with LXR
+----------------------
+
+This is simple:
+
+1) Put the paths to swish-e and swish-search in the 'swishindex' and
+   'swishsearch' variables in lxr.conf.  If there is no swish-search
+   executable on your system, use the path to swish-e as the
+   'swishsearch' value.
+
+2) Create a directory for the swish index files to go in, and put the
+   path of this directory in the 'swishdir' variable.
+
+3) Comment out the 'glimpsebin' variable
+
+Now re-run genxref and it should build the swish indexes for you and
+you're done.
 
 Getting Glimpse to work with LXR
 --------------------------------
