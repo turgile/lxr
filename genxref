@@ -16,13 +16,37 @@ use LXR::Common;
 
 
 my %option;
-GetOptions(\%option, "url=s", "version=s", "allurls!", "allversions!");
+GetOptions(\%option, "help!", "url=s", "version=s", "allurls!", "allversions!");
 
-die("URL must be specified.\n") 
+if ($option{'help'}) {
+  # this may not be the best way to implement this, but at least it's something
+  print <<END_HELP;
+Usage: genxref [option ...]
+
+The genxref program automatically generates LXR database cross-reference
+tokens for a set of URL configuration blocks and source code versions.  These
+are both defined in the lxr.conf configuration file.  Each "URL" is a separate
+source tree; LXR separates and identifies these by their URL.  Each "version" is
+a different version of the source tree being indexed.  See lxr.conf or
+lxr.conf.template for configuring URLs and versions.
+
+Valid options are:
+  --help             Print a summary of the options.
+  --url=URL          Generate tokens for the given URL configuration block.
+  --allurls          Generate tokens for all URL configuration blocks.
+  --version=VERSION  Generate tokens for the given version of the code.
+  --allversions      Generate tokens for all versions of the code (default).
+Report bugs at http://sourceforge.net/projects/lxr/.
+END_HELP
+  exit 0;
+}
+
+# TODO: implement --allurls
+die("Option --allurls not implemented.  Use --url instead.\n")
+    if $option{'allurls'};
+
+die("URL must be specified. Try \"genxref --help\".\n") 
 	unless $option{'url'};
-
-die("Version must be specified.\n") 
-	unless $option{'version'} || $option{'allversions'};
 
 $config = new LXR::Config($option{'url'});
 
@@ -31,8 +55,19 @@ die("No matching configuration") unless $config->sourceroot;
 $files = new LXR::Files($config->sourceroot);
 $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 
-genindex('/', $option{'version'});
-genrefs('/', $option{'version'});
+my @versions;
+if ($option{'allversions'} || !$option{'version'}) {
+  # is this really the best way to get the full list of versions?
+  @versions = $files->allreleases('/');
+} else {
+  @versions = ($option{'version'});
+}
+
+foreach my $version (@versions) {
+  genindex('/', $version);
+  genrefs('/', $version);
+}
+
 
 sub genindex {
 	my ($pathname, $release) = @_;
@@ -44,14 +79,8 @@ sub genindex {
 			genindex($pathname.$_, $release) 
 			} $files->getdir($pathname, $release);
 	} else {
-		my @releases = ($release 
-						? ($release)
-						: $files->allreleases($pathname));
-		
-		map {
-			&LXR::Tagger::processfile($pathname, $_,
-									  $config, $files, $index)
-			} @releases;
+	    &LXR::Tagger::processfile($pathname, $release,
+								$config, $files, $index)
 	}
 }
 
@@ -64,16 +93,9 @@ sub genrefs {
 		map {
 			genrefs($pathname.$_, $release)
 			} $files->getdir($pathname, $release);
-	}
-	else {
-		my @releases = ($release 
-						? ($release)
-						: $files->allreleases($pathname));
-
-		map {
-			&LXR::Tagger::processrefs($pathname, $_,
-									  $config, $files, $index)
-			} @releases;
+	} else {
+		&LXR::Tagger::processrefs($pathname, $release,
+								  $config, $files, $index)
 	}
 }
 
