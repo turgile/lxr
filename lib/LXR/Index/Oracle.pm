@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.6 2004/07/20 15:31:25 brondsem Exp $
+# $Id: Oracle.pm,v 1.7 2004/07/21 20:44:31 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.6 2004/07/20 15:31:25 brondsem Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.7 2004/07/21 20:44:31 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -29,16 +29,16 @@ use vars qw(%files %symcache @ISA $prefix);
 @ISA = ("LXR::Index");
 
 sub new {
-	my ( $self, $dbname ) = @_;
+	my ($self, $dbname) = @_;
 
-	$self = bless( {}, $self );
+	$self = bless({}, $self);
 
 	$self->{dbh} =
-	  DBI->connect( $dbname, $config->{dbuser}, $config->{dbpass},
-		{ RaiseError => 1, AutoCommit => 1 } )
+	  DBI->connect($dbname, $config->{dbuser}, $config->{dbpass},
+		{ RaiseError => 1, AutoCommit => 1 })
 	  || fatal "Can't open connection to database\n";
 
-	if ( $config->{'dbprefix'} ) {
+	if ($config->{'dbprefix'}) {
 		$prefix = $config->{'dbprefix'};
 	} else {
 		$prefix = "lxr_";
@@ -63,11 +63,11 @@ sub new {
 	  $self->{dbh}->prepare("delete from ${prefix}symbols where symname = ?");
 
 	$self->{indexes_select} =
-	  $self->{dbh}->prepare( "select f.filename, i.line, i.type, i.relsym "
+	  $self->{dbh}->prepare("select f.filename, i.line, i.type, i.relsym "
 		  . "from ${prefix}symbols s, ${prefix}indexes i, ${prefix}files f, ${prefix}releases r "
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
-		  . "and  s.symname = ? and  r.release = ? " );
+		  . "and  s.symname = ? and  r.release = ? ");
 	$self->{indexes_insert} =
 	  $self->{dbh}->prepare("insert into ${prefix}indexes values (?, ?, ?, ?, ?)");
 
@@ -90,58 +90,58 @@ sub new {
 
 	$self->{usage_insert} = $self->{dbh}->prepare("insert into ${prefix}usage values (?, ?, ?)");
 	$self->{usage_select} =
-	  $self->{dbh}->prepare( "select f.filename, u.line "
+	  $self->{dbh}->prepare("select f.filename, u.line "
 		  . "from ${prefix}symbols s, ${prefix}files f, ${prefix}releases r, ${prefix}usage u "
 		  . "where s.symid = u.symid "
 		  . "and f.fileid = u.fileid "
 		  . "and u.fileid = r.fileid and "
 		  . "s.symname = ? and  r.release = ? "
-		  . "order by f.filename" );
+		  . "order by f.filename");
 
 	$self->{delete_indexes} =
-	  $self->{dbh}->prepare( "delete from ${prefix}indexes "
+	  $self->{dbh}->prepare("delete from ${prefix}indexes "
 		  . "where fileid in "
-		  . "  (select fileid from ${prefix}releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)");
 	$self->{delete_usage} =
-	  $self->{dbh}->prepare( "delete from ${prefix}usage "
+	  $self->{dbh}->prepare("delete from ${prefix}usage "
 		  . "where fileid in "
-		  . "  (select fileid from ${prefix}releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)");
 	$self->{delete_status} =
-	  $self->{dbh}->prepare( "delete from ${prefix}status "
+	  $self->{dbh}->prepare("delete from ${prefix}status "
 		  . "where fileid in "
-		  . "  (select fileid from ${prefix}releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)");
 	$self->{delete_releases} =
-	  $self->{dbh}->prepare( "delete from ${prefix}releases " . "where release = ?" );
+	  $self->{dbh}->prepare("delete from ${prefix}releases " . "where release = ?");
 	$self->{delete_files} =
-	  $self->{dbh}->prepare( "delete from ${prefix}files "
+	  $self->{dbh}->prepare("delete from ${prefix}files "
 		  . "where fileid in "
-		  . "  (select fileid from ${prefix}releases where release = ?)" );
+		  . "  (select fileid from ${prefix}releases where release = ?)");
 
 	return $self;
 }
 
 sub index {
-	my ( $self, $symname, $fileid, $line, $type, $relsym ) = @_;
+	my ($self, $symname, $fileid, $line, $type, $relsym) = @_;
 
-	$self->{indexes_insert}->execute( $self->symid($symname),
-		$fileid, $line, $type, $relsym ? $self->symid($relsym) : undef );
+	$self->{indexes_insert}->execute($self->symid($symname),
+		$fileid, $line, $type, $relsym ? $self->symid($relsym) : undef);
 }
 
 sub reference {
-	my ( $self, $symname, $fileid, $line ) = @_;
+	my ($self, $symname, $fileid, $line) = @_;
 
-	$self->{usage_insert}->execute( $fileid, $line, $self->symid($symname) );
+	$self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
 
 }
 
 sub getindex {    # Hinzugefügt von Variable @row, While-Schleife
-	my ( $self, $symname, $release ) = @_;
-	my ( $rows, @ret,     @row );
+	my ($self, $symname, $release) = @_;
+	my ($rows, @ret,     @row);
 
-	$rows = $self->{indexes_select}->execute( "$symname", "$release" );
+	$rows = $self->{indexes_select}->execute("$symname", "$release");
 
-	while ( @row = $self->{indexes_select}->fetchrow_array ) {
-		push( @ret, [@row] );
+	while (@row = $self->{indexes_select}->fetchrow_array) {
+		push(@ret, [@row]);
 	}
 
 	#while ($rows-- > 0) {
@@ -150,19 +150,19 @@ sub getindex {    # Hinzugefügt von Variable @row, While-Schleife
 
 	$self->{indexes_select}->finish();
 
-	map { $$_[3] &&= $self->symname( $$_[3] ) } @ret;
+	map { $$_[3] &&= $self->symname($$_[3]) } @ret;
 
 	return @ret;
 }
 
 sub getreference {
-	my ( $self, $symname, $release ) = @_;
-	my ( $rows, @ret,     @row );
+	my ($self, $symname, $release) = @_;
+	my ($rows, @ret,     @row);
 
-	$rows = $self->{usage_select}->execute( "$symname", "$release" );
+	$rows = $self->{usage_select}->execute("$symname", "$release");
 
-	while ( @row = $self->{usage_select}->fetchrow_array ) {
-		push( @ret, [@row] );
+	while (@row = $self->{usage_select}->fetchrow_array) {
+		push(@ret, [@row]);
 	}
 
 	#while ($rows-- > 0) {
@@ -175,16 +175,16 @@ sub getreference {
 }
 
 sub fileid {
-	my ( $self, $filename, $revision ) = @_;
+	my ($self, $filename, $revision) = @_;
 	my ($fileid);
 
 	# CAUTION: $revision is not $release!
-	unless ( defined( $fileid = $files{"$filename\t$revision"} ) ) {
-		$self->{files_select}->execute( $filename, $revision );
+	unless (defined($fileid = $files{"$filename\t$revision"})) {
+		$self->{files_select}->execute($filename, $revision);
 		($fileid) = $self->{files_select}->fetchrow_array();
 		unless ($fileid) {
-			$self->{files_insert}->execute( $filename, $revision );
-			$self->{files_select}->execute( $filename, $revision );
+			$self->{files_insert}->execute($filename, $revision);
+			$self->{files_select}->execute($filename, $revision);
 			($fileid) = $self->{files_select}->fetchrow_array();
 
 		}
@@ -197,26 +197,26 @@ sub fileid {
 
 # Indicate that this filerevision is part of this release
 sub release {
-	my ( $self, $fileid, $release ) = @_;
+	my ($self, $fileid, $release) = @_;
 	my (@row);
-	my $rows = $self->{releases_select}->execute( $fileid + 0, $release );
-	while ( @row = $self->{releases_select}->fetchrow_array ) {
+	my $rows = $self->{releases_select}->execute($fileid + 0, $release);
+	while (@row = $self->{releases_select}->fetchrow_array) {
 		$rows = 1;
 	}
 	$self->{releases_select}->finish();
 
-	unless ( $rows > 0 ) {
-		$self->{releases_insert}->execute( $fileid + 0, $release );
+	unless ($rows > 0) {
+		$self->{releases_insert}->execute($fileid + 0, $release);
 		$self->{releases_insert}->finish();
 	}
 }
 
 sub symid {
-	my ( $self, $symname ) = @_;
+	my ($self, $symname) = @_;
 	my ($symid);
 
 	$symid = $symcache{$symname};
-	unless ( defined($symid) ) {
+	unless (defined($symid)) {
 		$self->{symbols_byname}->execute($symname);
 		($symid) = $self->{symbols_byname}->fetchrow_array();
 		$self->{symbols_byname}->finish();
@@ -235,10 +235,10 @@ sub symid {
 }
 
 sub symname {
-	my ( $self, $symid ) = @_;
+	my ($self, $symid) = @_;
 	my ($symname);
 
-	$self->{symbols_byid}->execute( $symid + 0 );
+	$self->{symbols_byid}->execute($symid + 0);
 	($symname) = $self->{symbols_byid}->fetchrow_array();
 	$self->{symbols_byid}->finish();
 
@@ -246,11 +246,11 @@ sub symname {
 }
 
 sub issymbol {
-	my ( $self, $symname ) = @_;
+	my ($self, $symname) = @_;
 	my ($symid);
 
 	$symid = $symcache{$symname};
-	unless ( defined($symid) ) {
+	unless (defined($symid)) {
 		$self->{symbols_byname}->execute($symname);
 		($symid) = $self->{symbols_byname}->fetchrow_array();
 		$self->{symbols_byname}->finish();
@@ -263,24 +263,24 @@ sub issymbol {
 # If this file has not been indexed earlier, mark it as being indexed
 # now and return true.  Return false if already indexed.
 sub toindex {
-	my ( $self, $fileid ) = @_;
+	my ($self, $fileid) = @_;
 	my ($status);
 
 	$self->{status_get}->execute($fileid);
 	$status = $self->{status_get}->fetchrow_array();
 	$self->{status_get}->finish();
 
-	if ( !defined($status) ) {
-		$self->{status_insert}->execute( $fileid + 0, 0 );
+	if (!defined($status)) {
+		$self->{status_insert}->execute($fileid + 0, 0);
 	}
-	return $self->{status_update}->execute( 1, $fileid, 0 ) > 0;
+	return $self->{status_update}->execute(1, $fileid, 0) > 0;
 }
 
 sub toreference {
-	my ( $self, $fileid ) = @_;
+	my ($self, $fileid) = @_;
 	my ($rv);
 
-	return $self->{status_update}->execute( 2, $fileid, 1 ) > 0;
+	return $self->{status_update}->execute(2, $fileid, 1) > 0;
 }
 
 # This function should be called before parsing each new file,
@@ -291,7 +291,7 @@ sub empty_cache {
 }
 
 sub purge {
-	my ( $self, $version ) = @_;
+	my ($self, $version) = @_;
 
 	# we don't delete symbols, because they might be used by other versions
 	# so we can end up with unused symbols, but that doesn't cause any problems
@@ -321,7 +321,7 @@ sub DESTROY {
 	$self->{delete_releases} = undef;
 	$self->{delete_files}    = undef;
 
-	if ( $self->{dbh} ) {
+	if ($self->{dbh}) {
 		$self->{dbh}->disconnect();
 		$self->{dbh} = undef;
 	}

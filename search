@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.23 2004/07/19 20:03:31 brondsem Exp $
+# $Id: search,v 1.24 2004/07/21 20:44:30 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.23 2004/07/19 20:03:31 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.24 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -37,8 +37,8 @@ sub varinputs {
 	my $templ = shift;
 	my $ret   = '';
 
-	foreach ( $config->allvariables ) {
-		if ( $config->variable($_) ne $config->vardefault($_) ) {
+	foreach ($config->allvariables) {
+		if ($config->variable($_) ne $config->vardefault($_)) {
 			$ret .= expandtemplate(
 				$templ,
 				(
@@ -55,11 +55,11 @@ sub glimpsesearch {
 	my ($searchtext) = @_;
 
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
-	unless ( open( GLIMPSE, "-|" ) ) {
-		open( STDERR, ">&STDOUT" );
+	unless (open(GLIMPSE, "-|")) {
+		open(STDERR, ">&STDOUT");
 		$! = '';
-		exec( $config->glimpsebin, "-i", "-H" . $config->glimpsedir . "/" . $release,
-			'-y', '-n', $searchtext );
+		exec($config->glimpsebin, "-i", "-H" . $config->glimpsedir . "/" . $release,
+			'-y', '-n', $searchtext);
 		print("Glimpse subprocess died unexpextedly: $!\n");
 		exit;
 	}
@@ -68,8 +68,8 @@ sub glimpsesearch {
 	my @glimpselines = ();
 	while (<GLIMPSE>) {
 		$numlines++;
-		push( @glimpselines, $_ );
-		if ( $numlines > $maxhits ) {
+		push(@glimpselines, $_);
+		if ($numlines > $maxhits) {
 			last;
 		}
 	}
@@ -82,15 +82,15 @@ sub glimpsesearch {
 	# inaccessible files. It seems this is not the case.
 	# We will have to work around it for the time being.
 
-	if ( $retval == 0 ) {
+	if ($retval == 0) {
 		my @ret;
 		my $sourceroot = $config->sourceroot . '/' . $release . '/';
 		my $i          = 0;
 		foreach my $glimpseline (@glimpselines) {
-			last if ( $i > $maxhits );
+			last if ($i > $maxhits);
 
 			$glimpseline =~ s/$sourceroot//;
-			my ( $file, $line, $text ) = $glimpseline =~ /(.*?):\s*(\d+)\s*:(.*)/;
+			my ($file, $line, $text) = $glimpseline =~ /(.*?):\s*(\d+)\s*:(.*)/;
 			$text =~ s/&/&amp;/g;
 			$text =~ s/</&lt;/g;
 			$text =~ s/>/&gt;/g;
@@ -100,9 +100,9 @@ sub glimpsesearch {
 			$i++;
 		}
 		return @ret;
-	} elsif ( $retval == 1 ) {
+	} elsif ($retval == 1) {
 		my $glimpsebin = $config->glimpsebin;
-		my $glimpseresponse = join( "<br>", @glimpselines );
+		my $glimpseresponse = join("<br>", @glimpselines);
 		my $glimpseresponse =~ s/$glimpsebin/Reason/;
 		my $glimpseresponse =~ s/glimpse: error in searching index//;
 		print("<b>Search failed</b><br>\n$glimpseresponse");
@@ -116,20 +116,20 @@ sub glimpsesearch {
 sub swishsearch {
 	my ($searchtext) = @_;
 
-	if ( !-e $config->swishdir . "/" . $release . ".index" ) {
+	if (!-e $config->swishdir . "/" . $release . ".index") {
 		print
-"<p align='center'><i>Version '$release' has not been indexed and is unavailable for searching.</i></p>";
+		  "<p align='center'><i>Version '$release' has not been indexed and is unavailable for searching.</i></p>";
 		return;
 	}
 
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
-	unless ( open( SWISH, "-|" ) ) {
-		open( STDERR, ">&STDOUT" );
-		exec( $config->swishbin, "-f", $config->swishdir . "/" . $release . ".index",
-			"-m", $maxhits, "-w", "'" . $searchtext . "'" );
+	unless (open(SWISH, "-|")) {
+		open(STDERR, ">&STDOUT");
+		exec($config->swishbin, "-f", $config->swishdir . "/" . $release . ".index",
+			"-m", $maxhits, "-w", "'" . $searchtext . "'");
 
-		print( STDERR "Couldn't exec " . $config->swishbin . ": $!\n" );
-		kill( 9, $$ );
+		print(STDERR "Couldn't exec " . $config->swishbin . ": $!\n");
+		kill(9, $$);
 	}
 
 	my @result = grep { not /^[\#\.]/ } <SWISH>;
@@ -137,18 +137,17 @@ sub swishsearch {
 	my $retval = $? >> 8;
 
 	my @ret;
-	if ( $retval == 0 ) {
+	if ($retval == 0) {
 		foreach my $hit (@result) {
-			if ( $hit =~ /^err:/ ) {
-				print $hit if $hit !~ /no results/;
-				next;
-			}
-			my ( $score, $file ) = $hit =~ /^(\d+) \/(.+) "(.+)" \d+/;
+			next if $hit =~ /^err:/;    # skip; only 'no results' errors happen with return value 0
+			my ($score, $file) = $hit =~ /^(\d+) \/(.+) "(.+)" \d+/;
 			push @ret, [ $file, $score ];
 		}
 		return @ret;
 	} else {
 		print("<b>Search failed</b><br>\n@result");
+		print "<br><i>Tip: you may need to quote words that end with *</i>"
+		  if join('', @result) =~ /Wildcard not allowed within a word/;
 		return;
 	}
 }
@@ -163,7 +162,7 @@ sub printresults {
 		# glimpse and swish-e provide different data for each result
 		my (@params) = @$_;
 
-		if ( $config->glimpsebin ) {
+		if ($config->glimpsebin) {
 			my $file = $params[0];
 			my $line = $params[1];
 			my $text = $params[2];
@@ -171,7 +170,7 @@ sub printresults {
 				$templ,
 				(
 					text    => sub { return $text },
-					fileref => sub { fileref( "$file, line $line", "find-file", "/$file", $line ) },
+					fileref => sub { fileref("$file, line $line", "find-file", "/$file", $line) },
 				)
 			);
 		} else {
@@ -181,7 +180,7 @@ sub printresults {
 				$templ,
 				(
 					score   => sub { return $score },
-					fileref => sub { fileref( "$file", "find-file", "/$file" ) },
+					fileref => sub { fileref("$file", "find-file", "/$file") },
 				)
 			);
 		}
@@ -192,9 +191,9 @@ sub printresults {
 sub search {
 	my $templ;
 
-	if ( $config->htmlsearch ) {
-		unless ( open( TEMPL, $config->htmlsearch ) ) {
-			warning( "Template " . $config->htmlsearch . " does not exist." );
+	if ($config->htmlsearch) {
+		unless (open(TEMPL, $config->htmlsearch)) {
+			warning("Template " . $config->htmlsearch . " does not exist.");
 		} else {
 			local ($/) = undef;
 			$templ = <TEMPL>;
@@ -207,10 +206,10 @@ sub search {
 	my $searchtext = $HTTP->{'param'}->{'string'};
 
 	my @results;
-	if ( $searchtext ne "" ) {
-		if ( $config->glimpsebin ) {
+	if ($searchtext ne "") {
+		if ($config->glimpsebin) {
 			@results = glimpsesearch($searchtext);
-		} elsif ( $config->swishbin and $config->swishdir ) {
+		} elsif ($config->swishbin and $config->swishdir) {
 			@results = swishsearch($searchtext);
 		} else {
 			warning("No freetext search engine configured.");
@@ -229,7 +228,7 @@ sub search {
 				  : "";
 			},
 
-			results     => sub { printresults( @_, @results ) },
+			results     => sub { printresults(@_, @results) },
 			resultcount => sub { return scalar @results },
 		)
 	);

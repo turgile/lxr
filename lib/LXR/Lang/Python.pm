@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Python.pm,v 1.3 2004/07/19 19:50:21 brondsem Exp $
+# $Id: Python.pm,v 1.4 2004/07/21 20:44:31 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang::Python;
 
-$CVSID = '$Id: Python.pm,v 1.3 2004/07/19 19:50:21 brondsem Exp $ ';
+$CVSID = '$Id: Python.pm,v 1.4 2004/07/21 20:44:31 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -28,20 +28,20 @@ use vars qw(@ISA);
 @ISA = ('LXR::Lang');
 
 my @spec = (
-	'comment' => ( '#',     "\$" ),
-	'string'  => ( '"',     '"' ),
-	'string'  => ( "'",     "'" ),
-	'atom'    => ( '\\\\.', '' )
+	'comment' => ('#',     "\$"),
+	'string'  => ('"',     '"'),
+	'string'  => ("'",     "'"),
+	'atom'    => ('\\\\.', '')
 );
 
 sub new {
-	my ( $self, $pathname, $release ) = @_;
+	my ($self, $pathname, $release) = @_;
 
-	$self = bless( {}, $self );
+	$self = bless({}, $self);
 
 	$$self{'release'} = $release;
 
-	if ( $pathname =~ /(\w+)\.py$/ || $pathname =~ /(\w+)$/ ) {
+	if ($pathname =~ /(\w+)\.py$/ || $pathname =~ /(\w+)$/) {
 		$$self{'modulename'} = $1;
 	}
 
@@ -53,7 +53,7 @@ sub parsespec {
 }
 
 sub processcode {
-	my ( $self, $code, @itag ) = @_;
+	my ($self, $code, @itag) = @_;
 
 	$$code =~ s/([a-zA-Z_][a-zA-Z0-9_\.]*)/
 		($index->issymbol( $$self{'modulename'}.".".$1, $$self{'release'} )
@@ -67,37 +67,37 @@ sub processcode {
 }
 
 sub indexfile {
-	my ( $self, $name, $path, $fileid, $index, $config ) = @_;
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
-	my ( @ptag_lines, @single_ptag, $module_name );
+	my (@ptag_lines, @single_ptag, $module_name);
 
-	if ( $name =~ m|/(\w+)\.py$| ) {
+	if ($name =~ m|/(\w+)\.py$|) {
 		$module_name = $1;
 	}
 
-	open( PYTAG, $path );
+	open(PYTAG, $path);
 
 	while (<PYTAG>) {
 		chomp;
 
 		# Function definitions
-		if ( $_ =~ /^\s*def\s+([^\(]+)/ ) {
-			$index->index( $module_name . "\.$1", $fileid, $., "f" );
+		if ($_ =~ /^\s*def\s+([^\(]+)/) {
+			$index->index($module_name . "\.$1", $fileid, $., "f");
 		}
 
 		# Class definitions
-		elsif ( $_ =~ /^\s*class\s+([^\(:]+)/ ) {
-			$index->index( $module_name . "\.$1", $fileid, $., "c" );
+		elsif ($_ =~ /^\s*class\s+([^\(:]+)/) {
+			$index->index($module_name . "\.$1", $fileid, $., "c");
 		}
 
 		# Targets that are identifiers if occurring in an assignment..
-		elsif ( $_ =~ /^(\w+) *=.*/ ) {
-			$index->index( $module_name . "\.$1", $fileid, $., "v" );
+		elsif ($_ =~ /^(\w+) *=.*/) {
+			$index->index($module_name . "\.$1", $fileid, $., "v");
 		}
 
 		# ..for loop header.
-		elsif ( $_ =~ /^for\s+(\w+)\s+in.*/ ) {
-			$index->index( $module_name . "\.$1", $fileid, $., "v" );
+		elsif ($_ =~ /^for\s+(\w+)\s+in.*/) {
+			$index->index($module_name . "\.$1", $fileid, $., "v");
 		}
 	}
 	close(PYTAG);

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.16 2004/07/19 19:50:20 brondsem Exp $
+# $Id: SimpleParse.pm,v 1.17 2004/07/21 20:44:30 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.16 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.17 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 use integer;
@@ -52,13 +52,13 @@ sub init {
 	$tabwidth = 8;
 	my $tabhint;
 
-	( $fileh, $tabhint, @blksep ) = @_;
+	($fileh, $tabhint, @blksep) = @_;
 	$tabwidth = $tabhint || $tabwidth;
 
-	while ( @_ = splice( @blksep, 0, 3 ) ) {
-		push( @bodyid, $_[0] );
-		push( @open,   $_[1] );
-		push( @term,   $_[2] );
+	while (@_ = splice(@blksep, 0, 3)) {
+		push(@bodyid, $_[0]);
+		push(@open,   $_[1]);
+		push(@term,   $_[2]);
 	}
 
 	foreach (@open) {
@@ -79,7 +79,7 @@ sub untabify {
 
 	$_[0] =~ s/^(\t+)/(' ' x ($t * length($1)))/ge;                 # Optimize for common case.
 	$_[0] =~ s/([^\t]*)\t/$1.(' ' x ($t - (length($1) % $t)))/ge;
-	return ( $_[0] );
+	return ($_[0]);
 }
 
 sub nextfrag {
@@ -93,11 +93,11 @@ sub nextfrag {
 
 		# read one more line if we have processed
 		# all of the previously read line
-		if ( $#frags < 0 ) {
+		if ($#frags < 0) {
 			$line = $fileh->getline;
 
 			if (   $. <= 2
-				&& $line =~ /^.*-[*]-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-[*]-/ )
+				&& $line =~ /^.*-[*]-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-[*]-/)
 			{
 
 				# make sure there really is a non-zero tabwidth
@@ -107,25 +107,25 @@ sub nextfrag {
 			#			&untabify($line, $tabwidth); # We inline this for performance.
 
 			# Optimize for common case.
-			if ( defined($line) ) {
+			if (defined($line)) {
 				$line =~ s/^(\t+)/' ' x ($tabwidth * length($1))/ge;
 				$line =~ s/([^\t]*)\t/$1.(' ' x ($tabwidth - (length($1) % $tabwidth)))/ge;
 
 				# split the line into fragments
-				@frags = split( /($split)/, $line );
+				@frags = split(/($split)/, $line);
 			}
 		}
 
 		last if $#frags < 0;
 
 		# skip empty fragments
-		if ( $frags[0] eq '' ) {
+		if ($frags[0] eq '') {
 			shift(@frags);
 		}
 
 		# check if we are inside a fragment
-		if ( defined($frag) ) {
-			if ( defined($btype) ) {
+		if (defined($frag)) {
+			if (defined($btype)) {
 				my $next = shift(@frags);
 
 				# Add to the fragment
@@ -135,7 +135,7 @@ sub nextfrag {
 				last if $next =~ /^$term[$btype]$/;
 
 			} else {
-				if ( $frags[0] =~ /^$open$/ ) {
+				if ($frags[0] =~ /^$open$/) {
 
 					#					print "encountered open token while btype was $btype\n";
 					last;
@@ -147,7 +147,7 @@ sub nextfrag {
 			#			print "start of new fragment\n";
 			# Find the blocktype of the current block
 			$frag = shift(@frags);
-			if ( defined($frag) && ( @_ = $frag =~ /^$open$/ ) ) {
+			if (defined($frag) && (@_ = $frag =~ /^$open$/)) {
 
 				#				print "hit\n";
 				# grep in a scalar context returns the number of times
@@ -156,7 +156,7 @@ sub nextfrag {
 
 				my $i = 1;
 				$btype = grep { $i &&= !defined($_) } @_;
-				if ( !defined( $term[$btype] ) ) {
+				if (!defined($term[$btype])) {
 					print "fragment without terminator\n";
 					last;
 				}
@@ -165,7 +165,7 @@ sub nextfrag {
 	}
 	$btype = $bodyid[$btype] if defined($btype);
 
-	return ( $btype, $frag );
+	return ($btype, $frag);
 }
 
 1;

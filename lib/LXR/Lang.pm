@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.31 2004/07/19 19:50:20 brondsem Exp $
+# $Id: Lang.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,17 +18,17 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.31 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
 
 sub new {
-	my ( $self, $pathname, $release, @itag ) = @_;
-	my ( $lang, $type );
+	my ($self, $pathname, $release, @itag) = @_;
+	my ($lang, $type);
 
-	foreach $type ( values %{ $config->filetype } ) {
-		if ( $pathname =~ /$$type[1]/ ) {
+	foreach $type (values %{ $config->filetype }) {
+		if ($pathname =~ /$$type[1]/) {
 			eval "require $$type[2]";
 			die "Unable to load $$type[2] Lang class, $@" if $@;
 			my $create = "new $$type[2]" . '($pathname, $release, $$type[0])';
@@ -38,10 +38,10 @@ sub new {
 		}
 	}
 
-	if ( !defined $lang ) {
+	if (!defined $lang) {
 
 		# Try to see if it's a script
-		my $fh = $files->getfilehandle( $pathname, $release );
+		my $fh = $files->getfilehandle($pathname, $release);
 		return undef if !defined $fh;
 		$fh->getline =~ /^\#!\s*(\S+)/s;
 
@@ -49,8 +49,8 @@ sub new {
 		my %filetype = %{ $config->filetype };
 		my %inter    = %{ $config->interpreters };
 
-		foreach my $patt ( keys %inter ) {
-			if ( $shebang =~ /\/$patt/ ) {
+		foreach my $patt (keys %inter) {
+			if ($shebang =~ /\/$patt/) {
 				eval "require $filetype{$inter{$patt}}[2]";
 				die "Unable to load $filetype{$inter{$patt}}[2] Lang class, $@" if $@;
 				my $create = "new "
@@ -72,7 +72,7 @@ sub new {
 }
 
 sub processinclude {
-	my ( $self, $frag, $dir ) = @_;
+	my ($self, $frag, $dir) = @_;
 
 	$$frag =~ s#(\")(.*?)(\")#	 
 	  $1.&LXR::Common::incref($2, "include", $2, $dir).$3 #e;
@@ -81,7 +81,7 @@ sub processinclude {
 }
 
 sub processcomment {
-	my ( $self, $frag ) = @_;
+	my ($self, $frag) = @_;
 
 	$$frag = "<span class=\"comment\">$$frag</span>";
 	$$frag =~ s#\n#</span>\n<span class=\"comment\">#g;
@@ -90,7 +90,7 @@ sub processcomment {
 sub referencefile {
 	my ($self) = @_;
 
-	print( STDERR ref($self), "->referencefile not implemented.\n" );
+	print(STDERR ref($self), "->referencefile not implemented.\n");
 }
 
 1;

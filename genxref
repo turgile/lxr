@@ -29,9 +29,9 @@ use LXR::Tagger;
 use LXR::Common;
 
 my %option;
-GetOptions( \%option, "help!", "url=s", "version=s", "allurls!", "allversions!", "reindexall!" );
+GetOptions(\%option, "help!", "url=s", "version=s", "allurls!", "allversions!", "reindexall!");
 
-if ( $option{'help'} ) {
+if ($option{'help'}) {
 
 	# this may not be the best way to implement this, but at least it's something
 	print <<END_HELP;
@@ -63,14 +63,14 @@ die("Option --allurls not implemented.  Use --url instead.\n")
 die("URL must be specified. Try \"genxref --help\".\n")
   unless $option{'url'};
 
-$config = new LXR::Config( $option{'url'} );
+$config = new LXR::Config($option{'url'});
 
 die("No matching configuration") unless $config->sourceroot;
 
-$files = new LXR::Files( $config->sourceroot );
+$files = new LXR::Files($config->sourceroot);
 die "Can't create file access object " . $config->sourceroot
   if !defined($files);
-$index = new LXR::Index( $config->dbname, O_RDWR | O_CREAT );
+$index = new LXR::Index($config->dbname, O_RDWR | O_CREAT);
 die "Can't create Index " . $config->dbname if !defined($index);
 
 our $filetype = new File::MMagic();
@@ -78,10 +78,10 @@ our %binaryfiles;
 
 my @versions;
 
-if ( $option{'allversions'} || !$option{'version'} ) {
+if ($option{'allversions'} || !$option{'version'}) {
 	@versions = $config->varrange('v');
 	die
-"Option --allversions cannot be used because no versions found automatically.  Use --version=VERSION or fix lxr.conf.\n"
+	  "Option --allversions cannot be used because no versions found automatically.  Use --version=VERSION or fix lxr.conf.\n"
 	  if scalar @versions <= 0;
 } else {
 	@versions = $option{'version'};
@@ -90,49 +90,49 @@ if ( $option{'allversions'} || !$option{'version'} ) {
 foreach my $version (@versions) {
 	$index->purge($version) if $option{'reindexall'};
 	gensearch($version);
-	genindex( '/', $version );
-	genrefs( '/', $version );
+	genindex('/', $version);
+	genrefs('/', $version);
 }
 
 sub genindex {
-	my ( $pathname, $release ) = @_;
+	my ($pathname, $release) = @_;
 
-	print( STDERR "*** $pathname $release \n" );
+	print(STDERR "*** $pathname $release \n");
 
-	if ( $pathname =~ m|/$| ) {
-		map { genindex( $pathname . $_, $release ) } $files->getdir( $pathname, $release );
+	if ($pathname =~ m|/$|) {
+		map { genindex($pathname . $_, $release) } $files->getdir($pathname, $release);
 	} else {
-		&LXR::Tagger::processfile( $pathname, $release, $config, $files, $index )
+		&LXR::Tagger::processfile($pathname, $release, $config, $files, $index)
 		  unless exists $binaryfiles{$pathname};
 	}
 }
 
 sub genrefs {
-	my ( $pathname, $release ) = @_;
+	my ($pathname, $release) = @_;
 
-	print( STDERR "### $pathname $release \n" );
+	print(STDERR "### $pathname $release \n");
 
-	if ( $pathname =~ m|/$| ) {
-		map { genrefs( $pathname . $_, $release ) } $files->getdir( $pathname, $release );
+	if ($pathname =~ m|/$|) {
+		map { genrefs($pathname . $_, $release) } $files->getdir($pathname, $release);
 	} else {
-		&LXR::Tagger::processrefs( $pathname, $release, $config, $files, $index )
+		&LXR::Tagger::processrefs($pathname, $release, $config, $files, $index)
 		  unless exists $binaryfiles{$pathname};
 	}
 }
 
 sub feedswish {
-	my ( $pathname, $release, $swish, $filelist ) = @_;
+	my ($pathname, $release, $swish, $filelist) = @_;
 
-	print( STDERR "&&& $pathname $release \n" );
+	print(STDERR "&&& $pathname $release \n");
 
-	if ( $pathname =~ m|/$| ) {
-		map { feedswish( $pathname . $_, $release, $swish, $filelist ) }
-		  $files->getdir( $pathname, $release );
+	if ($pathname =~ m|/$|) {
+		map { feedswish($pathname . $_, $release, $swish, $filelist) }
+		  $files->getdir($pathname, $release);
 	} else {
 		print $filelist "$pathname\n";
-		my $contents = $files->getfile( $pathname, $release );
-		if ( $filetype->checktype_contents($contents) =~ m%(text|message)/%
-			and length($contents) > 0 )
+		my $contents = $files->getfile($pathname, $release);
+		if ($filetype->checktype_contents($contents) =~ m%(text|message)/%
+			and length($contents) > 0)
 		{
 			$swish->print(
 				"Path-Name: $pathname\n",
@@ -150,7 +150,7 @@ sub gensearch {
 	my ($release) = @_;
 	my $string;
 
-	if ( $config->glimpsedir and $config->glimpseindex ) {
+	if ($config->glimpsedir and $config->glimpseindex) {
 
 		# Make sure the directory that the glimpse results go into
 		# already exists as glimpse won't work if the directory does
@@ -161,14 +161,14 @@ sub gensearch {
 		mkdir $string;
 		system("chmod 755 $string");
 		my $glimpse = new IO::Handle;
-		my $pid = open( $glimpse, "|-" );
-		if ( $pid == 0 ) {
-			exec( $config->glimpseindex, "-n", "-o", "-H",
+		my $pid = open($glimpse, "|-");
+		if ($pid == 0) {
+			exec($config->glimpseindex, "-n", "-o", "-H",
 				$config->glimpsedir . "/$release",
 				$config->sourceroot . "/" . $release
 			);
-			print( STDERR "Couldn't exec " . $config->glimpseindex . ": $!\n" );
-			kill( 9, $$ );
+			print(STDERR "Couldn't exec " . $config->glimpseindex . ": $!\n");
+			kill(9, $$);
 		}
 		$glimpse->close();
 
@@ -177,7 +177,7 @@ sub gensearch {
 		system("chmod 644 $string");
 	}
 
-	if ( $config->swishdir and $config->swishbin ) {
+	if ($config->swishdir and $config->swishbin) {
 		my $swish = new IO::Handle;
 		die $config->swishdir . " does not exist" unless -d $config->swishdir;
 		my $filelist = new IO::File $config->swishdir . "/$release.filenames", "w"
@@ -185,16 +185,16 @@ sub gensearch {
 
 		# execute swish, as a pipe we can write to
 
-		open( $swish,
+		open($swish,
 			    "| "
 			  . $config->swishbin
 			  . " -S prog -i stdin -v 1 -c swish-e.conf -f "
 			  . $config->swishdir . "/"
 			  . $release
-			  . ".index" )
+			  . ".index")
 		  or die "Couldn't exec " . $config->swishbin . ": $!\n";
 
-		feedswish( "/", $release, $swish, $filelist );
+		feedswish("/", $release, $swish, $filelist);
 
 		$swish->close();
 		$filelist->close();

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.31 2004/07/19 19:50:20 brondsem Exp $
+# $Id: Config.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.31 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 
@@ -31,7 +31,7 @@ use vars qw($AUTOLOAD $confname);
 $confname = 'lxr.conf';
 
 sub new {
-	my ( $class, @parms ) = @_;
+	my ($class, @parms) = @_;
 	my $self = {};
 	bless($self);
 	$self->_initialize(@parms);
@@ -44,7 +44,7 @@ sub readfile {
 	my $file = shift;
 	my @data;
 
-	open( INPUT, $file ) || fatal("Config: cannot open $file\n");
+	open(INPUT, $file) || fatal("Config: cannot open $file\n");
 	$file = <INPUT>;
 	close(INPUT);
 
@@ -54,8 +54,8 @@ sub readfile {
 }
 
 sub _initialize {
-	my ( $self, $url, $confpath ) = @_;
-	my ( $dir, $arg );
+	my ($self, $url, $confpath) = @_;
+	my ($dir,  $arg);
 
 	unless ($url) {
 		$url = 'http://' . $ENV{'SERVER_NAME'} . ':' . $ENV{'SERVER_PORT'};
@@ -66,11 +66,11 @@ sub _initialize {
 	$url .= '/' unless $url =~ m#/$#;    # append / if necessary
 
 	unless ($confpath) {
-		($confpath) = ( $0 =~ /(.*?)[^\/]*$/ );
+		($confpath) = ($0 =~ /(.*?)[^\/]*$/);
 		$confpath .= $confname;
 	}
 
-	unless ( open( CONFIG, $confpath ) ) {
+	unless (open(CONFIG, $confpath)) {
 		die("Couldn't open configuration file \"$confpath\".");
 	}
 
@@ -80,17 +80,17 @@ sub _initialize {
 	my $config_contents = <CONFIG>;
 	$config_contents =~ /(.*)/s;
 	$config_contents = $1;    #untaint it
-	my @config = eval( "\n#line 1 \"configuration file\"\n" . $config_contents );
+	my @config = eval("\n#line 1 \"configuration file\"\n" . $config_contents);
 	die($@) if $@;
 
 	my $config;
-	if ( scalar(@config) > 0 ) {
-		%$self = ( %$self, %{ $config[0] } );
+	if (scalar(@config) > 0) {
+		%$self = (%$self, %{ $config[0] });
 	}
   CANDIDATE: foreach $config (@config) {
-		if ( $config->{baseurl} ) {
+		if ($config->{baseurl}) {
 			my @aliases;
-			if ( $config->{baseurl_aliases} ) {
+			if ($config->{baseurl_aliases}) {
 				@aliases = @{ $config->{baseurl_aliases} };
 			}
 			my $root = $config->{baseurl};
@@ -98,9 +98,9 @@ sub _initialize {
 			foreach my $rt (@aliases) {
 				$rt .= '/' unless $rt =~ m#/$#;    # append / if necessary
 				my $r = quotemeta($rt);
-				if ( $url =~ /^$r/ ) {
+				if ($url =~ /^$r/) {
 					$config->{baseurl} = $rt;
-					%$self = ( %$self, %$config );
+					%$self = (%$self, %$config);
 					last CANDIDATE;
 				}
 			}
@@ -113,11 +113,11 @@ sub _initialize {
 sub allvariables {
 	my $self = shift;
 
-	return keys( %{ $self->{variables} || {} } );
+	return keys(%{ $self->{variables} || {} });
 }
 
 sub variable {
-	my ( $self, $var, $val ) = @_;
+	my ($self, $var, $val) = @_;
 
 	$self->{variables}{$var}{value} = $val if defined($val);
 	return $self->{variables}{$var}{value}
@@ -125,14 +125,14 @@ sub variable {
 }
 
 sub vardefault {
-	my ( $self, $var ) = @_;
+	my ($self, $var) = @_;
 
 	return $self->{variables}{$var}{default}
 	  || $self->{variables}{$var}{range}[0];
 }
 
 sub vardescription {
-	my ( $self, $var, $val ) = @_;
+	my ($self, $var, $val) = @_;
 
 	$self->{variables}{$var}{name} = $val if defined($val);
 
@@ -140,9 +140,9 @@ sub vardescription {
 }
 
 sub varrange {
-	my ( $self, $var ) = @_;
+	my ($self, $var) = @_;
 
-	if ( ref( $self->{variables}{$var}{range} ) eq "CODE" ) {
+	if (ref($self->{variables}{$var}{range}) eq "CODE") {
 		return &{ $self->{variables}{$var}{range} };
 	}
 
@@ -150,21 +150,21 @@ sub varrange {
 }
 
 sub varexpand {
-	my ( $self, $exp ) = @_;
+	my ($self, $exp) = @_;
 	$exp =~ s/\$\{?(\w+)\}?/$self->variable($1)/ge;
 
 	return $exp;
 }
 
 sub value {
-	my ( $self, $var ) = @_;
+	my ($self, $var) = @_;
 
-	if ( exists( $self->{$var} ) ) {
+	if (exists($self->{$var})) {
 		my $val = $self->{$var};
 
-		if ( ref($val) eq 'ARRAY' ) {
+		if (ref($val) eq 'ARRAY') {
 			return map { $self->varexpand($_) } @$val;
-		} elsif ( ref($val) eq 'CODE' ) {
+		} elsif (ref($val) eq 'CODE') {
 			return $val;
 		} else {
 			return $self->varexpand($val);
@@ -176,11 +176,11 @@ sub value {
 
 sub AUTOLOAD {
 	my $self = shift;
-	( my $var = $AUTOLOAD ) =~ s/.*:://;
+	(my $var = $AUTOLOAD) =~ s/.*:://;
 
 	my @val = $self->value($var);
 
-	if ( ref( $val[0] ) eq 'CODE' ) {
+	if (ref($val[0]) eq 'CODE') {
 		return $val[0]->(@_);
 	} else {
 		return wantarray ? @val : $val[0];
@@ -188,23 +188,23 @@ sub AUTOLOAD {
 }
 
 sub mappath {
-	my ( $self, $path, @args ) = @_;
+	my ($self, $path, @args) = @_;
 	my %oldvars;
-	my ( $m, $n );
+	my ($m, $n);
 
 	foreach $m (@args) {
-		if ( $m =~ /(.*?)=(.*)/ ) {
+		if ($m =~ /(.*?)=(.*)/) {
 			$oldvars{$1} = $self->variable($1);
-			$self->variable( $1, $2 );
+			$self->variable($1, $2);
 		}
 	}
 
-	while ( ( $m, $n ) = each %{ $self->{maps} || {} } ) {
+	while (($m, $n) = each %{ $self->{maps} || {} }) {
 		$path =~ s/$m/$self->varexpand($n)/e;
 	}
 
-	while ( ( $m, $n ) = each %oldvars ) {
-		$self->variable( $m, $n );
+	while (($m, $n) = each %oldvars) {
+		$self->variable($m, $n);
 	}
 
 	return $path;

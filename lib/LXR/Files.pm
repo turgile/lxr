@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.7 2004/07/19 19:50:20 brondsem Exp $
+# $Id: Files.pm,v 1.8 2004/07/21 20:44:30 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.7 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.8 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 
 sub new {
-	my ( $self, $srcroot ) = @_;
+	my ($self, $srcroot) = @_;
 	my $files;
 
-	if ( $srcroot =~ /^CVS:(.*)/i ) {
+	if ($srcroot =~ /^CVS:(.*)/i) {
 		require LXR::Files::CVS;
 		$srcroot = $1;
 		$files   = new LXR::Files::CVS($srcroot);

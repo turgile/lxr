@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.21 2004/07/19 19:50:20 brondsem Exp $
+# $Id: Tagger.pm,v 1.22 2004/07/21 20:44:30 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,79 +18,79 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.21 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.22 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
 use LXR::Lang;
 
 sub processfile {
-	my ( $pathname, $release, $config, $files, $index ) = @_;
+	my ($pathname, $release, $config, $files, $index) = @_;
 
-	my $lang = new LXR::Lang( $pathname, $release );
+	my $lang = new LXR::Lang($pathname, $release);
 
 	return unless $lang;
 
-	my $revision = $files->filerev( $pathname, $release );
+	my $revision = $files->filerev($pathname, $release);
 
 	return unless $revision;
 
-	print( STDERR "--- $pathname $release $revision\n" );
+	print(STDERR "--- $pathname $release $revision\n");
 
 	if ($index) {
-		my $fileid = $index->fileid( $pathname, $revision );
+		my $fileid = $index->fileid($pathname, $revision);
 
-		$index->release( $fileid, $release );
+		$index->release($fileid, $release);
 
-		if ( $index->toindex($fileid) ) {
+		if ($index->toindex($fileid)) {
 			$index->empty_cache();
-			print( STDERR "--- $pathname $fileid\n" );
+			print(STDERR "--- $pathname $fileid\n");
 
-			my $path = $files->tmpfile( $pathname, $release );
+			my $path = $files->tmpfile($pathname, $release);
 
-			$lang->indexfile( $pathname, $path, $fileid, $index, $config );
+			$lang->indexfile($pathname, $path, $fileid, $index, $config);
 			$index->setindexed($fileid);
 			unlink($path);
 		} else {
-			print( STDERR "$pathname was already indexed\n" );
+			print(STDERR "$pathname was already indexed\n");
 		}
 	} else {
-		print( STDERR " **** FAILED ****\n" );
+		print(STDERR " **** FAILED ****\n");
 	}
 	$lang     = undef;
 	$revision = undef;
 }
 
 sub processrefs {
-	my ( $pathname, $release, $config, $files, $index ) = @_;
+	my ($pathname, $release, $config, $files, $index) = @_;
 
-	my $lang = new LXR::Lang( $pathname, $release );
+	my $lang = new LXR::Lang($pathname, $release);
 
 	return unless $lang;
 
-	my $revision = $files->filerev( $pathname, $release );
+	my $revision = $files->filerev($pathname, $release);
 
 	return unless $revision;
 
-	print( STDERR "--- $pathname $release $revision\n" );
+	print(STDERR "--- $pathname $release $revision\n");
 
 	if ($index) {
-		my $fileid = $index->fileid( $pathname, $revision );
+		my $fileid = $index->fileid($pathname, $revision);
 
-		if ( $index->toreference($fileid) ) {
+		if ($index->toreference($fileid)) {
 			$index->empty_cache();
-			print( STDERR "--- $pathname $fileid\n" );
+			print(STDERR "--- $pathname $fileid\n");
 
-			my $path = $files->tmpfile( $pathname, $release );
+			my $path = $files->tmpfile($pathname, $release);
 
-			$lang->referencefile( $pathname, $path, $fileid, $index, $config );
+			$lang->referencefile($pathname, $path, $fileid, $index, $config);
 			$index->setreferenced($fileid);
 			unlink($path);
 		} else {
 			print STDERR "$pathname was already referenced\n";
 		}
 	} else {
-		print( STDERR " **** FAILED ****\n" );
+		print(STDERR " **** FAILED ****\n");
 	}
 
 	$lang     = undef;

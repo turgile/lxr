@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Java.pm,v 1.5 2004/07/19 19:50:21 brondsem Exp $
+# $Id: Java.pm,v 1.6 2004/07/21 20:44:31 brondsem Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -21,7 +21,7 @@
 
 package LXR::Lang::Java;
 
-my $CVSID = '$Id: Java.pm,v 1.5 2004/07/19 19:50:21 brondsem Exp $ ';
+my $CVSID = '$Id: Java.pm,v 1.6 2004/07/21 20:44:31 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -35,7 +35,7 @@ require LXR::Lang::Generic;
 # and "import" keywords
 
 sub processinclude {
-	my ( $self, $frag, $dir ) = @_;
+	my ($self, $frag, $dir) = @_;
 
 	# Deal with package declaration of the form
 	# "package java.lang.util"

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: ident,v 1.19 2004/07/19 19:50:20 brondsem Exp $
+# $Id: ident,v 1.20 2004/07/21 20:44:30 brondsem Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.19 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: ident,v 1.20 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -36,8 +36,8 @@ my $declare_hits;
 
 sub varinputs {
 	my $ret = '';
-	foreach ( $config->allvariables ) {
-		if ( $config->variable($_) ne $config->vardefault($_) ) {
+	foreach ($config->allvariables) {
+		if ($config->variable($_) ne $config->vardefault($_)) {
 			$ret .= "<input type=\"hidden\" name=\"$_\" value=\"" . $config->variable($_) . "\">\n";
 		}
 	}
@@ -48,17 +48,17 @@ sub refexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	my @refs = $index->getindex( $identifier, $release );
+	my @refs = $index->getindex($identifier, $release);
 
 	my $file_hits = 0;
 	my $last_file;
 	my $def;
 	foreach my $def (@refs) {
-		my ( $file, $line, $type, $rel ) = @$def;
+		my ($file, $line, $type, $rel) = @$def;
 		$file_hits++ if $file ne $last_file;
 		$last_file = $file;
 
-		$rel &&= "(member of " . idref( $rel, "search-member", $rel ) . ")";
+		$rel &&= "(member of " . idref($rel, "search-member", $rel) . ")";
 		$ret .= expandtemplate(
 			$templ,
 			(
@@ -67,7 +67,7 @@ sub refexpand {
 				type    => sub { $type },
 				rel     => sub { $rel },
 				fileref => sub {
-					fileref( "$file, line $line", "search-decl", $file, $line );
+					fileref("$file, line $line", "search-decl", $file, $line);
 				}
 			)
 		);
@@ -85,11 +85,11 @@ sub usesexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	my @uses = $index->getreference( $identifier, $release );
+	my @uses = $index->getreference($identifier, $release);
 	my $file_hits = 0;
 	my $last_file;
-	foreach my $ref ( sort { $$a[0] cmp $$b[0] } @uses ) {
-		my ( $file, $line ) = @$ref;
+	foreach my $ref (sort { $$a[0] cmp $$b[0] } @uses) {
+		my ($file, $line) = @$ref;
 		$file_hits++ if $file ne $last_file;
 		$last_file = $file;
 		$ret .= expandtemplate(
@@ -98,7 +98,7 @@ sub usesexpand {
 				file    => sub { $file },
 				line    => sub { $line },
 				fileref => sub {
-					fileref( "$file, line $line", "search-ref", $file, $line );
+					fileref("$file, line $line", "search-ref", $file, $line);
 				}
 			)
 		);
@@ -109,12 +109,12 @@ sub usesexpand {
 
 sub printident {
 	my $dir = shift;
-	my ( $templ, $templ_refs );
+	my ($templ, $templ_refs);
 
 	#$templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
-	if ( $config->htmlident ) {
-		unless ( open( TEMPL, $config->htmlident ) ) {
-			warning( "Template " . $config->htmlident . " does not exist." );
+	if ($config->htmlident) {
+		unless (open(TEMPL, $config->htmlident)) {
+			warning("Template " . $config->htmlident . " does not exist.");
 		} else {
 			local ($/) = undef;
 			$templ = <TEMPL>;
@@ -124,9 +124,9 @@ sub printident {
 		die "Ident template not configured";
 	}
 
-	if ( $config->htmlident_refs ) {
-		unless ( open( TEMPL, $config->htmlident_refs ) ) {
-			warning( "Template " . $config->htmlident_refs . " does not exist." );
+	if ($config->htmlident_refs) {
+		unless (open(TEMPL, $config->htmlident_refs)) {
+			warning("Template " . $config->htmlident_refs . " does not exist.");
 		} else {
 			local ($/) = undef;
 			$templ_refs = <TEMPL>;
@@ -152,7 +152,7 @@ sub printident {
 		)
 	);
 	print $declare_hits;
-	print( expandtemplate( $templ_refs, ( uses => sub { usesexpand(@_) }, ) ) );
+	print(expandtemplate($templ_refs, (uses => sub { usesexpand(@_) },)));
 	print $reference_hits;
 }
 

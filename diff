@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: diff,v 1.12 2004/07/19 19:50:20 brondsem Exp $
+# $Id: diff,v 1.13 2004/07/21 20:44:30 brondsem Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.12 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: diff,v 1.13 2004/07/21 20:44:30 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -32,17 +32,17 @@ use LXR::Common qw(:html);
 use Local;
 
 sub htmlsub {
-	my ( $s, $l ) = @_;
-	my @s = split( /(<[^>]*>|&[\#\w\d]+;?)/, $s );
+	my ($s, $l) = @_;
+	my @s = split(/(<[^>]*>|&[\#\w\d]+;?)/, $s);
 	$s = '';
 
 	while (@s) {
-		my $f = substr( shift(@s), 0, $l );
+		my $f = substr(shift(@s), 0, $l);
 		$l -= length($f);
 		$s .= $f;
 		$f = shift(@s);
-		if ( $f =~ /^&/ ) {
-			if ( $l > 0 ) {
+		if ($f =~ /^&/) {
+			if ($l > 0) {
 				$s .= $f;
 				$l--;
 			}
@@ -55,12 +55,12 @@ sub htmlsub {
 }
 
 sub printdiff {
-	my ( $diffvar, $diffval ) = @_;
+	my ($diffvar, $diffval) = @_;
 
 	unless ($diffvar) {
 		my @vars;
-		foreach ( $config->allvariables ) {
-			push( @vars, $config->vardescription($_) );
+		foreach ($config->allvariables) {
+			push(@vars, $config->vardescription($_));
 		}
 
 		$vars[ $#vars - 1 ] .= " or " . pop(@vars) if $#vars > 0;
@@ -69,34 +69,33 @@ sub printdiff {
 			"<p align=\"center\">\n",
 			"Please indicate the version of the file you wish to\n",
 			"compare to by clicking on the appropriate\n",
-			join( ", ", @vars ),
-			" button.\n",
-			"</p>\n"
+			join(", ", @vars),
+			" button.\n", "</p>\n"
 		);
 		return;
 	}
 
-	if ( $pathname =~ m|/$| ) {
+	if ($pathname =~ m|/$|) {
 		print("<h3 align=\"center\">Diff not yet supported for directories.</h3>\n");
 		return;
 	}
 
 	my $origval  = $config->variable($diffvar);
 	my $origname = $pathname;
-	my $origtemp = $files->tmpfile( $origname, $release );
+	my $origtemp = $files->tmpfile($origname, $release);
 
-	$config->variable( $diffvar, $diffval );
+	$config->variable($diffvar, $diffval);
 	my $diffname = $config->mappath($pathname);
-	my $difftemp = $files->tmpfile( $diffname, $config->variable('v') );
+	my $difftemp = $files->tmpfile($diffname, $config->variable('v'));
 
-	$config->variable( $diffvar, $origval );
+	$config->variable($diffvar, $origval);
 
-	unless ( defined($origtemp) ) {
+	unless (defined($origtemp)) {
 		unlink($difftemp);
 		print("*** $origname does not exist ***\n");
 		return;
 	}
-	unless ( defined($difftemp) ) {
+	unless (defined($difftemp)) {
 		unlink($origtemp);
 		print("*** $diffname does not exist ***\n");
 		return;
@@ -104,24 +103,24 @@ sub printdiff {
 
 	fflush;
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
-	unless ( open( DIFF, "-|" ) ) {
-		open( STDERR, ">&STDOUT" );
-		exec( 'diff', '-U0', $origtemp, $difftemp );
+	unless (open(DIFF, "-|")) {
+		open(STDERR, ">&STDOUT");
+		exec('diff', '-U0', $origtemp, $difftemp);
 		print "*** Diff subprocess died unexpextedly: $!\n";
 		exit;
 	}
 
-	my ( $os, $ol, $ns, $nl, $ms, $ml, $bo, $ofs, $dir, %orig, %new, %chg );
+	my ($os, $ol, $ns, $nl, $ms, $ml, $bo, $ofs, $dir, %orig, %new, %chg);
 
 	while (<DIFF>) {
-		if ( ( $os, $ol, $ns, $nl ) = /@@ -(\d+)(?:,(\d+)|) \+(\d+)(?:,(\d+)|) @@/ ) {
+		if (($os, $ol, $ns, $nl) = /@@ -(\d+)(?:,(\d+)|) \+(\d+)(?:,(\d+)|) @@/) {
 			$os++ if $ol eq '0';
 			$ns++ if $nl eq '0';
 			$ol = 1 unless defined($ol);
 			$nl = 1 unless defined($nl);
 
 			$bo = $os + $ofs;
-			if ( $ol < $nl ) {
+			if ($ol < $nl) {
 				$ofs += $nl - $ol;
 
 				$dir               = '&gt;&gt;';
@@ -134,10 +133,10 @@ sub printdiff {
 				$ml               = $nl;
 				$new{ $ns + $nl } = $ms;
 			}
-			foreach ( 0 .. $ml - 1 ) {
+			foreach (0 .. $ml - 1) {
 				$chg{ $bo + $_ } = '!!';
 			}
-			foreach ( 0 .. $ms - 1 ) {
+			foreach (0 .. $ms - 1) {
 				$chg{ $bo + $ml + $_ } = $dir;
 			}
 
@@ -164,20 +163,20 @@ sub printdiff {
 
 	my $origh = new FileHandle($origtemp);
 	my $orig  = '';
-	markupfile( $origh, sub { $orig .= shift }, 1 );
+	markupfile($origh, sub { $orig .= shift }, 1);
 	my $len = $. + $ofs;
 	$origh->close;
 
-	$config->variable( $diffvar, $diffval );
+	$config->variable($diffvar, $diffval);
 	$pathname = $diffname;
 
 	my $diffh = new FileHandle($difftemp);
 	my $new   = '';
 
-	markupfile( $diffh, sub { $new .= shift } );
+	markupfile($diffh, sub { $new .= shift });
 	$diffh->close;
 
-	$config->variable( $diffvar, $origval );
+	$config->variable($diffvar, $origval);
 	$pathname = $origname;
 
 	my $i;
@@ -186,16 +185,16 @@ sub printdiff {
 	$i = 1;
 	$new =~ s/^/"\n" x ($new{$i++})/mge;
 
-	my @orig = split( /\n/, $orig );
-	my @new  = split( /\n/, $new );
+	my @orig = split(/\n/, $orig);
+	my @new  = split(/\n/, $new);
 
 	print("<pre class=\"file\">\n");
-	foreach $i ( 0 .. $len ) {
-		my $o = htmlsub( $orig[$i], 50 );
+	foreach $i (0 .. $len) {
+		my $o = htmlsub($orig[$i], 50);
 		my $n = $new[$i];
 
 		my $diffmark =
-		  $chg{ $i + 1 } ? ( "<span class=\"diff-mark\">" . $chg{ $i + 1 } . "</span>" ) : "  ";
+		  $chg{ $i + 1 } ? ("<span class=\"diff-mark\">" . $chg{ $i + 1 } . "</span>") : "  ";
 
 		#print("$o <span class=\"diff-mark\">",
 		#      ($chg{$i+1} || "  "), "</span> $n\n");
@@ -203,13 +202,13 @@ sub printdiff {
 	}
 	print("</pre>");
 
-	unlink( $origtemp, $difftemp );
+	unlink($origtemp, $difftemp);
 }
 
 httpinit;
 
 makeheader('diff');
-printdiff( $$HTTP{'param'}{'diffvar'}, $$HTTP{'param'}{'diffval'} );
+printdiff($$HTTP{'param'}{'diffvar'}, $$HTTP{'param'}{'diffval'});
 makefooter('diff');
 
 httpclean;

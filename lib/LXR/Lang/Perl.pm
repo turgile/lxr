@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Perl.pm,v 1.6 2004/07/19 19:50:21 brondsem Exp $
+# $Id: Perl.pm,v 1.7 2004/07/21 20:44:31 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang::Perl;
 
-$CVSID = '$Id: Perl.pm,v 1.6 2004/07/19 19:50:21 brondsem Exp $ ';
+$CVSID = '$Id: Perl.pm,v 1.7 2004/07/21 20:44:31 brondsem Exp $ ';
 
 =head1 LXR::Lang::Perl
 
@@ -34,20 +34,20 @@ use vars qw(@ISA);
 @ISA = ('LXR::Lang');
 
 my @spec = (
-	'atom'    => ( '\$\W?',        '' ),
-	'atom'    => ( '\\\\.',        '' ),
-	'include' => ( '\buse\s+',     ';' ),
-	'include' => ( '\brequire\s+', ';' ),
-	'string'  => ( '"',            '"' ),
-	'comment' => ( '#',            "\$" ),
-	'comment' => ( "^=\\w+",       "^=cut" ),
-	'string'  => ( "'",            "'" )
+	'atom'    => ('\$\W?',        ''),
+	'atom'    => ('\\\\.',        ''),
+	'include' => ('\buse\s+',     ';'),
+	'include' => ('\brequire\s+', ';'),
+	'string'  => ('"',            '"'),
+	'comment' => ('#',            "\$"),
+	'comment' => ("^=\\w+",       "^=cut"),
+	'string'  => ("'",            "'")
 );
 
 sub new {
-	my ( $self, $pathname, $release ) = @_;
+	my ($self, $pathname, $release) = @_;
 
-	$self = bless( {}, $self );
+	$self = bless({}, $self);
 
 	$$self{'release'} = $release;
 
@@ -59,7 +59,7 @@ sub parsespec {
 }
 
 sub processcode {
-	my ( $self, $code, @itag ) = @_;
+	my ($self, $code, @itag) = @_;
 	my $sym;
 
 	#	$$code =~ s#([\@\$\%\&\*])([a-z0-9_]+)|\b([a-z0-9_]+)(\s*\()#
@@ -81,19 +81,19 @@ sub modref {
 	$file =~ s,::,/,g;
 	$file .= ".pm";
 
-	return &LXR::Common::incref( $mod, "include", $file );
+	return &LXR::Common::incref($mod, "include", $file);
 }
 
 sub processinclude {
-	my ( $self, $frag, $dir ) = @_;
+	my ($self, $frag, $dir) = @_;
 
 	$$frag =~ s/(use\s+|require\s+)([\w:]+)/$1.modref($2)/e;
 }
 
 sub processcomment {
-	my ( $self, $comm ) = @_;
+	my ($self, $comm) = @_;
 
-	if ( $$comm =~ /^=/s ) {
+	if ($$comm =~ /^=/s) {
 
 		# Pod text
 
@@ -102,11 +102,11 @@ sub processcomment {
 			map {
 				if (/^=head(\d)\s*(.*)/s)
 				{
-					"<span class=\"pod\"><font size=\"+" . ( 4 - $1 ) . "\">$2<\/font></span>";
+					"<span class=\"pod\"><font size=\"+" . (4 - $1) . "\">$2<\/font></span>";
 				} elsif (/^=item\s*(.*)/s) {
-					"<span class=\"podhead\">* $1 " . ( "-" x ( 67 - length($1) ) ) . "<\/span>";
+					"<span class=\"podhead\">* $1 " . ("-" x (67 - length($1))) . "<\/span>";
 				} elsif (/^=(pod|cut)/s) {
-					"<span class=\"podhead\">" . ( "-" x 70 ) . "<\/span>";
+					"<span class=\"podhead\">" . ("-" x 70) . "<\/span>";
 				} elsif (/^=.*/s) {
 					"";
 				} else {
@@ -118,7 +118,7 @@ sub processcomment {
 					}
 					$_;
 				}
-			  } split( /((?:\n[ \t]*)*\n)/, $$comm )
+			  } split(/((?:\n[ \t]*)*\n)/, $$comm)
 		);
 	} else {
 		$$comm =~ s|^(.*)$|<span class='comment'>$1</span>|gm;
@@ -126,20 +126,20 @@ sub processcomment {
 }
 
 sub indexfile {
-	my ( $self, $name, $path, $fileid, $index, $config ) = @_;
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
-	open( PLTAG, $path );
+	open(PLTAG, $path);
 
 	while (<PLTAG>) {
 		if (/^sub\s+(\w+)/) {
-			print( STDERR "Sub: $1\n" );
-			$index->index( $1, $fileid, $., 'f' );
+			print(STDERR "Sub: $1\n");
+			$index->index($1, $fileid, $., 'f');
 		} elsif (/^package\s+([\w:]+)/) {
-			print( STDERR "Class: $1\n" );
-			$index->index( $1, $fileid, $., 'c' );
+			print(STDERR "Class: $1\n");
+			$index->index($1, $fileid, $., 'c');
 		} elsif (/^=item\s+[\@\$\%\&\*]?(\w+)/) {
-			print( STDERR "Doc: $1\n" );
-			$index->index( $1, $fileid, $., 'i' );
+			print(STDERR "Doc: $1\n");
+			$index->index($1, $fileid, $., 'i');
 		}
 	}
 	close(PLTAG);

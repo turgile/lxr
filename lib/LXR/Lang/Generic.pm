@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.16 2004/07/20 18:58:24 brondsem Exp $
+# $Id: Generic.pm,v 1.17 2004/07/21 20:44:31 brondsem Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.16 2004/07/20 18:58:24 brondsem Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.17 2004/07/21 20:44:31 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -35,15 +35,15 @@ my $generic_config;
 @LXR::Lang::Generic::ISA = ('LXR::Lang');
 
 sub new {
-	my ( $proto, $pathname, $release, $lang ) = @_;
+	my ($proto, $pathname, $release, $lang) = @_;
 	my $class = ref($proto) || $proto;
 	my $self = {};
-	bless( $self, $class );
+	bless($self, $class);
 	$$self{'release'}  = $release;
 	$$self{'language'} = $lang;
 
 	read_config() unless defined $generic_config;
-	%$self = ( %$self, %$generic_config );
+	%$self = (%$self, %$generic_config);
 
 	# Set langid
 	$$self{'langid'} = $self->langinfo('langid');
@@ -56,23 +56,23 @@ sub new {
 # config file each time.  Because it is only done once, we also use
 # this to check the version of ctags.
 sub read_config {
-	open( CONF, $config->genericconf ) || die "Can't open " . $config->genericconf . ", $!";
+	open(CONF, $config->genericconf) || die "Can't open " . $config->genericconf . ", $!";
 
 	local ($/) = undef;
 
 	my $config_contents = <CONF>;
 	$config_contents =~ /(.*)/s;
-	$config_contents = $1;                                                          #untaint it
-	$generic_config  = eval( "\n#line 1 \"generic.conf\"\n" . $config_contents );
+	$config_contents = $1;                                                        #untaint it
+	$generic_config  = eval("\n#line 1 \"generic.conf\"\n" . $config_contents);
 	die($@) if $@;
 	close CONF;
 
 	# Setup the ctags to declid mapping
 	my $langmap = $generic_config->{'langmap'};
-	foreach my $lang ( keys %$langmap ) {
+	foreach my $lang (keys %$langmap) {
 		my $typemap = $langmap->{$lang}{'typemap'};
-		foreach my $type ( keys %$typemap ) {
-			$typemap->{$type} = $index->getdecid( $langmap->{$lang}{'langid'}, $typemap->{$type} );
+		foreach my $type (keys %$typemap) {
+			$typemap->{$type} = $index->getdecid($langmap->{$lang}{'langid'}, $typemap->{$type});
 		}
 	}
 
@@ -81,50 +81,50 @@ sub read_config {
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 	my $version = `$ctags --version`;
 	$version =~ /Exuberant ctags +(\d+)/i;
-	if ( $1 < 5 ) {
+	if ($1 < 5) {
 		die "Exuberant ctags version 5 or above required, found $version\n";
 	}
 }
 
 sub indexfile {
-	my ( $self, $name, $path, $fileid, $index, $config ) = @_;
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
 	my $typemap = $self->langinfo('typemap');
 
 	my $langforce = ${ $self->eclangnamemapping }{ $self->language };
-	if ( !defined $langforce ) {
+	if (!defined $langforce) {
 		$langforce = $self->language;
 	}
 
-	if ( $config->ectagsbin ) {
-		open( CTAGS,
-			join( " ",
+	if ($config->ectagsbin) {
+		open(CTAGS,
+			join(" ",
 				$config->ectagsbin, $self->ectagsopts, "--excmd=number",
-				"--language-force=$langforce", "-f", "-", $path, "|" )
+				"--language-force=$langforce", "-f", "-", $path, "|")
 		  )
 		  or die "Can't run ectags, $!";
 
 		while (<CTAGS>) {
 			chomp;
 
-			my ( $sym, $file, $line, $type, $ext ) = split( /\t/, $_ );
+			my ($sym, $file, $line, $type, $ext) = split(/\t/, $_);
 			$line =~ s/;\"$//;
 			$ext  =~ /language:(\w+)/;
 			$type = $typemap->{$type};
-			if ( !defined $type ) {
-				print "Warning: Unknown type ", ( split( /\t/, $_ ) )[3], "\n";
+			if (!defined $type) {
+				print "Warning: Unknown type ", (split(/\t/, $_))[3], "\n";
 				next;
 			}
 
 			# TODO: can we make it more generic in parsing the extension fields?
-			if ( defined($ext) && $ext =~ /^(struct|union|class|enum):(.*)/ ) {
+			if (defined($ext) && $ext =~ /^(struct|union|class|enum):(.*)/) {
 				$ext = $2;
 				$ext =~ s/::<anonymous>//g;
 			} else {
 				$ext = undef;
 			}
 
-			$index->index( $sym, $fileid, $line, $self->langid, $type, $ext );
+			$index->index($sym, $fileid, $line, $self->langid, $type, $ext);
 		}
 		close(CTAGS);
 
@@ -151,8 +151,8 @@ sub parsespec {
 # TODO : Make the handling of identifier recognition language dependant
 
 sub processcode {
-	my ( $self, $code ) = @_;
-	my ( $start, $id );
+	my ($self, $code) = @_;
+	my ($start, $id);
 	$$code =~ s {(^|[^\w\#])([\w~][\w]*)\b}
 	# Replace identifier by link unless it's a reserved word
 	{
@@ -169,23 +169,23 @@ sub processcode {
 #
 
 sub referencefile {
-	my ( $self, $name, $path, $fileid, $index, $config ) = @_;
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
 	require LXR::SimpleParse;
 
 	# Use dummy tabwidth here since it doesn't matter for referencing
-	&LXR::SimpleParse::init( new FileHandle($path), 1, $self->parsespec );
+	&LXR::SimpleParse::init(new FileHandle($path), 1, $self->parsespec);
 
 	my $linenum = 1;
-	my ( $btype, $frag ) = &LXR::SimpleParse::nextfrag;
+	my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 	my @lines;
 	my $ls;
 
-	while ( defined($frag) ) {
-		@lines = ( $frag =~ /(.*?\n)/g, $frag =~ /([^\n]*)$/ );
+	while (defined($frag)) {
+		@lines = ($frag =~ /(.*?\n)/g, $frag =~ /([^\n]*)$/);
 
-		if ( defined($btype) ) {
-			if ( $btype eq 'comment' or $btype eq 'string' or $btype eq 'include' ) {
+		if (defined($btype)) {
+			if ($btype eq 'comment' or $btype eq 'string' or $btype eq 'include') {
 				$linenum += @lines - 1;
 			} else {
 				print "BTYPE was: $btype\n";
@@ -203,12 +203,12 @@ sub referencefile {
 					$string = $_;
 
 					#		  print "considering $string\n";
-					if ( !grep( /^$string$/, $self->langinfo('reserved') )
-						&& $index->issymbol($string) )
+					if (!grep(/^$string$/, $self->langinfo('reserved'))
+						&& $index->issymbol($string))
 					{
 
 						#			print "adding $string to references\n";
-						$index->reference( $string, $fileid, $linenum );
+						$index->reference($string, $fileid, $linenum);
 					}
 
 				}
@@ -217,7 +217,7 @@ sub referencefile {
 			}
 			$linenum--;
 		}
-		( $btype, $frag ) = &LXR::SimpleParse::nextfrag;
+		($btype, $frag) = &LXR::SimpleParse::nextfrag;
 	}
 	print("+++ $linenum\n");
 }
@@ -227,7 +227,7 @@ sub referencefile {
 # this works.
 
 sub variable {
-	my ( $self, $var, $val ) = @_;
+	my ($self, $var, $val) = @_;
 
 	$self->{variables}{$var}{value} = $val if defined($val);
 	return $self->{variables}{$var}{value}
@@ -235,21 +235,21 @@ sub variable {
 }
 
 sub varexpand {
-	my ( $self, $exp ) = @_;
+	my ($self, $exp) = @_;
 	$exp =~ s/\$\{?(\w+)\}?/$self->variable($1)/ge;
 
 	return $exp;
 }
 
 sub value {
-	my ( $self, $var ) = @_;
+	my ($self, $var) = @_;
 
-	if ( exists( $self->{$var} ) ) {
+	if (exists($self->{$var})) {
 		my $val = $self->{$var};
 
-		if ( ref($val) eq 'ARRAY' ) {
+		if (ref($val) eq 'ARRAY') {
 			return map { $self->varexpand($_) } @$val;
-		} elsif ( ref($val) eq 'CODE' ) {
+		} elsif (ref($val) eq 'CODE') {
 			return $val;
 		} else {
 			return $self->varexpand($val);
@@ -261,11 +261,11 @@ sub value {
 
 sub AUTOLOAD {
 	my $self = shift;
-	( my $var = $AUTOLOAD ) =~ s/.*:://;
+	(my $var = $AUTOLOAD) =~ s/.*:://;
 
 	my @val = $self->value($var);
 
-	if ( ref( $val[0] ) eq 'CODE' ) {
+	if (ref($val[0]) eq 'CODE') {
 		return $val[0]->(@_);
 	} else {
 		return wantarray ? @val : $val[0];
@@ -273,19 +273,19 @@ sub AUTOLOAD {
 }
 
 sub langinfo {
-	my ( $self, $item ) = @_;
+	my ($self, $item) = @_;
 
 	my $val;
 	my $map = $self->langmap;
 	die if !defined $map;
-	if ( exists $$map{ $self->language } ) {
+	if (exists $$map{ $self->language }) {
 		$val = $$map{ $self->language };
 	} else {
 		return undef;
 	}
 
-	if ( defined $val && defined $$val{$item} ) {
-		if ( ref( $$val{$item} ) eq 'ARRAY' ) {
+	if (defined $val && defined $$val{$item}) {
+		if (ref($$val{$item}) eq 'ARRAY') {
 			return wantarray ? @{ $$val{$item} } : $$val{$item};
 		}
 		return $$val{$item};

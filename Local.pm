@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.19 2004/07/19 19:50:20 brondsem Exp $
+# $Id: Local.pm,v 1.20 2004/07/21 20:44:30 brondsem Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.19 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.20 2004/07/21 20:44:30 brondsem Exp $ ';
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -83,18 +83,18 @@ sub fdescexpand {
 	#ignore files that aren't source code
 	if (
 		!(
-			( $filename =~ /\.c$/ ) |  ( $filename =~ /\.h$/ ) |   ( $filename =~ /\.cc$/ ) |
-			( $filename =~ /\.cp$/ ) | ( $filename =~ /\.cpp$/ ) | ( $filename =~ /\.java$/ )
+			($filename =~ /\.c$/) |  ($filename =~ /\.h$/) |   ($filename =~ /\.cc$/) |
+			($filename =~ /\.cp$/) | ($filename =~ /\.cpp$/) | ($filename =~ /\.java$/)
 		)
 	  )
 	{
 		return ("\&nbsp\;");
 	}
 
-	if ( $fh = $files->getfilehandle( $dir . $filename, $release ) ) {
+	if ($fh = $files->getfilehandle($dir . $filename, $release)) {
 		while (<$fh>) {
 			$desc = $desc . $_;
-			if ( $linecount++ > 60 ) {
+			if ($linecount++ > 60) {
 				last;
 			}
 		}
@@ -102,12 +102,12 @@ sub fdescexpand {
 	}
 
 	# sanity check: if there's no description then stop
-	if ( !( $desc =~ /\w/ ) ) {
+	if (!($desc =~ /\w/)) {
 		return ("\&nbsp\;");
 	}
 
 	# if a java file, only consider class-level javadoc comments
-	if ( $filename =~ /\.java$/ ) {
+	if ($filename =~ /\.java$/) {
 
 		# last /** ... */ before 'public class' or 'public interface'
 
@@ -119,7 +119,7 @@ sub fdescexpand {
 		# last comment start before declaration
 		pos $desc = 0;
 		$commentStart = -1;
-		while ( $desc =~ m#/\*\*#g ) {
+		while ($desc =~ m#/\*\*#g) {
 			last if $declPos < pos $desc;
 			$commentStart = pos $desc;
 		}
@@ -129,7 +129,7 @@ sub fdescexpand {
 		pos $desc = $commentStart;
 		$desc =~ m#\*/#g;
 		$commentEnd = pos $desc;
-		$desc       = substr( $desc, $commentStart + 3, $commentEnd - $commentStart - 5 );
+		$desc       = substr($desc, $commentStart + 3, $commentEnd - $commentStart - 5);
 
 		return "\&nbsp\;" if !$desc;
 
@@ -145,8 +145,8 @@ sub fdescexpand {
 		$desc =~ s#<[/\w]+(\s*\w+=[\w]*\s*)*>##g;        # no quotes on attributes
 
 		# strip off some CVS keyword lines
-		foreach $keyword ( 'Workfile', 'Revision', 'Modtime', 'Author', 'Id', 'Date', 'Source',
-			'RCSfile' )
+		foreach $keyword ('Workfile', 'Revision', 'Modtime', 'Author', 'Id', 'Date', 'Source',
+			'RCSfile')
 		{
 			$desc =~ s/^\s*\$$keyword[\$:].*$//mg;
 		}
@@ -160,13 +160,13 @@ sub fdescexpand {
 	# descriptions before we go to the trouble of looking for
 	# one in the first comment. The whitespace between the
 	# delimeter and the description may include a newline.
-	if (   ( $desc =~ s/(?:.*?$filename\s*?- ?-*\s*)([^\n]*)(?:.*)/$1/sgi )
-		|| ( $desc =~ s/(?:.*?$filename\s*?:\s*)([^\n]*)(?:.*)/$1/sgi )
-		|| ( $desc =~ s/(?:.*?Description:\s*)([^\n]*)(?:.*)/$1/sgi ) )
+	if (   ($desc =~ s/(?:.*?$filename\s*?- ?-*\s*)([^\n]*)(?:.*)/$1/sgi)
+		|| ($desc =~ s/(?:.*?$filename\s*?:\s*)([^\n]*)(?:.*)/$1/sgi)
+		|| ($desc =~ s/(?:.*?Description:\s*)([^\n]*)(?:.*)/$1/sgi))
 	{
 
 		# if the description is non-empty then clean it up and return it
-		if ( $desc =~ /\w/ ) {
+		if ($desc =~ /\w/) {
 
 			#strip trailing asterisks and "*/"
 			$desc =~ s#\*/?\s*$##;
@@ -180,13 +180,13 @@ sub fdescexpand {
 			$desc =~ s#[^\w]*##ms;
 
 			#htmlify the comments making links to symbols and files
-			$desc = markupstring( $desc, $Path->{'virt'} );
+			$desc = markupstring($desc, $Path->{'virt'});
 			return ($desc);
 		}
 	}
 
 	# if java and the <filename><seperator> check above didn't work, just dump the whole javadoc
-	if ( $filename =~ /\.java$/ ) {
+	if ($filename =~ /\.java$/) {
 		return $desc;
 	}
 
@@ -216,7 +216,7 @@ sub fdescexpand {
 	$desc =~ s#\n\s*/\*+[\s\*]+\*/\n#\n#sg;
 
 	# Don't bother to continue if there aren't any comments here
-	if ( !( $desc =~ m#/\*# ) ) {
+	if (!($desc =~ m#/\*#)) {
 		return ("&nbsp;");
 	}
 
@@ -253,18 +253,18 @@ sub fdescexpand {
 
 	# If the description is too long then just use the first sentence
 	# this will fail if no period was used.
-	if ( length($desc) > 200 ) {
+	if (length($desc) > 200) {
 		$desc =~ s#([^\.]+\.)\s.*#$1#s;
 	}
 
 	# If the description is still too long then assume it will look
 	# like gobbeldygook and give up
-	if ( length($desc) > 200 ) {
+	if (length($desc) > 200) {
 		return ("&nbsp;");
 	}
 
 	# htmlify the comments, making links to symbols and files
-	$desc = markupstring( $desc, $Path->{'virt'} );
+	$desc = markupstring($desc, $Path->{'virt'});
 
 	if ($desc) {
 		return ($desc);
@@ -280,13 +280,13 @@ sub fdescexpand {
 # In Mozilla, if the directory has a README file look in it for lines
 # like the ones used in source code: "directoryname --- A short description"
 sub descexpand {
-	my ( $templ, $node, $dir, $release ) = @_;
-	if ( $files->isdir( $dir . $node, $release ) ) {
-		return LXR::Common::expandtemplate( $templ,
-			( 'desctext' => sub { return dirdesc( $dir . $node, $release ); } ) );
+	my ($templ, $node, $dir, $release) = @_;
+	if ($files->isdir($dir . $node, $release)) {
+		return LXR::Common::expandtemplate($templ,
+			('desctext' => sub { return dirdesc($dir . $node, $release); }));
 	} else {
-		return LXR::Common::expandtemplate( $templ,
-			( 'desctext' => sub { return fdescexpand( $node, $dir, $release ); } ) );
+		return LXR::Common::expandtemplate($templ,
+			('desctext' => sub { return fdescexpand($node, $dir, $release); }));
 	}
 }
 
@@ -299,21 +299,21 @@ sub descexpand {
 # possible make this work for randomly formatted files rather than
 # inventing strict rules which create gobbeldygook when they're broken.
 sub dirdesc {
-	my ( $path, $release ) = @_;
-	if ( $files->isfile( $path . "README.txt", $release ) ) {
-		descreadme( $path . "README.txt", $release );
-	} elsif ( $files->isfile( $path . "README", $release ) ) {
-		descreadme( $path . "README", $release );
-	} elsif ( $files->isfile( $path . "README.html", $release ) ) {
-		descreadmehtml( $path . "README.html", $release );
+	my ($path, $release) = @_;
+	if ($files->isfile($path . "README.txt", $release)) {
+		descreadme($path . "README.txt", $release);
+	} elsif ($files->isfile($path . "README", $release)) {
+		descreadme($path . "README", $release);
+	} elsif ($files->isfile($path . "README.html", $release)) {
+		descreadmehtml($path . "README.html", $release);
 	}
 }
 
 sub descreadmehtml {
-	my ( $file, $release ) = @_;
+	my ($file, $release) = @_;
 
 	my $string = "";
-	return if !( $desc = $files->getfilehandle( $file, $release ) );
+	return if !($desc = $files->getfilehandle($file, $release));
 
 	#    undef $/;
 	$string = <$desc>;
@@ -322,31 +322,31 @@ sub descreadmehtml {
 	close($desc);
 
 	# if the README is 0 length then give up
-	if ( !$string ) {
+	if (!$string) {
 		return;
 	}
 
 	# check if there's a short desc nested inside the long desc. If not, do
 	# a non-greedy search for a long desc. assume there are no other stray
 	# spans within the description.
-	if ( $string =~
-/<span class=["']?lxrlongdesc['"]?>(.*?<span class=["']?lxrshortdesc['"]?>.*?<\/span>.*?)<\/span>/is
+	if ($string =~
+		/<span class=["']?lxrlongdesc['"]?>(.*?<span class=["']?lxrshortdesc['"]?>.*?<\/span>.*?)<\/span>/is
 	  )
 	{
 		$long = $1;
-		if ( !( $long =~ /<span.*?\<span/is ) ) {
-			return ( $long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n" );
+		if (!($long =~ /<span.*?\<span/is)) {
+			return ($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
 		}
-	} elsif ( $string =~ /<span class=["']?lxrlongdesc['"]?>(.*?)<\/span>/is ) {
+	} elsif ($string =~ /<span class=["']?lxrlongdesc['"]?>(.*?)<\/span>/is) {
 		$long = $1;
-		if ( !( $long =~ /\<span/is ) ) {
-			return ( $long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n" );
+		if (!($long =~ /\<span/is)) {
+			return ($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
 		}
 	}
 }
 
 sub descreadme {
-	my ( $file, $release ) = @_;
+	my ($file, $release) = @_;
 
 	my $string = "";
 
@@ -359,7 +359,7 @@ sub descreadme {
 	my $minlines = 5;     # Too small. Go back and add another paragraph.
 	my $chopto   = 10;    # Truncate long READMEs to this length
 
-	return if !( $desc = $files->getfilehandle( $file, $release ) );
+	return if !($desc = $files->getfilehandle($file, $release));
 
 	#    undef $/;
 	$string = <$desc>;
@@ -368,7 +368,7 @@ sub descreadme {
 	close($desc);
 
 	# if the README is 0 length then give up
-	if ( !$string ) {
+	if (!$string) {
 		return;
 	}
 
@@ -396,8 +396,8 @@ sub descreadme {
 
 	# If the file is small there's not much use splitting it up.
 	# Just print it all
-	if ( $count <= $maxlines ) {
-		$string = markupstring( $string, $Path->{'virt'} );
+	if ($count <= $maxlines) {
+		$string = markupstring($string, $Path->{'virt'});
 		$string = convertwhitespace($string);
 		return ($string);
 	} else {
@@ -407,7 +407,7 @@ sub descreadme {
 		# one paragraph.
 		$n    = 6;
 		$temp = $string;
-		while ( ( $count > $chopto ) && ( $n-- > 1 ) ) {
+		while (($count > $chopto) && ($n-- > 1)) {
 			$string =~ s/^((?:(?:[\S\t ]*?\n)+?[\t ]*\n){$n}?)(.*)/$1/s;
 			$_ = $string;
 			$string =~ s/\s*\n$//gs;
@@ -417,7 +417,7 @@ sub descreadme {
 		# if we have too few lines then back up and grab another paragraph
 		$_     = $string;
 		$count = tr/\n//;
-		if ( $count < $minlines ) {
+		if ($count < $minlines) {
 			$n = $n + 1;
 			$temp =~ s/^((?:(?:[\S\t ]*?\n)+?[\t ]*\n){$n}?)(.*)/$1/s;
 			$string = $temp;
@@ -425,7 +425,7 @@ sub descreadme {
 
 		# if we have more than $maxlines then truncate to $chopto
 		# and add an elipsis.
-		if ( $count > $maxlines ) {
+		if ($count > $maxlines) {
 			$string =~ s/^((?:[\S \t]*\n){$chopto}?)(.*)/$1/s;
 			chomp($string);
 			$string = $string . "\n...";
@@ -434,13 +434,13 @@ sub descreadme {
 		# since not all of the README is displayed here,
 		# add a link to it.
 		chomp($string);
-		if ( $string =~ /SEE ALSO/ ) {
+		if ($string =~ /SEE ALSO/) {
 			$string = $string . ", README";
 		} else {
 			$string = $string . "\n\nSEE ALSO: README";
 		}
 
-		$string = markupstring( $string, $Path->{'virt'} );
+		$string = markupstring($string, $Path->{'virt'});
 		$string = convertwhitespace($string);
 
 		# strip blank lines at beginning and end of file again
