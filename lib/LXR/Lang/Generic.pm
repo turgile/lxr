@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.13 2004/07/15 20:28:44 brondsem Exp $
+# $Id: Generic.pm,v 1.14 2004/07/19 17:33:17 brondsem Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.13 2004/07/15 20:28:44 brondsem Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.14 2004/07/19 17:33:17 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -79,6 +79,8 @@ sub read_config {
 	}
 	
 	my $ctags = $config->ectagsbin;
+	
+	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 	my $version = `$ctags --version`;
 	$version=~ /Exuberant ctags +(\d+)/i;
 	if($1 < 5 ) {
