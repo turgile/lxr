@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.26 2002/01/23 08:12:05 mbox Exp $
+# $Id: Lang.pm,v 1.27 2002/01/23 14:59:21 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.26 2002/01/23 08:12:05 mbox Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.27 2002/01/23 14:59:21 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -37,22 +37,32 @@ sub new {
 			last;
         }
     }
-
+	
 	if (!defined $lang) {
         # Try to see if it's a script
 		my $fh = $files->getfilehandle($pathname, $release);
-		$fh->getline =~ /^#!\s*(\S+)/s;
+		$fh->getline =~ /^\#!\s*(\S+)/s;
 
 		my $shebang = $1;
+		my %filetype = %{$config->filetype};
+		my %inter = %{$config->interpreters};
 		
-		if ($shebang =~ /perl/) {
-			require LXR::Lang::Generic;
-			$lang = new LXR::Lang::Generic($pathname, $release, 'Perl');
-		} else {
-			$lang = undef;
+		foreach my $patt (keys %inter) {
+			if ($shebang =~ /$patt/) {
+				eval "require $filetype{$inter{$patt}}[2]";
+				die "Unable to load $filetype{$inter{$patt}}[2] Lang class, $@" if $@;
+				my $create = "new ".
+				  $filetype{$inter{$patt}}[2].'($pathname, $release, $filetype{$inter{$patt}}[0])';
+				$lang = eval($create);
+				last if defined $lang;
+				die "Unable to create $filetype{$inter{$patt}}[2] Lang object, $@";
+			}
 		}
 	}
 
+	# No match for this file
+	return undef if !defined $lang;
+	
 	$$lang{'itag'} = \@itag if $lang;
 
 	return $lang;
