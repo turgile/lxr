@@ -1,0 +1,47 @@
+<!doctype html public \"-//W3C//DTD HTML 3.2//EN\">
+<html>
+<head>
+<title>$title</title>
+<base href=$baseurl>
+</head>
+
+<body bgcolor=white text=black>
+<table width="100%" cellpadding=0 border=0>
+  <tr valign=top>
+    <td align=left valign=top>
+      <img src="pengmini.gif"
+        alt="Penguin" border=0 width=67 height=92 align=middle>
+    </td>
+    <td>
+      <table width="100%" cellpadding=0 border=0>
+        <tr valign=top>
+          <td align=center>  
+            <h1>
+              <a href="blurb.html">
+                Cross-Referencing Linux</a><br>
+              $banner
+            </h1>
+          </td>
+          <td align=right nowrap>
+            $modes{
+            [&nbsp;$modelink&nbsp;]<br>}
+          </td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding=0 border=0>
+        $variables{
+        <tr>
+          <td align=left>
+            $varname:
+          </td>
+          <td align=right>
+            $varlinks{
+            [&nbsp;$varvalue&nbsp;]}
+            <br>
+          </td>
+        </tr>}
+      </table>
+    </td>
+  </tr>
+</table>
+<hr>

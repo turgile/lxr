@@ -1,0 +1,35 @@
+<div align=center>
+  This searchpage is powered by <a href="http://glimpse.cs.arizona.edu">Glimpse</a>
+
+  <form method=get action="http:search">
+  $variables{<input type="hidden" name="$variable" value="$value">}
+
+    <table border=1 cellpadding=5 rules=none> 
+      <tr>
+        <td colspan=3>
+          String to search for: <br>
+          <input type=text name="string" value="$searchtext" size=60>
+          <input type=submit value="Search">
+
+      <tr border=0>
+        <td align=center>
+          $casecheck Case sensitive
+        <td align=center>
+          $regexpcheck Regular expression
+        <td align=center>
+            $errorselect
+          Misspellings allowed
+
+      <tr>
+        <td colspan=3 align=center>
+          Maximum number of files returned:
+            $maxfilesselect
+      <tr>
+        <td colspan=3 align=center>
+          Maximum number of matches per file returned:
+          $maxlinesselect
+    </table>
+  </form>
+
+  <a href="http:search_help.html">Hints</a> making queries
+</div>
