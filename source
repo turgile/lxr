@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.29 2001/10/17 06:52:52 pergj Exp $
+# $Id: source,v 1.30 2001/10/23 15:23:50 mbox Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,9 +23,10 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.29 2001/10/17 06:52:52 pergj Exp $ ';
+$CVSID = '$Id: source,v 1.30 2001/10/23 15:23:50 mbox Exp $ ';
 
 use strict;
+use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
 use LXR::Common qw(:html);
 use Local;
