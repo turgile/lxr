@@ -1,44 +1,38 @@
-# -*- tab-width: 4 -*- ###############################################
+# -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.20 2001/07/26 08:49:38 pok Exp $
+# $Id: Lang.pm,v 1.21 2001/08/04 17:45:32 mbox Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.20 2001/07/26 08:49:38 pok Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.21 2001/08/04 17:45:32 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
 
 sub new {
 	my ($self, $pathname, $release, @itag) = @_;
-	my $lang;
+	my ($lang, $type);
 
-	if ($pathname =~ /\.([ch]|cpp?|cc)$/i) {
-		require LXR::Lang::C;
-		$lang = new LXR::Lang::C($pathname, $release);
-	}
-	elsif ($pathname =~ /\.java$/i) {
-		require LXR::Lang::Java;
-		$lang = new LXR::Lang::Java($pathname, $release);
-	}
-	elsif ($pathname =~ /\.py$/i) {
-		require LXR::Lang::Python;
-		$lang = new LXR::Lang::Python($pathname, $release);
-	}
-	elsif ($pathname =~ /\.p[lmh]$/i) {
-		require LXR::Lang::Perl;
-		$lang = new LXR::Lang::Perl($pathname, $release);
-	}
-	else {
+    foreach $type ($config->filetype) {
+		if ($pathname =~ /$$type[1]/) {
+			eval "require $$type[2]";
+			my $create = "new $$type[2]".'($pathname, $release, $$type[0])';
+			$lang = eval($create);
+			die "Unable to create $$type[2] Lang object, $@" unless defined $lang;
+			last;
+        }
+    }
+
+	if (!defined $lang) {
+        # Try to see if it's a script
 		$files->getfile($pathname, $release) =~ /^#!\s*(\S+)/s;
 
 		my $shebang = $1;
-
+		
 		if ($shebang =~ /perl/) {
-			require LXR::Lang::Perl;
-			$lang = new LXR::Lang::Perl($pathname, $release);
-		}
-		else {
+			require LXR::Lang::Generic;
+			$lang = new LXR::Lang::Generic($pathname, $release, 'Perl');
+		} else {
 			$lang = undef;
 		}
 	}
@@ -51,17 +45,17 @@ sub new {
 sub processinclude {
 	my ($self, $frag, $dir) = @_;
 
-	$$frag =~ s#(\")(.*?)(\")#
-		$1.&LXR::Common::incref($2, $2, $dir).$3#e;
-	$$frag =~ s#(\0<)(.*?)(\0>)#
-		$1.&LXR::Common::incref($2, $2).$3#e;
-}
+	$$frag =~ s#(\")(.*?)(\")#	 
+	  $1.&LXR::Common::incref($2, $2, $dir).$3 #e;
+		$$frag =~ s#(\0<)(.*?)(\0>)#  
+		  $1.&LXR::Common::incref($2, $2).$3 #e;
+	  }
 
 sub processcomment {
 	my ($self, $frag) = @_;
 
 	$$frag = "<b><i>$$frag</i></b>";
-	$$frag =~ s#\n#</i></b>\n<b><i>#g;
+	$$frag =~ s#\n#</i></b>\n<b><i>#g; 	
 }
 
 sub referencefile {
