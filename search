@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.15 2004/07/06 13:54:40 brondsem Exp $
+# $Id: search,v 1.16 2004/07/07 20:29:40 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.15 2004/07/06 13:54:40 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.16 2004/07/07 20:29:40 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -120,6 +120,7 @@ sub swishsearch {
     close(SWISH);
     my $retval = $? >> 8;
 
+    my $hits = 0;
     if ($retval == 0) {
 	if (@result == 0) {
 	    print("No matching files<br>\n");
@@ -130,13 +131,15 @@ sub swishsearch {
 	    print("<h1>$searchtext</h1>\n");
 	    
 	    foreach my $hit (@result) {
+		print $hit and next if $hit =~ /^err:/;
 		my ($score, $file) = 
 		    $hit =~ /^(\d+) \/(.+) "(.+)" \d+/;
 		
 		print("$score ", &fileref("$file", "find-file", "/$file"), "<br>\n");
+		$hits++;
 	    }
 	}
-	print "<br>" . scalar @result . " files found.";
+	print "<br>" . $hits . " files found.";
     }
     else {
 	print("<b>Search failed</b><br>\n@result");
