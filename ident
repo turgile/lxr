@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.2 1999/04/09 10:35:30 pergj Exp $
+# $Id: ident,v 1.3 1999/05/25 19:33:47 argggh Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,144 +23,66 @@
 
 ######################################################################
 
-use lib 'lib/';
-use LXR::Common;
-use LXR::Config;
-use LXR::Index;
+$CVSID = '$Id: ident,v 1.3 1999/05/25 19:33:47 argggh Exp $ ';
 
-%ty = (('M', 'preprocessor macro'),
-       ('V', 'variable'),
-       ('f', 'function prototype'),
-       ('F', 'function'),
-       ('g', 'abstract method'),
-       ('G', 'method'),
-       ('C', 'class'),			# C++, Java
-       ('c', '(forwarded) class'),	# C++
-       ('I', 'interface'),		# for Java
-       ('T', 'type'),
-       ('S', 'struct type'),
-       ('E', 'enum type'),
-       ('U', 'union type'));
+use strict;
+use lib 'lib';
 
+use LXR::Common qw(:html);
+use Local;
 
 
 sub ident { 
-    print("<P ALIGN=CENTER>\n",
+    print("<p align=center>\n",
 	  "Type the full name of an identifier to summarize",
-	  "<BR>(a function name, variable name, typedef, etc.)\n",
-	  "<BR>Matches are case-sensitive.\n");                    
+	  "<br>(a function name, variable name, typedef, etc.)\n",
+	  "<br>Matches are case-sensitive.\n");                    
 
     print("<form method=get action=\"ident\">\n");
 
-    foreach ($Conf->allvariables) {
-	if ($Conf->variable($_) ne $Conf->vardefault($_)) {
+    foreach ($config->allvariables) {
+	if ($config->variable($_) ne $config->vardefault($_)) {
 	    print("<input type=hidden name=\"",$_, "\" ",
-		  "value=\"", $Conf->variable($_), "\">\n");
+		  "value=\"", $config->variable($_), "\">\n");
 	}
     }
     
-    print("<B>Identifier: </B><input type=text name=\"i\" ",
+    print("<b>Identifier: </b><input type=text name=\"i\" ",
 	  "value=\"",$identifier,"\" size=50>\n",
 	  "<input type=submit value=\"Find\">\n",
           "</form>\n");     
 
     
     if ($identifier) {
-	$index = new LXR::Index();
+	my @refs = $index->getindex($identifier, $release);
 
-	@refs = $index->getindex($identifier, '2.0');
+	use Data::Dumper;
+
+	print(STDERR Dumper(\@refs), "\n");
 
 	print("<h1>$identifier</h1>\n");
 
 	if (@refs) {
-	    while (($fileid, $line, $type) = splice(@refs, 0, 3)) {
+	    my $def;
+	    while ($def = shift(@refs)) {
+		my ($file, $line, $type) = @$def;
+	    
 		print("Defined as a $type_names{$type} in: ".
-		      &fileref($index->filename($fileid).", line $line",
-			       "/".$index->filename($fileid), $line).
+		      fileref("$file, line $line",
+			      $file, $line).
 		      "<br>\n");
 	    }
-	} else {
+	}
+	else {
 	    print("<br><b>Not used</b>");
 	}
     }
 }
 
 
-#  		    @_ = split(/\t/, $f{$t});
-#  		    unshift(@_);
-#  		    foreach (@_) {
-#  			($fnum, $line, @clss) = split(/:/, $_);
-			
-#  			print("<li>",
-#  			      &fileref("$fileidx{$fnum}, line $line",
-#  				       "/$fileidx{$fnum}", $line));
+httpinit;
 
-#  			if (@clss) { 
-#  			    if ($t eq 'F' || $t eq 'f') {
-#  				print(", as member of ");
-#  				if ($xref{$clss[0]}) {
-#  				    print(&idref("class $clss[0]", $clss[0]));
-#  				} else {
-#  				    print("class $clss[0]");
-#  				}
-#  			    } elsif ($t eq 'C') {
-#  				print(", inheriting <ul>\n");
-#  				foreach (@clss) {
-#  				    print("<li>");
-#  				    if ($xref{$_}) {
-#  					print(&idref("class $_", $clss[0]));
-#  				    } else {
-#  					print("class $_");
-#  				    }
-#  				}
-#  				print("</ul>");
-#  			    }
-#  			}
-#  			print("\n");
-#  		    }
-#  		    print("</ul>\n");
-#           }	    
-#  	    print("Referenced (in ",int(grep(/^R/, @refs))," files total) in:\n",
-#  		  "<ul>\n");
-#  	    $concise = $#refs > 100;
-#  	    foreach (@refs) {
-#  		if (/^R(.+):([\d,]+)/) {
-#  		    $fnam = $fileidx{$1};
-#  		    @fpos = split(/,/, $2);
-#  		    if ($#fpos > 0) {
-#  			if ($concise) {
-#  			    print("<li>", &fileref("$fnam", "/$fnam"),
-#  				  ", ",$#fpos+1," times\n");
-#  			} else {
-#  			    print("<li>$fnam:\n<ul>\n");
-#  			    foreach (@fpos) {
-#  				print("<li>", &fileref("line $_",
-#  						       "/$fnam", $_),"\n");
-#  			    }
-#  			    print("</ul>\n");
-#  			}
-#  		    } else {
-#  			print("<li>", &fileref("$fnam, line $fpos[0]",
-#  					       "/$fnam", $fpos[0]), 
-#  			      "\n");
-#  		    }
-#  		}
-#  	    }
-#  	    print("</ul>\n");
-#  	    untie(%fileidx);
-
-#  	} else {
-#  	    print("<br><b>Not used</b>");
-#  	}
-	
-#  	untie(%xref);
-#      }
-#  }
-
-($Conf, $HTTP, $Path) = &init;
-$identifier = $HTTP->{'param'}->{'i'};
-
-&makeheader('ident');
-&ident;
-&makefooter('ident');
+makeheader('ident');
+ident;
+makefooter('ident');
 

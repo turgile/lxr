@@ -1,15 +1,15 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.7 1999/05/24 21:53:40 argggh Exp $
+# $Id: DBI.pm,v 1.8 1999/05/25 19:33:48 argggh Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.7 1999/05/24 21:53:40 argggh Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.8 1999/05/25 19:33:48 argggh Exp $ ';
 
 use strict;
 use DBI;
 
-use vars qw($dbh $fst $fsq $fup $sst $ssq $sup $iup $rst $rup
+use vars qw($dbh $fst $fsq $fup $sst $ssq $sup $ist $iup $rst $rup
 			$transactions %files %symcache);
 
 sub new {
@@ -18,7 +18,7 @@ sub new {
 	$self = bless({}, $self);
 	$dbh = DBI->connect($dbname);
 	$$dbh{'AutoCommit'} = 0;
-#	$dbh->trace(2);
+	$dbh->trace(2);
 	
 	$transactions = 0;
 	%files = ();
@@ -38,6 +38,12 @@ sub new {
 	$sup = $dbh->prepare
 		("insert into symbols values (?, ?)");
 
+	$ist = $dbh->prepare
+		("select f.filename, i.line, i.type ".
+		 "from symbols s, indexes i, files f, releases r ".
+		 "where s.symid = i.symid and i.fileid = f.fileid ".
+		 "and f.fileid = r.fileid ".
+		 "and s.symname = ? and r.release = ?");
 	$iup = $dbh->prepare
 		("insert into indexes values (?, ?, ?, ?)");
 
@@ -62,6 +68,17 @@ sub index {
 
 sub getindex {
 	my ($self, $symname, $release) = @_;
+	my ($rows, @ret);
+
+	$rows = $ist->execute($symname, $release);
+
+	while ($rows-- > 0) {
+		push(@ret, [ $ist->fetchrow_array ]);
+	}
+
+	$ist->finish();
+
+	return @ret;
 }
 
 sub relate {
