@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.11 2002/03/18 14:55:43 mbox Exp $
+# $Id: Local.pm,v 1.12 2004/06/28 18:42:37 brondsem Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,13 +28,13 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.11 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.12 2004/06/28 18:42:37 brondsem Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(&fdescexpand &descexpand &dirdesc &convertwhitespace);
 
-use LXR::Common;
+use LXR::Common qw(:html);
 
 # dme: Create descriptions for a file in a directory listing
 # If no description, return the string "\&nbsp\;" to keep the
@@ -72,10 +72,9 @@ use LXR::Common;
 # Yea, though I walk through the valley of the shadow of pattern
 # matching, I shall fear no regex.
 sub fdescexpand {
-    # use global vars here because the expandtemplate subroutine makes
-    # passing parameters impossible. Use $filename from source and
-    # $Path from Common.pm
-    my $filename = $main::filename;
+    my $filename = shift;
+    my $dir = shift;
+    my $release = shift;
     my $linecount=0;
     my $copy= "";
     local $desc= "";
@@ -93,19 +92,20 @@ sub fdescexpand {
 	return("\&nbsp\;");
     }
 
-    if (open(FILE, $Path->{'real'}."/".$filename)) {
-        while(<FILE>){
+
+    if ($fh = $files->getfilehandle($dir.$filename, $release)) {
+        while(<$fh>){
 	    $desc = $desc . $_ ;
 	    if($linecount++ > 60) {
 		last;
 	    }
 	}
-	close(FILE);
+	close($file);
     } 
 
     # sanity check: if there's no description then stop
     if (!($desc =~ /\w/)){
-	return("\&nbsp\;");;
+	return("\&nbsp\;");
     }
 
     # save a copy for later
@@ -121,6 +121,10 @@ sub fdescexpand {
 	){
         # if the description is non-empty then clean it up and return it
         if ($desc =~ /\w/) {
+	    #strip html tags (they occur often in javadocs). this is a simple regex and doesn't try to handle tags with attributes
+	    $desc =~ s#<[/\w]+>##g;
+#	    $desc =~ s#<[/\w]+(\s*\w+="[\w\s]*"\s*)*>##g;
+	    
             #strip trailing asterisks and "*/"
             $desc =~ s#\*/?\s*$##;
             $desc =~ s#^[^\S]*\**[^\S]*#\n#gs;
@@ -162,7 +166,7 @@ sub fdescexpand {
 
     # Yuck, nuke these silly comments in js/jsj /* ** */
     $desc =~ s#\n\s*/\*+[\s\*]+\*/\n#\n#sg;
-
+    
     # Don't bother to continue if there aren't any comments here
     if(!($desc =~ m#/\*#)) {
 	return("&nbsp;");
@@ -231,16 +235,10 @@ sub fdescexpand {
 # In Mozilla, if the directory has a README file look in it for lines 
 # like the ones used in source code: "directoryname --- A short description"
 sub descexpand {
-    my ($templ, $node, $dir, $index) = @_;
-    
-    if ($$index{$node}) {
-	return LXR::Common::expandtemplate($templ,
-			      ('desctext', 
-			       sub { return $$index{$node} }));
-    }
-    else {
-	return "\&nbsp\;";
-    }
+    my ($templ, $node, $dir, $release) = @_;
+    return LXR::Common::expandtemplate($templ,
+			      ('desctext' => 
+			       sub { return fdescexpand($node, $dir, $release); }));
 }
 
 # dme: Print a descriptive blurb in directory listings between 
