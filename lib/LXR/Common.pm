@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.49 2004/07/21 20:44:30 brondsem Exp $
+# $Id: Common.pm,v 1.50 2004/07/26 20:47:43 brondsem Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.49 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.50 2004/07/26 20:47:43 brondsem Exp $ ';
 
 use strict;
 
@@ -599,13 +599,10 @@ sub titleexpand {
 		return $config->sourcerootname . $pathname;
 	} elsif ($who eq 'ident') {
 		my $i = $HTTP->{'param'}->{'i'};
-		return $config->sourcerootname . ' identfier search' . ($i ? ": $i" : '');
+		return $config->sourcerootname . ' identifier search' . ($i ? ": $i" : '');
 	} elsif ($who eq 'search') {
 		my $s = $HTTP->{'param'}->{'string'};
-		return $config->sourcerootname . ' freetext search' . ($s ? ": $s" : '');
-	} elsif ($who eq 'find') {
-		my $s = $HTTP->{'param'}->{'string'};
-		return $config->sourcerootname . ' file search' . ($s ? ": $s" : '');
+		return $config->sourcerootname . ' general search' . ($s ? ": $s" : '');
 	}
 }
 
@@ -661,23 +658,13 @@ sub modeexpand {
 	}
 
 	if ($who eq 'search') {
-		push(@mlist, "<span class='modes-sel'>freetext search</span>");
+		push(@mlist, "<span class='modes-sel'>general search</span>");
 	} else {
 		push(@mlist,
 			    "<a class=\"modes\" "
 			  . "href=\"$config->{virtroot}/search"
 			  . urlargs
-			  . "\">freetext search</a>");
-	}
-
-	if ($who eq 'find') {
-		push(@mlist, "<span class='modes-sel'>file search</span>");
-	} else {
-		push(@mlist,
-			    "<a class='modes' "
-			  . "href=\"$config->{virtroot}/find"
-			  . urlargs
-			  . "\">file search</a>");
+			  . "\">general search</a>");
 	}
 
 	foreach $mode (@mlist) {
@@ -712,11 +699,6 @@ sub varlinks {
 			} elsif ($who eq 'search') {
 				$vallink =
 				    "<a class=\"varlink\" href=\"$config->{virtroot}/search"
-				  . &urlargs("$var=$val", "string=" . $HTTP->{'param'}->{'string'})
-				  . "\">$val</a>";
-			} elsif ($who eq 'find') {
-				$vallink =
-				    "<a class=\"varlink\" href=\"$config->{virtroot}/find"
 				  . &urlargs("$var=$val", "string=" . $HTTP->{'param'}->{'string'})
 				  . "\">$val</a>";
 			}

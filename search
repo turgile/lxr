@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.24 2004/07/21 20:44:30 brondsem Exp $
+# $Id: search,v 1.25 2004/07/26 20:47:43 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.24 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.25 2004/07/26 20:47:43 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -51,8 +51,30 @@ sub varinputs {
 	return $ret;
 }
 
+sub filename_matches {
+	my ($filetext, $advanced, $casesensitive, $file) = @_;
+	if ($advanced) {
+		if ($casesensitive) {
+			if ($file =~ /$filetext/) {
+				return 1;
+			}
+		} elsif ($file =~ /$filetext/i) {
+			return 1;
+		}
+	} else {
+		if ($casesensitive) {
+			if (index($file, $filetext) != -1) {
+				return 1;
+			}
+		} elsif (index(lc($file), lc($filetext)) != -1) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 sub glimpsesearch {
-	my ($searchtext) = @_;
+	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
 
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 	unless (open(GLIMPSE, "-|")) {
@@ -69,7 +91,7 @@ sub glimpsesearch {
 	while (<GLIMPSE>) {
 		$numlines++;
 		push(@glimpselines, $_);
-		if ($numlines > $maxhits) {
+		if ($numlines >= $maxhits) {
 			last;
 		}
 	}
@@ -91,6 +113,8 @@ sub glimpsesearch {
 
 			$glimpseline =~ s/$sourceroot//;
 			my ($file, $line, $text) = $glimpseline =~ /(.*?):\s*(\d+)\s*:(.*)/;
+			next if $filetext and !filename_matches($filetext, $advanced, $casesensitive, $file);
+
 			$text =~ s/&/&amp;/g;
 			$text =~ s/</&lt;/g;
 			$text =~ s/>/&gt;/g;
@@ -114,7 +138,7 @@ sub glimpsesearch {
 }
 
 sub swishsearch {
-	my ($searchtext) = @_;
+	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
 
 	if (!-e $config->swishdir . "/" . $release . ".index") {
 		print
@@ -126,7 +150,7 @@ sub swishsearch {
 	unless (open(SWISH, "-|")) {
 		open(STDERR, ">&STDOUT");
 		exec($config->swishbin, "-f", $config->swishdir . "/" . $release . ".index",
-			"-m", $maxhits, "-w", "'" . $searchtext . "'");
+			"-w", "'" . $searchtext . "'");
 
 		print(STDERR "Couldn't exec " . $config->swishbin . ": $!\n");
 		kill(9, $$);
@@ -138,10 +162,16 @@ sub swishsearch {
 
 	my @ret;
 	if ($retval == 0) {
+		my $numlines = 0;
 		foreach my $hit (@result) {
 			next if $hit =~ /^err:/;    # skip; only 'no results' errors happen with return value 0
+
 			my ($score, $file) = $hit =~ /^(\d+) \/(.+) "(.+)" \d+/;
+			next if $filetext and !filename_matches($filetext, $advanced, $casesensitive, $file);
 			push @ret, [ $file, $score ];
+			$numlines++;
+
+			last if ($numlines >= $maxhits);
 		}
 		return @ret;
 	} else {
@@ -159,13 +189,22 @@ sub printresults {
 
 	foreach (@results) {
 
-		# glimpse and swish-e provide different data for each result
-		my (@params) = @$_;
-
-		if ($config->glimpsebin) {
-			my $file = $params[0];
-			my $line = $params[1];
-			my $text = $params[2];
+		# filename, glimpse and swish-e searches provide different data for each result
+		if (!ref) {
+			my $file = $_;
+			$ret .= expandtemplate(
+				$templ,
+				(
+					score   => sub { return '' },
+					text    => sub { return '' },
+					fileref => sub { fileref("$file", "find-file", "/$file") },
+				)
+			);
+		} elsif ($config->glimpsebin) {
+			my (@params) = @$_;
+			my $file     = $params[0];
+			my $line     = $params[1];
+			my $text     = $params[2];
 			$ret .= expandtemplate(
 				$templ,
 				(
@@ -174,8 +213,9 @@ sub printresults {
 				)
 			);
 		} else {
-			my $file  = $params[0];
-			my $score = $params[1];
+			my (@params) = @$_;
+			my $file     = $params[0];
+			my $score    = $params[1];
 			$ret .= expandtemplate(
 				$templ,
 				(
@@ -203,17 +243,53 @@ sub search {
 		die "'htmlsearch' template not configured";
 	}
 
-	my $searchtext = $HTTP->{'param'}->{'string'};
+	my $searchtext    = $HTTP->{'param'}->{'string'};
+	my $filetext      = $HTTP->{'param'}->{'filestring'};
+	my $advanced      = $HTTP->{'param'}->{'advanced'};
+	my $casesensitive = $HTTP->{'param'}->{'casesensitive'};
 
 	my @results;
 	if ($searchtext ne "") {
 		if ($config->glimpsebin) {
-			@results = glimpsesearch($searchtext);
+			@results = glimpsesearch($searchtext, $filetext, $advanced, $casesensitive);
 		} elsif ($config->swishbin and $config->swishdir) {
-			@results = swishsearch($searchtext);
+			@results = swishsearch($searchtext, $filetext, $advanced, $casesensitive);
 		} else {
 			warning("No freetext search engine configured.");
 		}
+	} elsif ($filetext ne "") {
+		my $FILELISTING;
+		if ($config->swishdir and $config->swishbin) {
+			unless ($FILELISTING = new IO::File($config->swishdir . "/$release.filenames")) {
+				&warning(
+					"Version '$release' has not been indexed and is unavailable for searching<br>Could not open "
+					  . $config->swishdir
+					  . "/$release.filenames.");
+				return;
+			}
+		} elsif ($config->glimpsedir and $config->glimpsebin) {
+			unless ($FILELISTING =
+				new IO::File($config->glimpsedir . "/" . $release . "/.glimpse_filenames"))
+			{
+				&warning(
+					"Version '$release' has not been indexed and is unavailable for searching<br>Could not open "
+					  . $config->glimpsedir
+					  . "/$release/.glimpse_filenames.");
+				return;
+			}
+		} else {
+			warning(
+				"Freetext search engine required for file search, and no freetext search engine is configured"
+			);
+			return;
+		}
+		my $sourceroot = $config->sourceroot . '/' . $release . '/';
+		while (<$FILELISTING>) {
+			chomp;
+			s/^$sourceroot//;
+			push @results, $_ if filename_matches($filetext, $advanced, $casesensitive, $_);
+		}
+		close($FILELISTING);
 	}
 
 	print expandtemplate(
@@ -222,7 +298,10 @@ sub search {
 			variables          => sub { varinputs(@_) },
 			searchtext         => sub { return $searchtext },
 			searchtext_escaped => sub { $_ = $searchtext; s/\"/&quot;/g; return $_; },
-			maxhits_message    => sub {
+			filetext_escaped   => sub { $_ = $filetext; s/\"/&quot;/g; return $_; },
+			advancedchecked      => sub { return $advanced      ? "checked" : "" },
+			casesensitivechecked => sub { return $casesensitive ? "checked" : "" },
+			maxhits_message      => sub {
 				return @results == $maxhits
 				  ? "<b>Too many hits, displaying first $maxhits</b><br>"
 				  : "";
