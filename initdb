@@ -3,8 +3,8 @@ drop sequence symnum;
 drop table files;
 drop table symbols;
 drop table indexes;
-drop table relations;
 drop table releases;
+drop table status;
 
 create sequence filenum cache 50;
 create sequence symnum cache 50;
@@ -12,40 +12,46 @@ create sequence symnum cache 50;
 create table files (
 	filename	varchar,
 	revision	varchar,
-	fileid		int 
-/*,
+	fileid		int,
 	primary key	(fileid),
 	unique		(filename, revision)
-*/
-);
 
+);
 
 create table symbols (
 	symname		varchar,
-	symid		int
-/*,
+	symid		int,
 	primary key	(symid),
 	unique		(symname)
-*/
+
 );
 
 create table indexes (
-	symid		int		/* references symbols */,
-	fileid		int		/* references files */,
+	symid		int		 references symbols,
+	fileid		int		 references files,
 	line		int,
 	type		varchar
 );
 
+/*
 create table relations (
-	symid		int		/* references symbols */,
+	symid		int		 references symbols,
 	release		varchar,
-	rsymid		int		/* references symbols */,
+	rsymid		int		 references symbols,
 	reltype		varchar
 );
+*/
 
 create table releases 
-	(fileid		int		/* references files */,
-	 release	varchar
+	(fileid		int		 references files,
+	release		varchar,
+	primary key	(fileid)
+);
+
+create table status
+	(fileid		int		 references files,
+	status		int,
+	primary key	(fileid)
 );
 
 create index symbolindex on symbols using btree (symname);
@@ -55,12 +61,5 @@ grant select on symbols to public;
 grant select on indexes to public;
 grant select on relations to public;
 grant select on releases to public;
-
-grant all on symbols to argggh;
-
-grant all on releases to toffer;
-grant all on symbols to toffer;
-grant all on indexes to toffer;
-grant all on files to toffer;
-grant all on relations to toffer;
+grant select on status to public;
 

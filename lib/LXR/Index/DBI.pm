@@ -1,15 +1,15 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.12 1999/06/01 08:08:21 pergj Exp $
+# $Id: DBI.pm,v 1.13 1999/08/19 22:13:36 argggh Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.12 1999/06/01 08:08:21 pergj Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.13 1999/08/19 22:13:36 argggh Exp $ ';
 
 use strict;
 use DBI;
 
-use vars qw($dbh $fst $fsq $fup $sst $ssq $sup $ist $iup $rst $rup
+use vars qw($dbh $fst $fsq $fup $sst $ssq $sup $ist $iup $rst $rup $tin $tip
 			$transactions %files %symcache);
 
 sub new {
@@ -51,6 +51,12 @@ sub new {
 		("select * from releases where fileid = ? and release = ?");
 	$rup = $dbh->prepare
 		("insert into releases values (?, ?)");
+
+	$tin = $dbh->prepare
+		("insert into status select ?, 0 except select fileid, 0 from status");
+
+	$tip = $dbh->prepare
+		("update status set status = ? where fileid = ? and status <= ?");
 
 	return $self;
 }
@@ -94,7 +100,7 @@ sub getrelations {
 }
 
 sub fileid {
-	my ($self, $filename, $revision, $update) = @_;
+	my ($self, $filename, $revision) = @_;
 	my ($fileid);
 
 	# CAUTION: $revision is not $release!
@@ -103,7 +109,7 @@ sub fileid {
 		$fst->execute($filename, $revision);
 		($fileid) = $fst->fetchrow_array();
 		unless ($fileid) {
-			return undef unless $update;
+#			return undef unless $update;
 
 			$fsq->execute();
 			($fileid) = $fsq->fetchrow_array();
@@ -160,6 +166,15 @@ sub issymbol {
 	return $symcache{$symname};
 }
 
+# If this file has not been indexed earlier, mark it as being indexed
+# now and return true.  Return false if already indexed.
+sub toindex {
+	my ($self, $fileid) = @_;
+
+	$tin->execute($fileid);
+	return $tip->execute(1, $fileid, 0) > 0;
+}
+
 sub END {
 	$fst = undef;
 	$fsq = undef;
@@ -168,6 +183,8 @@ sub END {
 	$ssq = undef;
 	$sup = undef;
 	$iup = undef;
+	$tin = undef;
+	$tip = undef;
 
 	$dbh->commit();
 	$dbh->disconnect();
