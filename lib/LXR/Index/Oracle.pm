@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.8 2004/07/27 08:05:45 mbox Exp $
+# $Id: Oracle.pm,v 1.9 2004/10/18 19:09:32 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.8 2004/07/27 08:05:45 mbox Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.9 2004/10/18 19:09:32 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -51,14 +51,14 @@ sub new {
 	  $self->{dbh}
 	  ->prepare("select fileid from ${prefix}files where  filename = ? and  revision = ?");
 	$self->{files_insert} =
-	  $self->{dbh}->prepare("insert into ${prefix}files values (?, ?, filenum.nextval)");
+	  $self->{dbh}->prepare("insert into ${prefix}files values (?, ?, ${prefix}filenum.nextval)");
 
 	$self->{symbols_byname} =
 	  $self->{dbh}->prepare("select symid from ${prefix}symbols where  symname = ?");
 	$self->{symbols_byid} =
 	  $self->{dbh}->prepare("select symname from ${prefix}symbols where symid = ?");
 	$self->{symbols_insert} =
-	  $self->{dbh}->prepare("insert into ${prefix}symbols values ( ?, symnum.nextval)");
+	  $self->{dbh}->prepare("insert into ${prefix}symbols values ( ?, ${prefix}symnum.nextval)");
 	$self->{symbols_remove} =
 	  $self->{dbh}->prepare("delete from ${prefix}symbols where symname = ?");
 
@@ -69,7 +69,7 @@ sub new {
 		  . "and f.fileid = r.fileid "
 		  . "and  s.symname = ? and  r.release = ? ");
 	$self->{indexes_insert} =
-	  $self->{dbh}->prepare("insert into ${prefix}indexes values (?, ?, ?, ?, ?)");
+	  $self->{dbh}->prepare("insert into ${prefix}indexes values (?, ?, ?, ?, ?, ?)");
 
 	$self->{releases_select} =
 	  $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and  release = ?");
@@ -97,6 +97,12 @@ sub new {
 		  . "and u.fileid = r.fileid and "
 		  . "s.symname = ? and  r.release = ? "
 		  . "order by f.filename");
+	$self->{decl_select} =
+	  $self->{dbh}->prepare(
+		"select declid from ${prefix}declarations where langid = ? and declaration = ?");
+	$self->{decl_insert} =
+	  $self->{dbh}->prepare(
+		"insert into ${prefix}declarations (declid, langid, declaration) values (${prefix}declnum.nextval, ?, ?)");
 
 	$self->{delete_indexes} =
 	  $self->{dbh}->prepare("delete from ${prefix}indexes "
@@ -121,10 +127,10 @@ sub new {
 }
 
 sub index {
-	my ($self, $symname, $fileid, $line, $type, $relsym) = @_;
+	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
 	$self->{indexes_insert}->execute($self->symid($symname),
-		$fileid, $line, $type, $relsym ? $self->symid($relsym) : undef);
+		$fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
 }
 
 sub reference {
@@ -276,11 +282,21 @@ sub toindex {
 	return $self->{status_update}->execute(1, $fileid, 0) > 0;
 }
 
+sub setindexed {
+	my ($self, $fileid) = @_;
+	$self->{status_update}->execute(1, $fileid, 0);
+}
+
 sub toreference {
 	my ($self, $fileid) = @_;
 	my ($rv);
 
 	return $self->{status_update}->execute(2, $fileid, 1) > 0;
+}
+
+sub setreferenced {
+	my ($self, $fileid) = @_;
+	$self->{status_update}->execute(2, $fileid, 1);
 }
 
 # This function should be called before parsing each new file,
@@ -290,6 +306,24 @@ sub empty_cache {
 	%symcache = ();
 }
 
+sub getdecid {
+	my ($self, $lang, $string) = @_;
+
+	my $rows = $self->{decl_select}->execute($lang, $string);
+	$self->{decl_select}->finish();
+
+	unless ($rows > 0) {
+		$self->{decl_insert}->execute($lang, $string);
+	}
+
+	$self->{decl_select}->execute($lang, $string);
+	my $id = $self->{decl_select}->fetchrow_array();
+	$self->{decl_select}->finish();
+
+	return $id;
+}
+
+
 sub purge {
 	my ($self, $version) = @_;
 
@@ -298,8 +332,8 @@ sub purge {
 	$self->{delete_indexes}->execute($version);
 	$self->{delete_usage}->execute($version);
 	$self->{delete_status}->execute($version);
-	$self->{delete_files}->execute($version);
 	$self->{delete_releases}->execute($version);
+	$self->{delete_files}->execute($version);
 }
 
 sub DESTROY {
