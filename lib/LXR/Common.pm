@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.38 2002/02/26 15:59:32 mbox Exp $
+# $Id: Common.pm,v 1.39 2002/02/26 16:07:06 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.38 2002/02/26 15:59:32 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.39 2002/02/26 16:07:06 mbox Exp $ ';
 
 use strict;
 
@@ -67,7 +67,7 @@ sub fatal {
 	my $c = join(", line ", (caller)[0,2]);
 	print(STDERR "[",scalar(localtime),"] fatal: $c: $_[0]\n");
 	print(STDERR '[@INC ', join(" ", @INC), ' $0 ', $0, "\n");
-	print(STDERR '$config', join(" ", %$config), "\n");
+	print(STDERR '$config', join(" ", %$config), "\n") if  ref($config) eq "HASH";
 	print("<h4 align=\"center\"><i>** Fatal: $_[0]</i></h4>\n") if $wwwdebug;
 	exit(1);
 }
