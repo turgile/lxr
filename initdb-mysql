@@ -1,7 +1,7 @@
 /* Read this into mysql with "\. initdb-mysql" when logged in as root
    to delete the old lxr database and create a new */ 
 
-drop if exists database lxr; 
+drop database if exists lxr; 
 create database lxr; 
 use lxr;
 
