@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.11 2002/02/26 15:56:23 mbox Exp $
+# $Id: Generic.pm,v 1.12 2002/07/29 00:58:42 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.11 2002/02/26 15:56:23 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.12 2002/07/29 00:58:42 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -179,7 +179,7 @@ sub referencefile {
   my $ls;
 
   while (defined($frag)) {
-	@lines = ($frag =~ /(.*?\n)/g, $frag =~ /[^\n]*$/);
+	@lines = ($frag =~ /(.*?\n)/g, $frag =~ /([^\n]*)$/);
 
 	if (defined($btype)) {
 	  if ($btype eq 'comment' or $btype eq 'string' or $btype eq 'include') {
