@@ -22,6 +22,8 @@ The current version of the lxr depends on three things:
    database you're using.  If you don't already have these, they can be
    installed via CPAN.  See http://dbi.perl.org/index.html for more info.
 
+6) If using the CVS support, you will need cvs and rcs installed as well.
+
 Installing the database
 -----------------------
 You will need to create a database for lxr, and possibly create a user
