@@ -7,6 +7,7 @@ use lib '/local/lxr/http/lxr2/lib';
 use LXR::Files::Plain;
 use LXR::Index;
 use LXR::Config;
+use LXR::Tagger;
 
 $Conf = new LXR::Config;
 

@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.4 1999/05/12 06:44:08 pergj Exp $
+# $Id: Common.pm,v 1.5 1999/05/13 22:58:23 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -556,15 +556,11 @@ sub fixpaths {
     $Path->{'realf'} = $Path->{'root'}.$Path->{'virtf'};
 
     # split the pathname into @pathelem with trailing 
-    (@pathelem) = ($Path->{'virtf'} =~ /([^\/]+$|[^\/]+\/)/g);
-    @pathelem = $Path->{'virtf'} =~ /([^\/]+)/g;
-
-#    @pathelem = $Path->{'virtf'} =~ /(.*?(?:$|\/))/g;
-    # @pathelem = map { $_ = "$_/"} grep /./, split /\//, $Path->{'virtf'};
+    # @pathelem = $Path->{'virtf'} =~ /(.*?(?:$|\/))/g;
+    @pathelem = $Path->{'virtf'} =~ /([^\/]+$|[^\/]+\/)/g;
 
     $fpath = '';
     foreach (@pathelem) {
-	print STDERR "* $_\n";
 	$fpath .= $_;
 	push(@addrelem, $fpath);
     }
@@ -579,7 +575,7 @@ sub fixpaths {
 	    # it is ignored when sizing table cells, so we have to use a real
 	    # space.  It's somewhat ugly to have these spaces be visible, but
 	    # not as ugly as getting a horizontal scrollbar...
-	    #
+
 	    $Path->{'xref'} .= &fileref($pathelem[$_], "/$addrelem[$_]") . " ";
 	} else {
 	    $Path->{'xref'} .= $pathelem[$_];
@@ -884,6 +880,7 @@ sub varlinks {
 				 "\">$val</a>";
 	    }
 	}
+
 	$vlex .= &expandtemplate($templ,
 				 ('varvalue', sub { return($vallink) }));
 

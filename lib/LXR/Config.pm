@@ -1,14 +1,16 @@
-# $Id: Config.pm,v 1.3 1999/05/11 20:50:48 pergj Exp $
+# $Id: Config.pm,v 1.4 1999/05/13 22:58:24 argggh Exp $
 
 package LXR::Config;
 
 use LXR::Common;
 
+use vars qw($AUTOLOAD);
+
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw($Conf);
 
-$confname = 'lxr.conf';
+$confname = 'lxr.conf-new';
 
 
 sub new {
@@ -21,49 +23,19 @@ sub new {
 }
 
 
-sub makevalueset {
-    my $val = shift;
-    my @valset;
 
-    if ($val =~ /^\s*\(([^\)]*)\)/) {
-	@valset = split(/\s*,\s*/,$1);
-    } elsif ($val =~ /^\s*\[\s*(\S*)\s*\]/) {
-	if (open(VALUESET, "$1")) {
-	    $val = join('',<VALUESET>);
-	    close(VALUESET);
-	    @valset = split("\n",$val);
-	} else {
-	    @valset = ();
-	}
-    } else {
-	@valset = ();
-    }
-    return(@valset);
-}
+sub readfile {
+    local($/) = undef;		# Just in case; probably redundant.
+    my $file  = shift;
+    my @data;
 
+    open(INPUT, $file);
+    $file = <INPUT>;
+    close(INPUT);
 
-sub parseconf {
-    my $line = shift;
-    my @items = ();
-    my $item;
+    @data = $file =~ /([^\s]+)/gs;
 
-    foreach $item ($line =~ /\s*(\[.*?\]|\(.*?\)|\".*?\"|\S+)\s*(?:$|,)/g) {
-	if ($item =~ /^\[\s*(.*?)\s*\]/) {
-	    if (open(LISTF, "$1")) {
-		$item = '('.join(',',<LISTF>).')';
-		close(LISTF);
-	    } else {
-		$item = '';
-	    }
-	}
-	if ($item =~ s/^\((.*)\)/$1/s) {
-	    $item = join("\0",($item =~ /\s*(\S+)\s*(?:$|,)/gs));
-	}
-	$item =~ s/^\"(.*)\"/$1/;
-
-	push(@items, $item);
-    }
-    return(@items);
+    return wantarray ? @data : $data[0];
 }
 
 
@@ -79,253 +51,106 @@ sub _initialize {
     unless (open(CONFIG, $conf)) {
 	&fatal("Couldn't open configuration file \"$conf\".");
     }
-    while (<CONFIG>) {
-	s/\#.*//;
-	next if /^\s*$/;
     
-	if (($dir, $arg) = /^\s*(\S+):\s*(.*)/) {
-	    if ($dir eq 'variable') {
-		@args = &parseconf($arg);
-		if ($args[0]) {
-		    $self->{vardescr}->{$args[0]} = $args[1];
-		    push(@{$self->{variables}},$args[0]);
-		    $self->{varrange}->{$args[0]} = [split(/\0/,$args[2])];
-		    $self->{vdefault}->{$args[0]} = $args[3];
-		    $self->{vdefault}->{$args[0]} ||= 
-			$self->{varrange}->{$args[0]}->[0];
-		    $self->{variable}->{$args[0]} =
-			$self->{vdefault}->{$args[0]};
-		}
-	    } elsif ($dir eq 'sourceroot' ||
-		     $dir eq 'srcrootname' ||
-                     $dir eq 'virtroot' ||
-		     $dir eq 'baseurl' ||
-		     $dir eq 'incprefix' ||
-		     $dir eq 'dbname' ||
-		     $dir eq 'dbtype' ||
-		     $dir eq 'bonsaihome' ||
-		     $dir eq 'glimpsebin' ||
-		     $dir eq 'ctagsbin' ||
-		     $dir eq 'htmlhead' ||
-		     $dir eq 'htmltail' ||
-		     $dir eq 'sourcehead' ||
-		     $dir eq 'sourcetail' ||
-		     $dir eq 'sourcedirhead' ||
-		     $dir eq 'sourcedirtail' ||
-		     $dir eq 'findhead' ||
-		     $dir eq 'findtail' ||
-		     $dir eq 'identhead' ||
-		     $dir eq 'identtail' ||
-		     $dir eq 'searchhead' ||
-		     $dir eq 'searchtail' ||
-		     $dir eq 'htmldir') {
-		if ($arg =~ /(\S+)/) {
-		    $self->{$dir} = $1;
-		}
-	    } elsif ($dir eq 'map') {
-		if ($arg =~ /(\S+)\s+(\S+)/) {
-		    push(@{$self->{maplist}}, [$1,$2]);
-		}
-	    } else {
-		&warning("Unknown config directive (\"$dir\")");
-	    }			
-	    next;
-	}
-	&warning("Noise in config file (\"$_\")");
-    }
+    local($SIG{'__DIE__'}) = 'IGNORE';
+    local($/) = undef;
+	
+    %$self = (%$self,
+	      %{eval(<CONFIG>)});
+
+    &fatal("Error in configuration file: ".$@) if $@;
 }
 
 
 sub allvariables {
     my $self = shift;
-    if(!defined($self)) {
-	return(undef);		
-    } else {
-	return(@{$self->{variables}});
-    }
+
+    return keys(%{$self->{variables} || {}});
 }
 
 
 sub variable {
     my ($self, $var, $val) = @_;
-    $self->{variable}->{$var} = $val if defined($val);
-    return($self->{variable}->{$var});
+
+    $self->{variables}{$var}{value} = $val if defined($val);
+    return $self->{variables}{$var}{value} || 
+	$self->vardefault($var);
 }
 
 
 sub vardefault {
     my ($self, $var) = @_;
-    return($self->{vdefault}->{$var});
+
+    return $self->{variables}{$var}{default} || 
+	$self->{variables}{$var}{range}[0];
 }
 
 
 sub vardescription {
     my ($self, $var, $val) = @_;
-    $self->{vardescr}->{$var} = $val if defined($val);
-    return($self->{vardescr}->{$var});
+
+    $self->{variables}{$var}{name} = $val if defined($val);
+
+    return $self->{variables}{$var}{name};
 }
 
 
 sub varrange {
     my ($self, $var) = @_;
-    return(@{$self->{varrange}->{$var}});
+
+    return @{$self->{variables}{$var}{range} || []};
 }
 
 
 sub varexpand {
     my ($self, $exp) = @_;
-    $exp =~ s/\$\{?(\w+)\}?/$self->{variable}->{$1}/g;
-    return($exp);
+    $exp =~ s/\$\{?(\w+)\}?/$self->{variables}{$1}{value}/g;
+
+    return $exp;
 }
 
 
-sub baseurl {
+sub AUTOLOAD {
     my $self = shift;
-    return($self->varexpand($self->{'baseurl'}));
-}
+    (my $var = $AUTOLOAD) =~ s/.*:://;
 
-
-sub sourceroot {
-    my $self = shift;
-    return($self->varexpand($self->{'sourceroot'}));
-}
-
-
-sub sourcerootname {
-    my $self = shift;
-    return($self->varexpand($self->{'srcrootname'}));
-}
-
-sub virtroot{
-    my $self = shift;
-    return($self->varexpand($self->{'virtroot'}));
-}
-
-sub incprefix {
-    my $self = shift;
-    my @inc = split(/:/, $self->{'incprefix'});
-    
-    map { $_ = $self->varexpand($_) } @inc;
-    return(@inc);
-}
-
-# What to do with these
-sub bonsaihome {
-    my $self = shift;
-    return($self->varexpand($self->{'bonsaihome'}));
-}
-
-# notused
-#sub dbdir {
-#    my $self = shift;
-#    return($self->varexpand($self->{'dbdir'}));
-#}
-
-sub dbname {
-    my $self = shift;
-    return($self->varexpand($self->{'dbname'}));
-}
-
-sub dbtype {
-    my $self = shift;
-    return($self->varexpand($self->{'dbtype'}));
-}
-
-sub glimpsebin {
-    my $self = shift;
-    return($self->varexpand($self->{'glimpsebin'}));
-}
-
-sub ctagsbin {
-    my $self = shift;
-    return($self->varexpand($self->{'ctagsbin'}));
-}
-
-
-sub htmlhead {
-    my $self = shift;
-    return($self->varexpand($self->{'htmlhead'}));
-}
-
-
-sub htmltail {
-    my $self = shift;
-    return($self->varexpand($self->{'htmltail'}));
-}
-
-sub sourcehead {
-    my $self = shift;
-    return($self->varexpand($self->{'sourcehead'}));
-}
-
-sub sourcetail {
-    my $self = shift;
-    return($self->varexpand($self->{'sourcetail'}));
-}
-
-sub sourcedirhead {
-    my $self = shift;
-    return($self->varexpand($self->{'sourcedirhead'}));
-}
-
-sub sourcedirtail {
-    my $self = shift;
-    return($self->varexpand($self->{'sourcedirtail'}));
-}
-
-sub findhead {
-    my $self = shift;
-    return($self->varexpand($self->{'findhead'}));
-}
-
-sub findtail {
-    my $self = shift;
-    return($self->varexpand($self->{'findtail'}));
-}
-
-sub identhead {
-    my $self = shift;
-    return($self->varexpand($self->{'identhead'}));
-}
-
-sub identtail {
-    my $self = shift;
-    return($self->varexpand($self->{'identtail'}));
-}
-
-sub searchhead {
-    my $self = shift;
-    return($self->varexpand($self->{'searchhead'}));
-}
-
-sub searchtail {
-    my $self = shift;
-    return($self->varexpand($self->{'searchtail'}));
-}
-
-
-
-sub htmldir {
-    my $self = shift;
-    return($self->varexpand($self->{'htmldir'}));
+    if (exists($self->{$var})) {
+	my $val = $self->{$var};
+	
+	if (ref($val) eq 'ARRAY') {
+	    return map { $self->varexpand($_) } @$val;
+	}
+	else {
+	    return $self->varexpand($val);
+	}
+    }
+    else {
+	return undef;
+    }
 }
 
 
 sub mappath {
     my ($self, $path, @args) = @_;
-    my (%oldvars) = %{$self->{variable}};
-    my ($m);
+    my %oldvars;
+    my ($m, $n);
     
     foreach $m (@args) {
-	$self->{variable}->{$1} = $2 if $m =~ /(.*?)=(.*)/;
+	if ($m =~ /(.*?)=(.*)/) {
+	    $oldvars{$1} = $self->variable($1);
+	    $self->variable($1, $2);
+	}
     }
 
-    foreach $m (@{$self->{maplist}}) {
-	$path =~ s/$m->[0]/$self->varexpand($m->[1])/e;
+    while (($m, $n) = each %{$self->{maps} || {}}) {
+	$path =~ s/$m/$self->varexpand($n)/e;
     }
 
-    $self->{variable} = {%oldvars};
-    return($path);
+    while (($m, $n) = each %oldvars) {
+	$self->variable($m, $n);
+    }
+
+    return $path;
 }
 
 #sub mappath {

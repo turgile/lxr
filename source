@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.4 1999/05/12 06:44:07 pergj Exp $
+# $Id: source,v 1.5 1999/05/13 22:58:22 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -31,8 +31,6 @@ use LXR::Common;
 use LXR::Config;
 use LXR::Files::Plain;
 use LXR::Index;
-use LXR::Index::DB;
-use LXR::Index::DBI;
 
 
 sub diricon {
