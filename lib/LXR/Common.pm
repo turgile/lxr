@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.3 1999/05/11 20:50:48 pergj Exp $
+# $Id: Common.pm,v 1.4 1999/05/12 06:44:08 pergj Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -556,20 +556,12 @@ sub fixpaths {
     $Path->{'realf'} = $Path->{'root'}.$Path->{'virtf'};
 
     # split the pathname into @pathelem with trailing 
-#    (@pathelem) = ($Path->{'virtf'} =~ /([^\/]+$|[^\/]+\/)/g);
-#    @pathelem = $Path->{'virtf'} =~ /([^\/]+)/g;
-    $_ = "/drivers/foo"; @_ = /(.)/g; print(STDERR "xxxyy ", join("*", @_), "\n");
-    my $foo = $Path->{'virtf'};
-    $_ = $foo;
-    @_ = /(.)/g;
-#    while ($foo =~ /(.)/g) {
-    foreach (@_) {
-	print(STDERR "*** $foo: $1\n");
-    }
+    (@pathelem) = ($Path->{'virtf'} =~ /([^\/]+$|[^\/]+\/)/g);
+    @pathelem = $Path->{'virtf'} =~ /([^\/]+)/g;
+
 #    @pathelem = $Path->{'virtf'} =~ /(.*?(?:$|\/))/g;
     # @pathelem = map { $_ = "$_/"} grep /./, split /\//, $Path->{'virtf'};
 
-    print STDERR "\n* $Path->{'virtf'}\n"; 
     $fpath = '';
     foreach (@pathelem) {
 	print STDERR "* $_\n";
@@ -580,9 +572,7 @@ sub fixpaths {
     unshift(@pathelem, $Conf->sourcerootname.'/');
     unshift(@addrelem, "");
     
-#    print STDERR "$Path->{'virtf'}\n";
     foreach (0..$#pathelem) {
-#	print STDERR "$pathelem[$_]\n";
 	if (defined($addrelem[$_])) {
 	    # jwz: put a space after each / in the banner so that it's possible
 	    # for the pathnames to wrap.  The <WBR> tag ought to do this, but

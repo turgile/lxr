@@ -26,7 +26,7 @@ sub filerev {
 sub getfiletime {
 	my ($self, $filename, $release) = @_;
 
-	return (stat($self->toreal($release, $filename)[9]);
+	return (stat($self->toreal($release, $filename)))[9];
 }
 
 
@@ -35,7 +35,7 @@ sub getfile {
 	my ($buffer);
 	local ($/) = undef;
 
-	open(FILE, $self->toreal($filename, $release) || return undef;
+	open(FILE, $self->toreal($filename, $release)) || return undef;
 	$buffer = <FILE>;
 	close(FILE);
 	return $buffer;
@@ -51,8 +51,9 @@ sub getdir {
 		next if $node =~ /^\.|~$|\.orig$/;
 
 		$node .= '/' if -d $dir.$node;
-		if (!($node eq "CVS"))
+		if (!($node eq "CVS")) {
 			push(@files, $node);
+		}
 	}
 	closedir(DIR);
 
@@ -80,8 +81,7 @@ sub isfile {
 sub getindex {
 	my ($self, $pathname, $release) = @_;
 	my ($save, $index, %index);
-
-	$indexname = $self->toreal($release, $pathname)."00-INDEX";
+	my $indexname = $self->toreal($release, $pathname)."00-INDEX";
 
 	if (-f $indexname) {
 		open(INDEX, $indexname) || &warning("Existing $indexname could not be opened.");
