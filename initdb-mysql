@@ -50,8 +50,8 @@ create table status
 );
 
 
-/* create index indexindex on indexes  (symid) */
-/* create unique index symbolindex on symbols  (symname) */
-/* create index useageindex on useage  (symid) */ 
+ create index indexindex on indexes  (symid) 
+ create unique index symbolindex on symbols  (symname) 
+ create index useageindex on useage  (symid) 
 
 grant all on lxr.* to lxr@localhost;
