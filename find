@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.9 2003/06/05 16:55:05 mbox Exp $
+# $Id: find,v 1.10 2004/06/28 13:17:17 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.9 2003/06/05 16:55:05 mbox Exp $ ';
+$CVSID = '$Id: find,v 1.10 2004/06/28 13:17:17 brondsem Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -53,10 +53,18 @@ sub find {
 
 
     if ($searchtext ne "") {
-	unless (open(FILELLISTING,$config->glimpsedir."/".$release."/.glimpse_filenames")) {
-	    &warning("Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
-	    return;
-	}
+    if ($config->swishdir and $config->swishindex) {
+        unless (open(FILELLISTING,$config->swishdir."/$release.filenames")) {
+            &warning("Could not open ".$config->swishdir."/$release.filenames.");
+            return;
+        }
+    }
+    if ($config->glimpsedir and $config->glimpseindex) {
+        unless (open(FILELLISTING,$config->glimpsedir."/".$release."/.glimpse_filenames")) {
+            &warning("Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
+            return;
+        }
+    }
 	print("<hr>\n");
 	$sourceroot = $config->sourceroot;
 	while($file = <FILELLISTING>) {

@@ -20,6 +20,7 @@ use lib 'lib';
 use Fcntl;
 use Getopt::Long;
 use IO::Handle;
+use File::MMagic;
 
 use LXR::Files;
 use LXR::Index;
@@ -70,6 +71,8 @@ die "Can't create file access object ".$config->sourceroot if !defined($files);
 $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 die "Can't create Index ".$config->dbname if !defined($index);
 
+our $filetype = new File::MMagic();
+
 my @versions;
 
 if ($option{'allversions'} || !$option{'version'}) {
@@ -116,22 +119,25 @@ sub genrefs {
 }
 
 sub feedswish {
-	my ($pathname, $release, $swish) = @_;
+	my ($pathname, $release, $swish, $filelist) = @_;
 
     print(STDERR "&&& $pathname $release \n");
     
     if ($pathname =~ m|/$|) {
 	map {
-	    feedswish($pathname.$_, $release, $swish)
+	    feedswish($pathname.$_, $release, $swish, $filelist)
 	    } $files->getdir($pathname, $release);
     } else {
-		my $contents = $files->getfile($pathname, $release);
-		$swish->print("Path-Name: $pathname\n",
-					  "Content-Length: ".length($contents)."\n",
-					  "Document-Type: TXT\n",
-					  "\n",
-					  $contents)
-			if length($contents) > 0;
+		print $filelist "$pathname\n";
+        my $contents = $files->getfile($pathname, $release);
+        if ($filetype->checktype_contents($contents) =~ m%(text|message)/%) {
+            $swish->print("Path-Name: $pathname\n",
+                          "Content-Length: ".length($contents)."\n",
+                          "Document-Type: TXT\n",
+                          "\n",
+                          $contents)
+                if length($contents) > 0;
+        }
     }
 }
 
@@ -162,16 +168,17 @@ sub gensearch {
 	}
 
 	if ($config->swishdir and $config->swishindex) {
-		my $swish = new IO::Handle;
-		my $pid = open($swish, "|-");
-		if ($pid == 0) {
-			exec($config->swishindex,
-				 "-S", "prog", "-i", "/bin/cat", "-v", "1",
-				 "-f", $config->swishdir."/".$release.".index");
-			print(STDERR "Couldn't exec ".$config->swishindex.": $!\n");
-			kill(9, $$);
-		}
-		feedswish("/", $release, $swish);
-		$swish->close();
+        my $swish = new IO::Handle;
+        my $filelist = new IO::File $config->swishdir."/$release.filenames", "w" or die "can't open $release.filenames for writing";
+        
+        # execute swish, as a pipe we can write to
+        
+        open($swish, "| " . $config->swishindex . " -S prog -i stdin -v 1 -f " . $config->swishdir."/".$release.".index")
+             or die "Couldn't exec ".$config->swishindex.": $!\n";
+        
+        feedswish("/", $release, $swish, $filelist);
+        
+        $swish->close();
+        $filelist->close();
 	}
 }
