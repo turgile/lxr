@@ -1,0 +1,4 @@
+To run these tests:
+
+- Make sure Test::Unit is installed
+- Execute TestRunner.pl AllTests
