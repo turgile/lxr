@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.16 2004/07/12 14:39:44 mbox Exp $
+# $Id: find,v 1.17 2004/07/14 14:43:38 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.16 2004/07/12 14:39:44 mbox Exp $ ';
+$CVSID = '$Id: find,v 1.17 2004/07/14 14:43:38 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -92,7 +92,6 @@ sub dofind {
 }
 
 sub find {
-    my $dir = shift;
     my $templ;
     
     if ($config->htmlfind) {
