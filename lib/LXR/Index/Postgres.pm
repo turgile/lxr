@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.17 2004/07/21 20:44:31 brondsem Exp $
+# $Id: Postgres.pm,v 1.18 2004/07/27 08:05:45 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.17 2004/07/21 20:44:31 brondsem Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.18 2004/07/27 08:05:45 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -44,7 +44,7 @@ sub new {
 
 	#	$dbh->trace(1);
 
-	if ($config->{'dbprefix'}) {
+	if (defined($config->{'dbprefix'})) {
 		$prefix = $config->{'dbprefix'};
 	} else {
 		$prefix = "lxr_";

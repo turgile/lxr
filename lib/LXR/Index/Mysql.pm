@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.18 2004/07/21 20:44:31 brondsem Exp $
+# $Id: Mysql.pm,v 1.19 2004/07/27 08:05:45 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.18 2004/07/21 20:44:31 brondsem Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.19 2004/07/27 08:05:45 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -40,7 +40,7 @@ sub new {
 		  || fatal "Can't open connection to database\n";
 	}
 
-	if ($config->{'dbprefix'}) {
+	if (defined($config->{'dbprefix'})) {
 		$prefix = $config->{'dbprefix'};
 	} else {
 		$prefix = "lxr_";

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.7 2004/07/21 20:44:31 brondsem Exp $
+# $Id: Oracle.pm,v 1.8 2004/07/27 08:05:45 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.7 2004/07/21 20:44:31 brondsem Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.8 2004/07/27 08:05:45 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -38,7 +38,7 @@ sub new {
 		{ RaiseError => 1, AutoCommit => 1 })
 	  || fatal "Can't open connection to database\n";
 
-	if ($config->{'dbprefix'}) {
+	if (defined($config->{'dbprefix'})) {
 		$prefix = $config->{'dbprefix'};
 	} else {
 		$prefix = "lxr_";
