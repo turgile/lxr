@@ -1,16 +1,19 @@
-# $Id: Common.pm,v 1.8 1999/05/16 09:53:17 argggh Exp $		-*- tab-width: 4 -*-
+# -*- tab-width: 4 -*- ###############################################
+#
+# $Id: Common.pm,v 1.9 1999/05/16 16:49:16 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-# use strict;			# Nope, not yet...
+use strict;
 
 use lib '../..';
 use Local;
 
 require Exporter;
-use vars qw(@ISA @EXPORT $wwwdebug %type_names @java_reserved @cterm);
+
+use vars qw(@ISA @EXPORT $wwwdebug %type_names @cterm $Conf $Path $HTTP $identifier);
 @ISA = qw(Exporter);
 @EXPORT = qw(&warning &fatal &abortall &fflush &urlargs 
 			 &fileref &idref &incref &htmlquote &freetextmarkup &markupfile
@@ -22,8 +25,6 @@ $wwwdebug = 1;
 
 $SIG{__WARN__} = 'warning';
 $SIG{__DIE__}  = 'fatal';
-
-use LXR::JavaClassList;		# jmason, for Java
 
 %type_names = 
 	(
@@ -41,16 +42,6 @@ use LXR::JavaClassList;		# jmason, for Java
 	 ('v' , 'variable definition'),
 	 ('x' , 'extern or forward variable declaration')
 	 );
-
-# May  8 1998 jmason java keywords
-@java_reserved = ('break', 'case', 'continue', 'default', 'do', 'else',
-				  'for', 'goto', 'if', 'return', 'static', 'switch',
-				  'void', 'volatile', 'while',
-				  'public', 'class', 'final', 'private', 'protected',
-				  'synchronized', 'package', 'import', 'boolean',
-				  'byte', 'new', 'abstract', 'extends', 'implements',
-				  'interface', 'throws', 'instanceof', 'super', 'this',
-				  'native', 'null');
 
 
 @cterm = ('atom',		'\\\\.',	'',
@@ -132,12 +123,12 @@ sub fileref {
 
 sub diffref {
 	my ($desc, $path, $darg) = @_;
+	my $dval;
 
-	($darg,$dval) = $darg =~ /(.*?)=(.*)/;
+	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
 	return ("<a href=\"$Conf->{virtroot}/diff$path".
 			&urlargs(($darg ? "diffvar=$darg" : ""),
-					 ($dval ? "diffval=$dval" : ""),
-					 @args).
+					 ($dval ? "diffval=$dval" : "")).
 			"\"\>$desc</a>");
 }
 
@@ -197,11 +188,8 @@ sub markupstring {
 	
 	# Look for identifiers and create links with identifier search query.
 	# TODO: Is there a performance problem with this?
-	tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
-		|| &warning("Cannot open xref database.");
 	$string =~ s#(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b#
 		$1.(is_linkworthy($2) ? &idref($2,$2) : $2)#ge;
-	untie(%xref);
 	
 	# HTMLify the special characters we marked earlier,
 	# but not the ones in the recently added xref html links.
@@ -235,7 +223,8 @@ sub is_linkworthy{
 
 	if ($string =~ /....../ 
 		&& ($string =~ /_/ || $string =~ /.[A-Z]/)
-		&& defined($xref{$string})) {
+#		&& defined($xref{$string}) FIXME
+		) {
 		return (1);
 	}
 	else {
@@ -261,38 +250,25 @@ sub freetextmarkup {
 }
 
 
-sub linetag {
-#$frag =~ s/\n/"\n".&linetag($virtp.$fname, $line)/ge;
-#	 my $tag = '<a href="'.$_[0].'#L'.$_[1].
-#	'" name="L'.$_[1].'">'.$_[1].' </a>';
-	my $tag;
-	$tag .= ' ' if $_[1] < 10;
-	$tag .= ' ' if $_[1] < 100;
-	$tag .= &fileref($_[1], $_[0], $_[1]).' ';
-	$tag =~ s/<a/<a name=$_[1]/;
-#	 $_[1]++;
-	return($tag);
-}
-
 sub markupfile {
 	my ($fileh, $virtp, $index, $fname, $outfun) = @_;
 
+	my $line = '001';
 	my @ltag = &fileref(1, $virtp.$fname, 1) =~ /^(<a)(.*\#)1(\">)1(<\/a>)$/;
 	$ltag[0] .= ' name=';
 	$ltag[3] .= ' ';
 	
-	$line = '001';
-
 	my @itag = &idref(1, 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 
-	# A C/C++ file 
-	if ($fname =~ /\.([ch]|cpp?|cc)$/i) { # Duplicated in genxref.
+	my $lang = new LXR::Lang($fname, @itag);
 
+	# A source code file
+	if ($lang) {
 		&SimpleParse::init($fileh, @cterm);
 
 		&$outfun(join($line++, @ltag));
 
-		($btype, $frag) = &SimpleParse::nextfrag;
+		my ($btype, $frag) = &SimpleParse::nextfrag;
 		
 		while (defined($frag)) {
 			&markspecials($frag);
@@ -317,100 +293,16 @@ sub markupfile {
 			} 
 			else {
 				# Code
-				$frag =~ s#(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
-					$1.($index->issymbol($2, $main::release) 
-						? join($2, @itag) 
-						: $2)#ge;
+				$lang->processcode(\$frag);
 			}
 
 			&htmlquote($frag);
-#		$frag =~ s/\n/"\n".&linetag($virtp.$fname, $line++)/ge;
+
 			$frag =~ s/\n/"\n".join($line++, @ltag)/ge;
 			&$outfun($frag);
 			
 			($btype, $frag) = &SimpleParse::nextfrag;
 		}
-		
-#	&$outfun("</pre>\n");
-#	untie(%xref);
-
-		# A Java file 
-	} 
-	elsif ($fname =~ /\.java$/i) { # Duplicated in genxref.
-
-		&SimpleParse::init($INFILE, @cterm);
-		
-		tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
-			|| &warning("Cannot open xref database.");
-		tie (%member_type, "DB_File", $Conf->dbdir."/vartype", O_RDONLY, 0664, $DB_HASH)
-			|| &warning("Cannot open vartype database.");
-
-		&$outfun(# "<pre>\n".
-				 #"<a name=\"".$line++.'"></a>');
-				 &linetag($virtp.$fname, $line++));
-
-		($btype, $frag) = &SimpleParse::nextfrag;
-
-		%import_specifics = ();
-		@import_stars = ();
-		$java_package = '';
-		$java_class = '';
-		$ident = '[a-zA-Z_][a-zA-Z0-9_]*';
-		$identdot = '[a-zA-Z_][a-zA-Z0-9_\.]*';
-		foreach $_ (@java_reserved) { $java_reserved{$_} = 1; }
-
-		while (defined($frag)) {
-			&markspecials($frag);
-
-			if ($btype eq 'comment') {
-				# Comment
-				# Convert mail adresses to mailto:
-				&freetextmarkup($frag);
-				$frag = "<b><i>$frag</i></b>";
-				$frag =~ s#\n#</i></b>\n<b><i>#g;
-			} elsif ($btype eq 'string') {
-				# String
-				$frag = "<i>$frag</i>";
-				
-			} elsif ($btype eq 'include') { 
-				# Include directive, unlikely but support it anyway!
-				$frag =~ s#(\")(.*?)(\")#
-					$1.&incref($2, $virtp).$3#e;
-				$frag =~ s#(\0<)(.*?)(\0>)#
-					$1.&incref($2).$3#e;
-			} else {
-				# Code
-
-				$* = 1;
-				$frag =~ s/(?:\A|\b)import\s+($identdot\.)\*\s*\;/
-					push (@import_stars, $1); $&;
-				/goex;
-				$frag =~ s/(?:\A|\b)import\s+($identdot\.)($ident)\s*\;/
-					$import_specifics {$2} = $1.$2; $&;
-				/goex;
-				$frag =~ s/(?:\A|\b)package\s+($identdot)\s*\;/
-					$java_package = "$1."; push (@import_stars, $java_package); $&;
-				/goex;
-				$frag =~ s/(?:\A|\b)(?:class|interface)\s+($ident)
-					(?:\s+extends\s+$identdot|\s+implements\s+$identdot)*\s+\{/
-						$java_class = $import_specifics {$1} = $java_package.$1; $&;
-				/goex;
-				#fix vi % command: }
-
-				$frag =~ s#(^|[^a-zA-Z\#0-9_])([a-zA-Z_][a-zA-Z0-9_\.]*)(\b)#
-					$1.&find_java_xrefs($2).$3;#ge;
-			}
-
-			&htmlquote($frag);
-			$frag =~ s/\n/"\n".&linetag($virtp.$fname, $line++)/ge;
-			&$outfun($frag);
-			
-			($btype, $frag) = &SimpleParse::nextfrag;
-		}
-		
-#	&$outfun("</pre>\n");
-		untie(%xref);
-		untie(%member_type);
 	} 
 	elsif ($fname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
 		&$outfun("</pre>");
@@ -421,15 +313,15 @@ sub markupfile {
 		&$outfun("</tr></td></table></ul><pre>");
 	} 
 	elsif ($fname eq 'CREDITS') {
-		while (<$INFILE>) {
+		while (defined($_ = $fileh->getline)) {
 			&SimpleParse::untabify($_);
 			&markspecials($_);
 			&htmlquote($_);
 			s/^N:\s+(.*)/<strong>$1<\/strong>/gm;
 			s/^(E:\s+)(\S+@\S+)/$1<a href=\"mailto:$2\">$2<\/a>/gm;
 			s/^(W:\s+)(.*)/$1<a href=\"$2\">$2<\/a>/gm;
-#		&$outfun("<a name=\"L$.\"><\/a>".$_);
-			&$outfun(&linetag($virtp.$fname, $.).$_);
+			# &$outfun("<a name=\"L$.\"><\/a>".$_);
+			&$outfun(join($line++, @ltag).$_);
 		}
 	} 
 	else {
@@ -475,133 +367,27 @@ sub markupfile {
 				&htmlquote($_);
 				&freetextmarkup($_);
 				#		&$outfun("<a name=\"L$.\"><\/a>".$_);
-				&$outfun(&linetag($virtp.$fname, $.).$_);
+				&$outfun(join($line++, @ltag).$_);
 			} while (defined($_ = $fileh->getline));
 		}
 	}
 }
 
-# not exported to genxref as it uses lots of vars arrays etc. defined in
-# this module; maybe some perl expert out there could fix it so it can
-# be shared between the two modules.
-#
-sub get_java_fqpn () {
-	local ($_) = @_;
-
-	if (defined ($java_reserved{$_})) { return undef; }
-
-	if ($_ eq 'this' && $xref{$java_class}) {
-		return $java_class;		# the "this" object's type.
-		
-	} 
-	elsif ($xref{$_}) {
-		return $_;				# already fully-packaged?
-
-	} 
-	elsif (defined ($import_specifics{$_}) && $xref{$import_specifics{$_}}) {
-		return $import_specifics{$_};	# the fully-packaged name.
-	}
-
-	my $import;
-	foreach $import (@import_stars) {
-		# maybe it was imported using a star?
-		if ($xref{$import.$_}) { return $import.$_; }
-	}
-
-	if (&JavaClassList::is_java_class ($_, @import_stars)) {
-		return $_;				# a java system class
-	}
-
-	# maybe it's a variable or method on this class
-	if ($xref{"$java_class.$_"}) { return "$java_class.$_"; }
-
-	undef;						# I give up
-}
-
-sub find_java_xref_bit {
-	local ($check, $ret) = @_;
-	local ($full);
-
-	$full = &get_java_fqpn($check);
-	if (defined ($full)) {
-		$check = $full; $ret = &idref ($ret, $check);
-
-		# Avoid accidentally nesting links
-		$ret =~ s!^(<a href=[^>]+>)(<a href=[^>]+>)(.+)</a>\.([^<]+)</a>$!
-			"$2$3</a>.$1$4</a>"
-				!ge;
-	}
-	return ($check, $ret);
-}
-
-sub find_java_xrefs {
-	local ($_) = @_;
-	local ($full, $check, @bits, $bit, $ret);
-
-	$full = &get_java_fqpn($_);
-	if (defined ($full)) { return &idref ($_, $full); }
-
-	($check, @bits) = split (/\./, $_);
-	if ($#bits >= 0) {
-		$ret = $check;
-		foreach $bit (@bits) {
-			($check, $ret) = &find_java_xref_bit ($check, $ret);
-			if (defined ($member_type{$check})) { $check = $member_type{$check}; }
-			$check .= '.'.$bit;
-			$ret .= '.'.$bit;
-		}
-		($check, $ret) = &find_java_xref_bit ($check, $ret);
-		return $ret;
-	}
-
-	$_;
-}
 
 sub fixpaths {
-	my ($fpath, @pathelem, @addrelem);
-
 	$Path->{'virtf'} = '/'.shift;
 	$Path->{'root'} = $Conf->sourceroot;
 	
 	while ($Path->{'virtf'} =~ s|/[^/]+/\.\./|/|g) {}
-	$Path->{'virtf'} =~ s#/\.\./#/#g;
+	$Path->{'virtf'} =~ s|/\.\./|/|g;
 	
 	$Path->{'virtf'} .= '/' if (-d $Path->{'root'}.$Path->{'virtf'});
-	$Path->{'virtf'} =~ s#//+#/#g;
+	$Path->{'virtf'} =~ s|//+|/|g;
 	
-	($Path->{'virt'}, $Path->{'file'}) = $Path->{'virtf'} =~ m#^(.*/)([^/]*)$#;
+	($Path->{'virt'}, $Path->{'file'}) = $Path->{'virtf'} =~ m|^(.*/)([^/]*)$|;
 
 	$Path->{'real'} = $Path->{'root'}.$Path->{'virt'};
 	$Path->{'realf'} = $Path->{'root'}.$Path->{'virtf'};
-
-	# split the pathname into @pathelem with trailing 
-	# @pathelem = $Path->{'virtf'} =~ /(.*?(?:$|\/))/g;
-	@pathelem = $Path->{'virtf'} =~ /([^\/]+$|[^\/]+\/)/g;
-
-	$fpath = '';
-	foreach (@pathelem) {
-		$fpath .= $_;
-		push(@addrelem, $fpath);
-	}
-
-	unshift(@pathelem, $Conf->sourcerootname.'/');
-	unshift(@addrelem, "");
-	
-	foreach (0..$#pathelem) {
-		if (defined($addrelem[$_])) {
-			# jwz: put a space after each / in the banner so that it's possible
-			# for the pathnames to wrap.  The <WBR> tag ought to do this, but
-			# it is ignored when sizing table cells, so we have to use a real
-			# space.  It's somewhat ugly to have these spaces be visible, but
-			# not as ugly as getting a horizontal scrollbar...
-
-			$Path->{'xref'} .= &fileref($pathelem[$_], "/$addrelem[$_]") . " ";
-		} 
-		else {
-			$Path->{'xref'} .= $pathelem[$_];
-		}
-	}
-	$Path->{'xref'} =~ s#/</a>#</a>/#gi;
 }
 
 
@@ -657,9 +443,7 @@ sub init {
 	$HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'arch'};
 	$HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};
 
-
 	$identifier = $HTTP->{'param'}->{'i'};
-	$readraw	= $HTTP->{'param'}->{'raw'};
 	
 	$Conf = new LXR::Config;
 
@@ -669,7 +453,7 @@ sub init {
 
 	&fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
 
-	if (defined($readraw)) {
+	if ($HTTP->{'param'}->{'raw'}) {
 		print("Content-type: image/gif\n\n");
 	} 
 	else {
@@ -690,7 +474,8 @@ sub init {
 		if ($file1) { $file1 =~ s@/$@@; }
 		if ($file2) { $file2 =~ s@/$@@; }
 
-		my $time1 = 0, $time2 = 0;
+		my $time1 = 0; 
+		my $time2 = 0;
 		if ($file1) { $time1 = (stat($file1))[9]; }
 		if ($file2) { $time2 = (stat($file2))[9]; }
 
@@ -755,16 +540,30 @@ sub expandtemplate {
 }
 
 
-# What follows is a pretty hairy way of expanding nested templates.
-# State information is passed via localized variables.
-
-# The first one is simple, the "banner" template is empty, so we
-# simply return an appropriate value.
+# What follows is somewhat less hairy way of expanding nested
+# templates than it used to be.  State information is passed via
+# function arguments, as God intended.
 sub bannerexpand {
 	my ($templ, $who) = @_;
 
 	if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
-		return $Path->{'xref'};
+		my $fpath = '';
+		my $furl  = fileref($Conf->sourcerootname.'/', '/');
+		
+		foreach ($Path->{'virtf'} =~ m|([^/]+/?)|g) {
+			$fpath .= $_;
+
+			# jwz: put a space after each / in the banner so that it's
+			# possible for the pathnames to wrap.  The <WBR> tag ought
+			# to do this, but it is ignored when sizing table cells,
+			# so we have to use a real space.  It's somewhat ugly to
+			# have these spaces be visible, but not as ugly as getting
+			# a horizontal scrollbar...
+			$furl .= ' '.fileref($_, "/$fpath");
+		} 
+		$furl =~ s|/</a>|</a>/|gi;
+		
+		return $furl;
 	}
 	else {
 		return '';

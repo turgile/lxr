@@ -54,6 +54,22 @@ sub getfilehandle {
 	return $fileh;
 }
 
+sub tmpfile {
+	my ($self, $filename, $release) = @_;
+	my ($tmp);
+	local ($/) = undef;
+
+	$tmp = '/tmp/lxrtmp.'.time.'.'.$$;
+	open(TMP, "> $tmp") || return undef;
+	open(FILE, $self->toreal($filename, $release)) || return undef;
+	print(TMP <FILE>);
+	close(FILE);
+	close(TMP);
+	
+	return $tmp;
+
+}
+
 sub getdir {
 	my ($self, $pathname, $release) = @_;
 	my ($dir, $node, @dirs, @files);

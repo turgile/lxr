@@ -1,11 +1,10 @@
-# $Id: Config.pm,v 1.9 1999/05/16 09:53:19 argggh Exp $
+# $Id: Config.pm,v 1.10 1999/05/16 16:49:17 argggh Exp $
 
 package LXR::Config;
 
 use LXR::Common;
 
 use vars qw($AUTOLOAD);
-use Data::Dumper;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -41,32 +40,32 @@ sub readfile {
 
 
 sub _initialize {
-    my ($self, $conf) = @_;
+    my ($self, $url, $conf) = @_;
     my ($dir, $arg);
 
+    unless ($url) {
+	$url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
+	$url =~ s/:80$//;
+	$url .= $ENV{'SCRIPT_NAME'};
+    }
+    
     unless ($conf) {
 	($conf = $0) =~ s#/[^/]+$#/#;
 	$conf .= $confname;
     }
     
     unless (open(CONFIG, $conf)) {
-	&fatal("Couldn't open configuration file \"$conf\".");
+	fatal("Couldn't open configuration file \"$conf\".");
     }
     
-    local($SIG{'__DIE__'}) = 'IGNORE';
+#    local($SIG{'__DIE__'}) = 'IGNORE';
     local($/) = undef;
-	
     my @config = eval("\n#line 1 \"configuration file\"\n".
 		      <CONFIG>);
-    &fatal($@) if $@;
-
-    my $url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
-    $url =~ s/:80$//;
-    $url .= $ENV{'SCRIPT_NAME'};
+    fatal($@) if $@;
 
     my $config;
     foreach $config (@config) {
-	print(STDERR Dumper($config));
 	if ($config->{baseurl}) {
 	    my $root = quotemeta($config->{baseurl});
 	    next unless $url =~ /^$root/;
@@ -167,16 +166,6 @@ sub mappath {
 
     return $path;
 }
-
-#sub mappath {
-#    my ($self, $path) = @_;
-#    my ($m);
-#    
-#    foreach $m (@{$self->{maplist}}) {
-#	$path =~ s/$m->[0]/$self->varexpand($m->[1])/e;
-#    }
-#    return($path);
-#}
 
 1;
 

@@ -4,23 +4,34 @@
 use strict;
 use lib 'lib';
 
+use Getopt::Long;
+
 use LXR::Files;
 use LXR::Index;
 use LXR::Config;
 use LXR::Tagger;
 
-$Conf = new LXR::Config;
+my %option;
+GetOptions(\%option, "url=s", "version=s", "allurls!", "allversions!");
+
+die("URL and version must be specified") 
+	unless $option{'url'} && $option{'version'};
+
+$Conf = new LXR::Config($option{'url'});
+
+die("No matching configuration") unless $Conf->sourceroot;
 
 my $files = new LXR::Files($Conf->sourceroot);
 my $index = new LXR::Index($Conf->dbname);
 
+genxref('/', $option{'version'});
 
 sub genxref {
 	my ($pathname, $release) = @_;
 	
 	print(STDERR "*** $pathname $release \n");
 
-	if ($files->isdir($pathname, $release)) {
+	if ($pathname =~ m|/$|) {
 		map { 
 			genxref($pathname.$_, $release) 
 			} $files->getdir($pathname, $release);
@@ -70,4 +81,3 @@ sub genxref {
 	}
 }
 
-genxref('/', '2.2.7');
