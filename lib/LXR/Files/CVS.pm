@@ -4,7 +4,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.2 1999/05/21 13:16:58 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.3 1999/05/22 10:52:03 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -88,11 +88,13 @@ sub getfilehandle {
 #							$self->toreal($filename, $release).
 #							" |"); # FIXME: Exploitable?
 
+
+	my $buffer = $self->getfile($filename, $release);
 	fflush;
 	my ($readh, $writeh) = FileHandle::pipe;
 	unless (fork) {
 		$writeh->autoflush(1);
-		$writeh->print($self->getfile($filename, $release));
+		$writeh->print($buffer);
 		exec("/bin/true");		# Exit without cleanup.
 		exit;
 	}
@@ -208,7 +210,7 @@ sub parsecvs {
 
 	while (@cvs && $cvs[0] !~ /\s*desc/s) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$ret{'branch'}{$r} = { map { s/^@|@($|@)/$1/gs; $_ }
+		$ret{'branch'}{$r} = { # map { s/^@|@($|@)/$1/gs; $_ }
 							   $v =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
 	}
 	
@@ -217,7 +219,7 @@ sub parsecvs {
 
 	while (@cvs) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$ret{'history'}{$r} = { map { s/^@|@($|@)/$1/gs; $_ }
+		$ret{'history'}{$r} = { # map { s/^@|@($|@)/$1/gs; $_ }
 								$v =~ /(\w+)\s*((?:[^\n@]+|@[^@]*@)*)\n/gs };
 	}
 
@@ -226,4 +228,3 @@ sub parsecvs {
 
 
 1;
-
