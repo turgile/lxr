@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.12 2001/11/18 03:31:33 mbox Exp $
+# $Id: ident,v 1.13 2001/11/20 15:34:00 mbox Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.12 2001/11/18 03:31:33 mbox Exp $ ';
+$CVSID = '$Id: ident,v 1.13 2001/11/20 15:34:00 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -122,71 +122,6 @@ sub printident {
 			  uses => sub { usesexpand(@_) },
 			 )
 			));
-}
-
-sub ident_ { 
-    print("Type the full name of an identifier to summarize ",
-	  "(a function name, variable name, typedef, etc).\n",
-	  "<p>Matches are case-sensitive.\n");                    
-
-    print("<form method=get action=\"ident\">\n");
-
-    foreach ($config->allvariables) {
-	if ($config->variable($_) ne $config->vardefault($_)) {
-	    print("<input type=hidden name=\"",$_, "\" ",
-		  "value=\"", $config->variable($_), "\">\n");
-	}
-    }
-    
-    print("<b>Identifier: </b><input type=text name=\"i\" ",
-	  "value=\"",$identifier,"\" size=15>\n",
-	  "<input type=submit value=\"Find\">\n",
-          "</form>\n");     
-
-    
-    if ($identifier) {
-	my @refs = $index->getindex($identifier, $release);
-
-	print("<span class=search-ident>$identifier</span>\n");
-
-	if (@refs) {
-	    my $def;
-
-	    # print("<ul>\n"); CSS _PH_
-	    print "<span class=search-ul>\n";
-	    while ($def = shift(@refs)) {
-		my ($file, $line, $type, $rel) = @$def;
-
-		$rel &&= "(member of ".idref($rel, "search-member", $rel).")";
-		
-		print("<span class=search-li1> $type_names{$type} in ".
-		      fileref("$file, line $line", "search-decl",
-			      $file, $line).
-		      " $rel</span>\n");
-	    }
-	    print "</span>\n";
-	    # print("</ul>\n");
-
-	    my @uses = $index->getreference($identifier, $release);
-
-	    if (@uses) {
-		@uses = sort { $$a[0] cmp $$b[0] } @uses;
-
-		my $ref;
-		while ($ref = shift(@uses)) {
-		    my ($file, $line) = @$ref;
-
-		    print("<span class=search-li2> ".
-			  fileref("$file, line $line", "search-ref",
-				  $file, $line).
-			  "</span>\n");
-		}
-	    }
-	}
-	else {
-	    print("<br><b>Not used</b>");
-	}
-    }
 }
 
 
