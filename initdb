@@ -2,24 +2,51 @@ drop sequence filenum;
 drop sequence symnum;
 drop table files;
 drop table symbols;
-drop table index;
-drop table relation;
+drop table indexes;
+drop table relations;
+drop table releases;
 
 create sequence filenum cache 50;
 create sequence symnum cache 50;
-create table files (filename varchar,
-		    revision varchar,
-		    fileid int);
-create table symbols (symname varchar,
-		      symid int);
-create table index (symid int,
-		    fileid int,
-		    line int,
-		    type varchar);
-create table relation (symid int,
-		       release varchar,
-		       rsymid int,
-		       reltype varchar);
+
+create table files (
+	filename	varchar,
+	revision	varchar,
+	fileid		int 
+/*,
+	primary key	(fileid),
+	unique		(filename, revision)
+*/
+);
+
+
+create table symbols (
+	symname		varchar,
+	symid		int
+/*,
+	primary key	(symid),
+	unique		(symname)
+*/
+);
+
+create table indexes (
+	symid		int		/* references symbols */,
+	fileid		int		/* references files */,
+	line		int,
+	type		varchar
+);
+
+create table relations (
+	symid		int		/* references symbols */,
+	release		varchar,
+	rsymid		int		/* references symbols */,
+	reltype		varchar
+);
+
+create table releases 
+	(fileid		int		/* references files */,
+	 release	varchar
+);
 
 create index symbolindex on symbols using btree (symname);
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.8 1999/05/16 23:48:29 argggh Exp $
+# $Id: Plain.pm,v 1.9 1999/05/17 23:43:50 argggh Exp $
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.8 1999/05/16 23:48:29 argggh Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.9 1999/05/17 23:43:50 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -22,8 +22,10 @@ sub new {
 sub filerev {
 	my ($self, $filename, $release) = @_;
 
-	return $release;
-}
+#	return $release;
+	return join("-", $self->getfiletime($filename, $release),
+				$self->getfilesize($filename, $release));
+}								
 
 sub getfiletime {
 	my ($self, $filename, $release) = @_;
@@ -69,7 +71,6 @@ sub tmpfile {
 	close(TMP);
 	
 	return $tmp;
-
 }
 
 sub getdir {

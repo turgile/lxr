@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.4 1999/05/16 23:48:32 argggh Exp $
+# $Id: DBI.pm,v 1.5 1999/05/17 23:43:52 argggh Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.4 1999/05/16 23:48:32 argggh Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.5 1999/05/17 23:43:52 argggh Exp $ ';
 
 use strict;
 use DBI;
@@ -36,7 +36,12 @@ sub new {
 		("insert into symbols values (?, ?)");
 
 	$$self{'iup'} = $$self{'dbh'}->prepare
-		("insert into index values (?, ?, ?, ?)");
+		("insert into indexes values (?, ?, ?, ?)");
+
+	$$self{'rst'} = $$self{'dbh'}->prepare
+		("select release from releases where fileid = ?");
+	$$self{'rup'} = $$self{'dbh'}->prepare
+		("insert into releases values (?, ?)");
 
 	return $self;
 }
@@ -70,6 +75,10 @@ sub getrelations {
 sub fileid {
 	my ($self, $filename, $release) = @_;
 	my ($fileid);
+
+	# FIXME: There's some release/revision mixup here.  Has to be fixed.
+	# Ask the Files object which revision the file has in this release.
+	# Remember to update releases table.
 
 	unless (defined($fileid = $$self{'files'}{"$filename\t$release"})) {
 		$$self{'fst'}->execute($filename, $release);
