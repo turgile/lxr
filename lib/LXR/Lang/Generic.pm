@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.2 2001/07/03 14:46:12 mbox Exp $
+# $Id: Generic.pm,v 1.3 2001/08/04 17:39:54 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -9,7 +9,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.2 2001/07/03 14:46:12 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.3 2001/08/04 17:39:54 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -21,9 +21,6 @@ use vars qw(@ISA $AUTOLOAD $langconf);
 
 @ISA = ('LXR::Lang');
 
-$langconf = "/home/malcolm/lxr/lib/LXR/Lang/generic.conf";
-
-
 sub new {
   my ($proto, $pathname, $release, $lang) = @_;
   my $class = ref($proto) || $proto;
@@ -32,7 +29,7 @@ sub new {
   $$self{'release'} = $release;
   $$self{'language'} = $lang;
 
-  open (X, $langconf) || die "Can't open $langconf, $!";
+  open (X, $config->genericconf) || die "Can't open $config->genericconf, $!";
 
   local($/) = undef;
 
@@ -93,8 +90,9 @@ sub parsespec {
 }
 
 # Process a chunk of code
-# Basically, look for anything that looks like # an identifier, and if
-# it is then make it a hyperlink
+# Basically, look for anything that looks like an identifier, and if
+# it is then make it a hyperlink, unless it's a reserved word in this
+# language.
 # Parameters:
 #   $code - reference to the code to markup
 #   @itag - ???
@@ -102,18 +100,69 @@ sub parsespec {
 
 sub processcode {
   my ($self, $code) = @_;
-  $$code =~ s!(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b!
-	$1.
-	  {if(!grep(/$2/, $self->langinfo('reserved')) {
-		if($index->issymbol($2, $$self{'release'})) {
-		  join($2, @{$$self{'itag'}});
-		}
-		else {
-		  $2;
-		}}
-		!gxe;
+  my ($start, $id);
+  $$code =~ s {(^|[^\w\#])([\w~][\w]*)\b}
+	# Replace identifier by link unless it's a reserved word
+	{
+	  $1.
+		((!grep(/$2/, $self->langinfo('reserved')) &&
+		  $index->issymbol($2, $$self{'release'})) ?
+		 join($2, @{$$self{'itag'}}) :
+		 $2);
+	}ge;
+}
 
+#
+# Find references to symbols in the file
+#
+
+sub referencefile {
+  my ($self, $name, $path, $fileid, $index, $config) = @_;
+
+  require LXR::SimpleParse;
+  &LXR::SimpleParse::init(new FileHandle($path), $self->parsespec);
+
+  my $linenum = 1;
+  my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
+  my @lines;
+  my $ls;
+
+  while (defined($frag)) {
+	@lines = ($frag =~ /(.*?\n)/g, $frag =~ /[^\n]*$/);
+
+	if (defined($btype)) {
+	  if ($btype eq 'comment' or $btype eq 'string' or $btype eq 'include') {
+		$linenum += @lines - 1;
+	  } else {
+		print "BTYPE was: $btype\n";
+	  }
+	} else {
+	  my $l;
+	  my $string;
+	  foreach $l (@lines) {
+		foreach ($l =~ /(?:^|[^a-zA-Z_\#]) 	# Non-symbol chars.
+				 (\~?_*[a-zA-Z][a-zA-Z0-9_]*) # The symbol.
+				 \b/ogx) {
+		  $string = $_;
+#		  print "considering $string\n";
+		  if (!grep(/$string/, $self->langinfo('reserved')) &&
+			  $index->issymbol($string)) {
+#			print "adding $string to references\n";
+			$index->reference($string, $fileid, $linenum);
+		  }
+
+		}
+				
+		$linenum++;
+	  }
+	  $linenum--;
+	}
+	($btype, $frag) = &LXR::SimpleParse::nextfrag;
   }
+  print("+++ $linenum\n");
+}
+
+
 
 
 # Autoload magic to allow access using $generic->variable syntax
@@ -165,7 +214,7 @@ sub AUTOLOAD {
 	return $val[0]->(@_);
   } else {
 	return wantarray ? @val : $val[0];
-  } 
+  }
 }
 
 sub langinfo {
@@ -173,13 +222,14 @@ sub langinfo {
 	
   my $val;
   my $map = $self->langmap;
+  die if !defined $map;
   if (exists $$map{$self->language}) {
 	$val = $$map{$self->language};
   } else {
 	$val = undef;
   }
 
-  if (defined $val) {
+  if (defined $val && defined $$val{$item}) {
 	return wantarray ? @{$$val{$item}} : $$val{$item};
   } else {
 	return undef;
