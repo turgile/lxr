@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.14 2001/11/14 15:03:29 mbox Exp $
+# $Id: SimpleParse.pm,v 1.15 2003/03/22 01:00:58 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.14 2001/11/14 15:03:29 mbox Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.15 2003/03/22 01:00:58 mbox Exp $ ';
 
 use strict;
 use integer;
@@ -100,7 +100,8 @@ sub nextfrag {
 			
 			if ($. <= 2 &&
 				$line =~ /^.*-[*]-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-[*]-/) {
-				$tabwidth = $1;
+				# make sure there really is a non-zero tabwidth
+				if ($1) { $tabwidth = $1; }
 			}
 			
 #			&untabify($line, $tabwidth); # We inline this for performance.
