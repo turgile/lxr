@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.13 2004/06/28 20:34:43 brondsem Exp $
+# $Id: Local.pm,v 1.14 2004/06/29 13:23:57 brondsem Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.13 2004/06/28 20:34:43 brondsem Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.14 2004/06/29 13:23:57 brondsem Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -125,11 +125,11 @@ sub fdescexpand {
 	
 	# strip off some CVS keyword lines
 	$desc =~ s/^\s?\$Workfile:.*$//mg;
-	$desc =~ s/^\s?\$Revision: 1.13 $//mg;
+	$desc =~ s/^\s?\$Revision: 1.14 $//mg;
 	$desc =~ s/^\s?\$Modtime:.*$//mg;
 	$desc =~ s/^\s?\$Author: brondsem $//mg;
-	$desc =~ s/^\s?\$Id: Local.pm,v 1.13 2004/06/28 20:34:43 brondsem Exp $//mg;
-	$desc =~ s/^\s?\$Date: 2004/06/28 20:34:43 $//mg;
+	$desc =~ s/^\s?\$Id: Local.pm,v 1.14 2004/06/29 13:23:57 brondsem Exp $//mg;
+	$desc =~ s/^\s?\$Date: 2004/06/29 13:23:57 $//mg;
 	
 	# strip html tags (probably a way to do this all in one, but it's beyond my skill)
 	$desc =~ s#<[/\w]+(\s*\w+="[\w\s]*"\s*)*>##g;	# double quoted attributes
@@ -266,9 +266,15 @@ sub fdescexpand {
 # like the ones used in source code: "directoryname --- A short description"
 sub descexpand {
     my ($templ, $node, $dir, $release) = @_;
-    return LXR::Common::expandtemplate($templ,
+    if ($files->isdir($dir . $node, $release)) {
+	return LXR::Common::expandtemplate($templ,
+			      ('desctext' => 
+			       sub { return dirdesc($dir.$node, $release); }));
+    } else {
+	return LXR::Common::expandtemplate($templ,
 			      ('desctext' => 
 			       sub { return fdescexpand($node, $dir, $release); }));
+    }
 }
 
 # dme: Print a descriptive blurb in directory listings between 
@@ -280,28 +286,26 @@ sub descexpand {
 # possible make this work for randomly formatted files rather than 
 # inventing strict rules which create gobbeldygook when they're broken.
 sub dirdesc {
-    my ($path) = @_;
-
-    if (-f $Path->{'real'}."/README") {
-	    descreadme($path);
-    } elsif (-f $Path->{'real'}."/README.html") {
-	    descreadmehtml($path);
+    my ($path, $release) = @_;
+    if ($files->isfile($path."README.txt", $release)) {
+	    descreadme($path."README.txt", $release);
+    } elsif ($files->isfile($path."README", $release)) {
+	    descreadme($path."README", $release);
+    } elsif ($files->isfile($path."README.html", $release)) {
+	    descreadmehtml($path."README.html", $release);
     }
 }
 
 
 sub descreadmehtml {
-    my ($path) = @_;
+    my ($file, $release) = @_;
 
     my $string = ""; 
-
-    if (!(open(DESC, $Path->{'real'}."/README.html"))) {
-	return;
-        }
+    return if !($desc = $files->getfilehandle($file, $release));
 #    undef $/;
-    $string = <DESC>;
+    $string = <$desc>;
 #    $/ = "\n";
-    close(DESC);
+    close($desc);
 
     # if the README is 0 length then give up
     if (!$string) {
@@ -314,18 +318,18 @@ sub descreadmehtml {
     if ($string =~ /<span class=["']?lxrlongdesc['"]?>(.*?<span class=["']?lxrshortdesc['"]?>.*?<\/span>.*?)<\/span>/is) {
         $long = $1;
         if (!($long =~ /<span.*?\<span/is)) {
-            print($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
+            return($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
         }
     } elsif ($string =~ /<span class=["']?lxrlongdesc['"]?>(.*?)<\/span>/is) {
         $long = $1;
         if (!($long =~ /\<span/is)) {
-            print($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
+            return($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
         }
     }
 }
 
 sub descreadme {
-    my ($path) = @_;
+    my ($file, $release) = @_;
 
     my $string = ""; 
 #    $string =~ s#(</?([^>^\s]+[^>]*)>.*$)#($2~/B|A|IMG|FONT|BR|EM|I|TT/i)?$1:""#sg;
@@ -337,14 +341,12 @@ sub descreadme {
     my $minlines = 5;   # Too small. Go back and add another paragraph.
     my $chopto = 10;    # Truncate long READMEs to this length
 
-    if (!(open(DESC, $Path->{'real'}."/README"))) {
-	return;
-        }
+    return if !($desc = $files->getfilehandle($file, $release));
 
 #    undef $/;
-    $string = <DESC>;
+    $string = <$desc>;
 #    $/ = "\n";
-    close(DESC);
+    close($desc);
 
     # if the README is 0 length then give up
     if (!$string){
@@ -377,7 +379,7 @@ sub descreadme {
     if ($count <= $maxlines) {
         $string = markupstring($string, $Path->{'virt'});
 	$string = convertwhitespace($string);
-        print($string);
+        return($string);
     } else {
         # grab the first n paragraphs, with n decreasing until the
         # string is 10 lines or shorter or until we're down to 
@@ -425,7 +427,7 @@ sub descreadme {
         $string =~ s/\s*\n$//gs;
         chomp($string);
 
-        print($string . "<p>\n");
+        return($string);
     }
 }
 
