@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.20 2004/06/29 20:58:06 brondsem Exp $
+# $Id: CVS.pm,v 1.21 2004/06/30 19:49:39 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.20 2004/06/29 20:58:06 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.21 2004/06/30 19:49:39 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -156,6 +156,8 @@ sub getfilehandle {
 	my $rev = $self->filerev($filename, $release);
 	return undef unless defined($rev);
 
+    return undef unless defined($self->toreal($filename, $release));
+
     open($fileh, "-|", "co -q -p$rev ".
             $self->cleanstring($self->toreal($filename, $release)));
 
@@ -251,6 +253,14 @@ sub getdir {
 			}
 		}
 		elsif ($node =~ /(.*),v$/) {
+			if (!$$LXR::Common::HTTP{'param'}{'showattic'}) {
+				# you can't just check for 'Attic' because for certain versions the file is alive even if in Attic
+				$self->parsecvs($pathname.substr($node,0, length($node)-2)); # substr is to remove the ',v'
+				my $rev = $cvs{'header'}{'symbols'}{$release};
+				if ($cvs{'branch'}{$release}{'state'} eq "dead" or $cvs{'branch'}{$rev}{'state'} eq "dead") {
+					next;
+				}
+			}
 			push(@files, $1) 
 				if ! defined($release) 
 					|| $self->getfiletime($pathname.$1, $release);
@@ -271,6 +281,16 @@ sub toreal {
 	}
 
 	return $real if -d $real;
+	
+	if (!$$LXR::Common::HTTP{'param'}{'showattic'}) {
+		# you can't just check for 'Attic' because for certain versions the file is alive even if in Attic
+		$self->parsecvs($pathname);
+		my $rev = $cvs{'header'}{'symbols'}{$release};
+		if ($cvs{'branch'}{$release}{'state'} eq "dead" or $cvs{'branch'}{$rev}{'state'} eq "dead") {
+			return undef;
+		}
+	}
+
 	return $real.',v' if -f $real.',v';
 	
 	$real =~ s|(/[^/]+/?)$|/Attic$1|;
@@ -380,7 +400,7 @@ sub parsecvs {
 
 	$cvs{'header'}{'symbols'}{'head'} = $cvs{'header'}{'head'};
 
-	while (@cvs && $cvs[0] !~ /\s*desc/s) {
+    while (@cvs && $cvs[0] !~ /\s*desc/s) {
 		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
 		$cvs{'branch'}{$r} = { map { s/@@/@/gs;
 									 /^@/s && substr($_, 1, -1) || $_ }

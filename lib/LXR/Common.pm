@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.43 2002/07/29 01:17:32 mbox Exp $
+# $Id: Common.pm,v 1.44 2004/06/30 19:49:38 brondsem Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.43 2002/07/29 01:17:32 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.44 2004/06/30 19:49:38 brondsem Exp $ ';
 
 use strict;
 
@@ -798,6 +798,17 @@ sub devinfo {
 				sort { $$b[2] <=> $$a[2] } @mods);
 }
 
+sub atticlink {
+	return "&nbsp;" if !$files->isa("LXR::Files::CVS");
+    return "&nbsp;" if $ENV{'SCRIPT_NAME'} !~ m|/source$|;
+	if ($HTTP->{'param'}->{'showattic'}) {
+		return ("<a class='modes' href=\"$config->{virtroot}/source" . $HTTP->{'path_info'} .
+			&urlargs("showattic=0") . "\">Hide attic files</a>");
+	} else {
+		return ("<a class='modes' href=\"$config->{virtroot}/source" . $HTTP->{'path_info'} .
+			&urlargs("showattic=1") . "\">Show attic files</a>");
+	}
+}
 
 sub makeheader {
 	my $who = shift;
@@ -835,7 +846,9 @@ sub makeheader {
 						  'pathname'	=> sub { pathname(@_) },
 						  'modes'		=> sub { modeexpand(@_, $who) },
 						  'variables'	=> sub { varexpand(@_, $who) },
-						  'devinfo'		=> sub { devinfo(@_) })));
+						  'devinfo'		=> sub { devinfo(@_) },
+						  'atticlink'	=> sub { atticlink(@_) },
+						  )));
 }
 
 
