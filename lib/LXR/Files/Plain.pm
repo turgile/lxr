@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.18 2002/02/03 08:22:08 mbox Exp $
+# $Id: Plain.pm,v 1.19 2002/02/26 15:57:55 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.18 2002/02/03 08:22:08 mbox Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.19 2002/02/26 15:57:55 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -59,7 +59,7 @@ sub getfile {
 	my ($buffer);
 	local ($/) = undef;
 
-	open(FILE, $self->toreal($filename, $release)) || return undef;
+	open(FILE, "<", $self->toreal($filename, $release)) || return undef;
 	$buffer = <FILE>;
 	close(FILE);
 	return $buffer;
@@ -80,7 +80,7 @@ sub tmpfile {
 
 	$tmp = $config->tmpdir.'/lxrtmp.'.time.'.'.$$.'.'.&LXR::Common::tmpcounter;
 	open(TMP, "> $tmp") || return undef;
-	open(FILE, $self->toreal($filename, $release)) || return undef;
+	open(FILE, "<", $self->toreal($filename, $release)) || return undef;
 	print(TMP <FILE>);
 	close(FILE);
 	close(TMP);
@@ -147,7 +147,7 @@ sub getindex {
 	my $indexname = $self->toreal($pathname, $release)."00-INDEX";
 
 	if (-f $indexname) {
-		open(INDEX, $indexname) || 
+		open(INDEX, "<", $indexname) || 
 			warning("Existing $indexname could not be opened.");
 		local($/) = undef;
 		$index = <INDEX>;
