@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.8 2000/10/31 12:52:10 argggh Exp $
+# $Id: Local.pm,v 1.9 2001/08/04 17:54:43 mbox Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -14,13 +14,12 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.8 2000/10/31 12:52:10 argggh Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.9 2001/08/04 17:54:43 mbox Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(&fdescexpand &descexpand &dirdesc &convertwhitespace);
 
-use lib 'lib/';
 use LXR::Common;
 
 # dme: Create descriptions for a file in a directory listing
