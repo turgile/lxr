@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.28 2004/07/20 18:17:39 brondsem Exp $
+# $Id: CVS.pm,v 1.29 2004/07/20 20:40:21 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.28 2004/07/20 18:17:39 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.29 2004/07/20 20:40:21 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -34,12 +34,14 @@ sub new {
 	$self->{'rootpath'} = $rootpath;
 	$self->{'rootpath'} =~ s@/*$@/@;
 
-	# the rcsdiff command (used in getdiff) uses parameters only supported by GNU diff
-	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
-	if ( `diff --version` =~ /GNU/ ) {
-		$gnu_diff = 1;
-	} else {
-		$gnu_diff = 0;
+	unless (defined $gnu_diff) {
+		# the rcsdiff command (used in getdiff) uses parameters only supported by GNU diff
+		$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+		if ( `diff --version` =~ /GNU/ ) {
+			$gnu_diff = 1;
+		} else {
+			$gnu_diff = 0;
+		}
 	}
 
 	return $self;
