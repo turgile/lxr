@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.1 1999/12/25 21:58:28 pergj Exp $
+# $Id: Postgres.pm,v 1.2 2000/07/26 07:50:21 pergj Exp $
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.1 1999/12/25 21:58:28 pergj Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.2 2000/07/26 07:50:21 pergj Exp $ ';
 
 use strict;
 use DBI;
@@ -78,6 +78,10 @@ sub new {
 		 "s.symname = ? and r.release = ?");
 
 	return $self;
+}
+
+sub empty_cache {
+  %symcache = ();
 }
 
 sub index {

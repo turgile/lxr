@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.12 1999/12/25 21:58:28 pergj Exp $
+# $Id: Tagger.pm,v 1.13 2000/07/26 07:50:21 pergj Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.12 1999/12/25 21:58:28 pergj Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.13 2000/07/26 07:50:21 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -23,6 +23,7 @@ sub processfile {
 
 	print(STDERR "--- $pathname $release $revision\n");
 	
+  if ($index) {
 	my $fileid = $index->fileid($pathname, $revision);
 
 	$index->release($fileid, $release);
@@ -36,6 +37,7 @@ sub processfile {
 		$lang->indexfile($pathname, $path, $fileid, $index, $config);
 		unlink($path);
 	}
+  } else { print(STDERR " **** FAILED ****\n"); }
 }
 
 
@@ -52,6 +54,7 @@ sub processrefs {
 
 	print(STDERR "--- $pathname $release $revision\n");
 	
+  if ($index) {
 	my $fileid = $index->fileid($pathname, $revision);
 
 	if ($index->toreference($fileid)) {
@@ -65,6 +68,7 @@ sub processrefs {
 	} else {
 		print STDERR "$pathname was already referenced\n";
 	}
+  } else { print( STDERR " **** FAILED ****\n"); }
 }
 
 
