@@ -4,6 +4,7 @@
 use strict;
 use lib 'lib';
 
+use Fcntl;
 use Getopt::Long;
 
 use LXR::Files;
@@ -28,7 +29,7 @@ $config = new LXR::Config($option{'url'});
 die("No matching configuration") unless $config->sourceroot;
 
 $files = new LXR::Files($config->sourceroot);
-$index = new LXR::Index($config->dbname);
+$index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 
 genindex('/', $option{'version'});
 genrefs('/', $option{'version'});

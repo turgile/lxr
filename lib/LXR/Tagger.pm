@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.14 2000/08/17 18:36:51 pergj Exp $
+# $Id: Tagger.pm,v 1.15 2000/10/31 12:52:11 argggh Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.14 2000/08/17 18:36:51 pergj Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.15 2000/10/31 12:52:11 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -23,23 +23,23 @@ sub processfile {
 
 	print(STDERR "--- $pathname $release $revision\n");
 	
-  if ($index) {
-	my $fileid = $index->fileid($pathname, $revision);
+	if ($index) {
+		my $fileid = $index->fileid($pathname, $revision);
 
-	$index->release($fileid, $release);
+		$index->release($fileid, $release);
 
-	if ($index->toindex($fileid)) {
-		$index->empty_cache();
-		print(STDERR "--- $pathname $fileid\n");
-
-		my $path = $files->tmpfile($pathname, $release);
-
-		$lang->indexfile($pathname, $path, $fileid, $index, $config);
-		unlink($path);
-	} else {
-		print(STDERR "$pathname was already indexed\n");
-	}
-  } else { print(STDERR " **** FAILED ****\n"); }
+		if ($index->toindex($fileid)) {
+			$index->empty_cache();
+			print(STDERR "--- $pathname $fileid\n");
+			
+			my $path = $files->tmpfile($pathname, $release);
+			
+			$lang->indexfile($pathname, $path, $fileid, $index, $config);
+			unlink($path);
+		} else {
+			print(STDERR "$pathname was already indexed\n");
+		}
+	} else { print(STDERR " **** FAILED ****\n"); }
 }
 
 

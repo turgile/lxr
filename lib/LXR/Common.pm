@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.25 2000/09/04 19:26:28 pergj Exp $
+# $Id: Common.pm,v 1.26 2000/10/31 12:52:11 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.25 2000/09/04 19:26:28 pergj Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.26 2000/10/31 12:52:11 argggh Exp $ ';
 
 use strict;
 
@@ -126,7 +126,7 @@ sub fileref {
 		$line = ('0' x (3-length($line))).$line;
 	}
 
-	return ("<a href=\"$config->{virtroot}/source$path".
+	return ("<a target=\"source\" href=\"$config->{virtroot}/source$path".
 			&urlargs(@args).
 			($line > 0 ? "#$line" : "").
 			"\"\>$desc</a>");
@@ -138,7 +138,7 @@ sub diffref {
 	my $dval;
 
 	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
-	return ("<a href=\"$config->{virtroot}/diff$path".
+	return ("<a target=\"source\" href=\"$config->{virtroot}/diff$path".
 			&urlargs(($darg ? "diffvar=$darg" : ""),
 					 ($dval ? "diffval=$dval" : "")).
 			"\"\>$desc</a>");
@@ -147,7 +147,7 @@ sub diffref {
 
 sub idref {
 	my ($desc, $id, @args) = @_;
-	return ("<a href=\"$config->{virtroot}/ident".
+	return ("<a target=\"search\" href=\"$config->{virtroot}/ident".
 			&urlargs(($id ? "i=$id" : ""),
 					 @args).
 			"\"\>$desc</a>");
@@ -402,6 +402,8 @@ sub printhttp {
 
 	# Todo: check lxr.conf.
 
+	print("HTTP/1.0 200 OK\n");
+
 	my $time = $files->getfiletime($pathname, $release);
 	my $time2 = (stat($config->confpath))[9];
 	$time = $time2 if $time2 > $time;
@@ -446,6 +448,7 @@ sub printhttp {
 	} 
 	else {
 		print("Content-Type: text/html; charset=iso-8859-1\n");
+		# print("Content-Type: text/html\n");
 	}
 
 	# Close the HTTP header block.
@@ -659,7 +662,8 @@ sub modeexpand {
 		push(@mlist, "<b><i>freetext search</i></b>");
 	} 
 	else {
-		push(@mlist, "<a href=\"$config->{virtroot}/search".
+		push(@mlist, "<a target=\"search\" ".
+			 "href=\"$config->{virtroot}/search".
 			 urlargs."\">freetext search</a>");
 	}
 	
@@ -667,7 +671,8 @@ sub modeexpand {
 		push(@mlist, "<b><i>file search</i></b>");
 	} 
 	else {
-		push(@mlist, "<a href=\"$config->{virtroot}/find".
+		push(@mlist, "<a target=\"search\" ".
+			 "href=\"$config->{virtroot}/find".
 			 urlargs."\">file search</a>");
 	}
 	

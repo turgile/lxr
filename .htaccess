@@ -11,5 +11,6 @@ deny from all
 </Files>
 
 <Files ~ (find|search|source|ident|diff|cgi-bin)$>
-SetHandler cgi-script
+SetHandler perl-script
+PerlHandler Apache::Registry
 </Files>

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $
+# $Id: Postgres.pm,v 1.4 2000/10/31 12:52:12 argggh Exp $
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.4 2000/10/31 12:52:12 argggh Exp $ ';
 
 use strict;
 use DBI;
@@ -21,7 +21,9 @@ sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	$dbh = DBI->connect($dbname);
+	$dbh ||= DBI->connect($dbname);
+	die($DBI::errstr) unless $dbh;
+
 	$$dbh{'AutoCommit'} = 0;
 #	$dbh->trace(1);
 	

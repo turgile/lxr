@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.7 1999/05/16 23:48:21 argggh Exp $
+# $Id: Local.pm,v 1.8 2000/10/31 12:52:10 argggh Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -14,7 +14,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.7 1999/05/16 23:48:21 argggh Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.8 2000/10/31 12:52:10 argggh Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -221,7 +221,7 @@ sub descexpand {
     my ($templ, $node, $dir, $index) = @_;
     
     if ($$index{$node}) {
-	return expandtemplate($templ,
+	return LXR::Common::expandtemplate($templ,
 			      ('desctext', 
 			       sub { return $$index{$node} }));
     }

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.14 1999/09/24 20:46:04 pergj Exp $
+# $Id: Plain.pm,v 1.15 2000/10/31 12:52:11 argggh Exp $
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.14 1999/09/24 20:46:04 pergj Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.15 2000/10/31 12:52:11 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -74,7 +74,7 @@ sub tmpfile {
 }
 
 sub getannotations {
-	return undef;
+	return ();
 }
 
 sub getauthor {
@@ -140,6 +140,16 @@ sub getindex {
 		%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
 	}
 	return %index;
+}
+
+sub allreleases {
+	my ($self, $filename) = @_;
+
+	opendir(SRCDIR, $self->{'rootpath'});
+	my @dirs = readdir(SRCDIR);
+	closedir(SRCDIR);
+
+	return grep { /^[^\.]/ && -r $self->toreal($filename, $_) } @dirs;
 }
 
 

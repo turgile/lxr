@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.6 2000/09/04 19:26:28 pergj Exp $
+# $Id: C.pm,v 1.7 2000/10/31 12:52:12 argggh Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.6 2000/09/04 19:26:28 pergj Exp $ ';
+$CVSID = '$Id: C.pm,v 1.7 2000/10/31 12:52:12 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -75,13 +75,15 @@ sub indexfile {
 			@_ = split(/\t/, $_);
 			$_[2] =~ s/;\"$//;
 				
-			if (defined($_[4]) && $_[4] =~ /^(struct|union|class):(.*)/) {
+			if (defined($_[4]) && $_[4] =~ /^(struct|union|class|enum):(.*)/) {
 				$_[4] = $2;
 				$_[4] =~ s/::<anonymous>//g;
 			}
 			else {
 				$_[4] = undef;
 			}
+
+			next if grep { $_[0] eq $_ } @reserved;
 
 			$index->index($_[0], $fileid, $_[2], $_[3], $_[4]);
 		}
@@ -97,7 +99,7 @@ sub indexfile {
 			   "--output=-",
 			   $path);
 	}
-	$self->removereserved;
+#	$self->removereserved;
 }
 
 

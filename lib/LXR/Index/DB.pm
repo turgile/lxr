@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.9 1999/08/17 18:35:36 argggh Exp $
+# $Id: DB.pm,v 1.10 2000/10/31 12:52:12 argggh Exp $
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.9 1999/08/17 18:35:36 argggh Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.10 2000/10/31 12:52:12 argggh Exp $ ';
 
 use strict;
 use DB_File;
@@ -12,7 +12,7 @@ use NDBM_File;
 
 
 sub new {
-	my ($self, $dbpath) = @_;
+	my ($self, $dbpath, $mode) = @_;
 	my ($foo);
 
 	$self = bless({}, $self);
@@ -22,7 +22,7 @@ sub new {
 	foreach ('releases', 'files', 'symbols', 'indexes', 'status') {
 		$foo = {};
 		tie (%$foo, 'NDBM_File' , $$self{'dbpath'}.$_, 
-			 O_RDWR|O_CREAT, 0664) || 
+			 $mode||O_RDONLY, 0664) ||
 				 die "Can't open database ".$$self{'dbpath'}.$_. "\n";
 		$$self{$_} = $foo;
 	}
@@ -43,9 +43,21 @@ sub index {
 sub getindex {
 	my ($self, $symname, $release) = @_;
 
-	my @defs = split(/\0/, $$self{'indexes'}{$self->symid($symname, $release)});
+	my (@d, $f);
+	foreach $f (split(/\0/,
+					  $$self{'indexes'}{$self->symid($symname, $release)})) {
+		my ($fi, $l, $t, $s) = split(/\t/, $f);
 
-	return map { [ split(/\t/, $_) ] } @defs;
+		my %r = map { ($_ => 1) } split(/;/, $self->{'releases'}{$fi});
+		next unless $r{$release};
+
+		push(@d, [ $self->filename($fi), $l, $t, $s ]);
+	}
+	return @d;
+}
+
+sub getreference {
+	return ();
 }
 
 sub relate {
@@ -102,6 +114,9 @@ sub issymbol {
 	my ($self, $symname, $release) = @_;
 
 	return $$self{'indexes'}{$self->symid($symname, $release)};
+}
+
+sub empty_cache {
 }
 
 
