@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.33 2001/10/16 20:38:37 pergj Exp $
+# $Id: Common.pm,v 1.34 2001/10/31 13:21:58 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.33 2001/10/16 20:38:37 pergj Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.34 2001/10/31 13:21:58 mbox Exp $ ';
 
 use strict;
 
@@ -66,7 +66,7 @@ $wwwdebug = 1;
 			   'u' => 'union names',
 			   'v' => 'variable definition',
 			   'x' => 'extern or forward variable declaration',
-			   'i' => 'documentation entry');
+			   'i' => 'interface');
 
 $tmpcounter = 23;
 
