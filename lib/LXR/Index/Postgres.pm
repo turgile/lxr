@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.13 2004/07/15 20:42:41 brondsem Exp $
+# $Id: Postgres.pm,v 1.14 2004/07/19 13:55:30 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.13 2004/07/15 20:42:41 brondsem Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.14 2004/07/19 13:55:30 brondsem Exp $ ';
 
 use strict;
 use DBI;
@@ -329,12 +329,12 @@ sub purge {
 	$delete_releases->execute($version);
 	$delete_files->execute($version);
 	commit_if_limit();
-	}
+}
 
 sub setindexed {
 	my ($self, $fileid) = @_;
 		$status_update->execute(1, $fileid, 0);
-	}
+}
 sub setreferenced {
  	my ($self, $fileid) = @_;
 	$status_update->execute(2, $fileid, 1);
