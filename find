@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.14 2004/07/07 20:31:45 brondsem Exp $
+# $Id: find,v 1.15 2004/07/08 13:41:46 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,82 +23,121 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.14 2004/07/07 20:31:45 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.15 2004/07/08 13:41:46 brondsem Exp $ ';
 
+use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
 
 use LXR::Common qw(:html);
 use LXR::Config;
 
-sub find {
 
-    print ("<form method=\"get\" action=\"find\">\n");
+sub varinputs {
+    my $templ = shift;
+    my $ret = '';
 
     foreach ($config->allvariables) {
 	if ($config->variable($_) ne $config->vardefault($_)) {
-	    print("<input type=\"hidden\" name=\"",$_, "\" ",
-		  "value=\"", $config->variable($_), "\">\n");
+	    $ret .= expandtemplate($templ,
+			(
+			 variable => sub { $_ },
+			 value => sub { $config->variable($_) },
+			));
 	}
-    }			       
+    }
+    return $ret;
+}
+
+sub printresults {
+    my $templ = shift;
+    my @results = @_;
+    my $ret = '';
     
-    print("<b>Find file: </b><input type=\"text\" name=\"string\" ",
-	  "value=\"",$searchtext,"\" size=\"50\">\n",
-	  "<input type=\"submit\" value=\"search\">\n",
-	  "<br><input type=\"checkbox\" name=\"advanced\"", $advanced ? " checked" : "", " value=\"1\"/> Advanced (allow <a href=\"http://www.perldoc.com/perl5.8.4/pod/perlrequick.html\" target=\"_blank\">regex</a>)\n",
-	  "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"casesensitive\"", $casesensitive ? " checked" : "", " value=\"1\"/> Case-sensitive\n",
-	  "</form>\n");
+    foreach (@results) {
+	$ret .= expandtemplate($templ, ( fileref => sub { fileref("$_", "find-file", "/$_") } ));
+    }
+    return $ret;
+}
 
-
+sub dofind {
+    my ($searchtext, $FILELISTING, $advanced, $casesensitive) = @_;
+    my @ret;
+    
     if ($searchtext ne "") {
+	my $sourceroot = $config->sourceroot;
+	while(my $file = <$FILELISTING>) {
+	    chomp $file;
+	    $file =~ s/^$sourceroot//;
+	    if ($advanced) {
+		if ($casesensitive) {
+		    if ($file =~ /$searchtext/) {
+			push @ret, $file;
+		    }
+		} elsif ($file =~ /$searchtext/i) {
+		    push @ret, $file;
+		}
+	    } else {
+		if ($casesensitive) {
+		    if (index($file,$searchtext) != -1) {
+			push @ret, $file;
+		    }
+		} elsif (index(lc($file),lc($searchtext)) != -1) {
+		    push @ret, $file;
+		}
+	    }
+	}
+    }
+    return @ret;
+}
+
+sub find {
+    my $dir = shift;
+    my $templ;
+    
+    if ($config->htmlfind) {
+	unless (open(TEMPL, $config->htmlfind)) {
+	    warning("Template ".$config->htmlfind." does not exist.");
+	} else {
+	    local($/) = undef;
+	    $templ = <TEMPL>;
+	    close(TEMPL);
+	}
+    } else {
+	die "'htmlfind' template not configured";
+    }
+
+    my $searchtext = $HTTP->{'param'}->{'string'};
+    my $advanced = $HTTP->{'param'}->{'advanced'};
+    my $casesensitive = $HTTP->{'param'}->{'casesensitive'};
+
+    my $FILELISTING;
     if ($config->swishdir and $config->swishindex) {
-        unless (open(FILELLISTING,$config->swishdir."/$release.filenames")) {
+        unless ($FILELISTING = new IO::File($config->swishdir."/$release.filenames")) {
             &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->swishdir."/$release.filenames.");
             return;
         }
     }
     if ($config->glimpsedir and $config->glimpseindex) {
-        unless (open(FILELLISTING,$config->glimpsedir."/".$release."/.glimpse_filenames")) {
+        unless ($FILELISTING = new IO::File($config->glimpsedir."/".$release."/.glimpse_filenames")) {
             &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
             return;
         }
     }
-	print("<hr>\n");
-	$sourceroot = $config->sourceroot;
-	my $hits = 0;
-	while($file = <FILELLISTING>) {
-	    $file =~ s/^$sourceroot//;
-	    if ($advanced) {
-		if ($casesensitive) {
-		    if ($file =~ /$searchtext/) {
-			print(&fileref("$file", "find-file", "/$file"),"<br>\n");
-			$hits++;
-		    }
-		} elsif ($file =~ /$searchtext/i) {
-		    print(&fileref("$file", "find-file", "/$file"),"<br>\n");
-		    $hits++;
-		}
-	    } else {
-		if ($casesensitive) {
-		    if (index($file,$searchtext) != -1) {
-			print(&fileref("$file", "find-file", "/$file"),"<br>\n");
-			$hits++;
-		    }
-		} elsif (index(lc($file),lc($searchtext)) != -1) {
-		    print(&fileref("$file", "find-file", "/$file"),"<br>\n");
-		    $hits++;
-		}
-	    }
-	}
-    print "<br>$hits files found.";
-    }
+    my @results = dofind($searchtext, $FILELISTING, $advanced, $casesensitive);
+    close($FILELISTING);
+
+    print expandtemplate($templ,
+	(variables => sub { varinputs(@_) },
+	 advancedchecked => sub { return $advanced ? "checked" : "" },
+	 searchtext => sub { return $searchtext },
+	 casesensitivechecked => sub { return $casesensitive ? "checked" : "" },
+	 results => sub { printresults(@_, @results) },
+	 resultcount => sub { return scalar @results },
+	));
 }
 
 httpinit;
-
-$searchtext = $HTTP->{'param'}->{'string'};
-$advanced = $HTTP->{'param'}->{'advanced'};
-$casesensitive = $HTTP->{'param'}->{'casesensitive'};
 
 &makeheader('find');
 &find;

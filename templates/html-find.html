@@ -1,0 +1,21 @@
+<form method="get" action="find">
+    $variables{<input type="hidden" name="$variable" value="$value">}
+    
+    <b>Find file:</b>
+    <input type="text" name="string" value="$searchtext" size="50">
+	<input type="submit" value="search">
+    <br>
+    <input type="checkbox" name="advanced" $advancedchecked value="1"/>
+        Advanced (allow <a href="http://www.perldoc.com/perl5.8.4/pod/perlrequick.html" target="_blank">regex</a>)
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="checkbox" name="casesensitive" $casesensitivechecked value="1"/>
+        Case-sensitive
+    
+    <hr>
+    
+    $results{
+        $fileref<br>
+    }
+    
+    <br>$resultcount files found.
+</form>
