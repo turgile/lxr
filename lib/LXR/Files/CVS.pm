@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.16 2001/08/15 15:50:27 mbox Exp $
+# $Id: CVS.pm,v 1.17 2002/02/03 08:22:08 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.16 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.17 2002/02/03 08:22:08 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -189,7 +189,7 @@ sub tmpfile {
 	$buf = $self->getfile($filename, $release);
 	return undef unless defined($buf);
 	
-	$tmp = '/tmp/lxrtmp.'.time.'.'.$$.'.'.&LXR::Common::tmpcounter;
+	$tmp = $config->tmpdir.'/lxrtmp.'.time.'.'.$$.'.'.&LXR::Common::tmpcounter;
 	open(TMP, "> $tmp") || return undef;
 	print(TMP $buf);
 	close(TMP);
