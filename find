@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.11 2004/06/28 14:05:09 brondsem Exp $
+# $Id: find,v 1.12 2004/06/28 14:21:38 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.11 2004/06/28 14:05:09 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.12 2004/06/28 14:21:38 brondsem Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -71,13 +71,13 @@ characters "/" and "." while "$" denotes the end of the string.
     if ($searchtext ne "") {
     if ($config->swishdir and $config->swishindex) {
         unless (open(FILELLISTING,$config->swishdir."/$release.filenames")) {
-            &warning("Could not open ".$config->swishdir."/$release.filenames.");
+            &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->swishdir."/$release.filenames.");
             return;
         }
     }
     if ($config->glimpsedir and $config->glimpseindex) {
         unless (open(FILELLISTING,$config->glimpsedir."/".$release."/.glimpse_filenames")) {
-            &warning("Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
+            &warning("Version '$release' has not been indexed and is unavailable for searching<br>Could not open ".$config->glimpsedir."/$release/.glimpse_filenames.");
             return;
         }
     }

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.11 2002/07/29 01:17:32 mbox Exp $
+# $Id: search,v 1.12 2004/06/28 14:21:38 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.11 2002/07/29 01:17:32 mbox Exp $ ';
+$CVSID = '$Id: search,v 1.12 2004/06/28 14:21:38 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -100,6 +100,11 @@ sub glimpsesearch {
 
 sub swishsearch {
     my ($searchtext) = @_;
+
+    if (! -e $config->swishdir."/".$release.".index") {
+        print "Version '$release' has not been indexed and is unavailable for searching.";
+        return;
+    }
 
     unless (open(SWISH, "-|")) {
 	open(STDERR, ">&STDOUT");
