@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.29 2001/07/26 10:21:16 pok Exp $
+# $Id: Common.pm,v 1.30 2001/08/04 17:41:35 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.29 2001/07/26 10:21:16 pok Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.30 2001/08/04 17:41:35 mbox Exp $ ';
 
 use strict;
 
@@ -216,6 +216,8 @@ sub markupstring {
 	$string =~ s/([\w\-\_]*\@mozilla.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
 	$string =~ s/([\w\-\_]*\@gnome.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
 	$string =~ s/([\w\-\_]*\@linux.no)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
+	$string =~ s/([\w\-\_]*\@sourceforge.net)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
+	$string =~ s/([\w\-\_]*\@sf.net)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
 	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
 	
 	# HTMLify file names, assuming file is in the current directory.
@@ -274,7 +276,6 @@ sub markupfile {
 	$ltag[3] .= " ";
 	
 	my @itag = &idref(1, 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
-
 	my $lang = new LXR::Lang($pathname, $release, @itag);
 
 	# A source code file
@@ -320,7 +321,7 @@ sub markupfile {
 		}
 		&$outfun("</pre>");
 	} 
-	elsif ($pathname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm|png)$/i) {
+	elsif ($pathname =~ /$config->graphicfile/) {
 		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
 		&$outfun("<img src=\"$config->{virtroot}/source".
 				 $pathname.&urlargs("raw=1").
