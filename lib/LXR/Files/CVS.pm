@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.11 1999/11/24 14:48:53 argggh Exp $
+# $Id: CVS.pm,v 1.12 2001/07/26 08:49:38 pok Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.11 1999/11/24 14:48:53 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.12 2001/07/26 08:49:38 pok Exp $ ';
 
 use strict;
 use FileHandle;
@@ -29,6 +29,9 @@ sub filerev {
 	if ($release =~ /rev_([\d\.]+)/) {
 		return $1;
 	}
+	elsif ($release =~ /([\d\.]+)/) {
+		return $1;
+	}
 	else {
 		$self->parsecvs($filename);
 		return $cvs{'header'}{'symbols'}{$release};
@@ -47,8 +50,10 @@ sub getfiletime {
 	return undef unless defined($rev);
 
 	my @t = reverse(split(/\./, $cvs{'branch'}{$rev}{'date'}));
-	$t[4]--;
 
+	return undef unless @t;
+
+	$t[4]--;
 	return timegm(@t);
 }
 
@@ -61,37 +66,9 @@ sub getfilesize {
 sub getfile {
 	my ($self, $filename, $release) = @_;
 
-	$self->parsecvs($filename);
-
-	my $rev = $self->filerev($filename, $release);
-	return undef unless defined($rev);
-
-	my $hrev = $cvs{'header'}{'head'};
-	my @head = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
-
-	while ($hrev ne $rev && $cvs{'branch'}{$hrev}{'branches'} ne $rev) {
-		$hrev = $cvs{'branch'}{$hrev}{'next'};
-		my @diff = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
- 		my $off = 0;
-
-		while (@diff) {
-			my $dir = shift(@diff);
-
-			if ($dir =~ /^a(\d+)\s+(\d+)/) {
-				splice(@head, $1-$off, 0, splice(@diff, 0, $2));
-				$off -= $2;
-			}
-			elsif ($dir =~ /^d(\d+)\s+(\d+)/) {
-				splice(@head, $1-$off-1, $2);
-				$off += $2;
-			}
-			else {
-				warning("Oops! Out of sync!");
-			}
-		}
-	}
-
-	return join('', @head);
+	my $fileh = $self->getfilehandle($filename, $release);
+	return undef unless $fileh;
+	return join('', $fileh->getlines);
 }
 
 sub getannotations {
@@ -105,22 +82,23 @@ sub getannotations {
 	my $hrev = $cvs{'header'}{'head'};
 	my $lrev;
 	my @anno;
-	my @head = $cvs{'history'}{$hrev}{'text'} =~ /\n()/gs;
+	my $headfh = $self->getfilehandle($filename, $release);
+	my @head = $headfh->getlines;
 
 	while (1) {
 		if ($rev eq $hrev) {
 			@head = 0..$#head;
 		}
-
+		
 		$lrev = $hrev;
 		$hrev = $cvs{'branch'}{$hrev}{'next'} || last;
-
-		my @diff = $cvs{'history'}{$hrev}{'text'} =~ /([^\n]*\n)/gs;
- 		my $off = 0;
-
+		
+		my @diff = $self->getdiff($filename, $lrev, $hrev);
+		my $off = 0;
+		
 		while (@diff) {
 			my $dir = shift(@diff);
-
+			
 			if ($dir =~ /^a(\d+)\s+(\d+)/) {
 				splice(@diff, 0, $2);
 				splice(@head, $1-$off, 0, ('') x $2);
@@ -130,7 +108,7 @@ sub getannotations {
 				map {
 					$anno[$_] = $lrev if $_ ne '';
 				} splice(@head, $1-$off-1, $2);
-
+				
 				$off += $2;
 			}
 			else {
@@ -159,22 +137,33 @@ sub getfilehandle {
 	my ($self, $filename, $release) = @_;
 	my ($fileh);
 
-#	$fileh = new FileHandle("co -q -pv$release ".
-#							$self->toreal($filename, $release).
-#							" |"); # FIXME: Exploitable?
+	$self->parsecvs($filename);
 
-	my $buffer = $self->getfile($filename, $release);
+	my $rev = $self->filerev($filename, $release);
+	return undef unless defined($rev);
 
-	&LXR::Common::fflush;
-	my ($readh, $writeh) = FileHandle::pipe;
-	unless (fork) {
-		$writeh->autoflush(1);
-		$writeh->print($buffer);
-		exec("/bin/true");		# Exit without cleanup.
-		exit;
-	}
+	$fileh = new FileHandle("co -q -p$rev ".
+							$self->toreal($filename, $release).
+							" |"); # FIXME: Exploitable?
+	return $fileh;
+}
 
-	return $readh;
+sub getdiff {
+	my ($self, $filename, $release1, $release2) = @_;
+	my ($fileh);
+
+	$self->parsecvs($filename);
+
+	my $rev1 = $self->filerev($filename, $release1);
+	return undef unless defined($rev1);
+
+	my $rev2 = $self->filerev($filename, $release2);
+	return undef unless defined($rev2);
+
+	$fileh = new FileHandle("rcsdiff -q -a -n -r$rev1 -r$rev2 ".
+							$self->toreal($filename, $release1).
+							" |"); # FIXME: Exploitable?
+	return $fileh->getlines;
 }
 
 sub tmpfile {
@@ -297,15 +286,35 @@ sub allreleases {
 	return sort(keys(%{$cvs{'header'}{'symbols'}}));
 }
 
+sub allrevisions {
+	my ($self, $filename) = @_;
+
+	$self->parsecvs($filename);
+
+	return sort(keys(%{$cvs{'branch'}}));
+}
+
 sub parsecvs {
+	# Actually, these days it just parses the header.
+	# RCS tools are much better at parsing RCS files.
+	# -pok
 	my ($self, $filename) = @_;
 
 	return if $cache_filename eq $filename;
 	$cache_filename = $filename;
 
-	open(CVS, $self->toreal($filename, undef));
-	my @cvs = join('', <CVS>) =~ /((?:(?:[^\n@]+|@[^@]*@)\n?)+)/gs;
-	close(CVS);
+	my $file = '';
+	open (CVS, $self->toreal($filename, undef));
+	while (<CVS>) {
+		if (/^text\s*$/) {
+			# stop reading when we hit the text.
+			last;
+		}
+		$file .= $_;
+	}
+	close (CVS);
+
+	my @cvs = $file =~ /((?:(?:[^\n@]+|@[^@]*@)\n?)+)/gs;
 
 	$cvs{'header'} = { map { s/@@/@/gs;
 							 /^@/s && substr($_, 1, -1) || $_ }
@@ -313,7 +322,7 @@ sub parsecvs {
 
 	$cvs{'header'}{'symbols'}
 	= { $cvs{'header'}{'symbols'} =~ /(\S+?):(\S+)/g };
-
+	
 	my ($orel, $nrel, $rev);
 	while (($orel, $rev) = each %{$cvs{'header'}{'symbols'}}) {
 		$nrel = $config->cvsversion($orel);
@@ -337,13 +346,6 @@ sub parsecvs {
 	$cvs{'desc'} = shift(@cvs) =~ /\s*desc\s+((?:[^\n@]+|@[^@]*@)*)\n/s;
 	$cvs{'desc'} =~ s/^@|@($|@)/$1/gs;
 
-	while (@cvs) {
-		my ($r, $v) = shift(@cvs) =~ /\s*(\S+)\s*(.*)/s;
-		$cvs{'history'}{$r} = { map { s/@@/@/gs; 
-									  /^@/s && substr($_, 1, -1) || $_ }
-								$v =~ /(\w+)\s*((?:[^\n@]+|@[^@]*@)*)\n/gs };
-	}
 }
-
 
 1;

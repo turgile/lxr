@@ -4,6 +4,7 @@ drop table files;
 drop table symbols;
 drop table indexes;
 drop table releases;
+drop table usage;
 drop table status;
 
 create sequence filenum cache 50;
@@ -37,7 +38,7 @@ create table indexes (
 create table releases 
 	(fileid		int		references files,
 	release		varchar,
-	primary key	(fileid)
+	primary key	(fileid,release)
 );
 
 create table usage

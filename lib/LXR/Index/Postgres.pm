@@ -1,15 +1,15 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.4 2000/10/31 12:52:12 argggh Exp $
+# $Id: Postgres.pm,v 1.5 2001/07/26 08:49:38 pok Exp $
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.4 2000/10/31 12:52:12 argggh Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.5 2001/07/26 08:49:38 pok Exp $ ';
 
 use strict;
 use DBI;
 
-use vars qw($dbh $transactions %files %symcache 
+use vars qw($dbh $transactions %files %symcache $commitlimit
 			$files_select $filenum_nextval $files_insert
 			$symbols_byname $symbols_byid $symnum_nextval
 			$symbols_remove $symbols_insert $indexes_select $indexes_insert
@@ -26,7 +26,8 @@ sub new {
 
 	$$dbh{'AutoCommit'} = 0;
 #	$dbh->trace(1);
-	
+
+	$commitlimit = 100;
 	$transactions = 0;
 	%files = ();
 	%symcache = ();
@@ -96,7 +97,7 @@ sub index {
 							 $line,
 							 $type,
 							 $relsym ? $self->symid($relsym) : undef);
-	unless (++$transactions % 500) {
+	unless (++$transactions % $commitlimit) {
 		$dbh->commit();
 	}
 }
@@ -108,7 +109,7 @@ sub reference {
 						   $line,
 						   $self->symid($symname));
 
-	unless (++$transactions % 500) {
+	unless (++$transactions % $commitlimit) {
 		$dbh->commit();
 	}
 }
@@ -179,11 +180,15 @@ sub fileid {
 sub release {
 	my ($self, $fileid, $release) = @_;
 
-	my $rows = $releases_select->execute($fileid+0, $release);
-	$releases_select->finish();
 
-	unless ($rows > 0) {
-		$releases_insert->execute($fileid, $release);
+	$releases_select->execute($fileid+0, $release);
+	my $firstrow = $releases_select->fetchrow_array();
+
+
+#	$releases_select->finish();
+
+	unless ($firstrow) {
+		$releases_insert->execute($fileid+0, $release);
 	}
 }
 
@@ -239,7 +244,7 @@ sub toindex {
 	my ($self, $fileid) = @_;
 
 	$status_insert->execute($fileid+0, $fileid+0);
-	return $status_update->execute(1, $fileid, 0) > 0;
+	return $status_update->execute(1, $fileid+0, 0) > 0;
 }
 
 sub toreference {

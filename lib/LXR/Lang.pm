@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.19 1999/12/25 21:58:27 pergj Exp $
+# $Id: Lang.pm,v 1.20 2001/07/26 08:49:38 pok Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.19 1999/12/25 21:58:27 pergj Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.20 2001/07/26 08:49:38 pok Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -30,9 +30,9 @@ sub new {
 		$lang = new LXR::Lang::Perl($pathname, $release);
 	}
 	else {
-		my ($shebang);
+		$files->getfile($pathname, $release) =~ /^#!\s*(\S+)/s;
 
-		$shebang = $files->getfile($pathname, $release) =~ /^#!\s*(\S+)/s;
+		my $shebang = $1;
 
 		if ($shebang =~ /perl/) {
 			require LXR::Lang::Perl;

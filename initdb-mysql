@@ -34,7 +34,7 @@ create table indexes (
 create table releases 
         (fileid         int not null references files,
         release         char(255) binary not null,
-        primary key     (fileid)
+        primary key     (fileid,release)
 );
 
 create table useage

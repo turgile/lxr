@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.15 2000/10/31 12:52:11 argggh Exp $
+# $Id: Tagger.pm,v 1.16 2001/07/26 08:49:38 pok Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.15 2000/10/31 12:52:11 argggh Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.16 2001/07/26 08:49:38 pok Exp $ ';
 
 use strict;
 use FileHandle;
@@ -16,7 +16,7 @@ sub processfile {
 	my $lang = new LXR::Lang($pathname, $release);
 
 	return unless $lang;
-	
+
 	my $revision = $files->filerev($pathname, $release);
 
 	return unless $revision;

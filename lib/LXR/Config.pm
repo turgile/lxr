@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.23 2000/09/04 19:26:28 pergj Exp $
+# $Id: Config.pm,v 1.24 2001/07/26 08:49:38 pok Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.23 2000/09/04 19:26:28 pergj Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.24 2001/07/26 08:49:38 pok Exp $ ';
 
 use strict;
 
@@ -116,6 +116,10 @@ sub vardescription {
 
 sub varrange {
     my ($self, $var) = @_;
+
+	if (ref($self->{variables}{$var}{range}) eq "CODE") {
+		return &{$self->{variables}{$var}{range}};
+	}
 
     return @{$self->{variables}{$var}{range} || []};
 }
