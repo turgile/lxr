@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.12 2004/06/28 18:42:37 brondsem Exp $
+# $Id: Local.pm,v 1.13 2004/06/28 20:34:43 brondsem Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.12 2004/06/28 18:42:37 brondsem Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.13 2004/06/28 20:34:43 brondsem Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -108,6 +108,35 @@ sub fdescexpand {
 	return("\&nbsp\;");
     }
 
+    # if a java file, only consider class-level javadoc comments
+    if ($filename =~ /\.java$/) {
+	# first /** ... */ before 'public class' or 'public interface'
+	# (it'd be better to match the last /** ... */ before the declaration, but i can't get that to work
+	$desc =~ m#/\*\*(.*?)\*/.*public\s((abstract|static|final|strictfp)\s)*(class|interface)#s;
+	$desc = $1;
+	
+	return "\&nbsp\;" if ! $desc;
+	
+	# strip off any leading * s
+	$desc =~ s/^\s?\*\s?//mg;
+	
+	# Strip off @parameter lines
+	$desc =~ s/^\s?@\w+.*$//mg;
+	
+	# strip off some CVS keyword lines
+	$desc =~ s/^\s?\$Workfile:.*$//mg;
+	$desc =~ s/^\s?\$Revision: 1.13 $//mg;
+	$desc =~ s/^\s?\$Modtime:.*$//mg;
+	$desc =~ s/^\s?\$Author: brondsem $//mg;
+	$desc =~ s/^\s?\$Id: Local.pm,v 1.13 2004/06/28 20:34:43 brondsem Exp $//mg;
+	$desc =~ s/^\s?\$Date: 2004/06/28 20:34:43 $//mg;
+	
+	# strip html tags (probably a way to do this all in one, but it's beyond my skill)
+	$desc =~ s#<[/\w]+(\s*\w+="[\w\s]*"\s*)*>##g;	# double quoted attributes
+	$desc =~ s#<[/\w]+(\s*\w+='[\w\s]*'\s*)*>##g;	# single quoted attributes
+	$desc =~ s#<[/\w]+(\s*\w+=[\w]*\s*)*>##g;	# no quotes on attributes
+   }
+
     # save a copy for later
     $copy = $desc;
 
@@ -121,10 +150,6 @@ sub fdescexpand {
 	){
         # if the description is non-empty then clean it up and return it
         if ($desc =~ /\w/) {
-	    #strip html tags (they occur often in javadocs). this is a simple regex and doesn't try to handle tags with attributes
-	    $desc =~ s#<[/\w]+>##g;
-#	    $desc =~ s#<[/\w]+(\s*\w+="[\w\s]*"\s*)*>##g;
-	    
             #strip trailing asterisks and "*/"
             $desc =~ s#\*/?\s*$##;
             $desc =~ s#^[^\S]*\**[^\S]*#\n#gs;
@@ -140,6 +165,11 @@ sub fdescexpand {
             $desc = markupstring($desc, $Path->{'virt'});
             return($desc);
 	} 
+    }
+    
+    # if java and the <filename><seperator> check above didn't work, just dump the whole javadoc
+    if ($filename =~ /\.java$/) {
+	return $desc;
     }
 
     # we didn't find any well behaved descriptions above so start over 
