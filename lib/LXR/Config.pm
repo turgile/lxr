@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.26 2002/02/26 15:59:32 mbox Exp $
+# $Id: Config.pm,v 1.27 2003/06/05 15:39:15 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.26 2002/02/26 15:59:32 mbox Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.27 2003/06/05 15:39:15 mbox Exp $ ';
 
 use strict;
 
@@ -84,13 +84,26 @@ sub _initialize {
     die($@) if $@;
 
     my $config;
-    foreach $config (@config) {
+	if (scalar(@config) > 0) {
+		%$self = (%$self, %{$config[0]});
+	}
+    CANDIDATE: foreach $config (@config) {
 		if ($config->{baseurl}) {
-			my $root = quotemeta($config->{baseurl});
-			next unless $url =~ /^$root/;
+			my @aliases;
+			if ($config->{baseurl_aliases}) {
+				@aliases = @{$config->{baseurl_aliases}};
+			}
+			my $root = $config->{baseurl};
+			push @aliases, $root;
+			foreach my $rt (@aliases) {
+				my $r = quotemeta($rt);
+				if ($url =~ /^$r/) {
+					$config->{baseurl} = $rt;
+					%$self = (%$self, %$config);
+					last CANDIDATE;
+				}
+			}
 		}
-		
-		%$self = (%$self, %$config);
     }
 
 	die "Can't find config for $url\n" if !defined $$self{baseurl};
