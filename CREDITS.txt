@@ -15,7 +15,7 @@ Malcolm Box <mbox@users.sf.net>
 Principal Developers
 --------------------
 
-Peder O. Klingenberg <peder@klingenburg.no>
+Peder O. Klingenberg <peder@klingenberg.no>
 
 Contributors
 ------------
@@ -30,4 +30,4 @@ To get your name added to this list, see:
  
    http://sf.net/projects/lxr
  
-Last updated: $Date: 2001/09/27 15:02:26 $
+Last updated: $Date: 2001/09/28 14:31:38 $
