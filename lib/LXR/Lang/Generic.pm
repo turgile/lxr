@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.15 2004/07/19 19:50:21 brondsem Exp $
+# $Id: Generic.pm,v 1.16 2004/07/20 18:58:24 brondsem Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.15 2004/07/19 19:50:21 brondsem Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.16 2004/07/20 18:58:24 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -157,7 +157,7 @@ sub processcode {
 	# Replace identifier by link unless it's a reserved word
 	{
 	  $1.
-		((!grep(/$2/, $self->langinfo('reserved')) &&
+		((!grep(/^$2$/, $self->langinfo('reserved')) &&
 		  $index->issymbol($2, $$self{'release'})) ?
 		 join($2, @{$$self{'itag'}}) :
 		 $2);
@@ -203,7 +203,7 @@ sub referencefile {
 					$string = $_;
 
 					#		  print "considering $string\n";
-					if ( !grep( /$string/, $self->langinfo('reserved') )
+					if ( !grep( /^$string$/, $self->langinfo('reserved') )
 						&& $index->issymbol($string) )
 					{
 
