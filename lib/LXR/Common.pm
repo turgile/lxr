@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.39 2002/02/26 16:07:06 mbox Exp $
+# $Id: Common.pm,v 1.40 2002/03/18 14:44:23 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.39 2002/02/26 16:07:06 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.40 2002/03/18 14:44:23 mbox Exp $ ';
 
 use strict;
 
@@ -446,6 +446,7 @@ sub printhttp {
 	}
 
 	if ($HTTP->{'param'}->{'raw'}) {
+		#FIXME - need more types here
 		my %type = ('gif'	=> 'image/gif',
 					'html'	=> 'text/html');
 
@@ -518,9 +519,12 @@ sub httpinit {
 
 	$identifier = $HTTP->{'param'}->{'i'};
 	$config = new LXR::Config($HTTP->{'this_url'});
+	die "Can't find config for ".$HTTP->{'this_url'} if !defined($config);
 	$files  = new LXR::Files($config->sourceroot);
+	die "Can't create Files for ".$config->sourceroot if !defined($files);
 	$index  = new LXR::Index($config->dbname);
-
+	die "Can't create Index for ".$config->dbname if !defined($index);
+	
 	foreach ($config->allvariables) {
 		$config->variable($_, $HTTP->{'param'}->{$_}) if $HTTP->{'param'}->{$_};
 	}
