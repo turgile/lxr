@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.5 1999/05/13 22:58:23 argggh Exp $
+# $Id: Common.pm,v 1.6 1999/05/14 12:45:29 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -60,20 +60,23 @@ use LXR::JavaClassList;		# jmason, for Java
 
 
 sub warning {
-    print(STDERR "[",scalar(localtime),"] warning: $_[0]\n");
+    my $c = join(", line ", (caller)[0,2]);
+    print(STDERR "[",scalar(localtime),"] warning: $c: $_[0]\n");
     print("<h4 align=\"center\"><i>** Warning: $_[0]</i></h4>\n") if $wwwdebug;
 }
 
 
 sub fatal {
-    print(STDERR "[",scalar(localtime),"] fatal: $_[0]\n");
+    my $c = join(", line ", (caller)[0,2]);
+    print(STDERR "[",scalar(localtime),"] fatal: $c: $_[0]\n");
     print("<h4 align=\"center\"><i>** Fatal: $_[0]</i></h4>\n") if $wwwdebug;
     exit(1);
 }
 
 
 sub abortall {
-    print(STDERR "[",scalar(localtime),"] abortall: $_[0]\n");
+    my $c = join(", line ", (caller)[0,2]);
+    print(STDERR "[",scalar(localtime),"] abortall: $c: $_[0]\n");
     print("Content-Type: text/html; charset=iso-8859-1\n\n",
 	  "<html>\n<head>\n<title>Abort</title>\n</head>\n",
 	  "<body><h1>Abort!</h1>\n",
@@ -155,7 +158,7 @@ sub incref {
     foreach $file (@paths) {
 	$file =~ s/\/+$//;
 	$file = $Conf->mappath($file."/".$name);
-	return &fileref($name, $file) if -e $Conf->sourceroot."/".$file;
+	return &fileref($name, $file) if $main::files->isfile($file, $main::release);
 	
     }
     
@@ -272,16 +275,14 @@ sub linetag {
 }
 
 sub markupfile {
-    my ($INFILE, $virtp, $fname, $outfun) = @_;
+    my ($buffer, $virtp, $index, $fname, $outfun) = @_;
 
      $line = 1;
 
      # A C/C++ file 
      if ($fname =~ /\.([ch]|cpp?|cc)$/i) { # Duplicated in genxref.
 
- 	&SimpleParse::init($INFILE, @cterm);
-
-	my $index = new LXR::Index();
+ 	&SimpleParse::init($buffer, @cterm);
 
  	&$outfun(# "<pre>\n".
  		 #"<a name=\"L".$line++.'"></a>');

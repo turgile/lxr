@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.5 1999/05/13 22:58:22 argggh Exp $
+# $Id: source,v 1.6 1999/05/14 12:45:29 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,15 +23,18 @@
 
 ######################################################################
 
+use strict;
+
 use Local;
 use lib 'lib';
 use lib '/local/lxr/lib/perl5/site_perl';
 use SimpleParse;
 use LXR::Common;
 use LXR::Config;
-use LXR::Files::Plain;
+use LXR::Files;
 use LXR::Index;
 
+use vars qw($files $index $Path $HTTP $filename $release $parentdir $line $color @dirs @files %index);
 
 sub diricon {
     my ($img, $link);
@@ -102,7 +105,7 @@ sub filesize {
 
 sub modtime {
     my $current_time = time;
-    my $file_time = $files->getfiletime($filename,$release);
+    my $file_time = $files->getfiletime($filename, $release);
     
     my @t = gmtime($file_time);
     
@@ -177,17 +180,16 @@ sub printdir {
 	unless (open(TEMPL, $Conf->htmldir)) {
 	    &warning("Template ".$Conf->htmldir." does not exist.");
 	} else {
-	    $save = $/; undef($/);
+	    local($/) = undef;
 	    $template = <TEMPL>;
-	    $/ = $save;
 	    close(TEMPL);
 	}
     }
     
-    if(!defined(@dirs = $files->getdir($pathname, $release))) {
-	print("<p align=center>\n<i>The directory ".$files->toreal($pathname, $release)." does not exist.</i>\n");
+    if (!defined(@dirs = $files->getdir($filename, $release))) {
+	print("<p align=center>\n<i>The directory ".$files->toreal($filename, $release)." does not exist.</i>\n");
 	#FIXME what does this do?
-	if ($files->toreal($pathname, $release) =~ m#(.+[^/])[/]*$# ) {
+	if ($files->toreal($filename, $release) =~ m#(.+[^/])[/]*$# ) {
 	    if (-e $1) {
 		&warning("Unable to open ".$Path->{'real'});
 	    }
@@ -195,7 +197,7 @@ sub printdir {
 	return;
     }
        
-    %index = $files->getindex($pathname, $release);
+    %index = $files->getindex($filename, $release);
        
     if ($Path->{'virt'} =~ m#^(.*/)[^/]*/$#) {
 	$parentdir = $1;
@@ -212,31 +214,27 @@ sub printdir {
 
 
 sub printfile {
-    my $string;
-
     unless ($Path->{'file'}) {
 	&printdir;
     } else {
-	if (open(SRCFILE, $Path->{'realf'})) {
-	    if (($Path->{'file'} =~ /\.(html)$/)) {
-		print <SRCFILE>;
-	    } elsif ($Path->{'file'} =~ /README$/) {
-		print("<PRE>");
-		while(<SRCFILE>) {
-		    $string = $string . $_;
-		}
-                print(markupstring($string, $Path->{'virt'}));
-		print("</PRE>");
+	my $buffer = $files->getfile($filename, $release);
+
+	if ($buffer) {
+	    if ($filename =~ /\.(html)$/) {
+		print($buffer);
+	    } elsif ($filename =~ /README$/) {
+		print("<pre>",
+		      markupstring($buffer, $filename, $index),
+		      "</pre>");
 	    } else {
 		print("<pre>");
-		&markupfile(\*SRCFILE, $Path->{'virt'}, 
-			    $Path->{'file'}, sub { print shift });
+		markupfile(\$buffer, $Path->{'virt'}, $index,
+			   $Path->{'file'}, sub { print shift });
 		print("</pre>");
 	    }
-	    close(SRCFILE);
 
 	} else {
-	    print "\<p align=center>\n<i>The file ".$Path->{'realf'}." does not exist.</i>\n";
+	    print("\<p align=center>\n<i>The file $filename does not exist.</i>\n");
 	    if (-f $Path->{'real'}.$Path->{'file'}) {
 		&warning("Unable to open ".$Path->{'realf'});
 	    }
@@ -246,11 +244,11 @@ sub printfile {
 
 ($Conf, $HTTP, $Path) = &init($0);
 
-my $files = new LXR::Files::Plain($Conf->sourceroot);
-my $index = new LXR::Index($Conf->dbname);
+$files = new LXR::Files($Conf->sourceroot);
+$index = new LXR::Index($Conf->dbname);
 
 $filename = $Path->{'virtf'};
-$release = $HTTP->{'param'}->{'version'};
+$release = $Conf->variable('v');
 
 #if the file is html then don't print a header because the file
 #has its own 

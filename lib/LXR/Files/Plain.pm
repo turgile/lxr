@@ -26,7 +26,7 @@ sub filerev {
 sub getfiletime {
 	my ($self, $filename, $release) = @_;
 
-	return (stat($self->toreal($release, $filename)))[9];
+	return (stat($self->toreal($filename, $release)))[9];
 }
 
 
@@ -43,45 +43,53 @@ sub getfile {
 
 sub getdir {
 	my ($self, $pathname, $release) = @_;
-	my ($dir, $node, @files);
+	my ($dir, $node, @dirs, @files);
 
-	$dir = $self->toreal($release,$pathname);
+	$dir = $self->toreal($pathname, $release);
 	opendir(DIR, $dir) || return ();
 	while (defined($node = readdir(DIR))) {
 		next if $node =~ /^\.|~$|\.orig$/;
+		next if $node eq 'CVS';
 
-		$node .= '/' if -d $dir.$node;
-		if (!($node eq "CVS")) {
+		if (-d $dir.$node) {
+			push(@dirs, $node.'/');
+		}
+		else {
 			push(@files, $node);
 		}
 	}
 	closedir(DIR);
 
-	return @files;
+	return sort @dirs, sort @files;
 }
 
 # This function should not be used outside this module
 # except for printing error messages
+# (I'm not sure even that is legitimate use, considering
+# other possible File classes.)
+
 sub toreal {
 	my ($self, $pathname, $release) = @_;
+
 	return ($self->{'rootpath'}.$release.$pathname);
 }
 
 sub isdir {
 	my ($self, $pathname, $release) = @_;
-	return -d $self->toreal($release,$pathname);
+
+	return -d $self->toreal($pathname, $release);
 }
 
 sub isfile {
 	my ($self, $pathname, $release) = @_;
 
-	return -f $self->toreal($release,$pathname);
+	return -f $self->toreal($pathname, $release);
 }
 
 sub getindex {
 	my ($self, $pathname, $release) = @_;
 	my ($save, $index, %index);
-	my $indexname = $self->toreal($release, $pathname)."00-INDEX";
+	my $indexname = $self->toreal($pathname, $release)."00-INDEX";
 
 	if (-f $indexname) {
 		open(INDEX, $indexname) || &warning("Existing $indexname could not be opened.");

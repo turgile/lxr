@@ -2,64 +2,72 @@
 # -*- tab-width: 4 -*-
 
 use strict;
-use lib '/local/lxr/http/lxr2/lib';
+use lib 'lib';
 
-use LXR::Files::Plain;
+use LXR::Files;
 use LXR::Index;
 use LXR::Config;
 use LXR::Tagger;
 
 $Conf = new LXR::Config;
 
-my $files = new LXR::Files::Plain($Conf->sourceroot);
+my $files = new LXR::Files($Conf->sourceroot);
 my $index = new LXR::Index($Conf->dbname);
 
 
-
 sub genxref {
-    my ($pathname, $release) = @_;
-    
-    if ($files->isdir($pathname, $release)) {
-	map { 
-	    genxref($pathname.$_, $release) 
-	    } $files->getdir($pathname, $release);
-    }
-    elsif ($pathname =~ /\.(cc?|h)$/) {
+	my ($pathname, $release) = @_;
+	
 	print(STDERR "*** $pathname $release \n");
-	
-	open(TMP, "> /tmp/lxrref");
-	print(TMP $files->getfile($pathname, $release));
-	close(TMP);
-	
-	open(CTAGS, $Conf->ctagsbin." --excmd=number --lang=c++ --c-types=cdefgmnpstuvx -f - /tmp/lxrref |") 
-	    || die "Can't run ctags";
-#		open(CTAGS, "ctags-3.2/ctags --excmd=number --sort=no --lang=c++ --c-types=cdefgmnpstuvx -f - ".$$files{'rootpath'}.$release.$pathname." |");
-	while (<CTAGS>) {
-	    chomp;
-	    @_ = split(/\t/, $_);
-	    $_[2] =~ s/;\"$//;
-	    
-	    $index->index($_[0], $release, $pathname, $_[2], $_[3]);
-	    
-	    if ($_[4] eq '') {
-	    }
-	    elsif ($_[4] =~ /^file:/) {
-	    }
-	    elsif ($_[4] =~ /^struct:(.*)/) {
-		$index->relate($_[0], $release, $1, 'struct member');
-	    }
-	    elsif ($_[4] =~ /^union:(.*)/) {
-		$index->relate($_[0], $release, $1, 'union member');
-	    }
-	    elsif ($_[4] =~ /^class:(.*)/) {
-		$index->relate($_[0], $release, $1, 'class member');
-	    }
-	    else {
-		print(STDERR "** Unknown : $_\n");
-	    }
+
+	if ($files->isdir($pathname, $release)) {
+		map { 
+			genxref($pathname.$_, $release) 
+			} $files->getdir($pathname, $release);
 	}
-	close(CTAGS);
-    }
+	else {
+		&LXR::Tagger::processfile($pathname, $release, 
+								  $Conf, $files, $index);
+
+#  		my $tagger = new LXR::Tagger($pathname, $Conf);
+#  		if ($tagger) {
+#  			print(STDERR "*** $pathname $release \n");
+			
+#  			$tagger->
+#  			open(TMP, "> /tmp/lxrref");
+#  			print(TMP $files->getfile($pathname, $release));
+#  			close(TMP);
+			
+#  			open(CTAGS, $Conf->ctagsbin." --excmd=number --lang=c++ --c-types=cdefgmnpstuvx -f - /tmp/lxrref |") 
+#  				|| die "Can't run ctags";
+#  #		open(CTAGS, "ctags-3.2/ctags --excmd=number --sort=no --lang=c++ --c-types=cdefgmnpstuvx -f - ".$$files{'rootpath'}.$release.$pathname." |");
+#  			while (<CTAGS>) {
+#  				chomp;
+#  				@_ = split(/\t/, $_);
+#  				$_[2] =~ s/;\"$//;
+				
+#  				$index->index($_[0], $release, $pathname, $_[2], $_[3]);
+				
+#  				if ($_[4] eq '') {
+#  				}
+#  				elsif ($_[4] =~ /^file:/) {
+#  				}
+#  				elsif ($_[4] =~ /^struct:(.*)/) {
+#  					$index->relate($_[0], $release, $1, 'struct member');
+#  				}
+#  				elsif ($_[4] =~ /^union:(.*)/) {
+#  					$index->relate($_[0], $release, $1, 'union member');
+#  				}
+#  				elsif ($_[4] =~ /^class:(.*)/) {
+#  					$index->relate($_[0], $release, $1, 'class member');
+#  				}
+#  				else {
+#  					print(STDERR "** Unknown : $_\n");
+#  				}
+#  			}
+#  			close(CTAGS);
+#  		}
+	}
 }
 
 genxref('/', '2.2.7');

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-#
+# $Id: DBI.pm,v 1.3 1999/05/14 12:45:31 argggh Exp $
 
 package LXR::Index::DBI;
 
@@ -10,7 +10,6 @@ use DBI;
 
 sub new {
 	my ($self, $dbname) = @_;
-	my ($foo);
 
 	$self = bless({}, $self);
 	$$self{'dbh'} = DBI->connect($dbname);

@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.4 1999/05/13 22:58:24 argggh Exp $
+# $Id: Config.pm,v 1.5 1999/05/14 12:45:30 argggh Exp $
 
 package LXR::Config;
 
@@ -104,7 +104,7 @@ sub varrange {
 
 sub varexpand {
     my ($self, $exp) = @_;
-    $exp =~ s/\$\{?(\w+)\}?/$self->{variables}{$1}{value}/g;
+    $exp =~ s/\$\{?(\w+)\}?/$self->variable($1)/ge;
 
     return $exp;
 }
