@@ -72,6 +72,7 @@ $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 die "Can't create Index ".$config->dbname if !defined($index);
 
 our $filetype = new File::MMagic();
+our %binaryfiles;
 
 my @versions;
 
@@ -83,9 +84,9 @@ if ($option{'allversions'} || !$option{'version'}) {
 }
 
 foreach my $version (@versions) {
+  gensearch($version);
   genindex('/', $version);
   genrefs('/', $version);
-  gensearch($version);
 }
 
 
@@ -99,7 +100,7 @@ sub genindex {
 	    genindex($pathname.$_, $release) 
 	    } $files->getdir($pathname, $release);
     } else {
-	  &LXR::Tagger::processfile($pathname, $release, $config, $files, $index)
+	  &LXR::Tagger::processfile($pathname, $release, $config, $files, $index) unless exists $binaryfiles{$pathname};
     }
 }
 
@@ -113,7 +114,7 @@ sub genrefs {
 	    genrefs($pathname.$_, $release)
 	    } $files->getdir($pathname, $release);
     } else {
-	  &LXR::Tagger::processrefs($pathname, $release, $config, $files, $index)
+	  &LXR::Tagger::processrefs($pathname, $release, $config, $files, $index) unless exists $binaryfiles{$pathname};
     }
 }
 
@@ -129,13 +130,14 @@ sub feedswish {
     } else {
 		print $filelist "$pathname\n";
         my $contents = $files->getfile($pathname, $release);
-        if ($filetype->checktype_contents($contents) =~ m%(text|message)/%) {
+        if ($filetype->checktype_contents($contents) =~ m%(text|message)/% and length($contents) > 0) {
             $swish->print("Path-Name: $pathname\n",
                           "Content-Length: ".length($contents)."\n",
                           "Document-Type: TXT\n",
                           "\n",
-                          $contents)
-                if length($contents) > 0;
+                          $contents);
+	} else {
+	    $binaryfiles{$pathname} = 1;
         }
     }
 }
