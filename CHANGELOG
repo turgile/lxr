@@ -1,0 +1,77 @@
+2001-10-23  mbox  
+
+	* /cvsroot/lxr/lxr/lib/LXR/Tagger.pm: Remove obsolete code
+
+	* /cvsroot/lxr/lxr/templates/html-tail.html:
+	Updated valid HTML logo to point to W3C's validator and the HTML 4.01 logo
+
+2001-10-17  mbox  
+
+	* /cvsroot/lxr/lxr/lib/LXR/Index/Mysql.pm: Fix typo in if() expression
+
+2001-10-17  pergj  
+
+	* /cvsroot/lxr/lxr/source: Fix accidentially added libpath.
+
+2001-10-16  pergj  
+
+	* /cvsroot/lxr/lxr/diff, /cvsroot/lxr/lxr/find, /cvsroot/lxr/lxr/ident, /cvsroot/lxr/lxr/lib/LXR/Common.pm, /cvsroot/lxr/lxr/search, /cvsroot/lxr/lxr/source:
+	Clean up after httpinit
+
+	* /cvsroot/lxr/lxr/lib/LXR/Index/Mysql.pm, /cvsroot/lxr/lxr/templates/lxr.conf:
+	Database password and user can now be specified in lxr.conf
+
+2001-09-28  mbox  
+
+	* /cvsroot/lxr/lxr/CREDITS.txt: Credit the right person :-)
+
+	* /cvsroot/lxr/lxr/templates/html-head.html:
+	Fix HTML to be 4.01 Transitional compliant
+
+	* /cvsroot/lxr/lxr/templates/lxr.css:
+	Adding missing file for CSS support
+
+2001-09-27  mbox  
+
+	* /cvsroot/lxr/lxr/templates/html-dir.html, /cvsroot/lxr/lxr/templates/html-head.html, /cvsroot/lxr/lxr/templates/html-ident.html, /cvsroot/lxr/lxr/templates/lxr.conf, /cvsroot/lxr/lxr/.cvsignore, /cvsroot/lxr/lxr/diff, /cvsroot/lxr/lxr/find, /cvsroot/lxr/lxr/ident, /cvsroot/lxr/lxr/lib/LXR/Common.pm, /cvsroot/lxr/lxr/lib/LXR/Lang.pm, /cvsroot/lxr/lxr/lib/LXR/Lang/Perl.pm, /cvsroot/lxr/lxr/search, /cvsroot/lxr/lxr/source:
+	Apply patch 458027 from Pavel Hlavnicka
+
+	Adds stylesheet (CSS) support to ident, source and diff.
+
+	Output style is now controllable from via the lxr.css stylesheet (example
+	provided in templates).  Ident output now generated via a template rather
+	than hard coded.
+
+	Minor additional fixes by me result in the output of ident & source both
+	validating as HTML 4.01 Transitional.
+
+	* /cvsroot/lxr/lxr/lib/LXR/Lang/generic.conf: Fix typo
+
+	* /cvsroot/lxr/lxr/lib/LXR/Lang/generic.conf:
+	Patched to add support for PHP (thanks to tarken@users.sf.net)
+
+	* /cvsroot/lxr/lxr/CREDITS.txt:
+	Added a CREDITS file to acknowledge and thank all those who have helped
+	create the lxr.
+
+2001-09-26  mbox  
+
+	* /cvsroot/lxr/lxr/initdb-mysql, /cvsroot/lxr/lxr/initdb-postgres:
+	Dramatically speed up (>50 times) the speed of incremental indexing by
+	creating an index to allow the fileid to be looked up fast from the filename.
+
+	Ideally this index would include the revision as well, but this is not
+	possible in MySQL because of limits (500 chars) on the index key.
+
+	Tested on MySQL, but not on postgres.
+
+	Fixes bug 465131
+
+	* /cvsroot/lxr/lxr/genxref:
+	Replace use of direct access of range variable v with the correct
+	varrange accessor
+
+2001-08-16  mbox  
+
+	* /cvsroot/lxr/lxr/.cvsignore:
+	Ignore the template & conf files of the user
