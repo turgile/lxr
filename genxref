@@ -55,15 +55,18 @@ die("No matching configuration") unless $config->sourceroot;
 $files = new LXR::Files($config->sourceroot);
 $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 
-my $version;
+my @versions;
+
 if ($option{'allversions'} || !$option{'version'}) {
-    $version = undef;
+    @versions = @{$config->{variables}{v}{range}};
 } else {
-    $version = $option{'version'};
+    @versions = $option{'version'};
 }
 
-genindex('/', $version);
-genrefs('/', $version);
+foreach (@versions) {
+  genindex('/', $_);
+  genrefs('/', $_);
+}
 
 sub genindex {
     my ($pathname, $release) = @_;
@@ -71,20 +74,12 @@ sub genindex {
     print(STDERR "*** $pathname $release \n");
     
     if ($pathname =~ m|/$|) {
-	map { 
+	map {
 	    genindex($pathname.$_, $release) 
 	    } $files->getdir($pathname, $release);
     } else {
-	# You generally don't know in advance what versions
-	# exist for a specific file until you ask it.
-	my @releases = ($release 
-			? ($release)
-			: $files->allreleases($pathname));
-	
-	map {
-	    &LXR::Tagger::processfile($pathname, $_,
+	  &LXR::Tagger::processfile($pathname, $release,
 				      $config, $files, $index)
-	    } @releases;
     }
 }
 
@@ -98,15 +93,7 @@ sub genrefs {
 	    genrefs($pathname.$_, $release)
 	    } $files->getdir($pathname, $release);
     } else {
-	# You generally don't know in advance what versions
-	# exist for a specific file until you ask it.
-	my @releases = ($release 
-			? ($release)
-			: $files->allreleases($pathname));
-	
-	map {
-	    &LXR::Tagger::processrefs($pathname, $_,
-				      $config, $files, $index)
-	    } @releases;
+	  &LXR::Tagger::processrefs($pathname, $release,
+								$config, $files, $index)
     }
 }
