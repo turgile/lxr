@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.35 2004/06/29 13:23:57 brondsem Exp $
+# $Id: source,v 1.36 2004/06/29 15:45:15 brondsem Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.35 2004/06/29 13:23:57 brondsem Exp $ ';
+$CVSID = '$Id: source,v 1.36 2004/06/29 15:45:15 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -223,6 +223,11 @@ sub printfile {
 	my $fileh = $files->getfilehandle($pathname, $release);
 
 	if ($fileh) {
+	    if ($config->cvswebprefix) {
+		my $revtarget = "";
+		$revtarget = "#rev$release" if lc($release) ne "head";
+		print "<a href='" . $config->cvswebprefix . $pathname . $config->cvswebpostfix . $revtarget . "'>View CVS Log</a>";
+	    }
 	    if ($raw) {
 		print($fileh->getlines);
 	    } 
