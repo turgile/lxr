@@ -209,6 +209,15 @@ That's it - lxr should now work. Fire up your webbrowser and go to
 http://yoursite/lxr/source and you should see the listing for the top
 of your source tree.
 
+If you are using a webserver other than Apache, you need to provide:
+/icons/back.gif
+/icons/folder.gif
+/icons/c.gif
+/icons/text.gif
+/icons/compressed.gif
+/icons/image2.gif
+/icons/generic.gif
+
 Getting help if it doesn't work:
 --------------------------------
 If you can't get LXR to work then you can try asking on the mailing
