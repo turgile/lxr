@@ -199,6 +199,10 @@ Alias /lxr /usr/local/lxr
 The distribution contains a .htaccess file set up to ensure that lxr
 will work. Edit it if you have special local policies.
 
+If you are using Apache without mod_perl (running scripts as CGI),
+instead of 'Alias' in httpd.conf use 'ScriptAlias'.  Also, delete
+.htaccess and rename .htaccess_cgi to .htaccess.
+
 That's it - lxr should now work. Fire up your webbrowser and go to
 http://yoursite/lxr/source and you should see the listing for the top
 of your source tree.

@@ -1,0 +1,16 @@
+Options Indexes ExecCGI FollowSymlinks
+
+order deny,allow
+
+<Files lxr.conf>
+deny from all
+</Files>
+
+<Files lib>
+deny from all
+</Files>
+
+<Files ~ (find|search|source|ident|diff|cgi-bin)$>
+SetHandler cgi-script
+ForceType text/html
+</Files>
