@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.37 2004/06/30 19:49:50 brondsem Exp $
+# $Id: source,v 1.38 2004/07/13 19:16:56 brondsem Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.37 2004/06/30 19:49:50 brondsem Exp $ ';
+$CVSID = '$Id: source,v 1.38 2004/07/13 19:16:56 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -223,11 +223,6 @@ sub printfile {
 	my $fileh = $files->getfilehandle($pathname, $release);
 
 	if ($fileh) {
-	    if ($config->cvswebprefix) {
-		my $revtarget = "";
-		$revtarget = "#rev$release" if lc($release) ne "head";
-		print "<a href='" . $config->cvswebprefix . $pathname . $config->cvswebpostfix . $revtarget . "'>View CVS Log</a>";
-	    }
 	    if ($raw) {
 		print($fileh->getlines);
 	    } 
@@ -237,6 +232,11 @@ sub printfile {
 #		      "</pre>");
 #	    } 
 	    else {
+		if ($config->cvswebprefix) {
+		    my $revtarget = "";
+		    $revtarget = "#rev$release" if lc($release) ne "head";
+		    print "<a href='" . $config->cvswebprefix . $pathname . $config->cvswebpostfix . $revtarget . "'>View CVS Log</a>";
+		}
 		my @ann = $files->getannotations($pathname, $release);
 
 		if (@ann) {
