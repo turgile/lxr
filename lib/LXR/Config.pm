@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.25 2001/08/15 15:50:27 mbox Exp $
+# $Id: Config.pm,v 1.26 2002/02/26 15:59:32 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.25 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.26 2002/02/26 15:59:32 mbox Exp $ ';
 
 use strict;
 
@@ -92,6 +92,8 @@ sub _initialize {
 		
 		%$self = (%$self, %$config);
     }
+
+	die "Can't find config for $url\n" if !defined $$self{baseurl};
 }
 
 
