@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.28 2001/05/31 14:45:09 mbox Exp $
+# $Id: Common.pm,v 1.29 2001/07/26 10:21:16 pok Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.28 2001/05/31 14:45:09 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.29 2001/07/26 10:21:16 pok Exp $ ';
 
 use strict;
 
@@ -320,7 +320,7 @@ sub markupfile {
 		}
 		&$outfun("</pre>");
 	} 
-	elsif ($pathname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
+	elsif ($pathname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm|png)$/i) {
 		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
 		&$outfun("<img src=\"$config->{virtroot}/source".
 				 $pathname.&urlargs("raw=1").
