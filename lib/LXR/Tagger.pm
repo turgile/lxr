@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.18 2001/08/15 15:50:27 mbox Exp $
+# $Id: Tagger.pm,v 1.19 2001/10/23 14:30:18 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.18 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.19 2001/10/23 14:30:18 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -91,46 +91,5 @@ sub processrefs {
 	$lang = undef;
 	$revision = undef;
   }
-
-
-
-# Ctags
-package LXR::Tagger::ctags;
-
-# Excuberant ctags
-package LXR::Tagger::ectags;
-
-#  			open(TMP, "> /tmp/lxrref");
-#  			print(TMP $files->getfile($pathname, $release));
-#  			close(TMP);
-			
-#  				|| die "Can't run ctags";
-#  #		open(CTAGS, "ctags-3.2/ctags --excmd=number --sort=no --lang=c++ --c-types=cdefgmnpstuvx -f - ".$$files{'rootpath'}.$release.$pathname." |");
-#  			while (<CTAGS>) {
-#  				chomp;
-#  				@_ = split(/\t/, $_);
-#  				$_[2] =~ s/;\"$//;
-				
-#  				$index->index($_[0], $release, $pathname, $_[2], $_[3]);
-				
-#  				if ($_[4] eq '') {
-#  				}
-#  				elsif ($_[4] =~ /^file:/) {
-#  				}
-#  				elsif ($_[4] =~ /^struct:(.*)/) {
-#  					$index->relate($_[0], $release, $1, 'struct member');
-#  				}
-#  				elsif ($_[4] =~ /^union:(.*)/) {
-#  					$index->relate($_[0], $release, $1, 'union member');
-#  				}
-#  				elsif ($_[4] =~ /^class:(.*)/) {
-#  					$index->relate($_[0], $release, $1, 'class member');
-#  				}
-#  				else {
-#  					print(STDERR "** Unknown : $_\n");
-#  				}
-#  			}
-#  			close(CTAGS);
-
 
 1;
