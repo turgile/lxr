@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.27 2001/01/07 19:37:04 pergj Exp $
+# $Id: Common.pm,v 1.28 2001/05/31 14:45:09 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.27 2001/01/07 19:37:04 pergj Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.28 2001/05/31 14:45:09 mbox Exp $ ';
 
 use strict;
 
@@ -126,7 +126,7 @@ sub fileref {
 		$line = ('0' x (3-length($line))).$line;
 	}
 
-	return ("<a target=\"source\" href=\"$config->{virtroot}/source$path".
+	return ("<a href=\"$config->{virtroot}/source$path".
 			&urlargs(@args).
 			($line > 0 ? "#$line" : "").
 			"\"\>$desc</a>");
@@ -138,7 +138,7 @@ sub diffref {
 	my $dval;
 
 	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
-	return ("<a target=\"source\" href=\"$config->{virtroot}/diff$path".
+	return ("<a href=\"$config->{virtroot}/diff$path".
 			&urlargs(($darg ? "diffvar=$darg" : ""),
 					 ($dval ? "diffval=$dval" : "")).
 			"\"\>$desc</a>");
@@ -147,7 +147,7 @@ sub diffref {
 
 sub idref {
 	my ($desc, $id, @args) = @_;
-	return ("<a target=\"search\" href=\"$config->{virtroot}/ident".
+	return ("<a href=\"$config->{virtroot}/ident".
 			&urlargs(($id ? "i=$id" : ""),
 					 @args).
 			"\"\>$desc</a>");
@@ -507,7 +507,6 @@ sub httpinit {
 	$HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};
 
 	$identifier = $HTTP->{'param'}->{'i'};
-	
 	$config = new LXR::Config($HTTP->{'this_url'});
 	$files  = new LXR::Files($config->sourceroot);
 	$index  = new LXR::Index($config->dbname);
@@ -662,7 +661,7 @@ sub modeexpand {
 		push(@mlist, "<b><i>freetext search</i></b>");
 	} 
 	else {
-		push(@mlist, "<a target=\"search\" ".
+		push(@mlist, "<a ".
 			 "href=\"$config->{virtroot}/search".
 			 urlargs."\">freetext search</a>");
 	}
@@ -671,7 +670,7 @@ sub modeexpand {
 		push(@mlist, "<b><i>file search</i></b>");
 	} 
 	else {
-		push(@mlist, "<a target=\"search\" ".
+		push(@mlist, "<a ".
 			 "href=\"$config->{virtroot}/find".
 			 urlargs."\">file search</a>");
 	}

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.4 2001/05/23 01:08:19 mbox Exp $
+# $Id: Mysql.pm,v 1.5 2001/05/31 14:45:09 mbox Exp $
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.4 2001/05/23 01:08:19 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.5 2001/05/31 14:45:09 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -76,8 +76,8 @@ sub new {
 		 "where s.symid = u.symid ".
 		 "and f.fileid = u.fileid ".
 		 "and u.fileid = r.fileid and ".
-		 " s.symname = ? and  r.release = ?".
-		 " order by f.filename");
+		 "s.symname = ? and  r.release = ? ".
+		 "order by f.filename");
 
 	return $self;
 }
@@ -178,6 +178,7 @@ sub release {
 
 	unless ($rows > 0) {
 		$releases_insert->execute($fileid, $release);
+		$releases_insert->finish();
 	}
 }
 
@@ -189,11 +190,13 @@ sub symid {
 	unless (defined($symid)) {
 		$symbols_byname->execute($symname);
 		($symid) = $symbols_byname->fetchrow_array();
+		$symbols_byname->finish();
 		unless ($symid) {
 			$symbols_insert->execute($symname);
 			# Get the id of the new symbol
 			$symbols_byname->execute($symname);
 			($symid) = $symbols_byname->fetchrow_array();
+			$symbols_byname->finish();
 		}
 		$symcache{$symname} = $symid;
 	}
@@ -207,6 +210,7 @@ sub symname {
 
 	$symbols_byid->execute($symid+0);
 	($symname) = $symbols_byid->fetchrow_array();
+	$symbols_byid->finish();
 
 	return $symname;
 }
@@ -219,6 +223,7 @@ sub issymbol {
 	unless (defined($symid)) {
 		$symbols_byname->execute($symname);
 		($symid) = $symbols_byname->fetchrow_array();
+		$symbols_byname->finish();
 		$symcache{$symname} = $symid;
 	}
 
@@ -240,6 +245,7 @@ sub toindex {
 
 	$status_get->execute($fileid);
 	$status = $status_get->fetchrow_array();
+	$status_get->finish();
 
 	if(!defined($status)) {
 		$status_insert->execute($fileid+0, 0);

@@ -1,29 +1,36 @@
 Installation
 ------------
+The current version of the lxr depends on three things:
+
+1) A recent version of the exuberant ctags program
+2) A relational database.  MySQL has been tested, and there is code
+for Postgresql as well.
+3) Apache with mod_perl
 
 At the moment the DBI backend works, this means that you will have to
-set up a relational database like Postgres or Sybase. The DBI backend
-currently in CVS has been tested with Postgres. I have gotten LXR to
-work with Sybase as well. The problem is that SQL is not SQL and the
-things that work with Sybase does not work with Postgres. We have to
-figure out a way to make it work with different databases without
-making it a nightmare to maintain.
+set up a relational database like MySQL. The DBI backend currently in
+CVS has been tested with MySQL.  There is a DB backend for Berkeley
+dbm file support, but it has not been tested recently.
 
-Create database
----------------
-First install the DBMS and create a lxr database. In postgres this is
-done by entering 'createdb lxr' at the shell prompt. With other
-databases you will probably want to use the "create database lxr" SQL
-statement. The file "initdb" contains the SQL statements needed to
-initialize the database. If you are running postgres the
-initialization can be done by running 'psql lxr' and reading the file
-"initdb" by entering '\i createdb'. Just ignore the errors about
-unimplemented functions. The user running your cgi-scripts must be
-able to use the postgres database. This user is usually nobody, create
-the postgres user by entering "createuser nobody" at the shell prompt.
+Installing the database
+-----------------------
+First install the DBMS and create a lxr database. The files
+initdb-<name> where <name> is the name of your database contain the
+commands to create the correct database.
 
-Edit config file
-----------------
+If you are running postgres the initialization can be done by running
+'psql lxr' and reading the file "initdb-postgres" by entering '\i
+createdb'. Just ignore the errors about unimplemented functions.
+The user running your cgi-scripts must be able to use the postgres
+database. This user is usually nobody, create the postgres user by
+entering "createuser nobody" at the shell prompt.
+
+If you are using MySQL, run 'mysql' and then read in the initdb-mysql
+file using '\. initdb-mysql'.  This will create the database and a
+user called lxr with access rights to the database.
+
+Edit the lxr config file
+------------------------
 When the database is initialized, copy lxr.conf.template to lxr.conf.
 Then edit lxr.conf, it should contain enough comments to get you
 started.
@@ -42,15 +49,47 @@ noting that one lxr.conf file can be used for several different
 configurations. Which config block to use is selected according to the
 url argument.
 
+Note that genxref can be a very slow process the first time it's run,
+for example on a 4Gb source tree a full run can take several days. However,
+on future runs it will only index changed files, thus speeding the
+process.
+
 Set up webserver
 ----------------
-In srm.conf
+The browsing scripts currently supplied depend on mod_perl to execute
+properly, although it should be easy to modify them to work as plain
+CGI scripts.  Since mod_perl is an Apache add-on, this means using
+Apache at the moment.
 
-Alias /lxr /usr/local/lxr/http
-<Directory /usr/local/lxr/http>
+In httpd.conf
+
+Alias /lxr /path/to/lxr
+<Directory /path/to/lxr/>
 AllowOverride All
 </Directory>
 
 The distribution contains a .htaccess file set up to ensure that lxr
 will work. Edit it if you have special local policies.
 
+If you have problems with the LXR modules not being found by mod_perl,
+you may need to install the LXR module under the normal perl module
+directory i.e. copy/link lib/LXR into /usr/lib/perl5/site_perl/5.6.0
+(assuming this is where your perl is installed).
+
+Possible problems and solutions:
+-------------------------------
+
+** Fatal: Can't find database
+
+This message comes from the DB backend. The likely cause is that the
+webserver url passed to the browsing scripts does not match the url in
+lxr.conf.  This means the configuration will not be found, and thus
+the database will not be found
+
+HTTP headers appearing in the html, or output not being interpreted as HTML
+
+This can be caused by warning messages output before the script
+outputs the right headers to tell the browser that the output is
+HTML.  This can normally be solved by changing the value of $wwwdebug
+to 0 in Common.pm.  But please report the warning message as a bug at
+http://sf.net/projects/lxr first!
