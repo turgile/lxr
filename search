@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.14 2004/07/06 13:50:17 brondsem Exp $
+# $Id: search,v 1.15 2004/07/06 13:54:40 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.14 2004/07/06 13:50:17 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.15 2004/07/06 13:54:40 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -131,7 +131,7 @@ sub swishsearch {
 	    
 	    foreach my $hit (@result) {
 		my ($score, $file) = 
-		    $hit =~ /^(\d+) \/(.+) "\S+" \d+/;
+		    $hit =~ /^(\d+) \/(.+) "(.+)" \d+/;
 		
 		print("$score ", &fileref("$file", "find-file", "/$file"), "<br>\n");
 	    }
