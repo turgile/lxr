@@ -1,29 +1,31 @@
-# Configuration file.  -*- perl -*-
-# 
+# -*- mode: perl -*-
+# Configuration file
+#
 (
  {
-    # Global configuration
-    
-     'glimpsebin'	=> '/info/lxr/bin/glimpse',
-     'ctagsbin'		=> '/usr/bin/gctags',
-     'ectagsbin'	=> '/local/bin/ctags',
-     
-     'tmpdir'		=> '/tmp',
+  # Global configuration
+
+  # 'glimpsebin'	=> '/info/lxr/bin/glimpse',
+  'ectagsbin'	=> '/usr/bin/ctags',
+  'tmpdir'		=> '/tmp',
+  # Location of the Generic.pm config file
+  'genericconf' => '/path/to/lib/LXR/Lang/generic.conf'
+
  },
 
  {
      # Configuration for http://karsk.ping.uio.no/~argggh/lxr.
      # baseurl is used to select configuration block.
 
-     'baseurl'		=> 'http://karsk.ping.uio.no/~argggh/lxr',
-     'virtroot'		=> '/~argggh/lxr',
+     'baseurl'		=> 'http://192.168.1.3/lxr',
+     'virtroot'		=> '/lxr',
      
      'variables' => {
 	 # Define typed variable "v", read valueset from file.
 	 'v' => {'name'    => 'Version',
 		 'range'   => [ readfile('src/cvsversions') ], 
 
-                 # If files within a tree can have different versions,
+         # If files within a tree can have different versions,
 		 # e.g in a CVS tree, 'range' can be specified as a
 		 # function to call for each file:
 		 #'range'   => sub { return 
@@ -56,14 +58,72 @@
 # containing one directory for each version, or cvs: and the name of a
 # cvs repository
 
-#     'sourceroot'	=> './src',
-     'sourceroot'	=> 'cvs:/hom/karsk/a/CVSROOT/linux',
-     'sourcerootname'	=> 'Linux',
+     'sourceroot'	=> '/home/malcolm/indexed-src',
+#     'sourceroot'	=> 'cvs:/hom/karsk/a/CVSROOT/linux',
+     'sourcerootname'	=> 'Example',
 # where to look for include files inside the sourcetree
-     'incprefix'	=> ['/include', '/include/linux'],
-     
-# If dbname is a directory the db-file databases will be stored here
-# if a relational database is used the name is a dbi database specifier
-     'dbname'		=> 'dbi:Pg:dbname=lxr',
-#     'dbname'		=> 'src/db',
- })
+  'incprefix'	=> ['/include', '/include/linux'],
+
+  # Which extensions to treat as images when browsing.  If a file is an image,
+  # it is displayed.
+  
+  'graphicfile' => '(?i)\.(gif|jpg|jpeg|pjpg|pjpeg|xbm|png)$',
+
+  # How to map files to languages
+  # format is name, regex, module
+  'filetype' => [
+				 # Format is
+				 # Language name, filepatten regexp, module to envoke
+				 # Note that to have another language supported by Generic.pm,
+				 # you must ensure that:
+				 # a) exuberant ctags supports it
+				 # b) generic.conf is updated to specify information about the language
+				 # c) the name of the language given here matches the entry in generic.conf
+				 ['C', '\.c$' #'
+				  , 'LXR::Lang::Generic'],
+				 ['C++', '\.C$|((?i)\.c\+\+$|\.cc$|\.cpp$|\.cxx$|\.h$|\.hh$|\.hpp$|\.hxx$|\.h\+\+$)' #'
+				  , 'LXR::Lang::Generic'],
+
+# Some languages are commented out until the relevant entries in generic.conf are made
+# The list here is the set supported by ctags 5.0.1
+# 				 ['Beta', '(?i)\.bet$' #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['Cobol', '(?i)\.cob$'  #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['Eiffel', '(?i)\.e$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['Fortran', '(?i)\.f$|\.for$|\.ftn$|\.f77$|\.f90$|\.f95$'   #'
+# 				  , 'LXR::Lang::Generic'],
+				 ['Java', '(?i)\.java$'   #'
+				  , 'LXR::Lang::Generic'],
+# 				 ['Lisp', '(?i)\.cl$|\.clisp$|\.el$|\.l$|\.lisp$|\.lsp$|\.ml$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['Make', '(?i)\.mak$|makefile*' #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['Pascal', '(?i)\.p$|\.pas$'   #'
+# 				  , 'LXR::Lang::Generic'],
+				 ['Perl', '(?i)\.pl$|\.pm$|\.perl$'   #'
+				  , 'LXR::Lang::Generic'],
+# 				 ['php', '(?i)\.php$|\.php3$|\.phtml$'   #'
+# 				  , 'LXR::Lang::Generic'],
+				 ['Python', '(?i)\.py$|\.python$'   #'
+				  , 'LXR::Lang::Generic'],
+# 				 ['rexx', '(?i)\.cmd$|\.rexx$|\.rx$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['ruby', '(?i)\.rb$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['scheme', '(?i)\.sch$|\.scheme$|\.scm$|\.sm$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['shell', '(?i)\.sh$|\.bsh$|\.bash$|\.ksh$|\.zsh$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['s-Lang', '(?i)\.sl$'   #'
+# 				  , 'LXR::Lang::Generic'],
+# 				 ['tcl', '(?i)\.tcl$|\.wish$'   #'
+# 				  , 'LXR::Lang::Generic'],
+				],
+  
+  # If dbname is a directory the db-file databases will be stored here
+  # if a relational database is used the name is a dbi database specifier
+  'dbname'		=> 'dbi:mysql:dbname=lxr',
+  #     'dbname'		=> 'src/db',
+})
