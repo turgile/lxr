@@ -77,6 +77,7 @@ my @versions;
 
 if ($option{'allversions'} || !$option{'version'}) {
     @versions = $config->varrange('v');
+    die "Option --allversions cannot be used because no versions found automatically.  Use --version=VERSION or fix lxr.conf.\n" if scalar @versions <= 0;
 } else {
     @versions = $option{'version'};
 }
@@ -98,8 +99,7 @@ sub genindex {
 	    genindex($pathname.$_, $release) 
 	    } $files->getdir($pathname, $release);
     } else {
-	  &LXR::Tagger::processfile($pathname, $release,
-				      $config, $files, $index)
+	  &LXR::Tagger::processfile($pathname, $release, $config, $files, $index)
     }
 }
 
@@ -113,8 +113,7 @@ sub genrefs {
 	    genrefs($pathname.$_, $release)
 	    } $files->getdir($pathname, $release);
     } else {
-	  &LXR::Tagger::processrefs($pathname, $release,
-								$config, $files, $index)
+	  &LXR::Tagger::processrefs($pathname, $release, $config, $files, $index)
     }
 }
 
@@ -168,17 +167,17 @@ sub gensearch {
 	}
 
 	if ($config->swishdir and $config->swishindex) {
-        my $swish = new IO::Handle;
-        my $filelist = new IO::File $config->swishdir."/$release.filenames", "w" or die "can't open $release.filenames for writing";
-        
-        # execute swish, as a pipe we can write to
-        
-        open($swish, "| " . $config->swishindex . " -S prog -i stdin -v 1 -f " . $config->swishdir."/".$release.".index")
-             or die "Couldn't exec ".$config->swishindex.": $!\n";
-        
-        feedswish("/", $release, $swish, $filelist);
-        
-        $swish->close();
-        $filelist->close();
+	    my $swish = new IO::Handle;
+	    my $filelist = new IO::File $config->swishdir."/$release.filenames", "w" or die "can't open $release.filenames for writing";
+	    
+	    # execute swish, as a pipe we can write to
+	    
+	    open($swish, "| " . $config->swishindex . " -S prog -i stdin -v 1 -f " . $config->swishdir."/".$release.".index")
+		or die "Couldn't exec ".$config->swishindex.": $!\n";
+	    
+	    feedswish("/", $release, $swish, $filelist);
+	    
+	    $swish->close();
+	    $filelist->close();
 	}
 }
