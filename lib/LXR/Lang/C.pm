@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.2 1999/09/18 10:27:07 argggh Exp $
+# $Id: C.pm,v 1.3 1999/12/25 21:58:29 pergj Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.2 1999/09/18 10:27:07 argggh Exp $ ';
+$CVSID = '$Id: C.pm,v 1.3 1999/12/25 21:58:29 pergj Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -60,7 +60,7 @@ sub indexfile {
 			@_ = split(/\t/, $_);
 			$_[2] =~ s/;\"$//;
 				
-			if ($_[4] =~ /^(struct|union|class):(.*)/) {
+			if (defined($_[4]) && $_[4] =~ /^(struct|union|class):(.*)/) {
 				$_[4] = $2;
 				$_[4] =~ s/::<anonymous>//g;
 			}
@@ -106,22 +106,20 @@ sub referencefile {
 			my $l;
 			foreach $l (@lines) {
 				foreach ($l =~ /(?:^|[^a-zA-Z_\#]) # Non-symbol chars.
-						 (\~?_*[a-zA-Z][a-zA-Z0-9_]*) # The symbol.
-						 \b/ogx)
-				{
-					$index->reference($_, $fileid, $linenum)
-						if $index->issymbol($_);
-                }
+  						 (\~?_*[a-zA-Z][a-zA-Z0-9_]*) # The symbol.
+  						 \b/ogx)
+  				{
+  					$index->reference($_, $fileid, $linenum)
+  						if $index->issymbol($_);
+                  }
 
-				$linenum++;
-			}
-			$linenum--;
-		}
-		($btype, $frag) = &LXR::SimpleParse::nextfrag;
-	}
+  				$linenum++;
+  			}
+  			$linenum--;
+  		}
+  		($btype, $frag) = &LXR::SimpleParse::nextfrag;
+  	}
 	print("+++ $linenum\n");
-
-	exit if rand(50) < 1;
 }
 
 

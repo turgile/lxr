@@ -1,0 +1,69 @@
+drop table files;
+drop table symbols;
+drop table indexes;
+drop table releases;
+drop table status;
+drop table useage;
+
+/* symnum filenum */
+create table files (
+        filename        char(255) not null,
+        revision        char(255) not null,
+        fileid          int not null auto_increment,
+        primary key     (fileid) /*,
+        unique          (filename, revision) */
+
+);
+
+create table symbols (
+        symname         char(255) not null,
+        symid           int not null auto_increment,
+        primary key     (symid),
+        unique          (symname)
+
+);
+
+create table indexes (
+        symid           int not null references symbols,
+        fileid          int not null references files,
+        line            int not null,
+        type            char(1),
+        relsym          int          references symbols
+);
+
+create table releases 
+        (fileid         int not null  references files,
+        release         char(255) not null,
+        primary key     (fileid)
+);
+
+create table useage
+        (fileid         int not null    references files,
+        line            int not null,
+        symid           int not null    references symbols
+);
+
+create table status
+        (fileid         int not null references files,
+        status          int,
+        primary key     (fileid)
+);
+
+create index indexindex on indexes  (symid);
+create unique index symbolindex on symbols  (symname);
+create index useageindex on useage  (symid);
+
+grant select on files to public;
+grant select on symbols to public;
+grant select on indexes to public;
+grant select on releases to public;
+grant select on useage to public;
+grant select on status to public;
+
+grant all on files to pergj;
+grant all on symbols to pergj;
+grant all on indexes to pergj;
+grant all on releases to pergj;
+grant all on useage to pergj;
+grant all on status to pergj;
+

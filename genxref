@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# -*- tab-width: 4 -*-
+#!/usr/bin/perl -w 
+# -*- tab-width: 4 -*-"
 
 use strict;
 use lib 'lib';
@@ -11,6 +11,8 @@ use LXR::Index;
 use LXR::Config;
 use LXR::Tagger;
 use LXR::Common;
+
+
 
 my %option;
 GetOptions(\%option, "url=s", "version=s", "allurls!", "allversions!");
@@ -33,21 +35,20 @@ genrefs('/', $option{'version'});
 
 sub genindex {
 	my ($pathname, $release) = @_;
-	
+
 	print(STDERR "*** $pathname $release \n");
-	
+
 	if ($pathname =~ m|/$|) {
 		map { 
 			genindex($pathname.$_, $release) 
 			} $files->getdir($pathname, $release);
-	}
-	else {
+	} else {
 		my @releases = ($release 
 						? ($release)
 						: $files->allreleases($pathname));
-
+		
 		map {
-			&LXR::Tagger::processfile($pathname, $_, 
+			&LXR::Tagger::processfile($pathname, $_,
 									  $config, $files, $index)
 			} @releases;
 	}
@@ -55,12 +56,12 @@ sub genindex {
 
 sub genrefs {
 	my ($pathname, $release) = @_;
-	
+
 	print(STDERR "### $pathname $release \n");
 
 	if ($pathname =~ m|/$|) {
-		map { 
-			genrefs($pathname.$_, $release) 
+		map {
+			genrefs($pathname.$_, $release)
 			} $files->getdir($pathname, $release);
 	}
 	else {
@@ -69,7 +70,7 @@ sub genrefs {
 						: $files->allreleases($pathname));
 
 		map {
-			&LXR::Tagger::processrefs($pathname, $_, 
+			&LXR::Tagger::processrefs($pathname, $_,
 									  $config, $files, $index)
 			} @releases;
 	}

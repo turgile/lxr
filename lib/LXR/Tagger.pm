@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.11 1999/09/17 09:37:41 argggh Exp $
+# $Id: Tagger.pm,v 1.12 1999/12/25 21:58:28 pergj Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.11 1999/09/17 09:37:41 argggh Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.12 1999/12/25 21:58:28 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -13,7 +13,7 @@ use LXR::Lang;
 sub processfile {
 	my ($pathname, $release, $config, $files, $index) = @_;
 
-	my $lang = new LXR::Lang($pathname);
+	my $lang = new LXR::Lang($pathname, $release);
 
 	return unless $lang;
 	
@@ -28,7 +28,7 @@ sub processfile {
 	$index->release($fileid, $release);
 
 	if ($index->toindex($fileid)) {
-
+		$index->empty_cache();
 		print(STDERR "--- $pathname $fileid\n");
 
 		my $path = $files->tmpfile($pathname, $release);
@@ -42,7 +42,7 @@ sub processfile {
 sub processrefs {
 	my ($pathname, $release, $config, $files, $index) = @_;
 
-	my $lang = new LXR::Lang($pathname);
+	my $lang = new LXR::Lang($pathname, $release);
 
 	return unless $lang;
 	
@@ -55,17 +55,16 @@ sub processrefs {
 	my $fileid = $index->fileid($pathname, $revision);
 
 	if ($index->toreference($fileid)) {
-
+		$index->empty_cache();
 		print(STDERR "--- $pathname $fileid\n");
 
 		my $path = $files->tmpfile($pathname, $release);
 
 		$lang->referencefile($pathname, $path, $fileid, $index, $config);
 		unlink($path);
+	} else {
+		print STDERR "$pathname was already referenced\n";
 	}
-
-#	if ($index->toreference($fileid)) {
-#	}	
 }
 
 

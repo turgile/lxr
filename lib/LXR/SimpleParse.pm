@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.10 1999/09/18 10:27:04 argggh Exp $
+# $Id: SimpleParse.pm,v 1.11 1999/12/25 21:58:28 pergj Exp $
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.10 1999/09/18 10:27:04 argggh Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.11 1999/12/25 21:58:28 pergj Exp $ ';
 
 use strict;
 use integer;
@@ -27,6 +27,15 @@ my $tabwidth;		# Tab width
 
 sub init {
     my @blksep;
+	
+	$fileh = "";
+	@frags = ();
+	@bodyid = ();
+	@open = ();
+	@term = ();
+	$split = "";
+	$open = "";
+	$tabwidth = 8;
 
     ($fileh, @blksep) = @_;
 
@@ -47,8 +56,6 @@ sub init {
 		$split .= "$_|";
     }
     chop($split);
-
-    $tabwidth = 8;
 }
 
 
