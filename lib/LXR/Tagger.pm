@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.19 2001/10/23 14:30:18 mbox Exp $
+# $Id: Tagger.pm,v 1.20 2004/04/21 22:52:08 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.19 2001/10/23 14:30:18 mbox Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.20 2004/04/21 22:52:08 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -49,6 +49,7 @@ sub processfile {
 		my $path = $files->tmpfile($pathname, $release);
 		
 		$lang->indexfile($pathname, $path, $fileid, $index, $config);
+		$index->setindexed($fileid);
 		unlink($path);
 	  } else {
 		print(STDERR "$pathname was already indexed\n");
@@ -82,6 +83,7 @@ sub processrefs {
 		my $path = $files->tmpfile($pathname, $release);
 		
 		$lang->referencefile($pathname, $path, $fileid, $index, $config);
+		$index->setreferenced($fileid);
 		unlink($path);
 	  } else {
 		print STDERR "$pathname was already referenced\n";

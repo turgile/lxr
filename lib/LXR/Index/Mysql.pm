@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.12 2001/11/18 03:31:34 mbox Exp $
+# $Id: Mysql.pm,v 1.13 2004/04/21 22:52:11 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.12 2001/11/18 03:31:34 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.13 2004/04/21 22:52:11 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -234,8 +234,8 @@ sub issymbol {
 	return $symid;
 }
 
-# If this file has not been indexed earlier, mark it as being indexed
-# now and return true.  Return false if already indexed.
+# If this file has not been indexed earlier return true.  Return false
+# if already indexed.
 sub toindex {
 	my ($self, $fileid) = @_;
 	my ($status);
@@ -247,15 +247,31 @@ sub toindex {
 	if(!defined($status)) {
 		$self->{status_insert}->execute($fileid+0, 0);
 	}
-	return $self->{status_update}->execute(1, $fileid, 0) > 0;
+	
+	return $status == 0;
 }
+
+sub setindexed {
+	my ($self, $fileid) = @_;
+	$self->{status_update}->execute(1, $fileid, 0);
+	}
 
 sub toreference {
 	my ($self, $fileid) = @_;
-	my ($rv);
+	my ($status);
 
-	return $self->{status_update}->execute(2, $fileid, 1) > 0;
+	$self->{status_get}->execute($fileid);
+	$status = $self->{status_get}->fetchrow_array();
+	$self->{status_get}->finish();
+
+	return $status < 2;
 }
+
+sub setreferenced {
+ 	my ($self, $fileid) = @_;
+	$self->{status_update}->execute(2, $fileid, 1);
+	}
+
 
 # This function should be called before parsing each new file, 
 # if this is not done the too much memory will be used and
