@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.21 1999/09/17 09:37:41 argggh Exp $
+# $Id: Config.pm,v 1.22 2000/01/05 07:54:04 pergj Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.21 1999/09/17 09:37:41 argggh Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.22 2000/01/05 07:54:04 pergj Exp $ ';
 
 use strict;
 
@@ -32,7 +32,7 @@ sub readfile {
     my $file  = shift;
     my @data;
 
-    open(INPUT, $file);
+    open(INPUT, $file) || fatal("Config: cannot open $file\n");
     $file = <INPUT>;
     close(INPUT);
 
