@@ -5,8 +5,10 @@ The current version of the lxr depends on three things:
 1) A recent version of the exuberant ctags program.  Available from
    http://sf.net/projects/ctags
 
-2) A relational database - MySQL (http://www.mysql.com) and Postgresql
-   (http://www.postgresql.org) are supported.
+2) A relational database - MySQL (http://www.mysql.com), Postgresql
+   (http://www.postgresql.org) and Oracle are supported.
+   You will also need the right Perl DBI drivers for your particular database,
+   usually available from CPAN.
 
 3) Apache with mod_perl - http://www.apache.org
 
@@ -39,6 +41,13 @@ For MySQL:
 Run 'mysql' and then read in the initdb-mysql file using
 '\. initdb-mysql'.  This will create the database and a user called
 lxr with access rights to the database.
+
+For Oracle
+
+Start script in sqlplus with:
+
+@/[pathTo]/initdb-oracle.sql;
+
 
 Create lxr installation directory
 ---------------------------------

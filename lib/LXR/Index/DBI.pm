@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: DBI.pm,v 1.18 2001/08/15 15:50:27 mbox Exp $
+# $Id: DBI.pm,v 1.19 2002/02/26 16:18:46 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.18 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.19 2002/02/26 16:18:46 mbox Exp $ ';
 
 use strict;
 
@@ -26,15 +26,15 @@ sub new {
 	my ($self, $dbname) = @_;
 	my ($index);
 
-	if($dbname =~ /^dbi:mysql:/) {
-		require LXR::Index::Mysql;
-		$index = new LXR::Index::Mysql($dbname);
-	} elsif($dbname =~ /^dbi:Pg:/) {
-		require LXR::Index::Postgres;
-		$index = new LXR::Index::Postgres($dbname);
-	} elsif($dbname =~ /^dbi:sybase:/) {
-		require LXR::Index::Sybase;
-		$index = new LXR::Index::Sybase($dbname);
+	if($dbname =~ /^dbi:mysql:/i) {
+	  require LXR::Index::Mysql;
+	  $index = new LXR::Index::Mysql($dbname);
+	} elsif($dbname =~ /^dbi:Pg:/i) {
+	  require LXR::Index::Postgres;
+	  $index = new LXR::Index::Postgres($dbname);
+	} elsif($dbname =~ /^dbi:oracle:/i) {
+	  require LXR::Index::Oracle;
+	  $index = new LXR::Index::Oracle($dbname);
 	}
 	return $index;
 }
