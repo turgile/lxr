@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.28 2004/07/15 14:41:04 brondsem Exp $
+# $Id: Config.pm,v 1.29 2004/07/15 14:55:00 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.28 2004/07/15 14:41:04 brondsem Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.29 2004/07/15 14:55:00 brondsem Exp $ ';
 
 use strict;
 
@@ -61,8 +61,6 @@ sub _initialize {
     unless ($url) {
 		$url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
 		$url =~ s/:80$//;
-
-		$url .= $ENV{'SCRIPT_NAME'};
     }
     
     $url =~ s|^http://([^/]*):443/|https://$1/|;
@@ -98,6 +96,7 @@ sub _initialize {
 			my $root = $config->{baseurl};
 			push @aliases, $root;
 			foreach my $rt (@aliases) {
+				$rt .= '/' unless $rt =~ m#/$#; # append / if necessary
 				my $r = quotemeta($rt);
 				if ($url =~ /^$r/) {
 					$config->{baseurl} = $rt;
