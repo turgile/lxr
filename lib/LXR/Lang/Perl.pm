@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Perl.pm,v 1.3 2001/08/15 15:50:27 mbox Exp $
+# $Id: Perl.pm,v 1.4 2001/09/27 16:12:20 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang::Perl;
 
-$CVSID = '$Id: Perl.pm,v 1.3 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Perl.pm,v 1.4 2001/09/27 16:12:20 mbox Exp $ ';
 
 =head1 LXR::Lang::Perl
 
@@ -81,7 +81,7 @@ sub modref {
 	$file =~ s,::,/,g;
 	$file .= ".pm";
 
-	return &LXR::Common::incref($mod, $file);
+	return &LXR::Common::incref($mod, "include", $file);
 }
 
 sub processinclude {
@@ -124,7 +124,7 @@ sub processcomment {
 		} split(/((?:\n[ \t]*)*\n)/, $$comm));
 	}
 	else {
-		$$comm =~ s|^(.*)$|<b><i>$1</i></b>|gm;
+		$$comm =~ s|^(.*)$|<span class='comment'>$1</span>|gm;
 	}
 }
 

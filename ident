@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.9 2000/10/31 12:52:10 argggh Exp $
+# $Id: ident,v 1.10 2001/09/27 16:12:20 mbox Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.9 2000/10/31 12:52:10 argggh Exp $ ';
+$CVSID = '$Id: ident,v 1.10 2001/09/27 16:12:20 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -32,7 +32,100 @@ use LXR::Common qw(:html);
 use Local;
 
 
-sub ident { 
+sub varinputs {
+    my $ret = '';
+    foreach ($config->allvariables) {
+	if ($config->variable($_) ne $config->vardefault($_)) {
+	    $ret .= "<input type=hidden name='$_' value='" . 
+	      $config->variable($_) . "'>\n";
+	}
+    }
+    return $ret;
+}
+
+sub refexpand {
+    my $templ = shift;
+    my $ret = '';
+
+    my @refs = $index->getindex($identifier, $release);
+
+    my $def;
+    foreach my $def (@refs) {
+	my ($file, $line, $type, $rel) = @$def;
+	
+	$rel &&= "(member of ".idref($rel, "search-member", $rel).")";
+	$ret .= expandtemplate($templ,
+			       (file => sub { $file },
+				line => sub { $line },
+				type => sub { $type_names{$type} },
+				rel  => sub { $rel },
+				fileref  => sub {
+				    fileref("$file, line $line", 
+					    "search-decl",
+					    $file, $line);
+				}
+			       ));
+	
+# 	print("<span class=search-li1> $type_names{$type} in ".
+# 	      fileref("$file, line $line", "search-decl",
+# 		      $file, $line).
+# 	      " $rel</span>\n");
+    }
+    
+    return $ret;
+}
+
+sub usesexpand {
+    my $templ = shift;
+    my $ret = '';
+
+    my @uses = $index->getreference($identifier, $release);
+    foreach my $ref (sort { $$a[0] cmp $$b[0] } @uses) {
+	my ($file, $line) = @$ref;
+	$ret .= expandtemplate($templ,
+			       (
+				file => sub { $file },
+				line => sub { $line },
+				fileref => sub {
+				    fileref("$file, line $line", "search-ref",
+					    $file, $line);
+				}
+			       ));
+    }
+    
+    return $ret;
+}
+
+sub printident {
+    my $dir = shift;
+    my $templ;
+    
+    #$templ = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
+    if ($config->htmlident) {
+	unless (open(TEMPL, $config->htmlident)) {
+	    warning("Template ".$config->htmlident." does not exist.");
+	} else {
+	    local($/) = undef;
+	    $templ = <TEMPL>;
+	    close(TEMPL);
+	}
+    }
+    
+    # print the description of the current directory
+    #dirdesc($dir);
+    
+    # print the listing itself
+    print(expandtemplate($templ,
+			 (test => sub { "testik" },
+			  variables => \&varinputs,
+			  identifier => sub { return $identifier },
+			  refs => sub { refexpand(@_) },
+			  uses => sub { usesexpand(@_) },
+			 )
+			));
+}
+
+sub ident_ { 
     print("Type the full name of an identifier to summarize ",
 	  "(a function name, variable name, typedef, etc).\n",
 	  "<p>Matches are case-sensitive.\n");                    
@@ -55,23 +148,25 @@ sub ident {
     if ($identifier) {
 	my @refs = $index->getindex($identifier, $release);
 
-	print("<h1>$identifier</h1>\n");
+	print("<span class=search-ident>$identifier</span>\n");
 
 	if (@refs) {
 	    my $def;
 
-	    print("<ul>\n");
+	    # print("<ul>\n"); CSS _PH_
+	    print "<span class=search-ul>\n";
 	    while ($def = shift(@refs)) {
 		my ($file, $line, $type, $rel) = @$def;
 
-		$rel &&= "(member of ".idref($rel, $rel).")";
+		$rel &&= "(member of ".idref($rel, "search-member", $rel).")";
 		
-		print("<li> $type_names{$type} in ".
-		      fileref("$file, line $line",
+		print("<span class=search-li1> $type_names{$type} in ".
+		      fileref("$file, line $line", "search-decl",
 			      $file, $line).
-		      " $rel<br>\n");
+		      " $rel</span>\n");
 	    }
-	    print("</ul>\n");
+	    print "</span>\n";
+	    # print("</ul>\n");
 
 	    my @uses = $index->getreference($identifier, $release);
 
@@ -82,10 +177,10 @@ sub ident {
 		while ($ref = shift(@uses)) {
 		    my ($file, $line) = @$ref;
 
-		    print("<li> ".
-			  fileref("$file, line $line",
+		    print("<span class=search-li2> ".
+			  fileref("$file, line $line", "search-ref",
 				  $file, $line).
-			  "<br>\n");
+			  "</span>\n");
 		}
 	    }
 	}
@@ -99,6 +194,6 @@ sub ident {
 httpinit;
 
 makeheader('ident');
-ident;
+printident;
 makefooter('ident');
 

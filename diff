@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: diff,v 1.6 2000/10/31 12:52:10 argggh Exp $
+# $Id: diff,v 1.7 2001/09/27 16:12:20 mbox Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.6 2000/10/31 12:52:10 argggh Exp $ ';
+$CVSID = '$Id: diff,v 1.7 2001/09/27 16:12:20 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -147,17 +147,19 @@ sub printdiff {
     print("<h1>Diff markup</h1>\n",
 	  "<h3>Differences between ",
 
-	  fileref("$origname <i>(".$config->vardescription($diffvar).
-		  " $origval)</i>", $origname, undef, "$diffvar=$origval"),
+	  fileref("$origname (".$config->vardescription($diffvar).
+		  " $origval)", "diff-fref", 
+		  $origname, undef, "$diffvar=$origval"),
 	  " and ",
 
-	  fileref("$diffname <i>(".$config->vardescription($diffvar).
-		  " $diffval)</i>",$diffname, undef, "$diffvar=$diffval"),
+	  fileref("$diffname (".$config->vardescription($diffvar).
+		  " $diffval)", "diff-fref", 
+		  $diffname, undef, "$diffvar=$diffval"),
 	  "</h3><hr>\n");
 
     my $origh = new FileHandle($origtemp);
     my $orig = '';
-    markupfile($origh, sub { $orig .= shift });
+    markupfile($origh, sub { $orig .= shift }, 1);
     my $len = $.+$ofs;
     $origh->close;
     
@@ -180,12 +182,16 @@ sub printdiff {
     my @orig = split(/\n/, $orig);
     my @new  = split(/\n/, $new);
 
-    print("<pre>");
+    print("<pre class=file>\n");
     foreach $i (0..$len) {
 	my $o = htmlsub($orig[$i], 50);
 	my $n = $new[$i];
 
-	print("$o <font color=red>", ($chg{$i+1} || "  "), "</font> $n\n");
+	my $diffmark = $chg{$i+1} ? 
+	  ("<span class=diff-mark>" . $chg{$i+1} . "</span>") : "  ";
+	#print("$o <span class=diff-mark>", 
+	#      ($chg{$i+1} || "  "), "</span> $n\n");
+	print "$o $diffmark $n\n";
     }
     print("</pre>");
 

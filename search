@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.5 2001/07/30 21:22:40 pergj Exp $
+# $Id: search,v 1.6 2001/09/27 16:12:20 mbox Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.5 2001/07/30 21:22:40 pergj Exp $ ';
+$CVSID = '$Id: search,v 1.6 2001/09/27 16:12:20 mbox Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -99,7 +99,8 @@ sub search {
 		    $text =~ s/</&lt;/g;
 		    $text =~ s/>/&gt;/g;
 
-		    print(&fileref("$file, line $line", "/$file", $line),
+		    print(&fileref("$file, line $line", "find-file", 
+				   "/$file", $line),
 			  " -- $text<br>\n");
 		}
 	    }

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.31 2001/08/15 15:50:27 mbox Exp $
+# $Id: Common.pm,v 1.32 2001/09/27 16:12:20 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.31 2001/08/15 15:50:27 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.32 2001/09/27 16:12:20 mbox Exp $ ';
 
 use strict;
 
@@ -129,9 +129,8 @@ sub urlargs {
 	return ($#args < 0 ? '' : '?'.join(';',@args));
 }	 
 
-
 sub fileref {
-	my ($desc, $path, $line, @args) = @_;
+	my ($desc, $css, $path, $line, @args) = @_;
 
 	# jwz: URL-quote any special characters.
 	$path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
@@ -140,19 +139,18 @@ sub fileref {
 		$line = ('0' x (3-length($line))).$line;
 	}
 
-	return ("<a href=\"$config->{virtroot}/source$path".
+	return ("<a class='$css' href=\"$config->{virtroot}/source$path".
 			&urlargs(@args).
 			($line > 0 ? "#$line" : "").
 			"\"\>$desc</a>");
 }
 
-
 sub diffref {
-	my ($desc, $path, $darg) = @_;
+	my ($desc, $css, $path, $darg) = @_;
 	my $dval;
 
 	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
-	return ("<a href=\"$config->{virtroot}/diff$path".
+	return ("<a class='$css' href=\"$config->{virtroot}/diff$path".
 			&urlargs(($darg ? "diffvar=$darg" : ""),
 					 ($dval ? "diffval=$dval" : "")).
 			"\"\>$desc</a>");
@@ -160,8 +158,8 @@ sub diffref {
 
 
 sub idref {
-	my ($desc, $id, @args) = @_;
-	return ("<a href=\"$config->{virtroot}/ident".
+	my ($desc, $css, $id, @args) = @_;
+	return ("<a class='$css' href=\"$config->{virtroot}/ident".
 			&urlargs(($id ? "i=$id" : ""),
 					 @args).
 			"\"\>$desc</a>");
@@ -169,7 +167,7 @@ sub idref {
 
 
 sub incref {
-	my ($name, $file, @paths) = @_;
+	my ($name, $css, $file, @paths) = @_;
 	my ($dir, $path);
 
 	push(@paths, $config->incprefix);
@@ -177,7 +175,7 @@ sub incref {
 	foreach $dir (@paths) {
 		$dir =~ s/\/+$//;
 		$path = $config->mappath($dir."/".$file);
-		return &fileref($name, $path) if $files->isfile($path, $release);
+		return &fileref($name, $css, $path) if $files->isfile($path, $release);
 		
 	}
 	
@@ -215,7 +213,7 @@ sub markupstring {
 	# Look for identifiers and create links with identifier search query.
 	# TODO: Is there a performance problem with this?
 	$string =~ s#(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b#
-		$1.(is_linkworthy($2) ? &idref($2,$2) : $2)#ge;
+		$1.(is_linkworthy($2) ? &idref($2, "", $2) : $2)#ge;
 	
 	# HTMLify the special characters we marked earlier,
 	# but not the ones in the recently added xref html links.
@@ -274,22 +272,24 @@ sub htmlquote {
 
 sub freetextmarkup {
 	$_[0] =~ s{((f|ht)tp://[^\s<>\0]*[^\s<>\0.])}
-			  {<a href="$1">$1</a>}g;
+			  {<a class='offshore' href="$1">$1</a>}g;
 	$_[0] =~ s{(\0<([^\s<>\0]+@[^\s<>\0]+)\0>)}
-			  {<a href="mailto:$2">$1</a>}g;
+			  {<a class='offshore' href="mailto:$2">$1</a>}g;
 }
 
 
 sub markupfile {
+	#_PH_ supress block is here to avoid the <pre> tag output
+	#while called from diff
 	my ($fileh, $outfun) = @_;
 	my ($dir) = $pathname =~ m|^(.*/)|;
 
 	my $line = '001';
-	my @ltag = &fileref(1, $pathname, 1) =~ /^(<a)(.*\#)001(\">)1(<\/a>)$/;
+	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a)(.*\#)001(\">)1(<\/a>)$/;
 	$ltag[0] .= ' name=';
 	$ltag[3] .= " ";
 	
-	my @itag = &idref(1, 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
+	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 	my $lang = new LXR::Lang($pathname, $release, @itag);
 
 	# A source code file
@@ -298,7 +298,7 @@ sub markupfile {
 
 		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
-		&$outfun("<pre>\n");
+		#&$outfun("<pre class=file>\n");
 		&$outfun(join($line++, @ltag)) if defined($frag);
 		
 		while (defined($frag)) {
@@ -312,7 +312,7 @@ sub markupfile {
 			} 
 			elsif ($btype eq 'string') {
 				# String
-				$frag = "<i>$frag</i>";
+				$frag = "<span class='string'>$frag</span>";
 			} 
 			elsif ($btype eq 'include') { 
 				# Include directive
@@ -333,7 +333,7 @@ sub markupfile {
 
 			&$outfun($ofrag);
 		}
-		&$outfun("</pre>");
+		#&$outfun("</pre>");
 	} 
 	elsif ($pathname =~ /$config->graphicfile/) {
 		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
@@ -376,7 +376,7 @@ sub markupfile {
 			
 		} 
 		else {
-			&$outfun("<pre>\n");
+			#&$outfun("<pre class=file>\n");
 			do {
 				&LXR::SimpleParse::untabify($_);
 				&markspecials($_);
@@ -385,7 +385,7 @@ sub markupfile {
 				#		&$outfun("<a name=\"L$.\"><\/a>".$_);
 				&$outfun(join($line++, @ltag).$_);
 			} while (defined($_ = $fileh->getline));
-			&$outfun("</pre>");
+			#&$outfun("</pre>");
 		}
 	}
 }
@@ -574,7 +574,7 @@ sub bannerexpand {
 
 	if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 		my $fpath = '';
-		my $furl  = fileref($config->sourcerootname.'/', '/');
+		my $furl  = fileref($config->sourcerootname.'/', "banner", '/');
 		
 		foreach ($pathname =~ m|([^/]+/?)|g) {
 			$fpath .= $_;
@@ -585,11 +585,11 @@ sub bannerexpand {
 			# so we have to use a real space.  It's somewhat ugly to
 			# have these spaces be visible, but not as ugly as getting
 			# a horizontal scrollbar...
-			$furl .= ' '.fileref($_, "/$fpath");
+			$furl .= ' '.fileref($_, "banner", "/$fpath");
 		} 
 		$furl =~ s|/</a>|</a>/|gi;
 		
-		return $furl;
+		return "<span class=banner>$furl</span>";
 	}
 	else {
 		return '';
@@ -635,6 +635,10 @@ sub baseurl {
 	return $url;
 }
 
+sub stylesheet {
+	return $config->stylesheet;
+}
+
 sub dotdoturl {
 	my $url = $config->baseurl;
 	$url =~ s@/$@@;
@@ -652,40 +656,40 @@ sub modeexpand {
 	my $mode;
 	
 	if ($who eq 'source' || $who eq 'sourcedir') {
-		push(@mlist, "<b><i>source navigation</i></b>");
+		push(@mlist, "<span class='modes-sel'>source navigation</span>");
 	} 
 	else {
-		push(@mlist, fileref("source navigation", $pathname));
+		push(@mlist, fileref("source navigation", "modes", $pathname));
 	}
 	
 	if ($who eq 'diff') {
-		push(@mlist, "<b><i>diff markup</i></b>");
+		push(@mlist, "<span class='modes-sel'>diff markup</span>");
 	} 
 	elsif ($who eq 'source' && $pathname !~ m|/$|) {
-		push(@mlist, diffref("diff markup", $pathname));
+		push(@mlist, diffref("diff markup", "modes", $pathname));
 	}
 	
 	if ($who eq 'ident') {
-		push(@mlist, "<b><i>identifier search</i></b>");
+		push(@mlist, "<span class='modes-sel'>identifier search</span>");
 	} 
 	else {
-		push(@mlist, idref("identifier search", ""));
+		push(@mlist, idref("identifier search", "modes", ""));
 	}
 
 	if ($who eq 'search') {
-		push(@mlist, "<b><i>freetext search</i></b>");
+		push(@mlist, "<span class='modes-sel'>freetext search</span>");
 	} 
 	else {
-		push(@mlist, "<a ".
+		push(@mlist, "<a class=modes ".
 			 "href=\"$config->{virtroot}/search".
 			 urlargs."\">freetext search</a>");
 	}
 	
 	if ($who eq 'find') {
-		push(@mlist, "<b><i>file search</i></b>");
+		push(@mlist, "<span class='modes-sel'>file search</span>");
 	} 
 	else {
-		push(@mlist, "<a ".
+		push(@mlist, "<a class='modes'".
 			 "href=\"$config->{virtroot}/find".
 			 urlargs."\">file search</a>");
 	}
@@ -710,11 +714,11 @@ sub varlinks {
 	$oldval = $config->variable($var);
 	foreach $val ($config->varrange($var)) {
 		if ($val eq $oldval) {
-			$vallink = "<b><i>$val</i></b>";
+			$vallink = "<span class=var-sel>$val</span>";
 		} 
 		else {
 			if ($who eq 'source' || $who eq 'sourcedir') {
-				$vallink = &fileref($val, 
+				$vallink = &fileref($val, "varlink",
 									$config->mappath($pathname,
 													 "$var=$val"),
 									0,
@@ -722,19 +726,19 @@ sub varlinks {
 
 			} 
 			elsif ($who eq 'diff') {
-				$vallink = &diffref($val, $pathname, "$var=$val");
+				$vallink = &diffref($val, "varlink", $pathname, "$var=$val");
 			}
 			elsif ($who eq 'ident') {
-				$vallink = &idref($val, $identifier, "$var=$val");
+				$vallink = &idref($val, "varlink", $identifier, "$var=$val");
 			} 
 			elsif ($who eq 'search') {
-				$vallink = "<a href=\"$config->{virtroot}/search".
+				$vallink = "<a class=varlink href=\"$config->{virtroot}/search".
 					&urlargs("$var=$val",
 							 "string=".$HTTP->{'param'}->{'string'}).
 								 "\">$val</a>";
 			} 
 			elsif ($who eq 'find') {
-				$vallink = "<a href=\"$config->{virtroot}/find".
+				$vallink = "<a class=varlink href=\"$config->{virtroot}/find".
 					&urlargs("$var=$val",
 							 "string=".$HTTP->{'param'}->{'string'}).
 								 "\">$val</a>";
@@ -816,10 +820,12 @@ sub makeheader {
 		}
 	}
 
+	#CSS checked _PH_
 	print(expandtemplate($template,
 						 ('title'		=> sub { titleexpand(@_, $who) },
 						  'banner'		=> sub { bannerexpand(@_, $who) },
 						  'baseurl'		=> sub { baseurl(@_) },
+						  'stylesheet'  => sub { stylesheet(@_) },
 						  'dotdoturl'	=> sub { dotdoturl(@_) },
 						  'thisurl'		=> sub { thisurl(@_) },
 						  'pathname'	=> sub { pathname(@_) },
