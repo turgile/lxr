@@ -1,19 +1,20 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.2 2000/08/17 18:36:52 pergj Exp $
+# $Id: Mysql.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.2 2000/08/17 18:36:52 pergj Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $ ';
 
 use strict;
 use DBI;
+use LXR::Common;
 
 use vars qw($dbh $transactions %files %symcache
 			$files_select $files_insert
 			$symbols_byname $symbols_byid
-			$symbols_insert $indexes_select $indexes_insert
-			$releases_select $releases_insert $status_insert
+			$symbols_insert $symbols_remove $indexes_select 
+			$indexes_insert $releases_select $releases_insert $status_insert
 			$status_update $status_get $usage_insert $usage_select);
 
 
@@ -21,7 +22,7 @@ sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	$dbh = DBI->connect($dbname, "root") || die "Can't open connection to database\n";
+	$dbh = DBI->connect($dbname, "lxr") || fatal "Can't open connection to database\n";
 #	$$dbh{'AutoCommit'} = 0;
 #	$dbh->trace(1);
 
@@ -30,28 +31,30 @@ sub new {
 	%symcache = ();
 
 	$files_select = $dbh->prepare
-		("select fileid from files where filename = ? and revision = ?");
+		("select fileid from files where  filename = ? and  revision = ?");
 	$files_insert = $dbh->prepare
 		("insert into files values (?, ?, NULL)");
 
 	$symbols_byname = $dbh->prepare
-		("select symid from symbols where symname = ?");
+		("select symid from symbols where  symname = ?");
 	$symbols_byid = $dbh->prepare
 		("select symname from symbols where symid = ?");
 	$symbols_insert = $dbh->prepare
 		("insert into symbols values ( ?, NULL)");
+	$symbols_remove = $dbh->prepare
+		("delete from symbols where symname = ?");
 
 	$indexes_select = $dbh->prepare
 		("select f.filename, i.line, i.type, i.relsym ".
 		 "from symbols s, indexes i, files f, releases r ".
 		 "where s.symid = i.symid and i.fileid = f.fileid ".
 		 "and f.fileid = r.fileid ".
-		 "and s.symname = ? and r.release = ?");
+		 "and  s.symname = ? and  r.release = ?");
 	$indexes_insert = $dbh->prepare
 		("insert into indexes values (?, ?, ?, ?, ?)");
 
 	$releases_select = $dbh->prepare
-		("select * from releases where fileid = ? and release = ?");
+		("select * from releases where fileid = ? and  release = ?");
 	$releases_insert = $dbh->prepare
 		("insert into releases values (?, ?)");
 
@@ -73,7 +76,7 @@ sub new {
 		 "where s.symid = u.symid ".
 		 "and f.fileid = u.fileid ".
 		 "and f.fileid = r.fileid and ".
-		 "s.symname = ? and r.release = ?");
+		 " s.symname = ? and  r.release = ?");
 
 	return $self;
 }
@@ -218,6 +221,13 @@ sub issymbol {
 	}
 
 	return $symid;
+}
+
+sub removesymbol {
+	my ($self, $symname) = @_;
+
+	delete $symcache{$symname};
+	$symbols_remove->execute($symname);
 }
 
 # If this file has not been indexed earlier, mark it as being indexed

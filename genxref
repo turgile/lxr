@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl
 # -*- tab-width: 4 -*-"
 
 use strict;

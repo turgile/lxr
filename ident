@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.7 1999/12/25 21:58:27 pergj Exp $
+# $Id: ident,v 1.8 2000/09/04 19:26:27 pergj Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.7 1999/12/25 21:58:27 pergj Exp $ ';
+$CVSID = '$Id: ident,v 1.8 2000/09/04 19:26:27 pergj Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -55,10 +55,6 @@ sub ident {
     
     if ($identifier) {
 	my @refs = $index->getindex($identifier, $release);
-
-	use Data::Dumper;
-
-	print(STDERR Dumper(\@refs), "\n");
 
 	print("<h1>$identifier</h1>\n");
 

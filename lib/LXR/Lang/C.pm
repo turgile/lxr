@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.5 2000/08/17 18:36:52 pergj Exp $
+# $Id: C.pm,v 1.6 2000/09/04 19:26:28 pergj Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.5 2000/08/17 18:36:52 pergj Exp $ ';
+$CVSID = '$Id: C.pm,v 1.6 2000/09/04 19:26:28 pergj Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -19,6 +19,12 @@ my @spec = ('atom'		=> ('\\\\.',	''),
 			'string'	=> ('"',		'"'),
 			'string'	=> ("'",		"'"),
 			'include'	=> ('#include',	"\$"));
+
+my @reserved = ('asm',' auto', 'break', 'case', 'char', 
+				'continue', 'default', 'do', 'double', 
+				'else', 'enum', 'extern', 'float', 'for', 
+				'fortran', 'goto', 'if', 'int', 'long', 
+				'register', 'return', 'short');
 
 sub new {
 	my ($self, $pathname, $release) = @_;
@@ -41,6 +47,15 @@ sub processcode {
 		$1.($index->issymbol($2, $$self{'release'}) 
 			? join($2, @{$$self{'itag'}})
 			: $2)#ge;
+}
+
+sub removereserved {
+	my ($self) = @_;
+	my ($keyword);
+	
+	foreach $keyword (@reserved) {
+		$index->removesymbol($keyword);
+	}
 }
 
 sub indexfile {
@@ -82,6 +97,7 @@ sub indexfile {
 			   "--output=-",
 			   $path);
 	}
+	$self->removereserved;
 }
 
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.22 2000/01/05 07:54:04 pergj Exp $
+# $Id: Config.pm,v 1.23 2000/09/04 19:26:28 pergj Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.22 2000/01/05 07:54:04 pergj Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.23 2000/09/04 19:26:28 pergj Exp $ ';
 
 use strict;
 
@@ -24,8 +24,6 @@ sub new {
     return($self);
 	die("Foo!\n");
 }
-
-
 
 sub readfile {
     local($/) = undef;		# Just in case; probably redundant.

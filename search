@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.2 1999/04/09 10:35:30 pergj Exp $
+# $Id: search,v 1.3 2000/09/04 19:26:27 pergj Exp $
 
 # search --	Freetext search
 #
@@ -24,7 +24,7 @@
 ######################################################################
 
 use lib 'lib/';
-use LXR::Common;
+use LXR::Common qw(:html);
 use LXR::Config;
 
 $maxhits = 1000;
@@ -36,10 +36,10 @@ sub search {
 
     print("<form method=get action=\"search\">\n");
 
-    foreach ($Conf->allvariables) {
-	if ($Conf->variable($_) ne $Conf->vardefault($_)) {
+    foreach ($config->allvariables) {
+	if ($config->variable($_) ne $config->vardefault($_)) {
 	    print("<input type=hidden name=\"",$_, "\" ",
-		  "value=\"", $Conf->variable($_), "\">\n");
+		  "value=\"", $config->variable($_), "\">\n");
 	}
     }
 
@@ -55,7 +55,7 @@ sub search {
 	unless (open(GLIMPSE, "-|")) {
 	    open(STDERR, ">&STDOUT");
 	    $!='';
-	    exec($Conf->glimpsebin,"-i","-H".$Conf->dbdir,'-y','-n',$searchtext);
+	    exec($config->glimpsebin,"-i","-H".$config->dbdir,'-y','-n',$searchtext);
 	    print("Glimpse subprocess died unexpextedly: $!\n");
 	    exit;
 	}
@@ -85,7 +85,7 @@ sub search {
 		    print("<b> Too many hits, displaying first $maxhits</b><br>\n");
 		}
 		print("<h1>$searchtext</h1>\n");
-		$sourceroot = $Conf->sourceroot;
+		$sourceroot = $config->sourceroot;
 		foreach $glimpseline (@glimpselines) {
 		    
 		    $glimpseline =~ s/$sourceroot//;
@@ -100,7 +100,7 @@ sub search {
 		}
 	    }
 	} elsif ($retval == 1) {
-	    $glimpsebin = $Conf->glimpsebin;
+	    $glimpsebin = $config->glimpsebin;
 	    $glimpseresponse = join("<br>",@glimpselines);
 	    $glimpseresponse =~ s/$glimpsebin/Reason/;
 	    $glimpseresponse =~ s/glimpse: error in searching index//;
@@ -111,7 +111,7 @@ sub search {
     }
 }
 
-($Conf, $HTTP, $Path) = &init;
+&httpinit;
 $searchtext = $HTTP->{'param'}->{'string'};
 
 &makeheader('search');

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.2 2000/07/26 07:50:21 pergj Exp $
+# $Id: Postgres.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.2 2000/07/26 07:50:21 pergj Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.3 2000/09/04 19:26:28 pergj Exp $ ';
 
 use strict;
 use DBI;
@@ -12,7 +12,7 @@ use DBI;
 use vars qw($dbh $transactions %files %symcache 
 			$files_select $filenum_nextval $files_insert
 			$symbols_byname $symbols_byid $symnum_nextval
-			$symbols_insert $indexes_select $indexes_insert
+			$symbols_remove $symbols_insert $indexes_select $indexes_insert
 			$releases_select $releases_insert $status_insert
 			$status_update $usage_insert $usage_select);
 
@@ -44,6 +44,8 @@ sub new {
 		("select nextval('symnum')");
 	$symbols_insert = $dbh->prepare
 		("insert into symbols values (?, ?)");
+	$symbols_remove = $dbh->prepare
+		("delete from symbols where symname = ?");
 
 	$indexes_select = $dbh->prepare
 		("select f.filename, i.line, i.type, i.relsym ".
@@ -220,6 +222,13 @@ sub issymbol {
 	}
 	
 	return $symcache{$symname};
+}
+
+sub removesymbol {
+	my ($self, $symname) = @_;
+
+	delete $symcache{$symname};
+	$symbols_remove->execute($symname);
 }
 
 # If this file has not been indexed earlier, mark it as being indexed

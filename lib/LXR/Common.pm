@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.24 1999/09/22 10:32:52 argggh Exp $
+# $Id: Common.pm,v 1.25 2000/09/04 19:26:28 pergj Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.24 1999/09/22 10:32:52 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.25 2000/09/04 19:26:28 pergj Exp $ ';
 
 use strict;
 
@@ -18,7 +18,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
 
 @ISA		= qw(Exporter);
 
-@EXPORT		= qw($files $index $config);
+@EXPORT		= qw($files $index $config &fatal);
 @EXPORT_OK	= qw($files $index $config $pathname $identifier $release
 				 $HTTP %type_names
 				 &warning &fatal &abortall &fflush &urlargs &fileref
@@ -219,7 +219,7 @@ sub markupstring {
 	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
 	
 	# HTMLify file names, assuming file is in the current directory.
-	$string =~ s#\b(([\w-_\/]+\.(c|h|cc|cp|cpp|java))|README)\b#<a href=\"$config->{virtroot}/source$virtp$1\">$1</a>#g;
+	$string =~ s#\b(([\w\-_\/]+\.(c|h|cc|cp|cpp|java))|README)\b#<a href=\"$config->{virtroot}/source$virtp$1\">$1</a>#g;
 	
 	return($string);
 }
