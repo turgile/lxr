@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.22 2004/06/30 20:33:35 brondsem Exp $
+# $Id: CVS.pm,v 1.23 2004/07/01 13:57:03 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.22 2004/06/30 20:33:35 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.23 2004/07/01 13:57:03 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -257,7 +257,7 @@ sub getdir {
 				# you can't just check for 'Attic' because for certain versions the file is alive even if in Attic
 				$self->parsecvs($pathname.substr($node,0, length($node)-2)); # substr is to remove the ',v'
 				my $rev = $cvs{'header'}{'symbols'}{$release};
-				if ($cvs{'branch'}{$release}{'state'} eq "dead" or $cvs{'branch'}{$rev}{'state'} eq "dead") {
+				if ($cvs{'branch'}{$rev}{'state'} eq "dead") {
 					next;
 				}
 			}
@@ -286,7 +286,7 @@ sub toreal {
 		# you can't just check for 'Attic' because for certain versions the file is alive even if in Attic
 		$self->parsecvs($pathname);
 		my $rev = $cvs{'header'}{'symbols'}{$release};
-		if ($cvs{'branch'}{$release}{'state'} eq "dead" or $cvs{'branch'}{$rev}{'state'} eq "dead") {
+		if ($cvs{'branch'}{$rev}{'state'} eq "dead") {
 			return undef;
 		}
 	}
@@ -345,14 +345,22 @@ sub allreleases {
 
 	$self->parsecvs($filename);
 
-	return sort(keys(%{$cvs{'header'}{'symbols'}}));
+	# no header symbols for a directory, so we use the default and the current release
+	if (defined %{$cvs{'header'}{'symbols'}}) {
+		return sort keys %{$cvs{'header'}{'symbols'}};
+	} else {
+		my @releases;
+		push @releases, $$LXR::Common::HTTP{'param'}{'v'} if $$LXR::Common::HTTP{'param'}{'v'};
+		push @releases, $config->vardefault('v');
+		return @releases;
+	}
 }
 
 sub allrevisions {
 	my ($self, $filename) = @_;
 
 	$self->parsecvs($filename);
-
+  
 	return sort(keys(%{$cvs{'branch'}}));
 }
 
@@ -365,10 +373,11 @@ sub parsecvs {
 	return if $cache_filename eq $filename;
 	$cache_filename = $filename;
 
-	%cvs = ();
+	undef %cvs;
 
 	my $file = '';
 	open (CVS, $self->toreal($filename, undef));
+	close CVS and return if -d CVS; # we can't parse a directory
 	while (<CVS>) {
 		if (/^text\s*$/) {
 			# stop reading when we hit the text.
@@ -406,7 +415,8 @@ sub parsecvs {
 									 /^@/s && substr($_, 1, -1) || $_ }
 							   $v =~ /(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs };
 	}
-	
+	delete $cvs{'branch'}{''}; # somehow an empty branch name gets in; delete it
+
 	$cvs{'desc'} = shift(@cvs) =~ /\s*desc\s+((?:[^\n@]+|@[^@]*@)*)\n/s;
 	$cvs{'desc'} =~ s/^@|@($|@)/$1/gs;
 
