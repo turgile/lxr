@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.23 2004/07/01 13:57:03 brondsem Exp $
+# $Id: CVS.pm,v 1.24 2004/07/15 14:41:04 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.23 2004/07/01 13:57:03 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.24 2004/07/15 14:41:04 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -158,11 +158,15 @@ sub getfilehandle {
 
     return undef unless defined($self->toreal($filename, $release));
 
-    open($fileh, "-|", "co -q -p$rev ".
-            $self->cleanstring($self->toreal($filename, $release)));
+    $rev =~ /([\d\.]*)/; $rev = $1; # untaint
+    my $clean_filename = $self->cleanstring($self->toreal($filename, $release));
+    $clean_filename =~ /(.*)/; $clean_filename = $1; # technically untaint here (cleanstring did the real untainting)
+    
+    $ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+    open($fileh, "-|", "co -q -p$rev $clean_filename");
 
-	die("Error executing \"co\"; rcs not installed?") unless $fileh;
-	return $fileh;
+    die("Error executing \"co\"; rcs not installed?") unless $fileh;
+    return $fileh;
 }
 
 sub getdiff {
@@ -177,8 +181,13 @@ sub getdiff {
 	my $rev2 = $self->filerev($filename, $release2);
 	return undef unless defined($rev2);
 
-    open($fileh, "-|", "rcsdiff -q -a -n -r$rev1 -r$rev2 ".
-            $self->cleanstring($self->toreal($filename, $release1)));
+	$rev1 =~ /([\d\.]*)/; $rev1 = $1; # untaint
+	$rev2 =~ /([\d\.]*)/; $rev2 = $1; # untaint
+	my $clean_filename = $self->cleanstring($self->toreal($filename, $release1));
+	$clean_filename =~ /(.*)/; $clean_filename = $1; # technically untaint here (cleanstring did the real untainting)
+    
+	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+	open($fileh, "-|", "rcsdiff -q -a -n -r$rev1 -r$rev2 $clean_filename");
 
 	die("Error executing \"rcsdiff\"; rcs not installed?") unless $fileh;
 	return $fileh->getlines;

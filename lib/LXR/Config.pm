@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.27 2003/06/05 15:39:15 mbox Exp $
+# $Id: Config.pm,v 1.28 2004/07/15 14:41:04 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.27 2003/06/05 15:39:15 mbox Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.28 2004/07/15 14:41:04 brondsem Exp $ ';
 
 use strict;
 
@@ -79,8 +79,10 @@ sub _initialize {
 	$$self{'confpath'} = $confpath;
     
     local($/) = undef;
+    my $config_contents = <CONFIG>;
+    $config_contents =~ /(.*)/s ; $config_contents = $1; #untaint it
     my @config = eval("\n#line 1 \"configuration file\"\n".
-					  <CONFIG>);
+					  $config_contents);
     die($@) if $@;
 
     my $config;

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.18 2004/07/14 14:49:30 brondsem Exp $
+# $Id: search,v 1.19 2004/07/15 14:41:04 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,10 +23,10 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.18 2004/07/14 14:49:30 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.19 2004/07/15 14:41:04 brondsem Exp $ ';
 
 use strict;
-use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
+use lib '.';
 
 use LXR::Common qw(:html);
 use LXR::Config;
@@ -53,6 +53,7 @@ sub varinputs {
 sub glimpsesearch {
     my ($searchtext) = @_;
 
+    $ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
     unless (open(GLIMPSE, "-|")) {
 	open(STDERR, ">&STDOUT");
 	$!='';
@@ -121,11 +122,12 @@ sub swishsearch {
         return;
     }
 
+    $ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
     unless (open(SWISH, "-|")) {
 	open(STDERR, ">&STDOUT");
 	exec($config->swishsearch,
 	     "-f", $config->swishdir."/".$release.".index",
-	     "-m", $maxhits, "-w", $searchtext);
+	     "-m", $maxhits, "-w", "'" . $searchtext . "'");
 
 	print(STDERR "Couldn't exec ".$config->swishsearch.": $!\n");
 	kill(9, $$);
@@ -217,6 +219,7 @@ sub search {
     print expandtemplate($templ,
 	(variables => sub { varinputs(@_) },
 	 searchtext => sub { return $searchtext },
+	 searchtext_escaped => sub { $_ = $searchtext; s/\"/&quot;/g; return $_;},
 	 maxhits_message => sub { return @results == $maxhits ? "<b>Too many hits, displaying first $maxhits</b><br>" : "" },
 	 
 	 results => sub { printresults(@_, @results) },

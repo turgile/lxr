@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: diff,v 1.9 2002/03/18 14:55:43 mbox Exp $
+# $Id: diff,v 1.10 2004/07/15 14:41:04 brondsem Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,10 +23,10 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.9 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: diff,v 1.10 2004/07/15 14:41:04 brondsem Exp $ ';
 
 use strict;
-use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
+use lib '.';
 
 use LXR::Common qw(:html);
 use Local;
@@ -101,6 +101,7 @@ sub printdiff {
     }
 
     fflush;
+    $ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
     unless (open(DIFF, "-|")){
 	open(STDERR, ">&STDOUT");
 	exec('diff', '-U0', $origtemp, $difftemp);

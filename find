@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.17 2004/07/14 14:43:38 brondsem Exp $
+# $Id: find,v 1.18 2004/07/15 14:41:04 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,11 +23,10 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.17 2004/07/14 14:43:38 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.18 2004/07/15 14:41:04 brondsem Exp $ ';
 
 use strict;
-use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
-
+use lib '.';
 
 use LXR::Common qw(:html);
 use LXR::Config;
@@ -133,6 +132,7 @@ sub find {
 	(variables => sub { varinputs(@_) },
 	 advancedchecked => sub { return $advanced ? "checked" : "" },
 	 searchtext => sub { return $searchtext },
+	 searchtext_escaped => sub { $_ = $searchtext; s/\"/&quot;/g; return $_;},
 	 casesensitivechecked => sub { return $casesensitive ? "checked" : "" },
 	 results => sub { printresults(@_, @results) },
 	 resultcount => sub { return scalar @results },

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.46 2004/07/13 13:39:44 brondsem Exp $
+# $Id: Common.pm,v 1.47 2004/07/15 14:41:04 brondsem Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.46 2004/07/13 13:39:44 brondsem Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.47 2004/07/15 14:41:04 brondsem Exp $ ';
 
 use strict;
 
@@ -54,7 +54,6 @@ require LXR::Lang;
 $wwwdebug = 0;
 
 $tmpcounter = 23;
-
 
 sub warning {
 	my $c = join(", line ", (caller)[0,2]);
@@ -183,11 +182,6 @@ sub http_wash {
 	# Paranoia check. Regexp-searches in Glimpse won't work.
 	# if ($t =~ tr/;<>*|\`&$!#()[]{}:\'\"//) {
 
-	# Should be sufficient to keep "open" from doing unexpected stuff.
-	if ($t =~ tr/<>|\"\'\`//) {
-		&abortall("Illegal characters in HTTP-parameters.");
-	}
-	
 	return($t);
 }
 
@@ -609,15 +603,15 @@ sub titleexpand {
 	} 
 	elsif ($who eq 'ident') {
 		my $i = $HTTP->{'param'}->{'i'};
-		return $config->sourcerootname.' identfier search'.($i ? " \"$i\"" : '');
+		return $config->sourcerootname.' identfier search'.($i ? ": $i" : '');
 	} 
 	elsif ($who eq 'search') {
 		my $s = $HTTP->{'param'}->{'string'};
-		return $config->sourcerootname.' freetext search'.($s ? " \"$s\"" : '');
+		return $config->sourcerootname.' freetext search'.($s ? ": $s" : '');
 	} 
 	elsif ($who eq 'find') {
 		my $s = $HTTP->{'param'}->{'string'};
-		return $config->sourcerootname.' file search'.($s ? " \"$s\"" : '');
+		return $config->sourcerootname.' file search'.($s ? ": $s" : '');
 	}
 }
 
