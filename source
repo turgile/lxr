@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.30 2001/10/23 15:23:50 mbox Exp $
+# $Id: source,v 1.31 2002/03/18 14:55:43 mbox Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.30 2001/10/23 15:23:50 mbox Exp $ ';
+$CVSID = '$Id: source,v 1.31 2002/03/18 14:55:43 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -42,7 +42,7 @@ sub diricon {
 	$img = "internal-gopher-menu";
     }
 
-    return fileref("<img align=bottom border=0 src=\"$img\" alt=\"folder\">", "", 
+    return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"folder\">", "",
 		   $dir.$node);
 }
 
@@ -73,8 +73,8 @@ sub fileicon {
 	#      $img = "/icons/text.gif";
 	$img = "internal-gopher-unknown";
     }
-    return fileref("<img align=bottom border=0 src=\"$img\">", "", 
-		   $dir.$node);
+    return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"\">",
+                   "", $dir.$node);
 }
 
 sub filename {
@@ -151,7 +151,7 @@ sub direxpand {
 
     @nodes = $files->getdir($dir, $release);
     unless (@nodes) {
-	print("<p align=center>\n<i>The directory ".
+	print("<p align=\"center\">\n<i>The directory ".
 	      $files->toreal($dir, $release).
 	      " does not exist.</i>\n");
 	#FIXME what does this do?
@@ -266,14 +266,14 @@ sub printfile {
 		    $l =~ s/(\n)/$1.shift(@ann)/ge;
 		    print $l;
 		};
-		&$outfun("<pre class=file>\n");
+		&$outfun("<pre class=\"file\">\n");
 		markupfile($fileh, $outfun);
 		&$outfun("</pre>\n");
 	    }
 
 	} 
 	else {
-	    print("\<p align=center>\n<i>The file $pathname does not exist.</i>\n");
+	    print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
 	    if (-f $files->toreal($pathname, $release)) {
 		warning("Unable to open ".$files->toreal($pathname, $release));
 	    }
@@ -286,7 +286,7 @@ httpinit;
 
 if ($config->filter && $pathname !~ $config->filter) {
     makeheader('source');
-    print("\<p align=center>\n<i>The file $pathname does not exist.</i>\n");
+    print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
     makefooter('source');
     exit;
 }

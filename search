@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.9 2002/02/03 05:31:32 mbox Exp $
+# $Id: search,v 1.10 2002/03/18 14:55:43 mbox Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.9 2002/02/03 05:31:32 mbox Exp $ ';
+$CVSID = '$Id: search,v 1.10 2002/03/18 14:55:43 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -139,21 +139,21 @@ sub swishsearch {
 
 
 sub search {
-    print("<p align=center>\n",
-	  "<form method=get action=\"search\">\n");
+    print("<p align=\"center\">\n",
+	  "<form method=\"get\" action=\"search\">\n");
 
     foreach ($config->allvariables) {
 	if ($config->variable($_) ne $config->vardefault($_)) {
-	    print("<input type=hidden name=\"",$_, "\" ",
+	    print("<input type=\"hidden\" name=\"",$_, "\" ",
 		  "value=\"", $config->variable($_), "\">\n");
 	}
     }
 
     my $searchtext = $HTTP->{'param'}->{'string'};
 
-    print("<B>Search for: </B><input type=text name=\"string\" ",
-	  "value=\"",$searchtext,"\" size=50>\n",
-	  "<input type=submit value=\"search\">\n",
+    print("<b>Search for: </b><input type=\"text\" name=\"string\" ",
+	  "value=\"",$searchtext,"\" size=\"50\">\n",
+	  "<input type=\"submit\" value=\"search\">\n",
 	  "</form>\n");
 
     $| = 1; print('');

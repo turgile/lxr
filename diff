@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: diff,v 1.8 2001/10/16 20:38:37 pergj Exp $
+# $Id: diff,v 1.9 2002/03/18 14:55:43 mbox Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.8 2001/10/16 20:38:37 pergj Exp $ ';
+$CVSID = '$Id: diff,v 1.9 2002/03/18 14:55:43 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -66,7 +66,7 @@ sub printdiff {
 	
 	$vars[$#vars-1] .= " or ".pop(@vars) if $#vars > 0;
 	
-	print("<p align=center>\n",
+	print("<p align=\"center\">\n",
 	      "Please indicate the version of the file you wish to\n",
 	      "compare to by clicking on the appropriate\n",
 	      join(", ",@vars)," button.\n",
@@ -75,7 +75,7 @@ sub printdiff {
     }
 
     if ($pathname =~ m|/$|) {
-	print("<h3 align=center>Diff not yet supported for directories.</h3>\n");
+	print("<h3 align=\"center\">Diff not yet supported for directories.</h3>\n");
 	return;
     }
 
@@ -182,14 +182,14 @@ sub printdiff {
     my @orig = split(/\n/, $orig);
     my @new  = split(/\n/, $new);
 
-    print("<pre class=file>\n");
+    print("<pre class=\"file\">\n");
     foreach $i (0..$len) {
 	my $o = htmlsub($orig[$i], 50);
 	my $n = $new[$i];
 
 	my $diffmark = $chg{$i+1} ? 
-	  ("<span class=diff-mark>" . $chg{$i+1} . "</span>") : "  ";
-	#print("$o <span class=diff-mark>", 
+	  ("<span class=\"diff-mark\">" . $chg{$i+1} . "</span>") : "  ";
+	#print("$o <span class=\"diff-mark\">",
 	#      ($chg{$i+1} || "  "), "</span> $n\n");
 	print "$o $diffmark $n\n";
     }

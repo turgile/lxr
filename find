@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.7 2002/02/03 05:31:32 mbox Exp $
+# $Id: find,v 1.8 2002/03/18 14:55:43 mbox Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.7 2002/02/03 05:31:32 mbox Exp $ ';
+$CVSID = '$Id: find,v 1.8 2002/03/18 14:55:43 mbox Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -32,23 +32,23 @@ use LXR::Config;
 
 sub find {
 
-    print("<P ALIGN=CENTER>\n",
+    print("<p align=\"center\">\n",
 	  "Search for files (by name) using regular expressions.\n",
-	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)\n");
+	  "<br>(Need some <a href=\"search-help.html\">Hints</a> ",
+	  "on performing searches?)</p>\n");
 
-    print ("<form method=get action=\"find\">\n");       
+    print ("<form method=\"get\" action=\"find\">\n");
 
     foreach ($config->allvariables) {
 	if ($config->variable($_) ne $config->vardefault($_)) {
-	    print("<input type=hidden name=\"",$_, "\" ",
+	    print("<input type=\"hidden\" name=\"",$_, "\" ",
 		  "value=\"", $config->variable($_), "\">\n");
 	}
     }			       
     
-    print("<B>Find file: </B><input type=text name=\"string\" ",
-	  "value=\"",$searchtext,"\" size=50>\n",
-	  "<input type=submit value=\"search\">\n",
+    print("<b>Find file: </b><input type=\"text\" name=\"string\" ",
+	  "value=\"",$searchtext,"\" size=\"50\">\n",
+	  "<input type=\"submit\" value=\"search\">\n",
 	  "</form>\n");
 
 

@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.28 2002/02/05 10:34:43 mbox Exp $
+# $Id: Lang.pm,v 1.29 2002/03/18 14:55:43 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.28 2002/02/05 10:34:43 mbox Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.29 2002/03/18 14:55:43 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -81,8 +81,8 @@ sub processinclude {
 sub processcomment {
 	my ($self, $frag) = @_;
 
-	$$frag = "<span class='comment'>$$frag</span>";
-	$$frag =~ s#\n#</span>\n<span class=comment>#g; 	
+	$$frag = "<span class=\"comment\">$$frag</span>";
+	$$frag =~ s#\n#</span>\n<span class=\"comment\">#g;
 }
 
 sub referencefile {

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.40 2002/03/18 14:44:23 mbox Exp $
+# $Id: Common.pm,v 1.41 2002/03/18 14:55:43 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.40 2002/03/18 14:44:23 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.41 2002/03/18 14:55:43 mbox Exp $ ';
 
 use strict;
 
@@ -289,7 +289,7 @@ sub markupfile {
 
 		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
-		#&$outfun("<pre class=file>\n");
+		#&$outfun("<pre class=\"file\">\n");
 		&$outfun(join($line++, @ltag)) if defined($frag);
 		
 		while (defined($frag)) {
@@ -327,7 +327,7 @@ sub markupfile {
 		#&$outfun("</pre>");
 	} 
 	elsif ($pathname =~ /$config->graphicfile/) {
-		&$outfun("<ul><table><tr><th valign=center><b>Image: </b></th>");
+		&$outfun("<ul><table><tr><th valign=\"center\"><b>Image: </b></th>");
 		&$outfun("<img src=\"$config->{virtroot}/source".
 				 $pathname.&urlargs("raw=1").
 				 "\" border=\"0\" alt=\"$pathname\">\n");
@@ -367,7 +367,7 @@ sub markupfile {
 			
 		} 
 		else {
-			#&$outfun("<pre class=file>\n");
+			#&$outfun("<pre class=\"file\">\n");
 			do {
 				&LXR::SimpleParse::untabify($_);
 				&markspecials($_);
@@ -585,7 +585,7 @@ sub bannerexpand {
 			$fpath .= $_;
 
 			# jwz: put a space after each / in the banner so that it's
-			# possible for the pathnames to wrap.  The <WBR> tag ought
+			# possible for the pathnames to wrap.  The <wbr> tag ought
 			# to do this, but it is ignored when sizing table cells,
 			# so we have to use a real space.  It's somewhat ugly to
 			# have these spaces be visible, but not as ugly as getting
@@ -594,7 +594,7 @@ sub bannerexpand {
 		} 
 		$furl =~ s|/</a>|</a>/|gi;
 		
-		return "<span class=banner>$furl</span>";
+		return "<span class=\"banner\">$furl</span>";
 	}
 	else {
 		return '';
@@ -685,7 +685,7 @@ sub modeexpand {
 		push(@mlist, "<span class='modes-sel'>freetext search</span>");
 	} 
 	else {
-		push(@mlist, "<a class=modes ".
+		push(@mlist, "<a class=\"modes\" ".
 			 "href=\"$config->{virtroot}/search".
 			 urlargs."\">freetext search</a>");
 	}
@@ -694,7 +694,7 @@ sub modeexpand {
 		push(@mlist, "<span class='modes-sel'>file search</span>");
 	} 
 	else {
-		push(@mlist, "<a class='modes'".
+		push(@mlist, "<a class='modes' ".
 			 "href=\"$config->{virtroot}/find".
 			 urlargs."\">file search</a>");
 	}
@@ -719,7 +719,7 @@ sub varlinks {
 	$oldval = $config->variable($var);
 	foreach $val ($config->varrange($var)) {
 		if ($val eq $oldval) {
-			$vallink = "<span class=var-sel>$val</span>";
+			$vallink = "<span class=\"var-sel\">$val</span>";
 		} 
 		else {
 			if ($who eq 'source' || $who eq 'sourcedir') {
@@ -737,13 +737,13 @@ sub varlinks {
 				$vallink = &idref($val, "varlink", $identifier, "$var=$val");
 			} 
 			elsif ($who eq 'search') {
-				$vallink = "<a class=varlink href=\"$config->{virtroot}/search".
+				$vallink = "<a class=\"varlink\" href=\"$config->{virtroot}/search".
 					&urlargs("$var=$val",
 							 "string=".$HTTP->{'param'}->{'string'}).
 								 "\">$val</a>";
 			} 
 			elsif ($who eq 'find') {
-				$vallink = "<a class=varlink href=\"$config->{virtroot}/find".
+				$vallink = "<a class=\"varlink\" href=\"$config->{virtroot}/find".
 					&urlargs("$var=$val",
 							 "string=".$HTTP->{'param'}->{'string'}).
 								 "\">$val</a>";

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.10 2001/08/15 15:50:26 mbox Exp $
+# $Id: Local.pm,v 1.11 2002/03/18 14:55:43 mbox Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.10 2001/08/15 15:50:26 mbox Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.11 2002/03/18 14:55:43 mbox Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -283,15 +283,15 @@ sub descreadmehtml {
     # check if there's a short desc nested inside the long desc. If not, do
     # a non-greedy search for a long desc. assume there are no other stray
     # spans within the description.
-    if ($string =~ /<SPAN CLASS=LXRLONGDESC>(.*?<SPAN CLASS=LXRSHORTDESC>.*?<\/SPAN>.*?)<\/SPAN>/is) {
+    if ($string =~ /<span class=["']?lxrlongdesc['"]?>(.*?<span class=["']?lxrshortdesc['"]?>.*?<\/span>.*?)<\/span>/is) {
         $long = $1;
         if (!($long =~ /<span.*?\<span/is)) {
-            print($long . "<P>\nSEE ALSO: <A HREF=\"README.html\">README</A>\n");
+            print($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
         }
-    } elsif ($string =~ /<SPAN CLASS=LXRLONGDESC>(.*?)<\/SPAN>/is) {
+    } elsif ($string =~ /<span class=["']?lxrlongdesc['"]?>(.*?)<\/span>/is) {
         $long = $1;
         if (!($long =~ /\<span/is)) {
-            print($long . "<P>\nSEE ALSO: <A HREF=\"README.html\">README</A>\n");
+            print($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
         }
     }
 }
@@ -397,7 +397,7 @@ sub descreadme {
         $string =~ s/\s*\n$//gs;
         chomp($string);
 
-        print($string . "<P>\n");
+        print($string . "<p>\n");
     }
 }
 
@@ -411,7 +411,7 @@ sub convertwhitespace {
     $string =~ s/<p>\n\s+o\s/<p>\n\&nbsp\;\&nbsp\;o /sg;
     $string =~ s/\n\s+o\s/&nbsp\;\n<br>\&nbsp\;\&nbsp\;o /sg;
 
-    #find paragraph breaks and replace with <P>
+    #find paragraph breaks and replace with <p>
     $string =~ s/\n\s*\n/<p>\n/sg;
 
     return($string);

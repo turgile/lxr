@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Perl.pm,v 1.4 2001/09/27 16:12:20 mbox Exp $
+# $Id: Perl.pm,v 1.5 2002/03/18 14:55:43 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang::Perl;
 
-$CVSID = '$Id: Perl.pm,v 1.4 2001/09/27 16:12:20 mbox Exp $ ';
+$CVSID = '$Id: Perl.pm,v 1.5 2002/03/18 14:55:43 mbox Exp $ ';
 
 =head1 LXR::Lang::Perl
 
@@ -98,14 +98,14 @@ sub processcomment {
 
 		$$comm = join('', map {
 			if (/^=head(\d)\s*(.*)/s) {
-				"<span class=pod><font size=\"+".(4-$1)."\">$2<\/font></span>";
+				"<span class=\"pod\"><font size=\"+".(4-$1)."\">$2<\/font></span>";
 			}
 			elsif (/^=item\s*(.*)/s) {
-				"<span class=podhead>* $1 ".
+				"<span class=\"podhead\">* $1 ".
 					("-" x (67 - length($1)))."<\/span>";
 			}
 			elsif (/^=(pod|cut)/s) {
-				"<span class=podhead>".
+				"<span class=\"podhead\">".
 					("-" x 70)."<\/span>";
 			}
 			elsif (/^=.*/s) {
@@ -113,10 +113,10 @@ sub processcomment {
 			}
 			else {
 				if (/^\s/s) {	# Verbatim paragraph
-					s|^(.*)$|<span class=pod><code>$1</code></span>|gm;
+					s|^(.*)$|<span class="pod"><code>$1</code></span>|gm;
 				}
 				else {			# Normal paragraph
-					s|^(.*)$|<span class=pod>$1</span>|gm;
+					s|^(.*)$|<span class="pod">$1</span>|gm;
 					s/C\0\<(.*?)\0\>/<code>$1<\/code>/g;
 				}
 				$_;

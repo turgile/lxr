@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.14 2002/03/07 15:44:31 mbox Exp $
+# $Id: ident,v 1.15 2002/03/18 14:55:43 mbox Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.14 2002/03/07 15:44:31 mbox Exp $ ';
+$CVSID = '$Id: ident,v 1.15 2002/03/18 14:55:43 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -36,8 +36,8 @@ sub varinputs {
     my $ret = '';
     foreach ($config->allvariables) {
 	if ($config->variable($_) ne $config->vardefault($_)) {
-	    $ret .= "<input type=hidden name='$_' value='" . 
-	      $config->variable($_) . "'>\n";
+	    $ret .= "<input type=\"hidden\" name=\"$_\" value=\"" .
+	      $config->variable($_) . "\">\n";
 	}
     }
     return $ret;
@@ -65,7 +65,7 @@ sub refexpand {
 				}
 			       ));
 	
-# 	print("<span class=search-li1> $type_names{$type} in ".
+# 	print("<span class=\"search-li1\"> $type_names{$type} in ".
 # 	      fileref("$file, line $line", "search-decl",
 # 		      $file, $line).
 # 	      " $rel</span>\n");
