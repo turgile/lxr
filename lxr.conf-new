@@ -86,7 +86,8 @@
      'sourcehead'	=> 'templ-lxr-head',
      'sourcedirhead'	=> 'templ-lxr-head',
      
-     'sourceroot'	=> 'src',
+#     'sourceroot'	=> 'src',
+     'sourceroot'	=> 'cvs:/usr/src/linux-cvs/',
      'sourcerootname'	=> 'Linux',
      'incprefix'	=> ['/include', '/include/linux'],
      
