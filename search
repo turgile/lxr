@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.25 2004/07/26 20:47:43 brondsem Exp $
+# $Id: search,v 1.26 2004/07/26 20:53:17 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.25 2004/07/26 20:47:43 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.26 2004/07/26 20:53:17 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -150,7 +150,7 @@ sub swishsearch {
 	unless (open(SWISH, "-|")) {
 		open(STDERR, ">&STDOUT");
 		exec($config->swishbin, "-f", $config->swishdir . "/" . $release . ".index",
-			"-w", "'" . $searchtext . "'");
+			"-w", "'(" . $searchtext . ")'");
 
 		print(STDERR "Couldn't exec " . $config->swishbin . ": $!\n");
 		kill(9, $$);
@@ -176,8 +176,6 @@ sub swishsearch {
 		return @ret;
 	} else {
 		print("<b>Search failed</b><br>\n@result");
-		print "<br><i>Tip: you may need to quote words that end with *</i>"
-		  if join('', @result) =~ /Wildcard not allowed within a word/;
 		return;
 	}
 }
@@ -195,7 +193,6 @@ sub printresults {
 			$ret .= expandtemplate(
 				$templ,
 				(
-					score   => sub { return '' },
 					text    => sub { return '' },
 					fileref => sub { fileref("$file", "find-file", "/$file") },
 				)
@@ -219,7 +216,7 @@ sub printresults {
 			$ret .= expandtemplate(
 				$templ,
 				(
-					score   => sub { return $score },
+					text   => sub { return $score },
 					fileref => sub { fileref("$file", "find-file", "/$file") },
 				)
 			);
