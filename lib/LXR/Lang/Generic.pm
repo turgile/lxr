@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.1 2001/06/17 08:35:10 mbox Exp $
+# $Id: Generic.pm,v 1.2 2001/07/03 14:46:12 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -9,9 +9,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.1 2001/06/17 08:35:10 mbox Exp $ ';
-
-my $langconf = "generic.conf";
+$CVSID = '$Id: Generic.pm,v 1.2 2001/07/03 14:46:12 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -19,15 +17,21 @@ use LXR::Lang;
 require Exporter;
 
 
-use vars qw(@ISA $AUTOLOAD);
+use vars qw(@ISA $AUTOLOAD $langconf);
+
 @ISA = ('LXR::Lang');
 
+$langconf = "/home/malcolm/lxr/lib/LXR/Lang/generic.conf";
+
+
 sub new {
-  my ($proto, $pathname, $release) = @_;
+  my ($proto, $pathname, $release, $lang) = @_;
   my $class = ref($proto) || $proto;
   my $self  = {};
   bless ($self, $class);
   $$self{'release'} = $release;
+  $$self{'language'} = $lang;
+
   open (X, $langconf) || die "Can't open $langconf, $!";
 
   local($/) = undef;
@@ -43,24 +47,25 @@ sub new {
 
 sub indexfile {
   my ($self, $name, $path, $fileid, $index, $config) = @_;
-  my $lang;
-
-  if ($config->ectagsbin) {
-    # We let ctags figure out the language and then snarf the result
-    open(CTAGS, join(" ", $config->ectagsbin,
-					 $self->ectagsopts,
-					 "--excmd=number", 
-					 "--fields=+l",	# print the language
-					 "-f", "-", 
-					 $path, "|"));
+  my $langforce = $ {$self->eclangnamemapping}{$self->language};
+  if (!defined $langforce) {
+	$langforce = $self->language;
+  }
 	
-    while (<CTAGS>) {
+  if ($config->ectagsbin) {
+	open(CTAGS, join(" ", $config->ectagsbin,
+					 $self->ectagsopts,
+					 "--excmd=number",
+					 "--language-force=$langforce",
+					 "-f", "-", 
+					 $path, "|")) or die "Can't run ectags, $!";
+	
+	while (<CTAGS>) {
 	  chomp;
 		
 	  my ($sym, $file, $line, $type,$ext) = split(/\t/, $_);
 	  $line =~ s/;\"$//;
 	  $ext =~ /language:(\w+)/;
-	  $lang=$1;
 		
 	  # TODO: can we make it more generic in parsing the extension fields?
 	  if (defined($ext) && $ext =~ /^(struct|union|class|enum):(.*)/) {
@@ -72,18 +77,48 @@ sub indexfile {
 		
 	  $index->index($sym, $fileid, $line, $type, $ext);
 	}
-    close(CTAGS);
+	close(CTAGS);
 	
   }
 }
 
+# This method returns the regexps used by SimpleParse to break the
+# code into different blocks such as code, string, include, comment etc.
+# Since this depends on the language, it's configured via generic.conf
 
-sub allvariables {
-  my $self = shift;
-  
-  return keys(%{$self->{variables} || {}});
+sub parsespec {
+  my ($self) = @_;
+  my @spec = $self->langinfo('spec');
+  return @spec;
 }
 
+# Process a chunk of code
+# Basically, look for anything that looks like # an identifier, and if
+# it is then make it a hyperlink
+# Parameters:
+#   $code - reference to the code to markup
+#   @itag - ???
+# TODO : Make the handling of identifier recognition language dependant
+
+sub processcode {
+  my ($self, $code) = @_;
+  $$code =~ s!(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b!
+	$1.
+	  {if(!grep(/$2/, $self->langinfo('reserved')) {
+		if($index->issymbol($2, $$self{'release'})) {
+		  join($2, @{$$self{'itag'}});
+		}
+		else {
+		  $2;
+		}}
+		!gxe;
+
+  }
+
+
+# Autoload magic to allow access using $generic->variable syntax
+# blatently ripped from Config.pm - I still don't fully understand how
+# this works.
 
 sub variable {
   my ($self, $var, $val) = @_;
@@ -92,10 +127,6 @@ sub variable {
   return $self->{variables}{$var}{value} ||
 	$self->vardefault($var);
 }
-
-# Autoload magic to allow access using $generic->variable syntax
-# blatently ripped from Config.pm - I still don't fully understand how
-# this works.
 
 sub varexpand {
   my ($self, $exp) = @_;
@@ -137,37 +168,13 @@ sub AUTOLOAD {
   } 
 }
 
-
-sub mappath {
-  my ($self, $path, @args) = @_;
-  my %oldvars;
-  my ($m, $n);
-    
-  foreach $m (@args) {
-	if ($m =~ /(.*?)=(.*)/) {
-	  $oldvars{$1} = $self->variable($1);
-	  $self->variable($1, $2);
-	}
-  }
-
-  while (($m, $n) = each %{$self->{maps} || {}}) {
-	$path =~ s/$m/$self->varexpand($n)/e;
-  }
-	
-  while (($m, $n) = each %oldvars) {
-	$self->variable($m, $n);
-  }
-	
-  return $path;
-}
-
 sub langinfo {
-  my ($self, $lang, $item) = @_;
+  my ($self, $item) = @_;
 	
   my $val;
   my $map = $self->langmap;
-  if (exists $$map{$lang}) {
-	$val = $$map{$lang};
+  if (exists $$map{$self->language}) {
+	$val = $$map{$self->language};
   } else {
 	$val = undef;
   }
@@ -178,3 +185,5 @@ sub langinfo {
 	return undef;
   }
 }
+
+1;
