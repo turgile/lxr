@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.17 2004/07/21 20:44:31 brondsem Exp $
+# $Id: Generic.pm,v 1.18 2004/08/10 16:13:02 brondsem Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.17 2004/07/21 20:44:31 brondsem Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.18 2004/08/10 16:13:02 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -149,7 +149,6 @@ sub parsespec {
 #   $code - reference to the code to markup
 #   @itag - ???
 # TODO : Make the handling of identifier recognition language dependant
-
 sub processcode {
 	my ($self, $code) = @_;
 	my ($start, $id);
@@ -157,10 +156,10 @@ sub processcode {
 	# Replace identifier by link unless it's a reserved word
 	{
 	  $1.
-		((!grep(/^$2$/, $self->langinfo('reserved')) &&
-		  $index->issymbol($2, $$self{'release'})) ?
-		 join($2, @{$$self{'itag'}}) :
-		 $2);
+		(
+		  grep(/^$2$/, $self->langinfo('reserved')) ? "<span class='reserved'>$2</span>" : 
+		  ($index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2)
+		);
 	}ge;
 }
 

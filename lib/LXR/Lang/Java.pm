@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Java.pm,v 1.6 2004/07/21 20:44:31 brondsem Exp $
+# $Id: Java.pm,v 1.7 2004/08/10 16:13:03 brondsem Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -21,7 +21,7 @@
 
 package LXR::Lang::Java;
 
-my $CVSID = '$Id: Java.pm,v 1.6 2004/07/21 20:44:31 brondsem Exp $ ';
+my $CVSID = '$Id: Java.pm,v 1.7 2004/08/10 16:13:03 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -40,7 +40,7 @@ sub processinclude {
 	# Deal with package declaration of the form
 	# "package java.lang.util"
 	$$frag =~ s#(package\s+)([\w.]+)#
-	    $1.
+	    "<span class='reserved'>$1</span>".
 	    ($index->issymbol($2, $$self{'release'}) ?
 		join($2, @{$$self{'itag'}}) : $2)
 	    #e;
@@ -48,7 +48,7 @@ sub processinclude {
 	# Deal with import declaration of the form
 	# "import java.awt.*" by providing link to the package
 	$$frag =~ s#(import\s+)([\w.]+)(\.\*)#
-		$1.
+		"<span class='reserved'>$1</span>".
 			($index->issymbol($2, $$self{'release'}) ?
 			 join($2, @{$$self{'itag'}}) : $2) . 
 				 $3 #e;
@@ -57,7 +57,7 @@ sub processinclude {
 	# "import java.awt.classname" by providing links to the
 	# package and the class
 	$$frag =~ s#(import\s+)([\w.]+)\.(\w+)(\W)#
-  		$1.
+		"<span class='reserved'>$1</span>".
   			($index->issymbol($2, $$self{'release'}) ?
   			 join($2, @{$$self{'itag'}}) : $2) . "." .
 				 ($index->issymbol($3, $$self{'release'}) ?

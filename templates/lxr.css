@@ -110,12 +110,17 @@ pre.file {
 
 /* comments */
 .comment {
-  color: #000066;
+  color: #808080;
 }
 
 /* strings */
 .string {
-  color: #000066;
+  color: #0000CC;
+}
+
+/* reserved words */
+.reserved {
+  color: #800000;
 }
 
 /****************************************/
