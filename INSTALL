@@ -18,6 +18,10 @@ The current version of the lxr depends on three things:
    Swish-e is fully GPL'ed, while Glimpse is only free for
    non-commercial use.
 
+5) The Perl database driver interface DBI and the relevant DBD driver for the
+   database you're using.  If you don't already have these, they can be
+   installed via CPAN.  See http://dbi.perl.org/index.html for more info.
+
 Installing the database
 -----------------------
 You will need to create a database for lxr, and possibly create a user
