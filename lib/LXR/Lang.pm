@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.29 2002/03/18 14:55:43 mbox Exp $
+# $Id: Lang.pm,v 1.30 2004/07/01 20:41:25 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.29 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.30 2004/07/01 20:41:25 brondsem Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -27,7 +27,7 @@ sub new {
 	my ($self, $pathname, $release, @itag) = @_;
 	my ($lang, $type);
 
-    foreach $type (values %{$config->filetype}) {
+	foreach $type (values %{$config->filetype}) {
 		if ($pathname =~ /$$type[1]/) {
 			eval "require $$type[2]";
 			die "Unable to load $$type[2] Lang class, $@" if $@;
@@ -49,7 +49,7 @@ sub new {
 		my %inter = %{$config->interpreters};
 		
 		foreach my $patt (keys %inter) {
-			if ($shebang =~ /$patt/) {
+			if ($shebang =~ /\/$patt/) {
 				eval "require $filetype{$inter{$patt}}[2]";
 				die "Unable to load $filetype{$inter{$patt}}[2] Lang class, $@" if $@;
 				my $create = "new ".
