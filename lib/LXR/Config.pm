@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.20 1999/08/07 18:16:23 argggh Exp $
+# $Id: Config.pm,v 1.21 1999/09/17 09:37:41 argggh Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.20 1999/08/07 18:16:23 argggh Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.21 1999/09/17 09:37:41 argggh Exp $ ';
 
 use strict;
 
@@ -49,9 +49,12 @@ sub _initialize {
     unless ($url) {
 		$url = 'http://'.$ENV{'SERVER_NAME'}.':'.$ENV{'SERVER_PORT'};
 		$url =~ s/:80$//;
+
 		$url .= $ENV{'SCRIPT_NAME'};
     }
     
+    $url =~ s|^http://([^/]*):443/|https://$1/|;
+
     unless ($confpath) {
 		($confpath) = ($0 =~ /(.*?)[^\/]*$/);
 		$confpath .= $confname;

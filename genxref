@@ -1,4 +1,4 @@
-#!/local/bin/perl5.004
+#!/local/bin/perl -d:SmallProf
 # -*- tab-width: 4 -*-
 
 use strict;
@@ -28,16 +28,17 @@ die("No matching configuration") unless $config->sourceroot;
 $files = new LXR::Files($config->sourceroot);
 $index = new LXR::Index($config->dbname);
 
-genxref('/', $option{'version'});
+# genindex('/', $option{'version'});
+genrefs('/', $option{'version'});
 
-sub genxref {
+sub genindex {
 	my ($pathname, $release) = @_;
 	
 	print(STDERR "*** $pathname $release \n");
 
 	if ($pathname =~ m|/$|) {
 		map { 
-			genxref($pathname.$_, $release) 
+			genindex($pathname.$_, $release) 
 			} $files->getdir($pathname, $release);
 	}
 	else {
@@ -47,6 +48,28 @@ sub genxref {
 
 		map {
 			&LXR::Tagger::processfile($pathname, $_, 
+									  $config, $files, $index)
+			} @releases;
+	}
+}
+
+sub genrefs {
+	my ($pathname, $release) = @_;
+	
+	print(STDERR "### $pathname $release \n");
+
+	if ($pathname =~ m|/$|) {
+		map { 
+			genrefs($pathname.$_, $release) 
+			} $files->getdir($pathname, $release);
+	}
+	else {
+		my @releases = ($release 
+						? ($release)
+						: $files->allreleases($pathname));
+
+		map {
+			&LXR::Tagger::processrefs($pathname, $_, 
 									  $config, $files, $index)
 			} @releases;
 	}

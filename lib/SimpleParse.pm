@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.8 1999/08/07 18:15:54 argggh Exp $
+# $Id: SimpleParse.pm,v 1.9 1999/09/17 09:37:39 argggh Exp $
 
 package SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.8 1999/08/07 18:15:54 argggh Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.9 1999/09/17 09:37:39 argggh Exp $ ';
 
 use strict;
 use integer;
@@ -82,12 +82,12 @@ sub nextfrag {
 			$line =~ s/^(\t+)/' ' x ($tabwidth * length($1))/ge;
 			$line =~ s/([^\t]*)\t/$1.(' ' x ($tabwidth - (length($1) % $tabwidth)))/ge;
 
-			@frags = split(/($split)/o, $line);
+			@frags = split(/($split)/, $line);
 		}
 
 		last if $#frags < 0;
 		
-		unless ($frags[0]) {
+		if ($frags[0] eq '') {
 			shift(@frags);
 		}
 		if (defined($frag)) {
@@ -99,13 +99,13 @@ sub nextfrag {
 
 			}
 			else {
-				last if $frags[0] =~ /^$open$/o;
+				last if $frags[0] =~ /^$open$/;
 				$frag .= shift(@frags);
 			}
 		}
 		else {
 			$frag = shift(@frags);
-			if (defined($frag) && (@_ = $frag =~ /^$open$/o)) {
+			if (defined($frag) && (@_ = $frag =~ /^$open$/)) {
 				# grep in a scalar context returns the number of times
 				# EXPR evaluates to true, which is this case will be
 				# the index of the first defined element in @_.
@@ -118,7 +118,6 @@ sub nextfrag {
     }
     $btype = $bodyid[$btype] if defined($btype);
     
-#    print(STDERR "$btype: $frag\n");
     return($btype, $frag);
 }
 

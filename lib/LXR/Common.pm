@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.20 1999/08/19 14:05:33 argggh Exp $
+# $Id: Common.pm,v 1.21 1999/09/17 09:37:40 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.20 1999/08/19 14:05:33 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.21 1999/09/17 09:37:40 argggh Exp $ ';
 
 use strict;
 
@@ -47,7 +47,7 @@ $wwwdebug = 1;
 			   'n' => 'namespace',
 			   'p' => 'function prototype or declaration',
 			   's' => 'structure name',
-			   't' => 'typedefs',
+			   't' => 'typedef',
 			   'u' => 'union names',
 			   'v' => 'variable definition',
 			   'x' => 'extern or forward variable declaration',
@@ -356,6 +356,7 @@ sub markupfile {
 			
 		} 
 		else {
+			&$outfun("<pre>");
 			do {
 				&SimpleParse::untabify($_);
 				&markspecials($_);
@@ -364,6 +365,7 @@ sub markupfile {
 				#		&$outfun("<a name=\"L$.\"><\/a>".$_);
 				&$outfun(join($line++, @ltag).$_);
 			} while (defined($_ = $fileh->getline));
+			&$outfun("</pre>");
 		}
 	}
 }

@@ -27,39 +27,39 @@ create table symbols (
 );
 
 create table indexes (
-	symid		int		 references symbols,
-	fileid		int		 references files,
+	symid		int		references symbols,
+	fileid		int		references files,
 	line		int,
-	type		varchar
+	type		varchar,
+	relsym		int		references symbols
 );
-
-/*
-create table relations (
-	symid		int		 references symbols,
-	release		varchar,
-	rsymid		int		 references symbols,
-	reltype		varchar
-);
-*/
 
 create table releases 
-	(fileid		int		 references files,
+	(fileid		int		references files,
 	release		varchar,
 	primary key	(fileid)
 );
 
+create table usage
+	(fileid		int		references files,
+	line		int,
+	symid		int		references symbols
+);
+
 create table status
-	(fileid		int		 references files,
+	(fileid		int		references files,
 	status		int,
 	primary key	(fileid)
 );
 
+create index indexindex on indexes using btree (symid);
 create index symbolindex on symbols using btree (symname);
+create index usageindex on usage using btree (symid);
 
 grant select on files to public;
 grant select on symbols to public;
 grant select on indexes to public;
-grant select on relations to public;
 grant select on releases to public;
+grant select on usage to public;
 grant select on status to public;
 

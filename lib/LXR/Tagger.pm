@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.10 1999/08/17 18:35:35 argggh Exp $
+# $Id: Tagger.pm,v 1.11 1999/09/17 09:37:41 argggh Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.10 1999/08/17 18:35:35 argggh Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.11 1999/09/17 09:37:41 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -12,10 +12,8 @@ use LXR::Lang;
 
 sub processfile {
 	my ($pathname, $release, $config, $files, $index) = @_;
-#	my $filetype = $typemap{$1} if $pathname =~ /([^\.]+)$/;
 
 	my $lang = new LXR::Lang($pathname);
-#	print(STDERR "Foo: $pathname, $lang\n");
 
 	return unless $lang;
 	
@@ -36,6 +34,33 @@ sub processfile {
 		my $path = $files->tmpfile($pathname, $release);
 
 		$lang->indexfile($pathname, $path, $fileid, $index, $config);
+		unlink($path);
+	}
+}
+
+
+sub processrefs {
+	my ($pathname, $release, $config, $files, $index) = @_;
+
+	my $lang = new LXR::Lang($pathname);
+
+	return unless $lang;
+	
+	my $revision = $files->filerev($pathname, $release);
+
+	return unless $revision;
+
+	print(STDERR "--- $pathname $release $revision\n");
+	
+	my $fileid = $index->fileid($pathname, $revision);
+
+	if ($index->toreference($fileid)) {
+
+		print(STDERR "--- $pathname $fileid\n");
+
+		my $path = $files->tmpfile($pathname, $release);
+
+		$lang->referencefile($pathname, $path, $fileid, $index, $config);
 		unlink($path);
 	}
 

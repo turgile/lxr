@@ -1,5 +1,5 @@
-#!/local/bin/perl5.004
-# $Id: ident,v 1.4 1999/08/17 18:35:32 argggh Exp $
+#!/local/bin/perl
+# $Id: ident,v 1.5 1999/09/17 09:37:37 argggh Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.4 1999/08/17 18:35:32 argggh Exp $ ';
+$CVSID = '$Id: ident,v 1.5 1999/09/17 09:37:37 argggh Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -64,14 +64,34 @@ sub ident {
 
 	if (@refs) {
 	    my $def;
-	    while ($def = shift(@refs)) {
-		my ($file, $line, $type) = @$def;
-		$file = $index->filename($file);
 
-		print("Defined as a $type_names{$type} in: ".
+	    print("<ul>\n");
+	    while ($def = shift(@refs)) {
+		my ($file, $line, $type, $rel) = @$def;
+
+		$rel &&= "(member of ".idref($rel, $rel).")";
+		
+		print("<li> $type_names{$type} in ".
 		      fileref("$file, line $line",
 			      $file, $line).
-		      "<br>\n");
+		      " $rel<br>\n");
+	    }
+	    print("</ul>\n");
+
+	    my @uses = $index->getreference($identifier, $release);
+
+	    if (@uses) {
+		@uses = sort { $$a[0] cmp $$b[0] } @uses;
+
+		my $ref;
+		while ($ref = shift(@uses)) {
+		    my ($file, $line) = @$ref;
+
+		    print("<li> ".
+			  fileref("$file, line $line",
+				  $file, $line).
+			  "<br>\n");
+		}
 	    }
 	}
 	else {
