@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.17 1999/06/01 06:44:20 pergj Exp $
+# $Id: source,v 1.18 1999/06/01 08:08:16 pergj Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.17 1999/06/01 06:44:20 pergj Exp $ ';
+$CVSID = '$Id: source,v 1.18 1999/06/01 08:08:16 pergj Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -249,7 +249,9 @@ sub printfile {
     }
 }
 
+
 httpinit;
+
 
 # If the file is html then simply pump it out.
 if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {
@@ -262,4 +264,3 @@ else {
     printfile(0);
     makefooter($type);
 }
-

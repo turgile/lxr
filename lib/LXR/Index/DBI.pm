@@ -1,72 +1,66 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.11 1999/06/01 06:44:25 pergj Exp $
+# $Id: DBI.pm,v 1.12 1999/06/01 08:08:21 pergj Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.11 1999/06/01 06:44:25 pergj Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.12 1999/06/01 08:08:21 pergj Exp $ ';
 
 use strict;
 use DBI;
 
-use vars qw($dbh $fst $fup $sst $ssq $sup $ist $iup $rup
+use vars qw($dbh $fst $fsq $fup $sst $ssq $sup $ist $iup $rst $rup
 			$transactions %files %symcache);
 
 sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	$dbh = DBI->connect($dbname, "pergj", "foobar");
+	$dbh = DBI->connect($dbname);
 	$$dbh{'AutoCommit'} = 0;
-#	$dbh->trace(1);
-	$dbh->{RaiseError} = 1;
+#	$dbh->trace(2);
 	
 	$transactions = 0;
 	%files = ();
 	%symcache = ();
 
-	$dbh->prepare("use lxr2")->execute();
-
+	$fst = $dbh->prepare
+		("select fileid from files where filename = ? and revision = ?");
+	$fsq = $dbh->prepare
+		("select nextval('filenum')");
 	$fup = $dbh->prepare
-		("insert into files values (?, ?)");
-
-	$sup = $dbh->prepare
-		("insert into symbols values ( ? )");
+		("insert into files values (?, ?, ?)");
 
 	$sst = $dbh->prepare
-		("select * from symbols where symname = ?");
+		("select symid from symbols where symname = ?");
+	$ssq = $dbh->prepare
+		("select nextval('symnum')");
+	$sup = $dbh->prepare
+		("insert into symbols values (?, ?)");
 
 	$ist = $dbh->prepare
 		("select f.filename, i.line, i.type ".
 		 "from symbols s, indexes i, files f, releases r ".
-		 "where s.symname = i.symname and ".
-		 "i.filename = f.filename and i.revision = f.revision ".
-		 "and f.filename = r.filename and f.revision = r.revision ".
+		 "where s.symid = i.symid and i.fileid = f.fileid ".
+		 "and f.fileid = r.fileid ".
 		 "and s.symname = ? and r.release = ?");
-
 	$iup = $dbh->prepare
-		("insert into indexes values (?, ?, ?, ?, ?)");
+		("insert into indexes values (?, ?, ?, ?)");
 
+	$rst = $dbh->prepare
+		("select * from releases where fileid = ? and release = ?");
 	$rup = $dbh->prepare
-		("insert into releases values (?, ?, ?)");
-	
-	$fst = $dbh->prepare
-		("select * from files where filename = ? and revision = ?");
-	
+		("insert into releases values (?, ?)");
+
 	return $self;
 }
 
 sub index {
-	my ($self, $symname, $filename, $revision, $line, $type) = @_;
+	my ($self, $symname, $fileid, $line, $type) = @_;
 
-	if(!issymbol($self, $symname)) {
-		$sup->execute($symname);
-	}
-
-	$iup->execute($symname,
-				  $filename, $revision,
-				  $line, $type);
-
+	$iup->execute($self->symid($symname),
+						   $fileid,
+						   $line, $type);
 	unless (++$transactions % 500) {
 		$dbh->commit();
 	}
@@ -99,18 +93,21 @@ sub getrelations {
 	my ($self, $symname, $release) = @_;
 }
 
-# Retrieve the file identifier for this file
 sub fileid {
 	my ($self, $filename, $revision, $update) = @_;
 	my ($fileid);
 
 	# CAUTION: $revision is not $release!
+
 	unless (defined($fileid = $files{"$filename\t$revision"})) {
 		$fst->execute($filename, $revision);
 		($fileid) = $fst->fetchrow_array();
 		unless ($fileid) {
 			return undef unless $update;
-			$fup->execute($filename, $revision);
+
+			$fsq->execute();
+			($fileid) = $fsq->fetchrow_array();
+			$fup->execute($filename, $revision, $fileid);
 		}
 		$files{"$filename\t$revision"} = $fileid;
 	}
@@ -119,9 +116,14 @@ sub fileid {
 
 # Indicate that this filerevision is part of this release
 sub release {
-	my ($self, $filename, $revision, $release) = @_;
+	my ($self, $fileid, $release) = @_;
 
-	$rup->execute($filename, $revision, $release);
+	my $rows = $rst->execute($fileid+0, $release);
+	$rst->finish();
+
+	unless ($rows > 0) {
+		$rup->execute($fileid, $release);
+	}
 }
 
 # Convert from fileid to filename
@@ -129,26 +131,38 @@ sub filename {
 	my ($self, $fileid) = @_;
 }
 
+sub symid {
+	my ($self, $symname) = @_;
+	my ($symid);
+
+	unless (defined($symid = $symcache{$symname})) {
+		$sst->execute($symname);
+		($symid) = $sst->fetchrow_array();
+		unless ($symid) {
+			$ssq->execute();
+			($symid) = $ssq->fetchrow_array();
+			$sup->execute($symname, $symid);
+		}
+		$symcache{$symname} = $symid;
+	}
+
+	return $symid;
+}
+
 sub issymbol {
 	my ($self, $symname) = @_;
-	my ($foobar);
 
-	if (!defined($symcache{$symname})) {
+	unless (exists($symcache{$symname})) {
 		$sst->execute($symname);
-		while($foobar = $sst->fetchrow_array()) {
-			$symcache{$symname} = $foobar;
-		}
-#		$sst->finish;
+		($symcache{$symname}) = $sst->fetchrow_array();
 	}
 	
-	if(defined($symcache{$symname})) {
-		return $symcache{$symname}
-	} else {
-		return ;
-	}		
+	return $symcache{$symname};
 }
 
 sub END {
+	$fst = undef;
+	$fsq = undef;
 	$fup = undef;
 	$sst = undef;
 	$ssq = undef;

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.7 1999/05/31 19:23:32 toffer Exp $
+# $Id: Lang.pm,v 1.8 1999/06/01 08:08:18 pergj Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.7 1999/05/31 19:23:32 toffer Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.8 1999/06/01 08:08:18 pergj Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -246,12 +246,7 @@ sub new {
 	$self = bless({}, $self);
 
 	$$self{'release'} = $release;
-
-	if ($pathname =~ /(\w+)\.py$/) { 
-		print STDERR "Pathname: $pathname \n modname: $1\n";
-		$$self{'modulename'} = $1;
-	}
-
+	
 	return $self;
 }
 	
@@ -262,11 +257,21 @@ sub parsespec {
 sub processcode {
 	my ($self, $code, @itag) = @_;
 	
-	$$code =~ s/([a-zA-Z_][a-zA-Z0-9_\.]*)/
-		($index->issymbol( $$self{'modulename'}.".".$1, $$self{'release'} )
+	$$code =~ s/([a-zA-Z_][a-zA-Z0-9_]*)/
+		($index->issymbol($1, $$self{'release'}) 
 		 ? join($1, @{$$self{'itag'}})
 		 : $1)/ge;
 }
+
+sub find_python_xrefs {
+	
+	
+	
+	
+	
+}
+
+
 
 
 1;

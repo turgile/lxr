@@ -1,46 +1,55 @@
-use lxr2
+drop sequence filenum;
+drop sequence symnum;
+drop table files;
+drop table symbols;
+drop table indexes;
+drop table relations;
+drop table releases;
 
-drop table files
-drop table symbols
-drop table indexes
-drop table relations
-drop table releases
-go
+create sequence filenum cache 50;
+create sequence symnum cache 50;
 
 create table files (
-	filename	varchar(80),
-	revision	varchar(80),
-	primary key	(filename, revision) 
-)
+	filename	varchar,
+	revision	varchar,
+	fileid		int 
+/*,
+	primary key	(fileid),
+	unique		(filename, revision)
+*/
+);
+
 
 create table symbols (
-	symname		varchar(80),
-	primary key	(symname),
-)
+	symname		varchar,
+	symid		int
+/*,
+	primary key	(symid),
+	unique		(symname)
+*/
+);
 
 create table indexes (
-	symname		varchar(80)		references symbols,
-	filename	varchar(80),
-	revision	varchar(80),
+	symid		int		/* references symbols */,
+	fileid		int		/* references files */,
 	line		int,
-	type		varchar(80),
-	foreign key	(filename, revision)	references files
-)
+	type		varchar
+);
 
 create table relations (
-	symname		varchar(80)		references symbols,
-	release		varchar(80),
-	rsymid		varchar(80)		references symbols,
-	reltype		varchar(80)
-)
+	symid		int		/* references symbols */,
+	release		varchar,
+	rsymid		int		/* references symbols */,
+	reltype		varchar
+);
 
-create table releases (
-	filename	varchar(80),
-	revision	varchar(80),
-	release		varchar(80),
-	foreign key	(filename, revision) references files
-)
+create table releases 
+	(fileid		int		/* references files */,
+	 release	varchar
+);
 
-create index symbolindex on symbols (symname)
+create index symbolindex on symbols using btree (symname);
 
-grant select on symbols to public
+grant select on symbols to public;
+grant all on symbols to argggh;
+grant all on symbols to toffer;

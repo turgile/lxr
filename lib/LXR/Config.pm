@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.14 1999/06/01 06:44:22 pergj Exp $
+# $Id: Config.pm,v 1.15 1999/06/01 08:08:18 pergj Exp $
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.14 1999/06/01 06:44:22 pergj Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.15 1999/06/01 08:08:18 pergj Exp $ ';
 
 use strict;
 
@@ -75,7 +75,6 @@ sub _initialize {
 		
 		%$self = (%$self, %$config);
     }
-    print (STDERR Dumper($self));
 }
 
 

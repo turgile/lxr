@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.12 1999/06/01 06:44:23 pergj Exp $
+# $Id: Plain.pm,v 1.13 1999/06/01 08:08:20 pergj Exp $
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.12 1999/06/01 06:44:23 pergj Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.13 1999/06/01 08:08:20 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -96,6 +96,10 @@ sub getdir {
 }
 
 # This function should not be used outside this module
+# except for printing error messages
+# (I'm not sure even that is legitimate use, considering
+# other possible File classes.)
+
 sub toreal {
 	my ($self, $pathname, $release) = @_;
 	
