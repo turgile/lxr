@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.39 2004/07/15 14:41:04 brondsem Exp $
+# $Id: source,v 1.40 2004/07/15 15:00:07 brondsem Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.39 2004/07/15 14:41:04 brondsem Exp $ ';
+$CVSID = '$Id: source,v 1.40 2004/07/15 15:00:07 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -145,6 +145,8 @@ sub direxpand {
 	print("<p align=\"center\">\n<i>The directory ".
 	      $files->toreal($dir, $release).
 	      " does not exist.</i>\n");
+	print("\<p align=\"center\">\n<i>This directory might exist in other versions, try 'Show attic files' or select a different Version.</i>\n")
+		if $files->isa("LXR::Files::CVS") and !$HTTP->{'param'}->{'showattic'};
 	#FIXME what does this do?
 	if ($files->toreal($dir, $release) =~ m#(.+[^/])[/]*$# ) {
 	    if (-e $1) {
