@@ -1,0 +1,19 @@
+Options ExecCGI FollowSymlinks
+
+order deny,allow
+
+<Files lxr.conf>
+deny from all
+</Files>
+
+<Files lib>
+deny from all
+</Files>
+
+<Files ~ (find|search|source|ident|diff|cgi-bin)$>
+SetHandler cgi-script
+deny from 193.156.96.237
+</Files>
+
+ErrorDocument 403 /notfound.html
+ErrorDocument 404 /notfound.html

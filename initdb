@@ -1,0 +1,25 @@
+drop sequence filenum;
+drop sequence symnum;
+drop table files;
+drop table symbols;
+drop table index;
+drop table relation;
+
+create sequence filenum cache 50;
+create sequence symnum cache 50;
+create table files (filename varchar,
+		    revision varchar,
+		    fileid int);
+create table symbols (symname varchar,
+		      symid int);
+create table index (symid int,
+		    fileid int,
+		    line int,
+		    type varchar);
+create table relation (symid int,
+		       release varchar,
+		       rsymid int,
+		       reltype varchar);
+
+create unique index symbolindex on symbols(symname);
+grant select on symbols to public;

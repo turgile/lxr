@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+# -*- tab-width: 4 -*-
+
+use strict;
+use lib '/home/argggh/lxr/lxr2/lib';
+
+use LXR::Files::Plain;
+use LXR::Index::DB;
+use LXR::Index::DBI;
+
+#my $files = new LXR::Files::Plain('/home/argggh/lxr/testsource');
+#my $index = new LXR::Index::DB('/home/argggh/lxr/testsource');
+my $files = new LXR::Files::Plain('/tmp');
+my $index = new LXR::Index::DBI('dbi:Pg:dbname=lxr');
+
+sub genxref {
+	my ($pathname, $release) = @_;
+
+	if ($files->isdir($pathname, $release)) {
+		map { 
+			genxref($pathname.$_, $release) 
+			} $files->getdir($pathname, $release);
+	}
+	elsif ($pathname =~ /\.(cc?|h)$/) {
+		print(STDERR "*** $pathname $release\n");
+		
+		open(TMP, "> /tmp/lxrref");
+		print(TMP $files->getfile($pathname, $release));
+		close(TMP);
+		
+		open(CTAGS, "ctags-3.2/ctags --excmd=number --lang=c++ --c-types=cdefgmnpstuvx -f - /tmp/lxrref |");
+#		open(CTAGS, "ctags-3.2/ctags --excmd=number --sort=no --lang=c++ --c-types=cdefgmnpstuvx -f - ".$$files{'rootpath'}.$release.$pathname." |");
+		while (<CTAGS>) {
+			chomp;
+			@_ = split(/\t/, $_);
+			$_[2] =~ s/;\"$//;
+			$index->index($_[0], $release, $pathname, $_[2], $_[3]);
+			if ($_[4] eq '') {
+			}
+			elsif ($_[4] =~ /^file:/) {
+			}
+			elsif ($_[4] =~ /^struct:(.*)/) {
+				$index->relate($_[0], $release, $1, 'struct member');
+			}
+			elsif ($_[4] =~ /^union:(.*)/) {
+				$index->relate($_[0], $release, $1, 'union member');
+			}
+			elsif ($_[4] =~ /^class:(.*)/) {
+				$index->relate($_[0], $release, $1, 'class member');
+			}
+			else {
+				print(STDERR "** Unknown : $_\n");
+			}
+		}
+		close(CTAGS);
+	}
+}
+
+genxref('/', '2.0');
