@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.10 1999/06/01 16:49:06 toffer Exp $
+# $Id: Lang.pm,v 1.11 1999/06/01 17:09:27 toffer Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.10 1999/06/01 16:49:06 toffer Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.11 1999/06/01 17:09:27 toffer Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -270,7 +270,6 @@ sub processcode {
 				$1,
 				$$self{'itag'}[2])
 		 : $1)/ge;
-	
 }
 
 
