@@ -86,8 +86,7 @@ If you have glimpse installed, you should set
  
 If you have swish-e installed, you should set
 
- 'swishindex' => '/path/to/your/swishe-e/executable'
- 'swishsearch' => '/path/to/your/swishe-e/executable'
+ 'swishbin' => '/path/to/your/swishe-e/executable'
 
 Comment out the variables for the indexer you are not using.
 Set 'htmlsearch' to either 'html-search-swish.html' or
@@ -193,7 +192,7 @@ have your URL be http://mysite/lxr then you would add:
 
 Alias /lxr /usr/local/lxr
 <Directory /usr/local/lxr>
-   AllowOverride All		
+   AllowOverride All
 </Directory>
 
 The distribution contains a .htaccess file set up to ensure that lxr

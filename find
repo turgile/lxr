@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: find,v 1.21 2004/07/19 19:50:20 brondsem Exp $
+# $Id: find,v 1.22 2004/07/19 20:03:31 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.21 2004/07/19 19:50:20 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.22 2004/07/19 20:03:31 brondsem Exp $ ';
 
 use strict;
 use lib '.';
@@ -112,7 +112,7 @@ sub find {
 	my $casesensitive = $HTTP->{'param'}->{'casesensitive'};
 
 	my $FILELISTING;
-	if ( $config->swishdir and $config->swishindex ) {
+	if ( $config->swishdir and $config->swishbin ) {
 		unless ( $FILELISTING = new IO::File( $config->swishdir . "/$release.filenames" ) ) {
 			&warning(
 "Version '$release' has not been indexed and is unavailable for searching<br>Could not open "

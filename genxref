@@ -177,7 +177,7 @@ sub gensearch {
 		system("chmod 644 $string");
 	}
 
-	if ( $config->swishdir and $config->swishindex ) {
+	if ( $config->swishdir and $config->swishbin ) {
 		my $swish = new IO::Handle;
 		die $config->swishdir . " does not exist" unless -d $config->swishdir;
 		my $filelist = new IO::File $config->swishdir . "/$release.filenames", "w"
@@ -187,12 +187,12 @@ sub gensearch {
 
 		open( $swish,
 			    "| "
-			  . $config->swishindex
+			  . $config->swishbin
 			  . " -S prog -i stdin -v 1 -c swish-e.conf -f "
 			  . $config->swishdir . "/"
 			  . $release
 			  . ".index" )
-		  or die "Couldn't exec " . $config->swishindex . ": $!\n";
+		  or die "Couldn't exec " . $config->swishbin . ": $!\n";
 
 		feedswish( "/", $release, $swish, $filelist );
 
