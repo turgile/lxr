@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.26 2004/07/26 20:53:17 brondsem Exp $
+# $Id: search,v 1.27 2004/09/02 15:26:42 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,10 +23,11 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.26 2004/07/26 20:53:17 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.27 2004/09/02 15:26:42 brondsem Exp $ ';
 
 use strict;
-use lib '.';
+use lib '.'; # for Local.pm
+use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
 
 use LXR::Common qw(:html);
 use LXR::Config;

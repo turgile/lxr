@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.43 2004/07/21 20:44:30 brondsem Exp $
+# $Id: source,v 1.44 2004/09/02 15:26:42 brondsem Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,10 +24,11 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.43 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: source,v 1.44 2004/09/02 15:26:42 brondsem Exp $ ';
 
 use strict;
-use lib '.';
+use lib '.'; # for Local.pm
+use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
 
 use LXR::Common qw(:html);
 use Local;
