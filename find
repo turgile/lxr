@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: find,v 1.12 2004/06/28 14:21:38 brondsem Exp $
+# $Id: find,v 1.13 2004/06/28 18:35:54 brondsem Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.12 2004/06/28 14:21:38 brondsem Exp $ ';
+$CVSID = '$Id: find,v 1.13 2004/06/28 18:35:54 brondsem Exp $ ';
 
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
 
@@ -32,9 +32,9 @@ use LXR::Config;
 
 sub find {
 
-print qq~
+print q~
 <p align=\"center\">
-Search for files (by name) using regular expressions.
+Search for files (by name) using <a href="http://www.perldoc.com/perl5.8.4/pod/perlrequick.html">perl regular expressions</a>.
 </p>
 <H3>Quick tip:</H3>
 <P>
@@ -43,13 +43,9 @@ The database that is searched has the form of the output of the
 </p><p>That is, each line is the absolute patch of a file
 If you want to search for a specific file(s), you use
 <ul>
-<li> /el.po search for all occurences of file "el.po".
-<li> .desktop search for all files ending with ".desktop".
+<li> /el\.po to search for all occurences of file "el.po".
+<li> \.desktop$ to search for all files ending with ".desktop".
 </ul>
-</p>
-<p>
-"\\" is for escaping characters (we escape
-characters "/" and "." while "$" denotes the end of the string.
 </p>
 ~;
 
