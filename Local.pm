@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.17 2004/06/30 19:19:45 brondsem Exp $
+# $Id: Local.pm,v 1.18 2004/07/14 14:42:28 brondsem Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.17 2004/06/30 19:19:45 brondsem Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.18 2004/07/14 14:42:28 brondsem Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -108,12 +108,30 @@ sub fdescexpand {
 	return("\&nbsp\;");
     }
 
+
     # if a java file, only consider class-level javadoc comments
     if ($filename =~ /\.java$/) {
-	# first /** ... */ before 'public class' or 'public interface'
-	# (it'd be better to match the last /** ... */ before the declaration, but i can't get that to work
-	$desc =~ m#/\*\*(.*?)\*/.*public\s((abstract|static|final|strictfp)\s)*(class|interface)#s;
-	$desc = $1;
+	# last /** ... */ before 'public class' or 'public interface'
+	
+	# find declaration
+	$desc =~ m/public\s((abstract|static|final|strictfp)\s)*(class|interface)/g;
+	$declPos = pos $desc;
+	return "\&nbsp\;" if ! $declPos;
+	
+	# last comment start before declaration
+	pos $desc = 0;
+	$commentStart = -1;
+	while ($desc =~ m#/\*\*#g) {
+	    last if $declPos < pos $desc;
+	    $commentStart = pos $desc;
+	}
+	return "\&nbsp\;" if $commentStart == -1;
+
+	# find comment end, and extract
+	pos $desc = $commentStart;
+	$desc =~ m#\*/#g;
+	$commentEnd = pos $desc;
+	$desc = substr($desc,$commentStart+3, $commentEnd-$commentStart - 5);
 	
 	return "\&nbsp\;" if ! $desc;
 	
