@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.27 2004/07/20 18:02:00 brondsem Exp $
+# $Id: CVS.pm,v 1.28 2004/07/20 18:17:39 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.27 2004/07/20 18:02:00 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.28 2004/07/20 18:17:39 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -133,7 +133,9 @@ sub getannotations {
 		}
 	}
 	
+	if (@anno) {
 		map { $anno[$_] = $lrev if $_ ne ''; } @head;
+	}
 
 	#	print(STDERR "** Anno: ".scalar(@anno).join("\n", '', @anno, ''));
 	return @anno;
