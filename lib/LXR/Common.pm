@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.14 1999/05/29 23:35:00 argggh Exp $
+# $Id: Common.pm,v 1.15 1999/05/31 19:23:31 toffer Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.14 1999/05/29 23:35:00 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.15 1999/05/31 19:23:31 toffer Exp $ ';
 
 use strict;
 
@@ -277,7 +277,7 @@ sub markupfile {
 		my ($btype, $frag) = &SimpleParse::nextfrag;
 
 		&$outfun(join($line++, @ltag)) if defined($frag);
-		
+
 		while (defined($frag)) {
 			&markspecials($frag);
 

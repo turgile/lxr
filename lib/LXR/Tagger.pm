@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.6 1999/05/29 18:57:15 toffer Exp $
+# $Id: Tagger.pm,v 1.7 1999/05/31 19:23:32 toffer Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.6 1999/05/29 18:57:15 toffer Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.7 1999/05/31 19:23:32 toffer Exp $ ';
 
 use strict;
 use FileHandle;
@@ -75,7 +75,7 @@ sub processfile {
 		}
 		close(CTAGS);
 	}
-
+	# Python
 	elsif (ref($lang) =~ /LXR::Lang::Python/) {
 		
 		my (@ptag_lines, @single_ptag, $module_name);
@@ -85,7 +85,6 @@ sub processfile {
 		}
 		
 		open(PYTAG, $path);
-		
 		while (<PYTAG>) {
 			chomp;
 
