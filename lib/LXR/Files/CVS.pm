@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.17 2002/02/03 08:22:08 mbox Exp $
+# $Id: CVS.pm,v 1.18 2003/05/02 23:04:16 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.17 2002/02/03 08:22:08 mbox Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.18 2003/05/02 23:04:16 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -156,10 +156,10 @@ sub getfilehandle {
 	my $rev = $self->filerev($filename, $release);
 	return undef unless defined($rev);
 
-	$fileh = new FileHandle("co -q -p$rev ".
-							$self->toreal($filename, $release).
-							" |"); # FIXME: Exploitable?
-	die("Error execting \"co\", rcs not installed?") unless $fileh;
+    open($fileh, "-|", "co -q -p$rev ".
+            $self->cleanstring($self->toreal($filename, $release)));
+
+	die("Error executing \"co\"; rcs not installed?") unless $fileh;
 	return $fileh;
 }
 
@@ -175,10 +175,10 @@ sub getdiff {
 	my $rev2 = $self->filerev($filename, $release2);
 	return undef unless defined($rev2);
 
-	$fileh = new FileHandle("rcsdiff -q -a -n -r$rev1 -r$rev2 ".
-							$self->toreal($filename, $release1).
-							" |"); # FIXME: Exploitable?
-	die("Error execting \"rcsdiff\", rcs not installed?") unless $fileh;
+    open($fileh, "-|", "rcsdiff -q -a -n -r$rev1 -r$rev2 ".
+            $self->cleanstring($self->toreal($filename, $release1)));
+
+	die("Error executing \"rcsdiff\"; rcs not installed?") unless $fileh;
 	return $fileh->getlines;
 }
 
@@ -273,6 +273,25 @@ sub toreal {
 
 	return undef;
 }
+
+
+sub cleanstring {
+    my ($self, $in) = @_;
+
+    my $out = '';
+
+    for (split('',$in)) {
+        s/[|&!`;$%<>[:cntrl:]]// ||   # drop these in particular
+          /[\w\/,.-_+=]/ ||           # keep these intact
+          s/([ '"\x20-\x7E])/\\$1/ || # escape these out
+          s/.//;                      # drop everything else
+
+        $out .= $_;
+    }
+
+    return $out;
+}
+
 
 sub isdir {
 	my ($self, $pathname, $release) = @_;
