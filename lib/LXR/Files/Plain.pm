@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.19 2002/02/26 15:57:55 mbox Exp $
+# $Id: Plain.pm,v 1.20 2004/06/29 20:41:23 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.19 2002/02/26 15:57:55 mbox Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.20 2004/06/29 20:41:23 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -102,11 +102,14 @@ sub getdir {
 
 	$dir = $self->toreal($pathname, $release);
 	opendir(DIR, $dir) || die ("Can't open $dir");
-	while (defined($node = readdir(DIR))) {
+	FILE: while (defined($node = readdir(DIR))) {
 		next if $node =~ /^\.|~$|\.orig$/;
 		next if $node eq 'CVS';
 
 		if (-d $dir.$node) {
+			foreach my $ignoredir ($config->ignoredirs) {
+				next FILE if $node eq $ignoredir;
+			}
 			push(@dirs, $node.'/');
 		}
 		else {

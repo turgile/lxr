@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.18 2003/05/02 23:04:16 mbox Exp $
+# $Id: CVS.pm,v 1.19 2004/06/29 20:41:23 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.18 2003/05/02 23:04:16 mbox Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.19 2004/06/29 20:41:23 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -234,11 +234,13 @@ sub getdir {
 	my $real = $self->toreal($pathname, $release);
 
 	opendir($DIRH, $real) || return ();
-	while (defined($node = readdir($DIRH))) {
+	FILE: while (defined($node = readdir($DIRH))) {
 		next if $node =~ /^\.|~$|\.orig$/;
 		next if $node eq 'CVS';
-
 		if (-d $real.$node) {
+			foreach my $ignoredir ($config->ignoredirs) {
+				next FILE if $node eq $ignoredir;
+			}
 			if ($node eq 'Attic') {
 				push(@files, $self->getdir($pathname.$node.'/', $release));
 			}
