@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.18 1999/08/07 18:16:14 argggh Exp $
+# $Id: Common.pm,v 1.19 1999/08/17 18:35:34 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.18 1999/08/07 18:16:14 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.19 1999/08/17 18:35:34 argggh Exp $ ';
 
 use strict;
 
@@ -50,7 +50,8 @@ $wwwdebug = 1;
 			   't' => 'typedefs',
 			   'u' => 'union names',
 			   'v' => 'variable definition',
-			   'x' => 'extern or forward variable declaration');
+			   'x' => 'extern or forward variable declaration',
+			   'i' => 'documentation entry');
 
 $tmpcounter = 23;
 
@@ -120,7 +121,11 @@ sub fileref {
 
 	# jwz: URL-quote any special characters.
 	$path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
-	
+
+	if ($line > 0 && length($line) < 3) {
+		$line = ('0' x (3-length($line))).$line;
+	}
+
 	return ("<a href=\"$config->{virtroot}/source$path".
 			&urlargs(@args).
 			($line > 0 ? "#$line" : "").
@@ -262,7 +267,7 @@ sub markupfile {
 	my ($dir) = $pathname =~ m|^(.*/)|;
 
 	my $line = '001';
-	my @ltag = &fileref(1, $pathname, 1) =~ /^(<a)(.*\#)1(\">)1(<\/a>)$/;
+	my @ltag = &fileref(1, $pathname, 1) =~ /^(<a)(.*\#)001(\">)1(<\/a>)$/;
 	$ltag[0] .= ' name=';
 	$ltag[3] .= " ";
 	

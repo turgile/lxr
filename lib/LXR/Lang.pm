@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.13 1999/08/07 18:16:27 argggh Exp $
+# $Id: Lang.pm,v 1.14 1999/08/17 18:35:34 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.13 1999/08/07 18:16:27 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.14 1999/08/17 18:35:34 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -91,13 +91,64 @@ sub processcode {
 			: $2)#ge;
 }
 
+sub indexfile {
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
+
+#	if (ref($lang) =~ /LXR::Lang::(C|Eiffel|Fortran|Java)/
+
+	if ($config->ectagsbin) {
+		open(CTAGS, join(" ", $config->ectagsbin,
+						 "--excmd=number",
+						 "--lang=c++",
+						 "--c-types=cdefgmnpstuvx",
+						 "-f", "-",
+						 $path, "|"));
+
+		while (<CTAGS>) {
+			chomp;
+				
+			@_ = split(/\t/, $_);
+			$_[2] =~ s/;\"$//;
+				
+			$index->index($_[0], $fileid, $_[2], $_[3]);
+
+#			if ($_[4] eq '') {
+#			}
+#			elsif ($_[4] =~ /^file:/) {
+#			}
+#			elsif ($_[4] =~ /^struct:(.*)/) {
+#				$index->relate($_[0], $release, $1, 'struct member');
+#			}
+#			elsif ($_[4] =~ /^union:(.*)/) {
+#				$index->relate($_[0], $release, $1, 'union member');
+#			}
+#			elsif ($_[4] =~ /^class:(.*)/) {
+#				$index->relate($_[0], $release, $1, 'class member');
+#			}
+#			else {
+#				print(STDERR "** Unknown : $_\n");
+#			}
+		}
+		close(CTAGS);
+	}
+	else {
+		system($config->ctagsbin, 
+			   "-x",
+#			   "--no-warn",
+			   "--members", 
+			   "--typedefs-and-c++",
+			   "--language=c++", 
+			   "--output=-",
+			   $path);
+	}
+}
 
 
 # Java
 package LXR::Lang::Java;    
 
 use vars qw(@ISA);
-@ISA = ('LXR::Lang');
+@ISA = ('LXR::Lang::C');
 
 my @spec = ('atom',		'\\\\.',	'',
 			'comment',	'/\*',		'\*/',
@@ -299,6 +350,41 @@ sub processcode {
 }
 
 
+sub	indexfile {
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
+
+	my (@ptag_lines, @single_ptag, $module_name);
+
+	if ($name =~ m|/(\w+)\.py$|) {
+		$module_name = $1;
+	}
+	
+	open(PYTAG, $path);
+		
+	while (<PYTAG>) {
+		chomp;
+		
+		# Function definitions
+		if ( $_ =~ /^\s*def\s+([^\(]+)/ ) {
+			$index->index($module_name."\.$1", $fileid, $., "f");
+		}
+		# Class definitions 
+		elsif ( $_ =~ /^\s*class\s+([^\(:]+)/ ) {
+			$index->index($module_name."\.$1", $fileid, $., "c");
+		}
+		# Targets that are identifiers if occurring in an assignment..
+		elsif ( $_ =~ /^(\w+) *=.*/ ) {
+			$index->index($module_name."\.$1", $fileid, $., "v");
+		}
+		# ..for loop header.
+		elsif ( $_ =~ /^for\s+(\w+)\s+in.*/ ) {
+			$index->index($module_name."\.$1", $fileid, $., "v");
+		}
+	}
+	close(PYTAG);
+}
+
+
 # Perl
 package LXR::Lang::Perl;
 
@@ -316,7 +402,7 @@ use vars qw(@ISA);
 @ISA = ('LXR::Lang');
 
 my @spec = (
-			'atom'		=> ('\$.',		''),
+#			'atom'		=> ('\$.',		''),
 			'atom'		=> ('\\\\.',	''),
 			'include'	=> ('\buse',	';'),
 			'string'	=> ('"',		'"'),
@@ -343,7 +429,7 @@ sub processcode {
 	my ($self, $code, @itag) = @_;
 	my $sym;
 
-	$$code =~ s#([\$\@\%\&\*])([a-z0-9_]+)|\b([a-z0-9_]+)(\s*\()#
+	$$code =~ s#([\@\$\%\&\*])([a-z0-9_]+)|\b([a-z0-9_]+)(\s*\()#
 		$sym = $2 || $3;
 		$1.($index->issymbol($sym, $$self{'release'})
 			? join($sym, @{$$self{'itag'}})
@@ -362,23 +448,60 @@ sub processcomment {
 	if ($$comm =~ /^=/s) {
 		# Pod text
 
-		$$comm =~ s/^=head(\d)\s*(.*)/
-			"<font size=\"+".(4-$1)."\">$2<\/font>"/gme;
-
-		$$comm =~ s/^=item\s*(.*)/
-			"<span class=podhead>* $1 ".("*" x (67 - length($1)))."<\/span>"/gme;
-
-		$$comm =~ s/^=(pod|cut)/"<span class=podhead>".("*" x 70)."<\/span>"/gme;
-		
-		$$comm =~ s/^=.*//gm;
-
-		$$comm =~ s|^((?!\<span).*)$|<span class=pod>$1</span>|gm;
-
-		$$comm =~ s/C\0\<(.*?)\0\>/<code>$1<\/code>/g;
+		$$comm = join('', map {
+			if (/^=head(\d)\s*(.*)/s) {
+				"<span class=pod><font size=\"+".(4-$1)."\">$2<\/font></span>";
+			}
+			elsif (/^=item\s*(.*)/s) {
+				"<span class=podhead>* $1 ".
+					("*" x (67 - length($1)))."<\/span>";
+			}
+			elsif (/^=(pod|cut)/s) {
+				"<span class=podhead>".
+					("*" x 70)."<\/span>";
+			}
+			elsif (/^=.*/s) {
+				"";
+			}
+			else {
+				if (/^\s/s) {	# Verbatim paragraph
+					s|^(.*)$|<span class=pod><code>$1</code></span>|gm;
+				}
+				else {			# Normal paragraph
+					s|^(.*)$|<span class=pod>$1</span>|gm;
+					s/C\0\<(.*?)\0\>/<code>$1<\/code>/g;
+				}
+				$_;
+			}
+		} split(/(\n[ \t]*(?:\n[ \t]*)*)/, $$comm));
 	}
 	else {
 		$$comm =~ s|^(.*)$|<b><i>$1</i></b>|gm;
 	}
 }
+
+
+sub indexfile {
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
+
+	open(PLTAG, $path);
+		
+	while (<PLTAG>) {
+		if (/^sub\s+(\w+)/) {
+			print(STDERR "Sub: $1\n");
+			$index->index($1, $fileid, $., 'f');
+		}
+		elsif (/^package\s+([\w:]+)/) {
+			print(STDERR "Class: $1\n");
+			$index->index($1, $fileid, $., 'c');
+		}
+		elsif (/^=item\s+[\@\$\%\&\*]?(\w+)/) {
+			print(STDERR "Doc: $1\n");
+			$index->index($1, $fileid, $., 'i');
+		}
+	}
+	close(PLTAG);
+}
+
 
 1;

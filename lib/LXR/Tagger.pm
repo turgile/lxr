@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.9 1999/06/01 08:08:19 pergj Exp $
+# $Id: Tagger.pm,v 1.10 1999/08/17 18:35:35 argggh Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.9 1999/06/01 08:08:19 pergj Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.10 1999/08/17 18:35:35 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -27,99 +27,20 @@ sub processfile {
 	
 	my $fileid = $index->fileid($pathname, $revision);
 
-	if ($fileid) {
-		$index->release($fileid, $release);
-		return;			# Already indexed.
-	}
-
-	$fileid = $index->fileid($pathname, $revision, 1);
 	$index->release($fileid, $release);
 
-	print(STDERR "--- $pathname $fileid\n");
+	if ($index->toindex($fileid)) {
 
-	my $path = $files->tmpfile($pathname, $release);
+		print(STDERR "--- $pathname $fileid\n");
 
-	if (ref($lang) =~ /LXR::Lang::(C|Eiffel|Fortran|Java)/
-		&& $config->ectagsbin) {
+		my $path = $files->tmpfile($pathname, $release);
 
-		open(CTAGS, join(" ", $config->ectagsbin,
-						 "--excmd=number",
-						 "--lang=c++",
-						 "--c-types=cdefgmnpstuvx",
-						 "-f", "-",
-						 $path, "|"));
-
-		while (<CTAGS>) {
-			chomp;
-			@_ = split(/\t/, $_);
-			$_[2] =~ s/;\"$//;
-			
-			$index->index($_[0], $fileid, $_[2], $_[3]);
-				
-			if ($_[4] eq '') {
-			}
-			elsif ($_[4] =~ /^file:/) {
-			}
-			elsif ($_[4] =~ /^struct:(.*)/) {
-				$index->relate($_[0], $release, $1, 'struct member');
-			}
-			elsif ($_[4] =~ /^union:(.*)/) {
-				$index->relate($_[0], $release, $1, 'union member');
-			}
-			elsif ($_[4] =~ /^class:(.*)/) {
-				$index->relate($_[0], $release, $1, 'class member');
-			}
-			else {
-				print(STDERR "** Unknown : $_\n");
-			}
-		}
-		close(CTAGS);
+		$lang->indexfile($pathname, $path, $fileid, $index, $config);
+		unlink($path);
 	}
 
-	elsif (ref($lang) =~ /LXR::Lang::Python/) {
-		
-		my (@ptag_lines, @single_ptag, $module_name);
-		
-		if ($pathname =~ m|/(\w+)\.py$|) {
-			$module_name = $1;
-		}
-		
-		open(PYTAG, $path);
-		
-		while (<PYTAG>) {
-			chomp;
-
-			# Function definitions
-			if ( $_ =~ /^\s*def\s+([^\(]+)/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "f");
-			}
-			# Class definitions 
-			elsif ( $_ =~ /^\s*class\s+([^\(:]+)/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "c");
-			}
-			# Targets that are identifiers if occurring in an assignment..
-			elsif ( $_ =~ /^(\w+) *=.*/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "v");
-			}
-			# ..for loop header.
-			elsif ( $_ =~ /^for\s+(\w+)\s+in.*/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "v");
-			}
-		}
-		close(PYTAG);
-	}
-	else {
-		system($config->ctagsbin, 
-			   "-x",
-#			   "--no-warn",
-			   "--members", 
-			   "--typedefs-and-c++",
-			   "--language=c++", 
-			   "--output=-",
-			   $path);
-		
-	}
-	unlink($path);
+#	if ($index->toreference($fileid)) {
+#	}	
 }
 
 

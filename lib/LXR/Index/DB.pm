@@ -1,13 +1,14 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.8 1999/05/29 18:57:16 toffer Exp $
+# $Id: DB.pm,v 1.9 1999/08/17 18:35:36 argggh Exp $
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.8 1999/05/29 18:57:16 toffer Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.9 1999/08/17 18:35:36 argggh Exp $ ';
 
 use strict;
 use DB_File;
+use NDBM_File;
 
 
 sub new {
@@ -18,10 +19,10 @@ sub new {
 	$$self{'dbpath'} = $dbpath;
 	$$self{'dbpath'} =~ s@/*$@/@;
 
-	foreach ('files', 'symbols', 'index', 'relation') {
+	foreach ('releases', 'files', 'symbols', 'indexes', 'status') {
 		$foo = {};
-		tie (%$foo, 'DB_File' , $$self{'dbpath'}.$_, 
-			 O_RDWR|O_CREAT, 0664, $DB_HASH) || 
+		tie (%$foo, 'NDBM_File' , $$self{'dbpath'}.$_, 
+			 O_RDWR|O_CREAT, 0664) || 
 				 die "Can't open database ".$$self{'dbpath'}.$_. "\n";
 		$$self{$_} = $foo;
 	}
@@ -30,11 +31,10 @@ sub new {
 }
 
 sub index {
-	my ($self, $symname, $release, $filename, $line, $type) = @_;
-	my $symid = $self->symid($symname, $release);
+	my ($self, $symname, $fileid, $line, $type, $rel) = @_;
+	my $symid = $self->symid($symname);
 
-	$self->{'index'}{$symid} = 
-		join("", $$self{'index'}{$symid}, join("\t", $filename, $line, $type, ''));
+	$self->{'indexes'}{$symid} .= join("\t", $fileid, $line, $type, $rel)."\0";
 #	$$self{'index'}{$self->symid($symname, $release)} =
 #		join("\t", $filename, $line, $type, '');
 }
@@ -42,10 +42,10 @@ sub index {
 # Returns array of (fileid, line, type)
 sub getindex {
 	my ($self, $symname, $release) = @_;
-	my ($foobar);
 
-	$foobar = $$self{'index'}{$self->symid($symname, $release)};
-	return split /\t/, $foobar;
+	my @defs = split(/\0/, $$self{'indexes'}{$self->symid($symname, $release)});
+
+	return map { [ split(/\t/, $_) ] } @defs;
 }
 
 sub relate {
@@ -62,14 +62,33 @@ sub getrelations {
 sub fileid {
 	my ($self , $filename, $release) = @_;
 	
-	return $filename;
+	return $filename.';'.$release;
 }
 
 # Convert from fileid to filename
 sub filename {
 	my ($self, $fileid) = @_;
-	
-	return ($fileid);
+	my ($filename) = split(/;/, $fileid);
+
+	return $filename;
+}
+
+# If this file has not been indexed earlier, mark it as being indexed
+# now and return true.  Return false if already indexed.
+sub toindex {
+	my ($self, $fileid) = @_;
+
+	return undef if $self->{'status'}{$fileid} >= 1;
+
+	$self->{'status'}{$fileid} = 1;
+	return 1;
+}
+
+# Indicate that this filerevision is part of this release
+sub release {
+	my ($self, $fileid, $release) = @_;
+
+	$self->{'releases'}{$fileid} .= $release.";";
 }
 
 sub symid {
@@ -82,7 +101,7 @@ sub symid {
 sub issymbol {
 	my ($self, $symname, $release) = @_;
 
-	return $$self{'index'}{$self->symid($symname, $release)};
+	return $$self{'indexes'}{$self->symid($symname, $release)};
 }
 
 

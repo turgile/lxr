@@ -1,4 +1,4 @@
-#!/local/bin/perl5
+#!/local/bin/perl5.004
 # -*- tab-width: 4 -*-
 
 use strict;
@@ -15,10 +15,10 @@ use LXR::Common;
 my %option;
 GetOptions(\%option, "url=s", "version=s", "allurls!", "allversions!");
 
-die("URL must be specified") 
+die("URL must be specified.\n") 
 	unless $option{'url'};
 
-die("Version must be specified") 
+die("Version must be specified.\n") 
 	unless $option{'version'} || $option{'allversions'};
 
 $config = new LXR::Config($option{'url'});
