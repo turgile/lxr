@@ -59,7 +59,10 @@ choice. A good choice could be /usr/local/lxr so you would do
 
 Now you have to put the perl modules that LXR uses into a directory on
 your system that will be searched by mod_perl when the LXR scripts are
-executed. Execute
+executed. Execute:
+
+ cp /usr/local/lxr/Local.pm /usr/lib/perl5/site_perl/
+ cp -r /usr/local/lxr/lib/LXR /usr/lib/perl5/site_perl
 
 Now you should copy the template files for LXR to your installation
 
