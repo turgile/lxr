@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.24 2001/11/14 15:03:29 mbox Exp $
+# $Id: Lang.pm,v 1.25 2001/11/28 13:01:57 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.24 2001/11/14 15:03:29 mbox Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.25 2001/11/28 13:01:57 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -30,6 +30,7 @@ sub new {
     foreach $type (values %{$config->filetype}) {
 		if ($pathname =~ /$$type[1]/) {
 			eval "require $$type[2]";
+			die "Unable to load $$type[2] Lang class, $@" if $@;
 			my $create = "new $$type[2]".'($pathname, $release, $$type[0])';
 			$lang = eval($create);
 			die "Unable to create $$type[2] Lang object, $@" unless defined $lang;
