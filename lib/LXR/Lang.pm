@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.25 2001/11/28 13:01:57 mbox Exp $
+# $Id: Lang.pm,v 1.26 2002/01/23 08:12:05 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.25 2001/11/28 13:01:57 mbox Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.26 2002/01/23 08:12:05 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -40,7 +40,8 @@ sub new {
 
 	if (!defined $lang) {
         # Try to see if it's a script
-		$files->getfile($pathname, $release) =~ /^#!\s*(\S+)/s;
+		my $fh = $files->getfilehandle($pathname, $release);
+		$fh->getline =~ /^#!\s*(\S+)/s;
 
 		my $shebang = $1;
 		
