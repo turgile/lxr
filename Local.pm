@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.14 2004/06/29 13:23:57 brondsem Exp $
+# $Id: Local.pm,v 1.15 2004/06/29 13:32:23 brondsem Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.14 2004/06/29 13:23:57 brondsem Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.15 2004/06/29 13:32:23 brondsem Exp $ ';
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -124,12 +124,10 @@ sub fdescexpand {
 	$desc =~ s/^\s?@\w+.*$//mg;
 	
 	# strip off some CVS keyword lines
-	$desc =~ s/^\s?\$Workfile:.*$//mg;
-	$desc =~ s/^\s?\$Revision: 1.14 $//mg;
-	$desc =~ s/^\s?\$Modtime:.*$//mg;
-	$desc =~ s/^\s?\$Author: brondsem $//mg;
-	$desc =~ s/^\s?\$Id: Local.pm,v 1.14 2004/06/29 13:23:57 brondsem Exp $//mg;
-	$desc =~ s/^\s?\$Date: 2004/06/29 13:23:57 $//mg;
+	foreach $keyword ('Workfile', 'Revision', 'Modtime', 'Author', 'Id', 'Date')
+	{
+	    $desc =~ s/^\s?\$$keyword[\$:].*$//mg;
+	}
 	
 	# strip html tags (probably a way to do this all in one, but it's beyond my skill)
 	$desc =~ s#<[/\w]+(\s*\w+="[\w\s]*"\s*)*>##g;	# double quoted attributes
