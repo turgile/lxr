@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.20 2004/06/29 20:41:23 brondsem Exp $
+# $Id: Plain.pm,v 1.21 2004/06/29 20:58:06 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.20 2004/06/29 20:41:23 brondsem Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.21 2004/06/29 20:58:06 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -129,6 +129,11 @@ sub getdir {
 sub toreal {
 	my ($self, $pathname, $release) = @_;
 	
+	# nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
+	foreach my $ignoredir ($config->ignoredirs) {
+		return undef if $pathname =~ m|/$ignoredir/|;
+	}
+
 	return ($self->{'rootpath'}.$release.$pathname);
 }
 
