@@ -1,6 +1,6 @@
 Installation
 ------------
-The current version of the lxr depends on three things:
+The current version of the lxr depends on the following things:
 
 1) A recent version of the exuberant ctags program.  Available from
    http://sf.net/projects/ctags
@@ -22,7 +22,9 @@ The current version of the lxr depends on three things:
    database you're using.  If you don't already have these, they can be
    installed via CPAN.  See http://dbi.perl.org/index.html for more info.
 
-6) If using the CVS support, you will need cvs and rcs installed as well.
+6) The Perl MMagic module, available from CPAN
+
+7) If using the CVS support, you will need cvs and rcs installed as well.
 
 Installing the database
 -----------------------
