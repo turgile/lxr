@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.21 2004/06/30 19:49:39 brondsem Exp $
+# $Id: CVS.pm,v 1.22 2004/06/30 20:33:35 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.21 2004/06/30 19:49:39 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.22 2004/06/30 20:33:35 brondsem Exp $ ';
 
 use strict;
 use FileHandle;
@@ -308,7 +308,7 @@ sub cleanstring {
     my $out = '';
 
     for (split('',$in)) {
-        s/[|&!`;$%<>[:cntrl:]]// ||   # drop these in particular
+        s/[|&!`;\$%<>[:cntrl:]]// ||   # drop these in particular
           /[\w\/,.-_+=]/ ||           # keep these intact
           s/([ '"\x20-\x7E])/\\$1/ || # escape these out
           s/.//;                      # drop everything else
