@@ -1,0 +1,27 @@
+Installation
+------------
+
+At the moment the DBI backend works, this means that you will have to
+set up a relational database like Postgres or Sybase. The DBI backend
+currently in CVS has been tested with Postgres. I have gotten LXR to
+work with Sybase as well. The problem is that SQL is not SQL and the
+things that work with Sybase does not work with Postgres. We have to
+figure out a way to make it work with different databases without
+making it a nightmare to maintain.
+
+First install the DBMS and create a lxr database. This is done with
+the "create database lxr" SQL statement. The file "initdb" contains
+the SQL statements needed to initialize the database. When the
+database is initialized, copy lxr.conf.template to lxr.conf. Then edit
+lxr.conf, it should contain enough comments to get you started.
+
+The new genxref is much smarter than the old one. Our intention is
+that you configure everything inside lxr.conf, the file is read by
+genxref and all paths are set up so the cgi-scripts will find the
+files. genxref takes two arguments --url=<url> and --version=<ver>
+where <url> is the url where the lxr cgi scripts are found. Version is
+a tag from cvs if you are using the cvs backend or the name of a
+directory in your "sourceroot" directory. It is worth noting that one
+lxr.conf file can be used for several different configurations. Which
+config block to use is selected according to the url argument. 
+
