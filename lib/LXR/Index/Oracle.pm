@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.1 2002/02/26 16:18:47 mbox Exp $
+# $Id: Oracle.pm,v 1.2 2004/07/14 14:27:18 brondsem Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.1 2002/02/26 16:18:47 mbox Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.2 2004/07/14 14:27:18 brondsem Exp $ ';
 
 use strict;
 use DBI;
