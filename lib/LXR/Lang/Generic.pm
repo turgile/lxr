@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.8 2001/11/18 03:31:34 mbox Exp $
+# $Id: Generic.pm,v 1.9 2001/11/28 12:59:51 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until 
@@ -22,13 +22,15 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.8 2001/11/18 03:31:34 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.9 2001/11/28 12:59:51 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
 use LXR::Lang;
 
 use vars qw($AUTOLOAD);
+
+my $generic_config;
 
 @LXR::Lang::Generic::ISA = ('LXR::Lang');
 
@@ -40,28 +42,36 @@ sub new {
   $$self{'release'} = $release;
   $$self{'language'} = $lang;
 
-  open (X, $config->genericconf) || die "Can't open $config->genericconf, $!";
-
-  local($/) = undef;
-
-  my $cfg = eval ("\n#line 1 \"generic.conf\"\n".
-				  <X>);
-  die ($@) if $@;
-  close X;
-  %$self= (%$self, %$cfg);
+  read_config() unless defined $generic_config;
+  %$self = (%$self, %$generic_config);
 
   # Set langid
   $$self{'langid'} = $self->langinfo('langid');
   die "No langid for language $lang" if !defined $self->langid;
-  
-  # Setup the ctags to declid mapping
-  my $typemap =\%{$self->langinfo('typemap')};
-  
-  foreach my $type (keys %$typemap) {
-	$typemap->{$type}=$index->getdecid($self->langid, $typemap->{$type});
-  }
 
   return $self;
+}
+
+sub read_config {
+	open (CONF, $config->genericconf) || die "Can't open $config->genericconf, $!";
+	
+	local($/) = undef;
+	
+	$generic_config = eval ("\n#line 1 \"generic.conf\"\n".
+							<CONF>);
+	die ($@) if $@;
+	close CONF;
+
+	# Setup the ctags to declid mapping
+	my $langmap = $generic_config->{'langmap'};
+	foreach my $lang (keys %$langmap) {
+		my $typemap = $langmap->{$lang}{'typemap'};
+		foreach my $type (keys %$typemap) {
+			$typemap->{$type} =
+			  $index->getdecid($langmap->{$lang}{'langid'},
+												$typemap->{$type});
+		}
+	}
 }
 
 sub indexfile {
