@@ -27,7 +27,6 @@ use LXR::Tagger;
 use LXR::Common;
 
 
-
 my %option;
 GetOptions(\%option, "help!", "url=s", "version=s", "allurls!", "allversions!");
 
@@ -71,7 +70,7 @@ $index = new LXR::Index($config->dbname, O_RDWR|O_CREAT);
 my @versions;
 
 if ($option{'allversions'} || !$option{'version'}) {
-    @versions = @{$config->{variables}{v}{range}};
+    @versions = $config->varrange('v');
 } else {
     @versions = $option{'version'};
 }
@@ -80,6 +79,7 @@ foreach my $version (@versions) {
   genindex('/', $version);
   genrefs('/', $version);
 }
+
 
 sub genindex {
     my ($pathname, $release) = @_;
