@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.35 2001/11/14 15:03:29 mbox Exp $
+# $Id: Common.pm,v 1.36 2001/11/17 03:06:19 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.35 2001/11/14 15:03:29 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.36 2001/11/17 03:06:19 mbox Exp $ ';
 
 use strict;
 
@@ -293,11 +293,11 @@ sub markupfile {
 	
 	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 	my $lang = new LXR::Lang($pathname, $release, @itag);
-	my $language = $lang->language;  # To get back to the key to lookup the tabwidth.
 	
 	# A source code file
 	if ($lang) {
-		&LXR::SimpleParse::init($fileh, $config->filetype->{$language}[3], $lang->parsespec);
+	    my $language = $lang->language;  # To get back to the key to lookup the tabwidth.
+	    &LXR::SimpleParse::init($fileh, $config->filetype->{$language}[3], $lang->parsespec);
 
 		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
@@ -426,19 +426,23 @@ sub printhttp {
 	my $time2 = (stat($config->confpath))[9];
 	$time = $time2 if $time2 > $time;
 
-	my %mods = ('main' => $0, %INC);
-	my ($mod, $path);
-	while (($mod, $path) = each %mods) {
-		$mod  =~ s/.pm$//;
-		$mod  =~ s|/|::|g;
-		$path =~ s|/+|/|g;
+	# Remove this to see if we get a speed increase by not stating all
+	# the modules.  Since for most sites the modules change rarely,
+	# this is a big hit for each access.
+	
+# 	my %mods = ('main' => $0, %INC);
+# 	my ($mod, $path);
+# 	while (($mod, $path) = each %mods) {
+# 		$mod  =~ s/.pm$//;
+# 		$mod  =~ s|/|::|g;
+# 		$path =~ s|/+|/|g;
 
-		no strict 'refs';
-		next unless $ {$mod.'::CVSID'};
+# 		no strict 'refs';
+# 		next unless $ {$mod.'::CVSID'};
 
-		$time2 = (stat($path))[9];
-		$time = $time2 if $time2 > $time;
-	}
+# 		$time2 = (stat($path))[9];
+# 		$time = $time2 if $time2 > $time;
+# 	}
 
 	if ($time > 0) {
 		my ($sec, $min, $hour, $mday, $mon, $year,$wday) = gmtime($time);
