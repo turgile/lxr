@@ -1,7 +1,8 @@
 #!/usr/bin/perl
-# $Id: source,v 1.32 2002/07/29 01:23:03 mbox Exp $
+# $Id: source,v 1.33 2004/06/28 13:48:29 brondsem Exp $
 
 # source --	Present sourcecode as html, complete with references
+#  the '/icons' images are available in any standard Apache installation
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
 #	Per Kristian Gjermshus <pergj@ifi.uio.no>
@@ -23,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.32 2002/07/29 01:23:03 mbox Exp $ ';
+$CVSID = '$Id: source,v 1.33 2004/06/28 13:48:29 brondsem Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -36,10 +37,9 @@ sub diricon {
     my $img;
 
     if ($node eq '../') {
-	$img = "/icons/back.gif";
+        $img = "/icons/back.gif";
     } else {
-#      $img = "/icons/folder.gif";
-	$img = "internal-gopher-menu";
+        $img = "/icons/folder.gif";
     }
 
     return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"folder\">", "",
@@ -63,15 +63,18 @@ sub fileicon {
     my $img;
 
     if ($node =~ /^.*\.[ch]$/) {
-#      $img = "/icons/c.gif";
-	$img = "internal-gopher-text";
+        $img = "/icons/c.gif";
     } elsif ($node =~ /^.*\.(cpp|cc|java)$/) {
-	# TODO: Find a nice icon for c++ files (KDE?)
-#      $img = "/icons/c.gif";
-	$img = "internal-gopher-text";
-    } else {		
-	#      $img = "/icons/text.gif";
-	$img = "internal-gopher-unknown";
+        # TODO: Find a nice icon for c++ files (KDE?)
+        $img = "/icons/c.gif";
+    } elsif ($node =~ /^.*\.(txt)$/) {
+        $img = "/icons/text.gif";
+    } elsif ($node =~ /^.*\.(jar|war|ear|zip|tar|gz|tgz|cab)$/) {
+        $img = "/icons/compressed.gif";
+    } elsif ($node =~ /^.*\.(jpg|jpeg|gif|bmp|png)$/) {
+        $img = "/icons/image2.gif";
+    } else {
+        $img = "/icons/generic.gif";
     }
     return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"\">",
                    "", $dir.$node);
