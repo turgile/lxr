@@ -5,7 +5,7 @@ The current version of the lxr depends on the following things:
 1) A recent version of the exuberant ctags program.  Available from
    http://sf.net/projects/ctags
 
-2) A relational database - MySQL (http://www.mysql.com), Postgresql
+2) A relational database - MySQL 4.x (http://www.mysql.com), Postgresql
    (http://www.postgresql.org) and Oracle are supported.
    You will also need the right Perl DBI drivers for your particular database,
    usually available from CPAN.
