@@ -14,9 +14,9 @@ create sequence symnum;
 
 commit;
 
-create table files ( 			
-	filename	varchar2(250),
-	revision	varchar2(250),
+create table files ( 			
+	filename	varchar2(250),
+	revision	varchar2(250),
 	fileid		number,
 	constraint pk_files primary key (fileid)
 );
