@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.27 2004/09/02 15:26:42 brondsem Exp $
+# $Id: search,v 1.28 2004/10/18 20:22:57 brondsem Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.27 2004/09/02 15:26:42 brondsem Exp $ ';
+$CVSID = '$Id: search,v 1.28 2004/10/18 20:22:57 brondsem Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -146,25 +146,23 @@ sub swishsearch {
 		  "<p align='center'><i>Version '$release' has not been indexed and is unavailable for searching.</i></p>";
 		return;
 	}
-
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 	unless (open(SWISH, "-|")) {
-		open(STDERR, ">&STDOUT");
 		exec($config->swishbin, "-f", $config->swishdir . "/" . $release . ".index",
 			"-w", "'(" . $searchtext . ")'");
-
+		open(STDERR, ">&STDOUT");
 		print(STDERR "Couldn't exec " . $config->swishbin . ": $!\n");
 		kill(9, $$);
 	}
 
 	my @result = grep { not /^[\#\.]/ } <SWISH>;
 	close(SWISH);
-	my $retval = $? >> 8;
-
+	my $retval = $?;
 	my @ret;
 	if ($retval == 0) {
 		my $numlines = 0;
 		foreach my $hit (@result) {
+			print $hit, "<br>\n" if $hit =~ $hit =~ /No such file or directory/;	# feeble attempt to print possible errors (e.g. incomplete LD_LIBRARY_PATH causes linking errors)
 			next if $hit =~ /^err:/;    # skip; only 'no results' errors happen with return value 0
 
 			my ($score, $file) = $hit =~ /^(\d+) \/(.+) "(.+)" \d+/;
@@ -176,7 +174,7 @@ sub swishsearch {
 		}
 		return @ret;
 	} else {
-		print("<b>Search failed</b><br>\n@result");
+		print("<b><font color='red'>Search failed: internal error</font></b><br>\n@result");
 		return;
 	}
 }
@@ -310,9 +308,7 @@ sub search {
 		)
 	);
 }
-
 httpinit;
-
 &makeheader('search');
 &search;
 &makefooter('search');
