@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: C.pm,v 1.7 2000/10/31 12:52:12 argggh Exp $
+# $Id: C.pm,v 1.8 2001/08/04 18:27:28 mbox Exp $
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.7 2000/10/31 12:52:12 argggh Exp $ ';
+$CVSID = '$Id: C.pm,v 1.8 2001/08/04 18:27:28 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -64,7 +64,7 @@ sub indexfile {
 	if ($config->ectagsbin) {
 		open(CTAGS, join(" ", $config->ectagsbin,
 						 "--excmd=number",
-						 "--lang=c++",
+						 "--language-force=c++",
 						 "--c-types=cdefgmnpstuvx",
 						 "-f", "-",
 						 $path, "|"));
