@@ -1,10 +1,11 @@
-# $Id: Config.pm,v 1.7 1999/05/15 14:12:01 argggh Exp $
+# $Id: Config.pm,v 1.8 1999/05/15 18:40:30 pergj Exp $
 
 package LXR::Config;
 
 use LXR::Common;
 
 use vars qw($AUTOLOAD);
+use Data::Dumper;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -180,3 +181,5 @@ sub mappath {
 #}
 
 1;
+
+
