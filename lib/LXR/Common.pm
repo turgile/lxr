@@ -1,12 +1,12 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.12 1999/05/24 21:53:35 argggh Exp $
+# $Id: Common.pm,v 1.13 1999/05/25 21:39:57 argggh Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.12 1999/05/24 21:53:35 argggh Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.13 1999/05/25 21:39:57 argggh Exp $ ';
 
 use strict;
 
@@ -14,7 +14,7 @@ require Exporter;
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS 
 			$files $index $config $pathname $identifier $release
-			$HTTP %type_names $wwwdebug @cterm);
+			$HTTP %type_names $wwwdebug $tmpcounter);
 
 @ISA		= qw(Exporter);
 
@@ -38,30 +38,21 @@ require LXR::Lang;
 
 $wwwdebug = 1;
 
-%type_names = 
-	(
-	 ('c' , 'class'),
-	 ('d' , 'macro (un)definition'),
-	 ('e' , 'enumerator'),
-	 ('f' , 'function definition'),
-	 ('g' , 'enumeration name'),
-	 ('m' , 'class, struct, or union member'),
-	 ('n' , 'namespace'),
-	 ('p' , 'function prototype or declaration'),
-	 ('s' , 'structure name'),
-	 ('t' , 'typedefs'),
-	 ('u' , 'union names'),
-	 ('v' , 'variable definition'),
-	 ('x' , 'extern or forward variable declaration')
-	 );
+%type_names = ('c' => 'class',
+			   'd' => 'macro (un)definition',
+			   'e' => 'enumerator',
+			   'f' => 'function definition',
+			   'g' => 'enumeration name',
+			   'm' => 'class, struct, or union member',
+			   'n' => 'namespace',
+			   'p' => 'function prototype or declaration',
+			   's' => 'structure name',
+			   't' => 'typedefs',
+			   'u' => 'union names',
+			   'v' => 'variable definition',
+			   'x' => 'extern or forward variable declaration');
 
-
-@cterm = ('atom',		'\\\\.',	'',
-		  'comment',	'/\*',		'\*/',
-		  'comment',	'//',		"\n",
-		  'string',		'"',		'"',
-		  'string',		"'",		"'",
-		  'include',	'#include',	"\n");
+$tmpcounter = 23;
 
 
 sub warning {
@@ -95,6 +86,10 @@ sub fflush {
 	$| = 1; print('');
 }
 
+
+sub tmpcounter {
+	return $tmpcounter++;
+}
 
 sub urlargs {
 	my @args = @_;
@@ -277,7 +272,7 @@ sub markupfile {
 
 	# A source code file
 	if ($lang) {
-		&SimpleParse::init($fileh, @cterm);
+		&SimpleParse::init($fileh, $lang->parsespec);
 
 		my ($btype, $frag) = &SimpleParse::nextfrag;
 

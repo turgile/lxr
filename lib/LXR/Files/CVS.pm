@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.5 1999/05/24 21:53:38 argggh Exp $
+# $Id: CVS.pm,v 1.6 1999/05/25 21:39:59 argggh Exp $
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.5 1999/05/24 21:53:38 argggh Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.6 1999/05/25 21:39:59 argggh Exp $ ';
 
 use strict;
 use FileHandle;
@@ -34,7 +34,7 @@ sub filerev {
 sub getfiletime {
 	my ($self, $filename, $release) = @_;
 
-	return 0 if $self->isdir($filename, $release);
+	return undef if $self->isdir($filename, $release);
 
 	$self->parsecvs($filename, $release);
 
@@ -114,12 +114,14 @@ sub getfilehandle {
 
 sub tmpfile {
 	my ($self, $filename, $release) = @_;
-	my ($tmp);
-	local ($/) = undef;
+	my ($tmp, $buf);
 
-	$tmp = '/tmp/lxrtmp.'.time.'.'.$$;
+	$buf = $self->getfile($filename, $release);
+	return undef unless defined($buf);
+	
+	$tmp = '/tmp/lxrtmp.'.time.'.'.$$.'.'.&LXR::Common::tmpcounter;
 	open(TMP, "> $tmp") || return undef;
-	print(TMP $self->getfile($filename, $release));
+	print(TMP $buf);
 	close(TMP);
 	
 	return $tmp;

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: diff,v 1.4 1999/05/25 19:33:46 argggh Exp $
+# $Id: diff,v 1.5 1999/05/25 21:39:55 argggh Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.4 1999/05/25 19:33:46 argggh Exp $ ';
+$CVSID = '$Id: diff,v 1.5 1999/05/25 21:39:55 argggh Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -56,10 +56,12 @@ sub htmlsub {
 
 
 sub printdiff {
+    my ($diffvar, $diffval) = @_;
 
     unless ($diffvar) {
-	foreach ($Conf->allvariables) {
-	    push(@vars, $Conf->vardescription($_));
+	my @vars;
+	foreach ($config->allvariables) {
+	    push(@vars, $config->vardescription($_));
 	}
 	
 	$vars[$#vars-1] .= " or ".pop(@vars) if $#vars > 0;
@@ -72,33 +74,41 @@ sub printdiff {
 	return;
     }
 
-    unless ($Path->{'file'}) {
+    if ($pathname =~ m|/$|) {
 	print("<h3 align=center>Diff not yet supported for directories.</h3>\n");
 	return;
     }
 
-    $origvirt = $Path->{'virt'}.$Path->{'file'};
-    $origreal = $Path->{'real'}.$Path->{'file'};
+    my $origval = $config->variable($diffvar);
+    my $origname = $pathname;
+    my $origtemp = $files->tmpfile($origname, $release);
 
-    $origval = $Conf->variable($diffvar);
-    $Conf->variable($diffvar,$diffval);
-    $diffvirt = $Conf->mappath($Path->{'virt'}).$Path->{'file'};
-    $diffreal = $Conf->sourceroot.$diffvirt;
-    $Conf->variable($diffvar,$origval);
+    $config->variable($diffvar,$diffval);
+    my $diffname = $config->mappath($pathname);
+    my $difftemp = $files->tmpfile($diffname, $config->variable('v'));
 
-#    print("<h3>Diff of $origvirt -> $diffvirt</h3>\n");
-#    print("<h3>($origreal -> $diffreal)</h3>\n");
+    $config->variable($diffvar,$origval);
 
-    # FIXME: Check existence of $origreal & $diffreal.
+    unless (defined($origtemp)) {
+	unlink($difftemp);
+	print("*** $origname does not exist ***\n");
+	return;
+    }
+    unless (defined($difftemp)) {
+	unlink($origtemp);
+	print("*** $diffname does not exist ***\n");
+	return;
+    }
 
-    &fflush;
+    fflush;
     unless (open(DIFF, "-|")){
 	open(STDERR, ">&STDOUT");
-	exec('diff', '-U0', $origreal, $diffreal);
+	exec('diff', '-U0', $origtemp, $difftemp);
 	print "*** Diff subprocess died unexpextedly: $!\n";
 	exit;
     }
     
+    my ($os, $ol, $ns, $nl, $ms, $ml, $bo, $ofs, $dir, %orig, %new, %chg);
 
     while (<DIFF>) {
 	if (($os, $ol, $ns, $nl) = 
@@ -131,81 +141,62 @@ sub printdiff {
 
 	}
     }
-    close(<DIFF>);
+    close(DIFF);
 
 
     print("<h1>Diff markup</h1>\n",
 	  "<h3>Differences between ",
 
-	  &fileref("$origvirt <i>(".$Conf->vardescription($diffvar).
-		   " $origval)</i>", $origvirt, undef, "$diffvar=$origval"),
+	  fileref("$origname <i>(".$config->vardescription($diffvar).
+		  " $origval)</i>", $origname, undef, "$diffvar=$origval"),
 	  " and ",
 
-	  &fileref("$diffvirt <i>(".$Conf->vardescription($diffvar).
-		   " $diffval)</i>",$diffvirt, undef, "$diffvar=$diffval"),
+	  fileref("$diffname <i>(".$config->vardescription($diffvar).
+		  " $diffval)</i>",$diffname, undef, "$diffvar=$diffval"),
 	  "</h3><hr>\n");
 
-#	  "<table width=\"100%\" border=0 cellpadding=0><tr><td>",
-#
-#	  &fileref("<b>$origvirt <i>(".$Conf->vardescription($diffvar).
-#		   " $origval)</i></b>", $origvirt, undef, "$diffvar=$origval"),
-#	  "<hr></td>\n<td></td>\n<td>",
-#
-#	  &fileref("<b>$diffvirt <i>(".$Conf->vardescription($diffvar).
-#		   " $diffval)</i></b>",$diffvirt, undef, "$diffvar=$diffval"),
-#	  "<hr></td>\n</tr></table>\n");
+    my $origh = new FileHandle($origtemp);
+    my $orig = '';
+    markupfile($origh, sub { $orig .= shift });
+    my $len = $.+$ofs;
+    $origh->close;
+    
+    $config->variable($diffvar, $diffval);
+    $pathname = $diffname;
 
+    my $diffh = new FileHandle($difftemp);
+    my $new = '';
+    
+    markupfile($diffh, sub { $new .= shift });
+    $diffh->close;
 
-    open(FOO, $origreal);
-    $orig = '';
-    &markupfile(\*FOO, $Path->{'virt'}, $index, 
-		$Path->{'file'}, sub { $orig .= shift });
-    $len = $.+$ofs;
-    close(FOO);
+    $config->variable($diffvar, $origval);
+    $pathname = $origname;
 
-    $Conf->variable($diffvar, $diffval);
-
-    open(FOO, $diffreal);
-    $new = '';
-    &markupfile(*FOO, $Conf->mappath($Path->{'virt'}), $index, 
-		$Path->{'file'}, sub { $new .= shift });
-    close(FOO);
-
-    $Conf->variable($diffvar, $origval);
-
+    my $i;
     $i = 1; $orig =~ s/^/"\n" x ($orig{$i++})/mge;
     $i = 1; $new  =~ s/^/"\n" x ($new{$i++})/mge;
 
-    @orig = split(/\n/, $orig);
-    @new  = split(/\n/, $new);
+    my @orig = split(/\n/, $orig);
+    my @new  = split(/\n/, $new);
 
     print("<pre>");
     foreach $i (0..$len) {
-	$o = &htmlsub($orig[$i], 50);
-#	$n = &htmlsub($new[$i], 999);
-	$n = $new[$i];
+	my $o = htmlsub($orig[$i], 50);
+	my $n = $new[$i];
 
-#	print("<tr><td><code>$o</code></td>".
-#	      "<td><font color=red> ", $chg{$i+1}, " </font></td>".
-#	      "<td><code>$n</code></td></tr>\n");
 	print("$o <font color=red>", ($chg{$i+1} || "  "), "</font> $n\n");
     }
     print("</pre>");
 
-#    print("</td></tr></table>");
+    unlink($origtemp, $difftemp);
 }
 
 
-($Conf, $HTTP, $Path) = &init;
+httpinit;
 
-$files = new LXR::Files($Conf->sourceroot);
-$index = new LXR::Index($Conf->dbname);
-
-$diffvar = $HTTP->{'param'}->{'diffvar'};
-$diffval = $HTTP->{'param'}->{'diffval'};
-
-&makeheader('diff');
-&printdiff;
-&makefooter('diff');
+makeheader('diff');
+printdiff($$HTTP{'param'}{'diffvar'}, $$HTTP{'param'}{'diffval'});
+makefooter('diff');
 
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.3 1999/05/24 21:53:36 argggh Exp $
+# $Id: Lang.pm,v 1.4 1999/05/25 21:39:57 argggh Exp $
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.3 1999/05/24 21:53:36 argggh Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.4 1999/05/25 21:39:57 argggh Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -37,6 +37,13 @@ package LXR::Lang::C;
 use strict;
 use LXR::Common;
 
+my @spec = ('atom',		'\\\\.',	'',
+			'comment',	'/\*',		'\*/',
+			'comment',	'//',		"\n",
+			'string',	'"',		'"',
+			'string',	"'",		"'",
+			'include',	'#include',	"\n");
+
 sub new {
 	my ($self, $pathname, $release) = @_;
 
@@ -45,6 +52,10 @@ sub new {
 	$$self{'release'} = $release;
 
 	return $self;
+}
+
+sub parsespec {
+	return @spec;
 }
 
 sub processcode {
@@ -59,6 +70,13 @@ sub processcode {
 
 # Java
 package LXR::Lang::Java;
+
+my @spec = ('atom',		'\\\\.',	'',
+			'comment',	'/\*',		'\*/',
+			'comment',	'//',		"\n",
+			'string',	'"',		'"',
+			'string',	"'",		"'",
+			'include',	'#include',	"\n");
 
 # May  8 1998 jmason java keywords
 my @java_reserved = ('break', 'case', 'continue', 'default', 'do', 'else',
@@ -91,6 +109,10 @@ sub new {
 	foreach $_ (@java_reserved) { $java_reserved{$_} = 1; }
 
 	return $self;
+}
+
+sub parsespec {
+	return @spec;
 }
 
 sub processcode {

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DBI.pm,v 1.8 1999/05/25 19:33:48 argggh Exp $
+# $Id: DBI.pm,v 1.9 1999/05/25 21:40:00 argggh Exp $
 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.8 1999/05/25 19:33:48 argggh Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.9 1999/05/25 21:40:00 argggh Exp $ ';
 
 use strict;
 use DBI;
@@ -18,7 +18,7 @@ sub new {
 	$self = bless({}, $self);
 	$dbh = DBI->connect($dbname);
 	$$dbh{'AutoCommit'} = 0;
-	$dbh->trace(2);
+#	$dbh->trace(2);
 	
 	$transactions = 0;
 	%files = ();

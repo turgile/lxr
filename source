@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.15 1999/05/24 21:53:32 argggh Exp $
+# $Id: source,v 1.16 1999/05/25 21:39:56 argggh Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.15 1999/05/24 21:53:32 argggh Exp $ ';
+$CVSID = '$Id: source,v 1.16 1999/05/25 21:39:56 argggh Exp $ ';
 
 use strict;
 use lib 'lib';
@@ -106,6 +106,8 @@ sub modtime {
 
     my $current_time = time;
     my $file_time = $files->getfiletime($dir.$node, $release);
+
+    return '-' unless defined($file_time);
     
     my @t = gmtime($file_time);
     
