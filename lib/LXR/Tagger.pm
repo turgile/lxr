@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.16 2001/07/26 08:49:38 pok Exp $
+# $Id: Tagger.pm,v 1.17 2001/08/15 15:27:24 mbox Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.16 2001/07/26 08:49:38 pok Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.17 2001/08/15 15:27:24 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -24,22 +24,24 @@ sub processfile {
 	print(STDERR "--- $pathname $release $revision\n");
 	
 	if ($index) {
-		my $fileid = $index->fileid($pathname, $revision);
-
-		$index->release($fileid, $release);
-
-		if ($index->toindex($fileid)) {
-			$index->empty_cache();
-			print(STDERR "--- $pathname $fileid\n");
-			
-			my $path = $files->tmpfile($pathname, $release);
-			
-			$lang->indexfile($pathname, $path, $fileid, $index, $config);
-			unlink($path);
-		} else {
-			print(STDERR "$pathname was already indexed\n");
-		}
+	  my $fileid = $index->fileid($pathname, $revision);
+	  
+	  $index->release($fileid, $release);
+	  
+	  if ($index->toindex($fileid)) {
+		$index->empty_cache();
+		print(STDERR "--- $pathname $fileid\n");
+		
+		my $path = $files->tmpfile($pathname, $release);
+		
+		$lang->indexfile($pathname, $path, $fileid, $index, $config);
+		unlink($path);
+	  } else {
+		print(STDERR "$pathname was already indexed\n");
+	  }
 	} else { print(STDERR " **** FAILED ****\n"); }
+	$lang = undef;
+	$revision = undef;
 }
 
 
@@ -56,22 +58,25 @@ sub processrefs {
 
 	print(STDERR "--- $pathname $release $revision\n");
 	
-  if ($index) {
-	my $fileid = $index->fileid($pathname, $revision);
-
-	if ($index->toreference($fileid)) {
+	if ($index) {
+	  my $fileid = $index->fileid($pathname, $revision);
+	  
+	  if ($index->toreference($fileid)) {
 		$index->empty_cache();
 		print(STDERR "--- $pathname $fileid\n");
-
+		
 		my $path = $files->tmpfile($pathname, $release);
-
+		
 		$lang->referencefile($pathname, $path, $fileid, $index, $config);
 		unlink($path);
-	} else {
+	  } else {
 		print STDERR "$pathname was already referenced\n";
-	}
-  } else { print( STDERR " **** FAILED ****\n"); }
-}
+	  }
+	} else { print( STDERR " **** FAILED ****\n"); }
+
+	$lang = undef;
+	$revision = undef;
+  }
 
 
 
