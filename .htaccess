@@ -1,4 +1,4 @@
-Options ExecCGI FollowSymlinks
+Options Indexes ExecCGI FollowSymlinks
 
 order deny,allow
 
@@ -12,8 +12,4 @@ deny from all
 
 <Files ~ (find|search|source|ident|diff|cgi-bin)$>
 SetHandler cgi-script
-deny from 193.156.96.237
 </Files>
-
-ErrorDocument 403 /notfound.html
-ErrorDocument 404 /notfound.html

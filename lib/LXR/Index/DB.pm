@@ -18,8 +18,9 @@ sub new {
 
 	foreach ('files', 'symbols', 'index', 'relation') {
 		$foo = {};
-#		tie (%$foo, 'DB_File' , $$self{'dbpath'}.$_, 
-#			 O_RDWR|O_CREAT, 0664, $DB_HASH);
+		tie (%$foo, 'DB_File' , $$self{'dbpath'}.$_, 
+			 O_RDWR|O_CREAT, 0664, $DB_HASH) || 
+				 die "Can't open database ".$$self{'dbpath'}.$_. "\n";
 		$$self{$_} = $foo;
 	}
 	
@@ -29,12 +30,16 @@ sub new {
 sub index {
 	my ($self, $symname, $release, $filename, $line, $type) = @_;
 
-	$$self{'files'}{$self->symid($symname, $release)} .=
+	$$self{'index'}{$self->symid($symname, $release)} .=
 		join("\t", $filename, $line, $type, '');
 }
 
+# Returns array of (fileid, line, type)
 sub getindex {
 	my ($self, $symname, $release) = @_;
+	my ($foobar);
+	$foobar = $$self{'index'}{$self->symid($symname, $release)};
+	return split /\t/, $foobar;
 }
 
 sub relate {
@@ -48,11 +53,37 @@ sub getrelations {
 	my ($self, $symname, $release) = @_;
 }
 
+sub fileid {
+	my ($self , $filename, $release) = @_;
+	
+	return $filename;
+}
+
+# Convert from fileid to filename
+sub filename {
+	my ($self, $fileid) = @_;
+	
+	return ($fileid);
+}
+
+# Convert from fileid to release
+sub release {
+	my ($self, $fileid) = @_;
+
+	return('2.0');
+}
+
 sub symid {
 	my ($self, $symname, $release) = @_;
 	my ($symid);
 
 	return $symname;
+}
+
+sub issymbol {
+	my ($self, $symname, $release) = @_;
+
+	return $$self{'index'}{$self->symid($symname, $release)};
 }
 
 1;

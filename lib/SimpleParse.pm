@@ -1,4 +1,4 @@
-# $Id: SimpleParse.pm,v 1.1 1999/04/09 10:18:01 pergj Exp $
+# $Id: SimpleParse.pm,v 1.2 1999/04/09 10:35:31 pergj Exp $
 
 use strict;
 

@@ -9,8 +9,8 @@
 	LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
 <TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/">
-</A></TD></TR></TABLE>
+<TR><TD>
+</TD></TR></TABLE>
 
-<H1><A HREF="$baseurl">Mozilla Cross Reference</A></H1>
+<H1><A HREF="$baseurl">Linux Cross Reference</A></H1>
 <P>

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ident,v 1.1 1999/04/09 10:18:01 pergj Exp $
+# $Id: ident,v 1.2 1999/04/09 10:35:30 pergj Exp $
 
 # ident --	Look up identifiers
 #
@@ -26,7 +26,7 @@
 use lib 'lib/';
 use LXR::Common;
 use LXR::Config;
-use DB_File;
+use LXR::Index;
 
 %ty = (('M', 'preprocessor macro'),
        ('V', 'variable'),
@@ -41,6 +41,7 @@ use DB_File;
        ('S', 'struct type'),
        ('E', 'enum type'),
        ('U', 'union type'));
+
 
 
 sub ident { 
@@ -65,99 +66,96 @@ sub ident {
 
     
     if ($identifier) {
-	tie(%xref, "DB_File", $Conf->dbdir."/xref", 
-	    O_RDONLY, undef, $DB_HASH) || 
-		&fatal("Could not open \"".$Conf->dbdir."/xref\"");
+	$index = new LXR::Index();
 
-	@refs = split(/\t/,$xref{$identifier});
+	@refs = $index->getindex($identifier, '2.0');
 
 	print("<h1>$identifier</h1>\n");
 
 	if (@refs) {
-	    tie(%fileidx, "DB_File", $Conf->dbdir."/fileidx", 
-		O_RDONLY, undef, $DB_HASH) || 
-		    &fatal("Could not open \"".$Conf->dbdir."/fileidx\"");
-	    
-	    foreach (@refs) {
-		$f{$1} .= "$2\t" if /^(.)(.*)/;
+	    while (($fileid, $line, $type) = splice(@refs, 0, 3)) {
+		print("Defined as a $type_names{$type} in: ".
+		      &fileref($index->filename($fileid).", line $line",
+			       "/".$index->filename($fileid), $line).
+		      "<br>\n");
 	    }
-
-	    foreach $t (keys(%ty)) {
-		if ($f{$t}) {
-		    print("Defined as a $ty{$t} in:<ul>\n");
-
-		    @_ = split(/\t/, $f{$t});
-		    unshift(@_);
-		    foreach (@_) {
-			($fnum, $line, @clss) = split(/:/, $_);
-			
-			print("<li>",
-			      &fileref("$fileidx{$fnum}, line $line",
-				       "/$fileidx{$fnum}", $line));
-
-			if (@clss) { 
-			    if ($t eq 'F' || $t eq 'f') {
-				print(", as member of ");
-				if ($xref{$clss[0]}) {
-				    print(&idref("class $clss[0]", $clss[0]));
-				} else {
-				    print("class $clss[0]");
-				}
-			    } elsif ($t eq 'C') {
-				print(", inheriting <ul>\n");
-				foreach (@clss) {
-				    print("<li>");
-				    if ($xref{$_}) {
-					print(&idref("class $_", $clss[0]));
-				    } else {
-					print("class $_");
-				    }
-				}
-				print("</ul>");
-			    }
-			}
-			print("\n");
-		    }
-		    print("</ul>\n");
-		}
-	    }
-
-	    print("Referenced (in ",int(grep(/^R/, @refs))," files total) in:\n",
-		  "<ul>\n");
-	    $concise = $#refs > 100;
-	    foreach (@refs) {
-		if (/^R(.+):([\d,]+)/) {
-		    $fnam = $fileidx{$1};
-		    @fpos = split(/,/, $2);
-		    if ($#fpos > 0) {
-			if ($concise) {
-			    print("<li>", &fileref("$fnam", "/$fnam"),
-				  ", ",$#fpos+1," times\n");
-			} else {
-			    print("<li>$fnam:\n<ul>\n");
-			    foreach (@fpos) {
-				print("<li>", &fileref("line $_",
-						       "/$fnam", $_),"\n");
-			    }
-			    print("</ul>\n");
-			}
-		    } else {
-			print("<li>", &fileref("$fnam, line $fpos[0]",
-					       "/$fnam", $fpos[0]), 
-			      "\n");
-		    }
-		}
-	    }
-	    print("</ul>\n");
-	    untie(%fileidx);
-
 	} else {
 	    print("<br><b>Not used</b>");
 	}
-	
-	untie(%xref);
     }
 }
+
+
+#  		    @_ = split(/\t/, $f{$t});
+#  		    unshift(@_);
+#  		    foreach (@_) {
+#  			($fnum, $line, @clss) = split(/:/, $_);
+			
+#  			print("<li>",
+#  			      &fileref("$fileidx{$fnum}, line $line",
+#  				       "/$fileidx{$fnum}", $line));
+
+#  			if (@clss) { 
+#  			    if ($t eq 'F' || $t eq 'f') {
+#  				print(", as member of ");
+#  				if ($xref{$clss[0]}) {
+#  				    print(&idref("class $clss[0]", $clss[0]));
+#  				} else {
+#  				    print("class $clss[0]");
+#  				}
+#  			    } elsif ($t eq 'C') {
+#  				print(", inheriting <ul>\n");
+#  				foreach (@clss) {
+#  				    print("<li>");
+#  				    if ($xref{$_}) {
+#  					print(&idref("class $_", $clss[0]));
+#  				    } else {
+#  					print("class $_");
+#  				    }
+#  				}
+#  				print("</ul>");
+#  			    }
+#  			}
+#  			print("\n");
+#  		    }
+#  		    print("</ul>\n");
+#           }	    
+#  	    print("Referenced (in ",int(grep(/^R/, @refs))," files total) in:\n",
+#  		  "<ul>\n");
+#  	    $concise = $#refs > 100;
+#  	    foreach (@refs) {
+#  		if (/^R(.+):([\d,]+)/) {
+#  		    $fnam = $fileidx{$1};
+#  		    @fpos = split(/,/, $2);
+#  		    if ($#fpos > 0) {
+#  			if ($concise) {
+#  			    print("<li>", &fileref("$fnam", "/$fnam"),
+#  				  ", ",$#fpos+1," times\n");
+#  			} else {
+#  			    print("<li>$fnam:\n<ul>\n");
+#  			    foreach (@fpos) {
+#  				print("<li>", &fileref("line $_",
+#  						       "/$fnam", $_),"\n");
+#  			    }
+#  			    print("</ul>\n");
+#  			}
+#  		    } else {
+#  			print("<li>", &fileref("$fnam, line $fpos[0]",
+#  					       "/$fnam", $fpos[0]), 
+#  			      "\n");
+#  		    }
+#  		}
+#  	    }
+#  	    print("</ul>\n");
+#  	    untie(%fileidx);
+
+#  	} else {
+#  	    print("<br><b>Not used</b>");
+#  	}
+	
+#  	untie(%xref);
+#      }
+#  }
 
 ($Conf, $HTTP, $Path) = &init;
 $identifier = $HTTP->{'param'}->{'i'};

@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.1 1999/04/09 10:18:01 pergj Exp $
+# $Id: Local.pm,v 1.2 1999/04/09 10:35:29 pergj Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>

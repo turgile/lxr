@@ -83,6 +83,17 @@ sub fileid {
 	return $fileid;
 }
 
+
+# Convert from fileid to filename
+sub filename {
+	my ($self, $fileid) = @_;
+}
+
+# Convert from fileid to release
+sub release {
+	my ($self, $fileid) = @_;
+}
+
 sub symid {
 	my ($self, $symname, $release) = @_;
 	my ($symid);

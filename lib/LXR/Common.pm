@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.1 1999/04/09 10:18:02 pergj Exp $
+# $Id: Common.pm,v 1.2 1999/04/09 10:35:31 pergj Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -12,7 +12,8 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(&warning &fatal &abortall &fflush &urlargs 
 	     &fileref &idref &incref &htmlquote &freetextmarkup &markupfile
-	     &markupstring &init &makeheader &makefooter &expandtemplate);
+	     &markupstring &init &makeheader &makefooter &expandtemplate
+	     %type_names);
 
 
 $wwwdebug = 1;
@@ -21,6 +22,23 @@ $SIG{__WARN__} = 'warning';
 $SIG{__DIE__}  = 'fatal';
 
 use LXR::JavaClassList;		# jmason, for Java
+
+%type_names = 
+    (
+     ('c' , 'class'),
+     ('d' , 'macro (un)definition'),
+     ('e' , 'enumerator'),
+     ('f' , 'function definition'),
+     ('g' , 'enumeration name'),
+     ('m' , 'class, struct, or union member'),
+     ('n' , 'namespace'),
+     ('p' , 'function prototype or declaration'),
+     ('s' , 'structure name'),
+     ('t' , 'typedefs'),
+     ('u' , 'union names'),
+     ('v' , 'variable definition'),
+     ('x' , 'extern or forward variable declaration')
+     );
 
 # May  8 1998 jmason java keywords
 @java_reserved = ('break', 'case', 'continue', 'default', 'do', 'else',
@@ -262,10 +280,8 @@ sub markupfile {
      if ($fname =~ /\.([ch]|cpp?|cc)$/i) { # Duplicated in genxref.
 
  	&SimpleParse::init($INFILE, @cterm);
-	
-	my $index = new LXR::Index::DBI("dbi:Pg:dbname=lxr");
-# 	tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
-# 	    || &warning("Cannot open xref database.");
+
+	my $index = new LXR::Index();
 
  	&$outfun(# "<pre>\n".
  		 #"<a name=\"L".$line++.'"></a>');

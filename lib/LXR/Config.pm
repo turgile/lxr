@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.1 1999/04/09 10:18:02 pergj Exp $
+# $Id: Config.pm,v 1.2 1999/04/09 10:35:32 pergj Exp $
 
 package LXR::Config;
 
@@ -6,7 +6,7 @@ use LXR::Common;
 
 require Exporter;
 @ISA = qw(Exporter);
-# @EXPORT = '';
+@EXPORT = qw($Conf);
 
 $confname = 'lxr.conf';
 
@@ -16,6 +16,7 @@ sub new {
     my $self = {};
     bless($self);
     $self->_initialize(@parms);
+    $Conf = $self;
     return($self);
 }
 
@@ -100,7 +101,8 @@ sub _initialize {
                      $dir eq 'virtroot' ||
 		     $dir eq 'baseurl' ||
 		     $dir eq 'incprefix' ||
-		     $dir eq 'dbdir' ||
+		     $dir eq 'dbname' ||
+		     $dir eq 'dbtype' ||
 		     $dir eq 'bonsaihome' ||
 		     $dir eq 'glimpsebin' ||
 		     $dir eq 'htmlhead' ||
@@ -212,11 +214,21 @@ sub bonsaihome {
     return($self->varexpand($self->{'bonsaihome'}));
 }
 
-sub dbdir {
+# notused
+#sub dbdir {
+#    my $self = shift;
+#    return($self->varexpand($self->{'dbdir'}));
+#}
+
+sub dbname {
     my $self = shift;
-    return($self->varexpand($self->{'dbdir'}));
+    return($self->varexpand($self->{'dbname'}));
 }
 
+sub dbtype {
+    my $self = shift;
+    return($self->varexpand($self->{'dbtype'}));
+}
 
 sub glimpsebin {
     my $self = shift;

@@ -2,20 +2,22 @@
 # -*- tab-width: 4 -*-
 
 use strict;
-use lib '/home/argggh/lxr/lxr2/lib';
+use lib '/home/pergj/src/lxr2/lxr2/lib';
 
 use LXR::Files::Plain;
-use LXR::Index::DB;
-use LXR::Index::DBI;
+use LXR::Index;
+use LXR::Config;
+
+$Conf = new LXR::Config;
 
 #my $files = new LXR::Files::Plain('/home/argggh/lxr/testsource');
 #my $index = new LXR::Index::DB('/home/argggh/lxr/testsource');
-my $files = new LXR::Files::Plain('/tmp');
-my $index = new LXR::Index::DBI('dbi:Pg:dbname=lxr');
+my $files = new LXR::Files::Plain($Conf->sourceroot);
+my $index = new LXR::Index($Conf->dbname);
 
 sub genxref {
 	my ($pathname, $release) = @_;
-
+	
 	if ($files->isdir($pathname, $release)) {
 		map { 
 			genxref($pathname.$_, $release) 
@@ -28,7 +30,7 @@ sub genxref {
 		print(TMP $files->getfile($pathname, $release));
 		close(TMP);
 		
-		open(CTAGS, "ctags-3.2/ctags --excmd=number --lang=c++ --c-types=cdefgmnpstuvx -f - /tmp/lxrref |");
+		open(CTAGS, "/local/bin/ctags --excmd=number --lang=c++ --c-types=cdefgmnpstuvx -f - /tmp/lxrref |") || die "Can't run ctags";
 #		open(CTAGS, "ctags-3.2/ctags --excmd=number --sort=no --lang=c++ --c-types=cdefgmnpstuvx -f - ".$$files{'rootpath'}.$release.$pathname." |");
 		while (<CTAGS>) {
 			chomp;

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: source,v 1.1 1999/04/09 10:18:01 pergj Exp $
+# $Id: source,v 1.2 1999/04/09 10:35:30 pergj Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -29,6 +29,7 @@ use SimpleParse;
 use LXR::Common;
 use LXR::Config;
 use LXR::Files::Plain;
+use LXR::Index;
 use LXR::Index::DB;
 use LXR::Index::DBI;
 
@@ -261,8 +262,6 @@ sub printfile {
 	}
     }
 }
-
-$_ = "/drivers/foo"; @_ = /(.)/g; print(STDERR "xxx1 ", join("*", @_), "\n");
 
 ($Conf, $HTTP, $Path) = &init($0);
 
