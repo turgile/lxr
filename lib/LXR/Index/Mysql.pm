@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.9 2001/10/16 20:25:32 pergj Exp $
+# $Id: Mysql.pm,v 1.10 2001/10/17 23:52:42 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.9 2001/10/16 20:25:32 pergj Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.10 2001/10/17 23:52:42 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -32,7 +32,7 @@ sub new {
 	my ($self, $dbname) = @_;
 
 	$self = bless({}, $self);
-	if(defined($config->{dbpass}) {
+	if(defined($config->{dbpass})) {
 		$self->{dbh} = DBI->connect($dbname, $config->{dbuser}, 
 									$config->{dbpass})
 			|| fatal "Can't open connection to database\n";
