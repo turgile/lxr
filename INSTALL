@@ -9,19 +9,48 @@ things that work with Sybase does not work with Postgres. We have to
 figure out a way to make it work with different databases without
 making it a nightmare to maintain.
 
-First install the DBMS and create a lxr database. This is done with
-the "create database lxr" SQL statement. The file "initdb" contains
-the SQL statements needed to initialize the database. When the
-database is initialized, copy lxr.conf.template to lxr.conf. Then edit
-lxr.conf, it should contain enough comments to get you started.
+Create database
+---------------
+First install the DBMS and create a lxr database. In postgres this is
+done by entering 'createdb lxr' at the shell prompt. With other
+databases you will probably want to use the "create database lxr" SQL
+statement. The file "initdb" contains the SQL statements needed to
+initialize the database. If you are running postgres the
+initialization can be done by running 'psql lxr' and reading the file
+"initdb" by entering '\i createdb'. Just ignore the errors about
+unimplemented functions. The user running your cgi-scripts must be
+able to use the postgres database. This user is usually nobody, create
+the postgres user by entering "createuser nobody" at the shell prompt.
 
-The new genxref is much smarter than the old one. Our intention is
-that you configure everything inside lxr.conf, the file is read by
-genxref and all paths are set up so the cgi-scripts will find the
-files. genxref takes two arguments --url=<url> and --version=<ver>
-where <url> is the url where the lxr cgi scripts are found. Version is
-a tag from cvs if you are using the cvs backend or the name of a
-directory in your "sourceroot" directory. It is worth noting that one
-lxr.conf file can be used for several different configurations. Which
-config block to use is selected according to the url argument. 
+Edit config file
+----------------
+When the database is initialized, copy lxr.conf.template to lxr.conf.
+Then edit lxr.conf, it should contain enough comments to get you
+started.
+
+Generate index.
+---------------
+It is now time to generate the index. This is done using the program
+"genxref". The new genxref is much smarter than the old one. Our
+intention is that you configure everything inside lxr.conf, the file
+is read by genxref and all paths are set up so the cgi-scripts will
+find the files. genxref takes two arguments --url=<url> and
+--version=<ver> where <url> is the url where the lxr cgi scripts are
+found. Version is a tag from cvs if you are using the cvs backend or
+the name of a directory in your "sourceroot" directory. It is worth
+noting that one lxr.conf file can be used for several different
+configurations. Which config block to use is selected according to the
+url argument.
+
+Set up webserver
+----------------
+In srm.conf
+
+Alias /lxr /usr/local/lxr/http
+<Directory /usr/local/lxr/http>
+AllowOverride All
+</Directory>
+
+The distribution contains a .htaccess file set up to ensure that lxr
+will work. Edit it if you have special local policies.
 

@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.13 1999/06/01 08:08:20 pergj Exp $
+# $Id: Plain.pm,v 1.14 1999/09/24 20:46:04 pergj Exp $
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.13 1999/06/01 08:08:20 pergj Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.14 1999/09/24 20:46:04 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -71,6 +71,14 @@ sub tmpfile {
 	close(TMP);
 	
 	return $tmp;
+}
+
+sub getannotations {
+	return undef;
+}
+
+sub getauthor {
+	return undef;
 }
 
 sub getdir {

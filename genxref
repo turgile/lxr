@@ -28,14 +28,14 @@ die("No matching configuration") unless $config->sourceroot;
 $files = new LXR::Files($config->sourceroot);
 $index = new LXR::Index($config->dbname);
 
-# genindex('/', $option{'version'});
+genindex('/', $option{'version'});
 genrefs('/', $option{'version'});
 
 sub genindex {
 	my ($pathname, $release) = @_;
 	
 	print(STDERR "*** $pathname $release \n");
-
+	
 	if ($pathname =~ m|/$|) {
 		map { 
 			genindex($pathname.$_, $release) 
