@@ -137,6 +137,29 @@ sub feedswish {
 
 sub gensearch {
 	my ($release) = @_;
+	my $string;
+
+	if ($config->glimpsebin and $config->glimpseindex) {
+		# Make sure the directory that the glimpse results go into
+		# already exists as glimpse won't work if the directory does
+		# not exist
+		$string = $config->glimpsedir."/".$release;
+		mkdir $string;
+		system("chmod 755 $string");
+		my $glimpse = new IO::Handle;
+		my $pid = open($glimpse, "|-");
+		if ($pid == 0) {
+			exec($config->glimpseindex,
+				 "-n", "-o", "-H", $config->glimpsedir."/$release",
+				 $config->sourceroot."/".$release);
+			print(STDERR "Couldn't exec ".$config->glimpseindex.": $!\n");
+			kill(9, $$);
+		}
+		$glimpse->close();
+		# Need to chmod the glimpse files so everybody can read them.
+		$string = $config->glimpsedir."/".$release."/.glimpse\*";
+		system("chmod 644 $string");
+	}
 
 	if ($config->swishdir and $config->swishindex) {
 		my $swish = new IO::Handle;

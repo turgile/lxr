@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.42 2002/07/29 00:50:32 mbox Exp $
+# $Id: Common.pm,v 1.43 2002/07/29 01:17:32 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.42 2002/07/29 00:50:32 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.43 2002/07/29 01:17:32 mbox Exp $ ';
 
 use strict;
 
@@ -488,7 +488,6 @@ sub printhttp {
 # sourcedirhead - Corresponds to the configig options
 # sourcehead -
 # htmldir -
-# dbdir -
 # sourceroot -
 # htmlhead -
 # incprefix -

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: search,v 1.10 2002/03/18 14:55:43 mbox Exp $
+# $Id: search,v 1.11 2002/07/29 01:17:32 mbox Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.10 2002/03/18 14:55:43 mbox Exp $ ';
+$CVSID = '$Id: search,v 1.11 2002/07/29 01:17:32 mbox Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };
@@ -40,7 +40,7 @@ sub glimpsesearch {
     unless (open(GLIMPSE, "-|")) {
 	open(STDERR, ">&STDOUT");
 	$!='';
-	exec($config->glimpsebin,"-i","-H".$config->glimpsedir,'-y','-n',$searchtext);
+	exec($config->glimpsebin,"-i","-H".$config->glimpsedir."/".$release,'-y','-n',$searchtext);
 	print("Glimpse subprocess died unexpextedly: $!\n");
 	exit;
     }
