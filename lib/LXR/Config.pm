@@ -1,10 +1,24 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.24 2001/07/26 08:49:38 pok Exp $
+# $Id: Config.pm,v 1.25 2001/08/15 15:50:27 mbox Exp $
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.24 2001/07/26 08:49:38 pok Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.25 2001/08/15 15:50:27 mbox Exp $ ';
 
 use strict;
 
