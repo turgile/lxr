@@ -1,10 +1,10 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.7 1999/05/31 19:23:32 toffer Exp $
+# $Id: Tagger.pm,v 1.8 1999/06/01 06:44:22 pergj Exp $
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.7 1999/05/31 19:23:32 toffer Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.8 1999/06/01 06:44:22 pergj Exp $ ';
 
 use strict;
 use FileHandle;
@@ -28,12 +28,12 @@ sub processfile {
 	my $fileid = $index->fileid($pathname, $revision);
 
 	if ($fileid) {
-		$index->release($fileid, $release);
+		$index->release($pathname, $revision, $release);
 		return;			# Already indexed.
 	}
 
 	$fileid = $index->fileid($pathname, $revision, 1);
-	$index->release($fileid, $release);
+	$index->release($pathname, $revision, $release);
 
 	print(STDERR "--- $pathname $fileid\n");
 
@@ -54,7 +54,7 @@ sub processfile {
 			@_ = split(/\t/, $_);
 			$_[2] =~ s/;\"$//;
 			
-			$index->index($_[0], $fileid, $_[2], $_[3]);
+			$index->index($_[0], $pathname, $revision, $_[2], $_[3]);
 				
 			if ($_[4] eq '') {
 			}
@@ -90,19 +90,19 @@ sub processfile {
 
 			# Function definitions
 			if ( $_ =~ /^\s*def\s+([^\(]+)/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "f");
+				$index->index($module_name."\.$1", $pathname, $revision, $., "f");
 			}
 			# Class definitions 
 			elsif ( $_ =~ /^\s*class\s+([^\(:]+)/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "c");
+				$index->index($module_name."\.$1", $pathname, $revision, $., "c");
 			}
 			# Targets that are identifiers if occurring in an assignment..
 			elsif ( $_ =~ /^(\w+) *=.*/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "v");
+				$index->index($module_name."\.$1", $pathname, $revision, $., "v");
 			}
 			# ..for loop header.
 			elsif ( $_ =~ /^for\s+(\w+)\s+in.*/ ) {
-				$index->index($module_name."\.$1", $fileid, $., "v");
+				$index->index($module_name."\.$1", $pathname, $revision, $., "v");
 			}
 		}
 		close(PYTAG);
