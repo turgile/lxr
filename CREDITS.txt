@@ -8,8 +8,7 @@ Arne Georg Gleditsch <lxr@linux.no>
 Per Kristian Gjermshus <lxr@linux.no> 
 
 Current Maintainer
-------------------
-
+------------------ 
 Malcolm Box <mbox@users.sf.net>
 
 Principal Developers
@@ -23,6 +22,8 @@ Contributors
 Pavel Hlavnicka <pavel@gingerall.cz>			CSS support
 Jason Dorie Short <jshort@devon.dhs.org>		File re-org
 Joseph Corral <joseph_corral@hp.com>
+Kristoffer Gleditsch <toffer@ping.uio.no>		Postgres patches
+
 
 
 -------------------------------------------------------------------------
@@ -30,4 +31,4 @@ To get your name added to this list, see:
  
    http://sf.net/projects/lxr
  
-Last updated: $Date: 2001/09/28 14:31:38 $
+Last updated: $Date: 2001/11/28 13:04:51 $

@@ -13,4 +13,5 @@ deny from all
 <Files ~ (find|search|source|ident|diff|cgi-bin)$>
 SetHandler perl-script
 PerlHandler Apache::Registry
+PerlSetEnv PERL5LIB lib
 </Files>
