@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.19 2004/10/18 20:45:37 brondsem Exp $
+# $Id: Postgres.pm,v 1.20 2005/04/30 01:35:54 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.19 2004/10/18 20:45:37 brondsem Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.20 2005/04/30 01:35:54 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -57,12 +57,12 @@ sub new {
 
 	$files_select =
 	  $dbh->prepare("select fileid from ${prefix}files where filename = ? and revision = ?");
-	$filenum_nextval = $dbh->prepare("select nextval('filenum')");
+	$filenum_nextval = $dbh->prepare("select nextval('${prefix}filenum')");
 	$files_insert    = $dbh->prepare("insert into ${prefix}files values (?, ?, ?)");
 
 	$symbols_byname = $dbh->prepare("select symid from ${prefix}symbols where symname = ?");
 	$symbols_byid   = $dbh->prepare("select symname from ${prefix}symbols where symid = ?");
-	$symnum_nextval = $dbh->prepare("select nextval('symnum')");
+	$symnum_nextval = $dbh->prepare("select nextval('${prefix}symnum')");
 	$symbols_insert = $dbh->prepare("insert into ${prefix}symbols values (?, ?)");
 	$symbols_remove = $dbh->prepare("delete from ${prefix}symbols where symname = ?");
 
@@ -99,7 +99,7 @@ sub new {
 		  . "and f.fileid = r.fileid and "
 		  . "s.symname = ? and r.release = ?");
 
-	$declid_nextnum = $dbh->prepare("select nextval('declnum')");
+	$declid_nextnum = $dbh->prepare("select nextval('${prefix}declnum')");
 
 	$decl_select =
 	  $dbh->prepare(
