@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.50 2004/07/26 20:47:43 brondsem Exp $
+# $Id: Common.pm,v 1.51 2005/05/04 23:19:33 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.50 2004/07/26 20:47:43 brondsem Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.51 2005/05/04 23:19:33 mbox Exp $ ';
 
 use strict;
 
@@ -171,9 +171,6 @@ sub http_wash {
 
 	$t =~ s/\+/ /g;
 	$t =~ s/\%([\da-f][\da-f])/pack("C", hex($1))/gie;
-
-	# Paranoia check. Regexp-searches in Glimpse won't work.
-	# if ($t =~ tr/;<>*|\`&$!#()[]{}:\'\"//) {
 
 	return ($t);
 }
@@ -458,42 +455,22 @@ sub printhttp {
 	print("\n");
 }
 
-# init - Returns the array ($config, $HTTP, $Path)
-#
-# Path:
-# file	- Name of file without path
-# realf - The current file
-# real	- The directory portion of the current file
-# root	- The root of the sourcecode, same as sourceroot in $config
-# virtf - Name of file within the sourcedir
-# virt	- Directory portion of same
-# xref	- Links to the different portions of the patname
-#
+# httpinit - parses and cleans up the URL parameters and sets up the various variables
+#            Also prints the HTTP header & sets up the signal handlers
+#			This is also where we protect from malicious input
+#      
 # HTTP:
 # path_info -
 # param		- Array of parameters
 # this_url	- The current url
 #
-# config:
-# maplist -		A list of the different mappings
-#				that are applied to the filename
-# sourcedirhead - Corresponds to the configig options
-# sourcehead -
-# htmldir -
-# sourceroot -
-# htmlhead -
-# incprefix -
-# virtroot -
-# glimpsebin -
-# srcrootname -
-# baseurl -
-# htmltail -
 sub httpinit {
 	$SIG{__WARN__} = \&warning;
 	$SIG{__DIE__}  = \&fatal;
 
 	$HTTP->{'path_info'} = http_wash($ENV{'PATH_INFO'});
 
+	$HTTP->{'path_info'} = clean_path($HTTP->{'path_info'});
 	$HTTP->{'this_url'} = 'http://' . $ENV{'SERVER_NAME'};
 	$HTTP->{'this_url'} .= ':' . $ENV{'SERVER_PORT'}
 	  if $ENV{'SERVER_PORT'} != 80;
@@ -501,13 +478,20 @@ sub httpinit {
 	$HTTP->{'this_url'} .= '?' . $ENV{'QUERY_STRING'}
 	  if $ENV{'QUERY_STRING'};
 
+	# We don't clean all the parameters here, as some scripts need extended characters
+	# e.g. regexp searching
 	$HTTP->{'param'} = { map { http_wash($_) } $ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g };
 
+	# But do clean up these
 	$HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'version'};
 	$HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'arch'};
 	$HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};
 
-	$identifier = $HTTP->{'param'}->{'i'};
+	$identifier = clean_identifier($HTTP->{'param'}->{'i'});
+	# remove the param versions to prevent unclean versions being used
+	delete $HTTP->{'param'}->{'i'};
+	delete $HTTP->{'param'}->{'identifier'};
+	
 	$config     = new LXR::Config($HTTP->{'this_url'});
 	die "Can't find config for " . $HTTP->{'this_url'} if !defined($config);
 	$files = new LXR::Files($config->sourceroot);
@@ -517,14 +501,54 @@ sub httpinit {
 
 	foreach ($config->allvariables) {
 		$config->variable($_, $HTTP->{'param'}->{$_}) if $HTTP->{'param'}->{$_};
+		delete $HTTP->{'param'}->{$_};
 	}
 
-	$release  = $config->variable('v');
+	$release  = clean_release($config->variable('v'));
+	$config->variable('v', $release);  # put back into config obj
+	
+	$HTTP->{'param'}->{'file'} = clean_path($HTTP->{'param'}->{'file'});
 	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
 
 	printhttp;
 }
 
+sub clean_release {
+	my $release = shift;
+	my @rels= $config->varrange('v');
+	my %test;
+	@test{@rels} = undef;
+	
+	if(!exists $test{$release}) {
+		$release = $config->vardefault('v');
+	}
+	return $release;
+}
+
+sub clean_identifier {
+	my $id = shift;
+
+	$id =~ s/(^[\w`:.,]+).*/$1/ if defined $id;
+
+	return $id;
+}
+
+sub clean_path {
+	# Cleans up a string to path
+	my $path = shift;
+	
+	if(defined $path) {
+		# First suppress anything after a dodgy character
+		$path =~ s!(^[\w_+-,.%^/]+).*!$1!;
+		# Clean out /../
+		while ($path =~ m!/../!) {
+			$path = s!/\.\./!/!g;
+		}
+	}
+	
+	return $path;
+}
+	
 sub httpclean {
 	$config = undef;
 	$files  = undef;
