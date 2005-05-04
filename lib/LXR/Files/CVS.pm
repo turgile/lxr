@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.32 2004/09/02 18:50:03 brondsem Exp $
+# $Id: CVS.pm,v 1.33 2005/05/04 23:21:09 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.32 2004/09/02 18:50:03 brondsem Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.33 2005/05/04 23:21:09 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -27,17 +27,20 @@ use LXR::Common;
 
 use vars qw(%cvs $cache_filename $gnu_diff);
 
+$cache_filename = '';
+
 sub new {
 	my ($self, $rootpath) = @_;
 
 	$self = bless({}, $self);
 	$self->{'rootpath'} = $rootpath;
 	$self->{'rootpath'} =~ s@/*$@/@;
-
+	$self->{'path'} = $config->cvspath;
+	
 	unless (defined $gnu_diff) {
 
 		# the rcsdiff command (used in getdiff) uses parameters only supported by GNU diff
-		$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+		$ENV{'PATH'} = $self->{'path'};
 		if (`diff --version 2>/dev/null` =~ /GNU/) {
 			$gnu_diff = 1;
 		} else {
@@ -169,7 +172,7 @@ sub getfilehandle {
 	$clean_filename =~ /(.*)/;
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
-	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+	$ENV{'PATH'} = $self->{'path'};
 	open($fileh, "-|", "co -q -p$rev $clean_filename");
 
 	die("Error executing \"co\"; rcs not installed?") unless $fileh;
@@ -198,7 +201,7 @@ sub getdiff {
 	$clean_filename =~ /(.*)/;
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
-	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
+	$ENV{'PATH'} = $self->{'path'};
 	open($fileh, "-|", "rcsdiff -q -a -n -r$rev1 -r$rev2 $clean_filename");
 
 	die("Error executing \"rcsdiff\"; rcs not installed?") unless $fileh;

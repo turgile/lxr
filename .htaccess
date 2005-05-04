@@ -14,6 +14,7 @@ deny from all
 SetHandler perl-script
 PerlHandler Apache::Registry
 PerlSetEnv PERL5LIB lib
+PerlTaintCheck On
 ForceType text/html
 PerlSendHeader On
 </Files>
