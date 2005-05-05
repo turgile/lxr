@@ -1,4 +1,4 @@
-# Test cases for the LXR::Files::Plain module
+# Test cases for the LXR::Files::CVS module
 # Uses the associated lxr.conf file
 
 package CVSTest;

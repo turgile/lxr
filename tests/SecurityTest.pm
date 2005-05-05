@@ -102,6 +102,51 @@ sub test_version_path_exploit {
 
 }
 
+sub test_filename_wash {
+	# Check that filenames are washed
+	my $self = shift;
+
+	$ENV{'SERVER_NAME'} = 'test';
+	$ENV{'SERVER_PORT'} = 80;
+	$ENV{'SCRIPT_NAME'} = '/lxr/source';
+	$ENV{'PATH_INFO'} = '/a/test/path/../../../';
+	$ENV{'QUERY_STRING'} = 'v=../../;virtroot=testpath;dbname=notapath';
+
+	# Need to preserve signal handlers round call to httpinit as
+	# it sets up the LXR signal handlers.
+	
+	my $die = $SIG{'__DIE__'};
+	my $warn = $SIG{'__WARN__'};
+	
+	httpinit;
+	
+	$SIG{'__DIE__'} = $die;
+	$SIG{'__WARN__'} = $warn;
+
+	$self->assert($pathname eq '/', "pathname not washed, got $pathname");
+	$self->assert($HTTP->{'param'}->{'file'} eq $pathname, '$http->{param}->{file} not washed, got '.$HTTP->{'param'}->{'file'});	
+	
+	$ENV{'PATH_INFO'} = '';
+	$ENV{'QUERY_STRING'} = 'file=/a/test/path++many';
+	my $die = $SIG{'__DIE__'};
+	my $warn = $SIG{'__WARN__'};
+	httpinit;
+	$SIG{'__DIE__'} = $die;
+	$SIG{'__WARN__'} = $warn;
+	$self->assert($pathname eq '/a/test/path++many', "pathname not washed, got $pathname");
+
+	$ENV{'PATH_INFO'} = '/../.././.././a/test/path+!/some/%chars,v';
+	$ENV{'QUERY_STRING'} = '';
+	my $die = $SIG{'__DIE__'};
+	my $warn = $SIG{'__WARN__'};
+	httpinit;
+	$SIG{'__DIE__'} = $die;
+	$SIG{'__WARN__'} = $warn;
+	$self->assert($pathname eq '/a/test/path+!/some/%chars,v', "pathname not washed, got $pathname");
+	
+}
+
+
 sub test_config {
 	# Check that parameters in URL cannot alter config variables
 	
