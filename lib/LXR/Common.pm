@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.51 2005/05/04 23:19:33 mbox Exp $
+# $Id: Common.pm,v 1.52 2005/05/15 22:59:31 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.51 2005/05/04 23:19:33 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.52 2005/05/15 22:59:31 mbox Exp $ ';
 
 use strict;
 
@@ -169,7 +169,6 @@ sub http_wash {
 		return (undef);
 	}
 
-	$t =~ s/\+/ /g;
 	$t =~ s/\%([\da-f][\da-f])/pack("C", hex($1))/gie;
 
 	return ($t);
@@ -539,10 +538,10 @@ sub clean_path {
 	
 	if(defined $path) {
 		# First suppress anything after a dodgy character
-		$path =~ s!(^[\w_+-,.%^/]+).*!$1!;
+		$path =~ s!(^[\w_+-,.%^/\!]+).*!$1!;
 		# Clean out /../
-		while ($path =~ m!/../!) {
-			$path = s!/\.\./!/!g;
+		while ($path =~ m!/\.\.?/!) {
+			$path =~ s!/\.\.?/!/!g;
 		}
 	}
 	
