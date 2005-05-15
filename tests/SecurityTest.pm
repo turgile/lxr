@@ -123,13 +123,12 @@ sub test_filename_wash {
 	$SIG{'__DIE__'} = $die;
 	$SIG{'__WARN__'} = $warn;
 
-	$self->assert($pathname eq '/', "pathname not washed, got $pathname");
-	$self->assert($HTTP->{'param'}->{'file'} eq $pathname, '$http->{param}->{file} not washed, got '.$HTTP->{'param'}->{'file'});	
+	$self->assert($pathname eq '/a/test/path/', "pathname not washed, got $pathname");
 	
 	$ENV{'PATH_INFO'} = '';
 	$ENV{'QUERY_STRING'} = 'file=/a/test/path++many';
-	my $die = $SIG{'__DIE__'};
-	my $warn = $SIG{'__WARN__'};
+	$die = $SIG{'__DIE__'};
+	$warn = $SIG{'__WARN__'};
 	httpinit;
 	$SIG{'__DIE__'} = $die;
 	$SIG{'__WARN__'} = $warn;
@@ -137,8 +136,8 @@ sub test_filename_wash {
 
 	$ENV{'PATH_INFO'} = '/../.././.././a/test/path+!/some/%chars,v';
 	$ENV{'QUERY_STRING'} = '';
-	my $die = $SIG{'__DIE__'};
-	my $warn = $SIG{'__WARN__'};
+	$die = $SIG{'__DIE__'};
+	$warn = $SIG{'__WARN__'};
 	httpinit;
 	$SIG{'__DIE__'} = $die;
 	$SIG{'__WARN__'} = $warn;
@@ -146,6 +145,30 @@ sub test_filename_wash {
 	
 }
 
+sub test_filename_compat {
+	# Checking for ability to deal with ++ in the filename
+	my $self = shift;
+
+	$ENV{'SERVER_NAME'} = 'test';
+	$ENV{'SERVER_PORT'} = 80;
+	$ENV{'SCRIPT_NAME'} = '/lxr/source';
+	$ENV{'PATH_INFO'} = '/a/test/file++name';
+	$ENV{'QUERY_STRING'} = '';
+
+	# Need to preserve signal handlers round call to httpinit as
+	# it sets up the LXR signal handlers.
+	
+	my $die = $SIG{'__DIE__'};
+	my $warn = $SIG{'__WARN__'};
+	
+	httpinit;
+	
+	$SIG{'__DIE__'} = $die;
+	$SIG{'__WARN__'} = $warn;
+
+	$self->assert($pathname eq '/a/test/file++name', "pathname corrupted, got $pathname");
+}
+	
 
 sub test_config {
 	# Check that parameters in URL cannot alter config variables
