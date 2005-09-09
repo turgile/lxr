@@ -143,6 +143,14 @@ sub test_filename_wash {
 	$SIG{'__WARN__'} = $warn;
 	$self->assert($pathname eq '/a/test/path+!/some/%chars,v', "pathname not washed, got $pathname");
 	
+	$ENV{'PATH_INFO'} = '/ab/-/path+!/some/%chars,v';
+	$ENV{'QUERY_STRING'} = '';
+	$die = $SIG{'__DIE__'};
+	$warn = $SIG{'__WARN__'};
+	httpinit;
+	$SIG{'__DIE__'} = $die;
+	$SIG{'__WARN__'} = $warn;
+	$self->assert($pathname eq '/ab/-/path+!/some/%chars,v', "pathname not washed, got $pathname");
 }
 
 sub test_filename_compat {
