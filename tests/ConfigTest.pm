@@ -52,6 +52,15 @@ sub test_allvariables {
 	$self->assert($#vars == 1, "Too many variables returned got " . $self->{config}->allvariables());
 }
 
+sub test_config_error {
+	my $self = shift;
+	my $t;
+	
+	eval {new LXR::Config("/a/path", "./lxr.conf")};
+	$t = $@;
+	$self->assert(defined($t), "Didn't fail to find config");
+	$self->assert_matches(qr/--url parameter should be a URL \(e\.g\. http:/, $t);
+}
 
 # set_up and tear_down are used to
 # prepare and release resources need for testing

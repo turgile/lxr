@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $
+# $Id: Config.pm,v 1.33 2005/09/10 00:09:20 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.33 2005/09/10 00:09:20 mbox Exp $ ';
 
 use strict;
 
@@ -106,8 +106,16 @@ sub _initialize {
 			}
 		}
 	}
-
-	die "Can't find config for $url\n" if !defined $$self{baseurl};
+	
+	if(!defined $$self{baseurl}) {
+		if($url =~ m!http://.+\.!) {
+			die "Can't find config for $url: make sure there is a 'baseurl' line that matches in lxr.conf\n";
+		} else {	
+			# wasn't a url, so probably genxref with a bad --url parameter
+			die "Can't find config for $url: " . 
+			 	"the --url parameter should be a URL (e.g. http://example.com/lxr) and must match a baseurl line in lxr.conf\n";
+		}
+	}
 }
 
 sub allvariables {
