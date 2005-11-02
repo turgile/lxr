@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.8 2004/07/21 20:44:30 brondsem Exp $
+# $Id: Files.pm,v 1.9 2005/11/02 23:39:55 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,23 +18,93 @@
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.8 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.9 2005/11/02 23:39:55 mbox Exp $ ';
 
 use strict;
 
 sub new {
-	my ($self, $srcroot) = @_;
+	my ( $self, $srcroot, $params ) = @_;
 	my $files;
 
-	if ($srcroot =~ /^CVS:(.*)/i) {
+	if ( $srcroot =~ /^CVS:(.*)/i ) {
 		require LXR::Files::CVS;
 		$srcroot = $1;
 		$files   = new LXR::Files::CVS($srcroot);
-	} else {
+	}
+	elsif ( $srcroot =~ /^bk:(.*)/i ) {
+		require LXR::Files::BK;
+		$srcroot = $1;
+		$files   = new LXR::Files::BK($srcroot, $params);
+	}
+	else {
 		require LXR::Files::Plain;
 		$files = new LXR::Files::Plain($srcroot);
 	}
 	return $files;
+}
+
+# Stub implementations of the Files interface
+
+sub getdir {
+	my $self = shift;
+	warn  "::getdir not implemented. Parameters @_";
+}
+
+sub getfile {
+	my $self = shift;
+	warn  "::getfile not implemented. Parameters @_";
+}
+
+sub getannotations {
+	my $self = shift;
+	warn  "::getannotations not implemented. Parameters @_";
+}
+
+sub getauthor {
+	my $self = shift;
+	warn  "::getauthor not implemented. Parameters @_";
+}
+
+sub filerev {
+	my $self = shift;
+	warn  "::filerev not implemented. Parameters @_";
+}
+
+sub getfilehandle {
+	my $self = shift;
+	warn  "::getfilehandle not implemented. Parameters @_";
+}
+
+sub getfilesize {
+	my $self = shift;
+	warn  "::getfilesize not implemented. Parameters @_";
+}
+
+sub getfiletime {
+	my $self = shift;
+	warn  "::getfiletime not implemented. Parameters @_";
+}
+
+sub getindex {
+	my $self = shift;
+	warn  "::getindex not implemented. Parameters @_";
+}
+
+sub isdir {
+	my $self = shift;
+	warn  "::isdir not implemented. Parameters: @_";
+}
+
+sub isfile {
+	my $self = shift;
+	warn  "::isfile not implemented. Parameters: @_";
+}
+
+sub toreal {
+	# FIXME: this function should probably not exist, since it doesn't make sense for 
+	# all file access methods
+	warn "toreal called - obsolete";
+	return undef;
 }
 
 1;

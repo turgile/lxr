@@ -49,7 +49,7 @@ sub test_allvariables {
 	my @vars = $self->{config}->allvariables();
     $self->assert(grep {$_ eq 'v'} @vars, "allvariables didn't return v");
 	$self->assert(grep {$_ eq 'a'} @vars, "allvariables didn't return a");
-	$self->assert($#vars == 1, "Too many variables returned got " . $self->{config}->allvariables());
+	$self->assert($#vars == 1, "Too many variables returned got @vars");
 }
 
 sub test_config_error {
@@ -61,6 +61,25 @@ sub test_config_error {
 	$self->assert(defined($t), "Didn't fail to find config");
 	$self->assert_matches(qr/--url parameter should be a URL \(e\.g\. http:/, $t);
 }
+
+# Test access to the sourceparams section
+
+sub test_sourceparams {
+	my $self = shift;
+	my $config = $self->{'config'};
+	
+	my $params = $config->sourceparams;
+	$self->assert_equals($$params{'cachepath'}, '/a/path/to/cache');
+	$self->assert_equals($$params{'param2'}, 'secondparam');
+}
+
+# Test multiple config block with common substrings work
+# Bug 525825
+sub test_multi_config {
+	my $self = shift;
+	my $test = eval {new LXR::Config("http://test/lxr-wibble", "./lxr.conf");};
+	$self->assert(!defined($test), "Should not have matched");
+	}
 
 # set_up and tear_down are used to
 # prepare and release resources need for testing

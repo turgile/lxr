@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: diff,v 1.15 2004/10/26 17:08:07 brondsem Exp $
+# $Id: diff,v 1.16 2005/11/02 23:39:55 mbox Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.15 2004/10/26 17:08:07 brondsem Exp $ ';
+$CVSID = '$Id: diff,v 1.16 2005/11/02 23:39:55 mbox Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -31,6 +31,7 @@ use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
 
 use LXR::Common qw(:html);
 use Local;
+use FileHandle;
 
 sub htmlsub {
 	my ($s, $l) = @_;

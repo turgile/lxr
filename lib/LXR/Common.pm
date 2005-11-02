@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.53 2005/09/09 22:06:18 mbox Exp $
+# $Id: Common.pm,v 1.54 2005/11/02 23:39:55 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.53 2005/09/09 22:06:18 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.54 2005/11/02 23:39:55 mbox Exp $ ';
 
 use strict;
 
@@ -493,7 +493,7 @@ sub httpinit {
 	
 	$config     = new LXR::Config($HTTP->{'this_url'});
 	die "Can't find config for " . $HTTP->{'this_url'} if !defined($config);
-	$files = new LXR::Files($config->sourceroot);
+	$files = new LXR::Files($config->sourceroot, $config->sourceparams);
 	die "Can't create Files for " . $config->sourceroot if !defined($files);
 	$index = new LXR::Index($config->dbname);
 	die "Can't create Index for " . $config->dbname if !defined($index);

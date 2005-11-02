@@ -51,6 +51,7 @@ Valid options are:
   --version=VERSION  Generate tokens for the given version of the code.
   --allversions      Generate tokens for all versions of the code (default).
   --reindexall       Purges existing index data
+  
 Report bugs at http://sourceforge.net/projects/lxr/.
 END_HELP
 	exit 0;
@@ -67,7 +68,7 @@ $config = new LXR::Config($option{'url'});
 
 die("No matching configuration") unless $config->sourceroot;
 
-$files = new LXR::Files($config->sourceroot);
+$files = new LXR::Files($config->sourceroot, $config->sourceparams);
 die "Can't create file access object " . $config->sourceroot
   if !defined($files);
 $index = new LXR::Index($config->dbname, O_RDWR | O_CREAT);

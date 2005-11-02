@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.24 2004/07/21 20:44:31 brondsem Exp $
+# $Id: Plain.pm,v 1.25 2005/11/02 23:39:55 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.24 2004/07/21 20:44:31 brondsem Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.25 2005/11/02 23:39:55 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -100,6 +100,10 @@ sub getdir {
 	my ($self, $pathname, $release) = @_;
 	my ($dir, $node, @dirs, @files);
 
+	if($pathname !~ m!/$!) {
+		$pathname = $pathname . '/';
+	}
+		
 	$dir = $self->toreal($pathname, $release);
 	opendir(DIR, $dir) || return ();
   FILE: while (defined($node = readdir(DIR))) {
@@ -162,16 +166,6 @@ sub getindex {
 		%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
 	}
 	return %index;
-}
-
-sub allreleases {
-	my ($self, $filename) = @_;
-
-	opendir(SRCDIR, $self->{'rootpath'});
-	my @dirs = readdir(SRCDIR);
-	closedir(SRCDIR);
-
-	return grep { /^[^\.]/ && -r $self->toreal($filename, $_) } @dirs;
 }
 
 1;

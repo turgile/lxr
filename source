@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.44 2004/09/02 15:26:42 brondsem Exp $
+# $Id: source,v 1.45 2005/11/02 23:39:55 mbox Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,11 +24,11 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.44 2004/09/02 15:26:42 brondsem Exp $ ';
+$CVSID = '$Id: source,v 1.45 2005/11/02 23:39:55 mbox Exp $ ';
 
 use strict;
-use lib '.'; # for Local.pm
-use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
+use lib '.';    # for Local.pm
+use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };  # if LXR modules are in ./lib
 
 use LXR::Common qw(:html);
 use Local;
@@ -43,8 +43,9 @@ sub diricon {
 		$img = "/icons/folder.gif";
 	}
 
-	return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"folder\">", "",
-		$dir . $node);
+	return fileref(
+		"<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"folder\">",
+		"", $dir . $node);
 }
 
 sub dirname {
@@ -76,7 +77,8 @@ sub fileicon {
 	} else {
 		$img = "/icons/generic.gif";
 	}
-	return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"\">", "", $dir . $node);
+	return fileref("<img align=\"bottom\" border=\"0\" src=\"$img\" alt=\"\">",
+		"", $dir . $node);
 }
 
 sub filename {
@@ -121,8 +123,11 @@ sub modtime {
 
 	my @t = gmtime($file_time);
 	my ($sec, $min, $hour, $mday, $mon, $year) = @t;
-	return
-	  sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+	return sprintf(
+		"%04d-%02d-%02d %02d:%02d:%02d",
+		$year + 1900,
+		$mon + 1, $mday, $hour, $min, $sec
+	);
 }
 
 sub bgcolor {
@@ -145,8 +150,7 @@ sub direxpand {
 
 	@nodes = $files->getdir($dir, $release);
 	unless (@nodes) {
-		print(  "<p align=\"center\">\n<i>The directory "
-			  . $files->toreal($dir, $release)
+		print(  "<p align=\"center\">\n<i>The directory " . $dir
 			  . " does not exist.</i>\n");
 		print(
 			"\<p align=\"center\">\n<i>This directory might exist in other versions, try 'Show attic files' or select a different Version.</i>\n"
@@ -154,12 +158,6 @@ sub direxpand {
 		  if $files->isa("LXR::Files::CVS")
 		  and !$HTTP->{'param'}->{'showattic'};
 
-		#FIXME what does this do?
-		if ($files->toreal($dir, $release) =~ m#(.+[^/])[/]*$#) {
-			if (-e $1) {
-				warning("Unable to open " . $files->toreal($dir, $release));
-			}
-		}
 		return;
 	}
 
@@ -175,9 +173,10 @@ sub direxpand {
 					'namelink' => sub { dirname(@_, $node, $dir) },
 					'filesize' => sub { '-' },
 					'modtime'  => sub { modtime(@_, $node, $dir) },
-					'bgcolor' => sub { bgcolor(@_,  $line++) },
-					'css'     => sub { rowclass(@_, $line++) },
-					'description' => sub { descexpand(@_, $node, $dir, $release) }
+					'bgcolor'     => sub { bgcolor(@_,  $line++) },
+					'css'         => sub { rowclass(@_, $line++) },
+					'description' =>
+					  sub { descexpand(@_, $node, $dir, $release) }
 				)
 			);
 		} else {
@@ -193,7 +192,9 @@ sub direxpand {
 					'css'         => sub { rowclass(@_, $line++) },
 					'description' => sub {
 						(
-							$files->toreal($dir . $node, $release) =~ m|/Attic/|
+							$files->isa('LXR::Files::CVS')
+							  && $files->toreal($dir . $node, $release) =~
+							  m|/Attic/|
 							? "<i>In Attic</i>  "
 							: ""
 						  )
@@ -269,7 +270,9 @@ sub printfile {
 						}
 
 						$b = $a;
-						$a .= ' ' x (6 - length($a)) . $files->getauthor($pathname, $a);
+						$a .=
+						  ' ' x (6 - length($a))
+						  . $files->getauthor($pathname, $a);
 						$a .= ' ' x (16 - length($a));
 					}
 				}
@@ -286,15 +289,14 @@ sub printfile {
 			}
 
 		} else {
-			print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
+			print(
+				"\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n"
+			);
 			print(
 				"\<p align=\"center\">\n<i>This file might exist in other versions, try 'Show attic files' or select a different Version.</i>\n"
 			  )
 			  if $files->isa("LXR::Files::CVS")
 			  and !$HTTP->{'param'}->{'showattic'};
-			if (-f $files->toreal($pathname, $release)) {
-				warning("Unable to open " . $files->toreal($pathname, $release));
-			}
 		}
 	}
 }
