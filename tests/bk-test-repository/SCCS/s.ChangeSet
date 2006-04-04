@@ -1,0 +1,156 @@
+H53661
+s 00001/00000/00001
+d D 1.13 05/02/19 21:46:16 malcolm 14 13
+c file1:
+c   A comment here
+cC
+cK44279
+e
+s 00001/00000/00001
+d D 1.12 05/02/13 22:42:04 malcolm 13 12
+c 
+cC
+cK44268
+e
+s 00003/00000/00001
+d D 1.11 05/02/13 21:49:12 malcolm 12 11
+c Added C code for testing (from Exuberant Ctags)
+c 
+c ruby.c, main.c, cobol.c:
+c   new file
+cC
+cK44255
+e
+s 00001/00000/00001
+d D 1.10 05/02/13 18:39:55 malcolm 11 10
+c file7:
+c   Rename: seconddir/thirddir/file6 -> seconddir/file7
+cC
+cK10972
+e
+s 00001/00000/00001
+d D 1.9 05/02/13 18:36:20 malcolm 10 9
+c file6:
+c   Rename: seconddir/thirddir/file5 -> seconddir/thirddir/file6
+cC
+cK11871
+e
+s 00001/00000/00001
+d D 1.8 05/02/13 14:54:12 malcolm 9 8
+c file2:
+c   new file
+cC
+cK11867
+e
+s 00001/00000/00001
+d D 1.7 05/02/13 14:53:13 malcolm 8 7
+c 
+cC
+cK01688
+e
+s 00002/00000/00001
+d D 1.6 05/02/13 14:51:16 malcolm 7 6
+c .del-file3~8c122dea36a73acd:
+c   Delete: firstdir/file3
+c .del-file2~7a40a14b3cb5ac42:
+c   Delete: firstdir/file2
+cC
+cK01695
+e
+s 00001/00000/00001
+d D 1.5 05/02/13 14:43:25 malcolm 6 5
+c 
+cC
+cK62242
+e
+s 00002/00000/00001
+d D 1.4 05/02/13 14:40:25 malcolm 5 4
+c file5, file4:
+c   new file
+cC
+cK62245
+e
+s 00002/00000/00001
+d D 1.3 05/02/13 14:33:14 malcolm 4 3
+c file3, file2:
+c   new file
+cC
+cK39733
+e
+s 00001/00000/00001
+d D 1.2 05/02/13 14:21:13 malcolm 3 2
+c file1:
+c   new file
+cC
+cK19416
+e
+s 00001/00000/00001
+d D 1.1 05/02/13 14:14:39 malcolm 2 1
+c Initial repository create
+cC
+cK11213
+e
+s 00000/00000/00000
+d D 1.0 05/02/13 14:14:38 malcolm 1 0
+c BitKeeper file /Users/malcolmbox/dev/eclipse/lxr-dev/lxr-dev/tests/bkexample/ChangeSet
+cBmalcolm@serenity|ChangeSet|20050213141438|39042|47592d0dd15d5f58
+cHserenity
+cK39042
+cPChangeSet
+cR47592d0dd15d5f58
+cV4
+cX0x1161
+cZ+00:00
+e
+u
+U
+f e 0
+f x 0x1161
+t
+T
+I 14
+malcolm@serenity|file1|20050213142029|09970|bd06fd0928163df malcolm@serenity|file1|20050219214529|14870
+E 14
+I 13
+malcolm@serenity|file1|20050213142029|09970|bd06fd0928163df malcolm@serenity|file1|20050213224155|11818
+E 13
+I 12
+malcolm@serenity|sourcedir/cobol.c|20050213214754|08846|97ec8a55cf04e8a6 malcolm@serenity|sourcedir/cobol.c|20050213214755|53974
+malcolm@serenity|sourcedir/main.c|20050213214810|19862|39b04783548e3a17 malcolm@serenity|sourcedir/main.c|20050213214811|29312
+malcolm@serenity|sourcedir/subdir1/ruby.c|20050213214836|20370|375ab20a34c75bfc malcolm@serenity|sourcedir/subdir1/ruby.c|20050213214837|37571
+E 12
+I 11
+malcolm@serenity|seconddir/thirddir/file5|20050213144015|06787|beceb40ac20f17c5 malcolm@serenity|seconddir/file7|20050213183950|24905
+E 11
+I 10
+malcolm@serenity|seconddir/thirddir/file5|20050213144015|06787|beceb40ac20f17c5 malcolm@serenity|seconddir/thirddir/file6|20050213183612|11495
+E 10
+I 9
+malcolm@serenity|firstdir/file2|20050213145406|01339|5d0867a0b6bb3baa malcolm@serenity|firstdir/file2|20050213145407|04408
+E 9
+I 8
+malcolm@serenity|seconddir/file4|20050213143935|30835|70b147cefe6b5392 malcolm@serenity|seconddir/file4|20050213145306|06196
+E 8
+I 7
+malcolm@serenity|firstdir/file2|20050213143243|48924|7a40a14b3cb5ac42 malcolm@serenity|BitKeeper/deleted/.del-file2~7a40a14b3cb5ac42|20050213145102|23590
+malcolm@serenity|firstdir/file3|20050213143308|30103|8c122dea36a73acd malcolm@serenity|BitKeeper/deleted/.del-file3~8c122dea36a73acd|20050213145109|49267
+E 7
+I 6
+malcolm@serenity|seconddir/thirddir/file5|20050213144015|06787|beceb40ac20f17c5 malcolm@serenity|seconddir/thirddir/file5|20050213144318|05048
+E 6
+I 5
+malcolm@serenity|seconddir/file4|20050213143935|30835|70b147cefe6b5392 malcolm@serenity|seconddir/file4|20050213143936|01939
+malcolm@serenity|seconddir/thirddir/file5|20050213144015|06787|beceb40ac20f17c5 malcolm@serenity|seconddir/thirddir/file5|20050213144016|02779
+E 5
+I 4
+malcolm@serenity|firstdir/file2|20050213143243|48924|7a40a14b3cb5ac42 malcolm@serenity|firstdir/file2|20050213143244|02959
+malcolm@serenity|firstdir/file3|20050213143308|30103|8c122dea36a73acd malcolm@serenity|firstdir/file3|20050213143309|02289
+E 4
+I 3
+malcolm@serenity|file1|20050213142029|09970|bd06fd0928163df malcolm@serenity|file1|20050213142030|05370
+E 3
+I 2
+malcolm@serenity|BitKeeper/etc/config|20050213141438|39913|c3f94431b8db5d51 malcolm@serenity|BitKeeper/etc/config|20050213141439|50499
+E 2
+I 1
+E 1

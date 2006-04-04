@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.54 2005/11/02 23:39:55 mbox Exp $
+# $Id: Common.pm,v 1.55 2006/04/04 22:23:43 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.54 2005/11/02 23:39:55 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.55 2006/04/04 22:23:43 mbox Exp $ ';
 
 use strict;
 
@@ -538,7 +538,7 @@ sub clean_path {
 	
 	if(defined $path) {
 		# First suppress anything after a dodgy character
-		$path =~ s!(^[\w_+\-,.%^/\!]+).*!$1!;
+		$path =~ s!(^[\w_+\-,\.%\^/\!]+).*!$1!;
 		# Clean out /../
 		while ($path =~ m!/\.\.?/!) {
 			$path =~ s!/\.\.?/!/!g;

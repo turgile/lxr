@@ -50,7 +50,7 @@ sub test_no_co_bug_1111786 {
 	
 	$self->{'cvs'}->{'path'} = '';
 	my $t;
-	my $ret = eval($t = $self->{'cvs'}->getfilehandle('tests/CVSTest.pm','release'));
+	my $ret = eval($t = $self->{'cvs'}->getfilehandle('INSTALL','release'));
 	$self->assert(!defined($ret) or !defined($t), 'Getfilehandle should die');
 	
 }
@@ -61,11 +61,12 @@ sub test_no_co_bug_1111786 {
 # Prepare a CVS object
  sub set_up {
 	my $self = shift;
-	my $dir = getcwd;
-	$dir = File::Spec->updir($dir);
+
+	# This test module relies on the CVSROOT env variable pointing to a test CVS repository
+	$self->assert(defined($ENV{'CVSROOT'}), 'CVSROOT must be defined');
 	
-	$self->{'cvs'} = new LXR::Files("cvs:$dir");
- 	$self->{'config'}->{'dir'} = "$dir/";
+	$self->{'cvs'} = new LXR::Files("cvs:$ENV{'CVSROOT'}");
+ 	$self->{'config'}->{'dir'} = "$ENV{'CVSROOT'}/";
  	}
 
  sub tear_down {

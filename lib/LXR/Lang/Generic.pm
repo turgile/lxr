@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.18 2004/08/10 16:13:02 brondsem Exp $
+# $Id: Generic.pm,v 1.19 2006/04/04 22:23:44 mbox Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.18 2004/08/10 16:13:02 brondsem Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.19 2006/04/04 22:23:44 mbox Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -108,7 +108,7 @@ sub indexfile {
 			chomp;
 
 			my ($sym, $file, $line, $type, $ext) = split(/\t/, $_);
-			$line =~ s/;\"$//;
+			$line =~ s/;\"$//;  #" fix fontification
 			$ext  =~ /language:(\w+)/;
 			$type = $typemap->{$type};
 			if (!defined $type) {
