@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.9 2005/11/02 23:39:55 mbox Exp $
+# $Id: Files.pm,v 1.10 2006/04/08 13:37:58 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.9 2005/11/02 23:39:55 mbox Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.10 2006/04/08 13:37:58 mbox Exp $ ';
 
 use strict;
 
@@ -35,6 +35,11 @@ sub new {
 		require LXR::Files::BK;
 		$srcroot = $1;
 		$files   = new LXR::Files::BK($srcroot, $params);
+	}
+	elsif ( $srcroot =~ /^git:(.*)/i ) {
+		require LXR::Files::GIT;
+		$srcroot = $1;
+		$files   = new LXR::Files::GIT($srcroot, $params);
 	}
 	else {
 		require LXR::Files::Plain;
