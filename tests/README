@@ -2,3 +2,9 @@ To run these tests:
 
 - Make sure Test::Unit is installed
 - Execute TestRunner.pl AllTests
+
+Note: If you wish to run the Bitkeeper tests you will need to:
+- untar the bk-test-repository.tgz file
+- uncomment the BKTest line in AllTests.pm
+
+
