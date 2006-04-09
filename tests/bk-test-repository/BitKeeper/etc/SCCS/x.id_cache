@@ -1,9 +1,0 @@
-# This is a BitKeeper cache file.
-# If you suspect that the file is corrupted, simply remove it and 
-# and it will be rebuilt as needed.
-# The format of the file is <ID> <PATHNAME>
-# The file is used for performance during makepatch/takepatch commands.
-malcolm@serenity|firstdir/file2|20050213143243|48924|7a40a14b3cb5ac42 BitKeeper/deleted/.del-file2~7a40a14b3cb5ac42
-malcolm@serenity|firstdir/file3|20050213143308|30103|8c122dea36a73acd BitKeeper/deleted/.del-file3~8c122dea36a73acd
-malcolm@serenity|seconddir/thirddir/file5|20050213144015|06787|beceb40ac20f17c5 seconddir/file7
-#$sum$ 27548
