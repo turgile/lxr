@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.57 2006/12/20 19:48:11 jbglaw Exp $
+# $Id: Common.pm,v 1.58 2006/12/20 19:57:56 jbglaw Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.57 2006/12/20 19:48:11 jbglaw Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.58 2006/12/20 19:57:56 jbglaw Exp $ ';
 
 use strict;
 
@@ -879,8 +879,7 @@ sub makefooter {
 				'variables' => sub { varexpand(@_,    $who) },
 				'devinfo'   => sub { devinfo(@_) }
 			)
-		),
-		"</html>\n"
+		)
 	);
 }
 
