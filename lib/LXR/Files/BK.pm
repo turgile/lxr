@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: BK.pm,v 1.3 2006/12/20 19:48:52 jbglaw Exp $
+# $Id: BK.pm,v 1.4 2006/12/20 19:49:29 jbglaw Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::BK;
 
-$CVSID = '$Id: BK.pm,v 1.3 2006/12/20 19:48:52 jbglaw Exp $ ';
+$CVSID = '$Id: BK.pm,v 1.4 2006/12/20 19:49:29 jbglaw Exp $ ';
 
 use strict;
 use File::Spec;
@@ -149,7 +149,7 @@ sub getannotations {
 sub openbkcommand {
 	my ($self, $command) = @_;
 
-	my $dir = getcwd();	
+	my $dir = getcwd();
 	chdir($self->{'rootpath'});
 	my $fileh = new IO::File;
 	$fileh->open($command) or die "Can't execute $command";
@@ -238,12 +238,12 @@ sub fill_cache {
 
 sub get_tree {
 	my ($self, $release) = @_;
-	
+
 	# Return entire tree as provided by 'bk rset'
 	# First, check if cache exists
-	
+
 	my $fileh = new IO::File;
-	
+
 	if (-r $self->cachename($release)) {
 		$fileh->open($self->cachename($release)) or die "Whoops, can't open cached version";
 	} else {
@@ -261,7 +261,7 @@ sub get_tree {
 			$fileh->open($self->cachename($release)) or die "Couldn't open cached version!";
 		}
 	}
-		
+
 	my @files = <$fileh>;
 	close $fileh;
 	chomp @files;
@@ -276,7 +276,7 @@ sub cachename {
 	my ($self, $release) = @_;
 	return $self->{'cache'}."/treecache-".$release;
 }
- 
+
 sub canonise {
 	my $path = shift;
 	$path =~ s!^/!!;
