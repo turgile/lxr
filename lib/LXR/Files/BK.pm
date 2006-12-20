@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: BK.pm,v 1.2 2005/11/02 23:39:55 mbox Exp $
+# $Id: BK.pm,v 1.3 2006/12/20 19:48:52 jbglaw Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::BK;
 
-$CVSID = '$Id: BK.pm,v 1.2 2005/11/02 23:39:55 mbox Exp $ ';
+$CVSID = '$Id: BK.pm,v 1.3 2006/12/20 19:48:52 jbglaw Exp $ ';
 
 use strict;
 use File::Spec;
