@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.56 2006/12/20 19:43:48 jbglaw Exp $
+# $Id: Common.pm,v 1.57 2006/12/20 19:48:11 jbglaw Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.56 2006/12/20 19:43:48 jbglaw Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.57 2006/12/20 19:48:11 jbglaw Exp $ ';
 
 use strict;
 
@@ -457,7 +457,7 @@ sub printhttp {
 # httpinit - parses and cleans up the URL parameters and sets up the various variables
 #            Also prints the HTTP header & sets up the signal handlers
 #			This is also where we protect from malicious input
-#      
+#
 # HTTP:
 # path_info -
 # param		- Array of parameters
@@ -490,7 +490,7 @@ sub httpinit {
 	# remove the param versions to prevent unclean versions being used
 	delete $HTTP->{'param'}->{'i'};
 	delete $HTTP->{'param'}->{'identifier'};
-	
+
 	$config     = new LXR::Config($HTTP->{'this_url'});
 	die "Can't find config for " . $HTTP->{'this_url'} if !defined($config);
 	$files = new LXR::Files($config->sourceroot, $config->sourceparams);
@@ -505,7 +505,7 @@ sub httpinit {
 
 	$release  = clean_release($config->variable('v'));
 	$config->variable('v', $release);  # put back into config obj
-	
+
 	$HTTP->{'param'}->{'file'} = clean_path($HTTP->{'param'}->{'file'});
 	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
 
@@ -517,7 +517,7 @@ sub clean_release {
 	my @rels= $config->varrange('v');
 	my %test;
 	@test{@rels} = undef;
-	
+
 	if(!exists $test{$release}) {
 		$release = $config->vardefault('v');
 	}
@@ -535,7 +535,7 @@ sub clean_identifier {
 sub clean_path {
 	# Cleans up a string to path
 	my $path = shift;
-	
+
 	if(defined $path) {
 		# First suppress anything after a dodgy character
 		$path =~ s!(^[\w_+\-,\.%\^/\!]+).*!$1!;
@@ -544,10 +544,10 @@ sub clean_path {
 			$path =~ s!/\.\.?/!/!g;
 		}
 	}
-	
+
 	return $path;
 }
-	
+
 sub httpclean {
 	$config = undef;
 	$files  = undef;
@@ -564,14 +564,14 @@ sub expandtemplate {
 		if (defined($expfun = $expfunc{$2})) {
 			if ($3 eq '') {
 				&$expfun(undef);
-			} 
+			}
 			else {
 				$exppar = $4;
 				$exppar =~ s#\01#\{#gs;
 				$exppar =~ s#\02#\}#gs;
 				&$expfun($exppar);
 			}
-		} 
+		}
 		else {
 			$1;
 		}
