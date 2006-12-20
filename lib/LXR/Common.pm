@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.55 2006/04/04 22:23:43 mbox Exp $
+# $Id: Common.pm,v 1.56 2006/12/20 19:43:48 jbglaw Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.55 2006/04/04 22:23:43 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.56 2006/12/20 19:43:48 jbglaw Exp $ ';
 
 use strict;
 
@@ -376,7 +376,7 @@ sub fixpaths {
 	while ($node =~ s|/[^/]+/\.\./|/|g) { }
 	$node =~ s|/\.\./|/|g;
 
-	$node .= '/' if $files->isdir($node);
+	$node .= '/' if $files->isdir($node, $release);
 	$node =~ s|//+|/|g;
 
 	return $node;
