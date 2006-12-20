@@ -74,10 +74,14 @@ choice. A good choice could be /usr/local/lxr so you would do
 
 Now you have to put the perl modules that LXR uses into a directory on
 your system that will be searched by mod_perl when the LXR scripts are
-executed. Execute:
+executed. Being an Apache 1.x user, execute:
 
  cp /usr/local/lxr/Local.pm /usr/lib/perl5/site_perl/
  cp -r /usr/local/lxr/lib/LXR /usr/lib/perl5/site_perl
+
+For Apache2, there's a clever variant to not clobber your system's
+Perl installation with foreign modules documented below in the Apache2
+section.
 
 Now you should copy the template files for LXR to your installation
 
@@ -90,7 +94,7 @@ If you have glimpse installed, you should set
 
  'glimpsebin' => '/path/to/your/glimpse/executable'
  'glimpseindex' => '/path/to/your/glimpseindex/executable'
- 
+
 If you have swish-e installed, you should set
 
  'swishbin' => '/path/to/your/swishe-e/executable'
@@ -152,6 +156,24 @@ in /path/to/cvs/repository and your cvs module is called lxr then set
 
   'sourceroot' => 'cvs:/path/to/cvs/repository/lxr'
   'sourcerootname' => 'A Friendly Name For Your Repository'
+
+Apache2, modperl2 and LXR
+-------------------------
+Edit the .htaccess file and change "Apache::Registry" to
+"ModPerl::Registry".  You also need to let modperl2 know about
+where to find LXR perl modules. You can add a line like this
+to your Apache2 config:
+
+	PerlRequire /usr/local/lxr/require.pl
+
+with about this contents:
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#!/usr/bin/env perl -w
+@INC=(@INC,	"/usr/local/lxr",
+		"/usr/local/lxr/lib",
+		"/usr/local/lxr/lib/Files");
+1;
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Using Swish-e with LXR
 ----------------------
