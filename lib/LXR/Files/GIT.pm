@@ -21,7 +21,7 @@
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.2 2006/12/20 19:51:13 jbglaw Exp $';
+$CVSID = '$Id: GIT.pm,v 1.3 2006/12/21 09:33:36 jbglaw Exp $';
 
 use strict;
 use FileHandle;
@@ -54,7 +54,7 @@ sub isdir {
 		return 1 == 1;
 	} else {
 		my $repo = Git->repository (Directory => "$self->{'rootpath'}");
-		my $line = $repo->command_oneline ("ls-tree", "-d", "$release", "$pathname");
+		my $line = $repo->command_oneline ("ls-tree", "$release", "$pathname");
 		return $line =~ m/^\d+ tree .*$/;
 	}
 }
@@ -67,7 +67,7 @@ sub isfile {
 		return 1 == 0;
 	} else {
 		my $repo = Git->repository (Directory => "$self->{'rootpath'}");
-		my $line = $repo->command_oneline ("ls-tree", "-d", "$release", "$pathname");
+		my $line = $repo->command_oneline ("ls-tree", "$release", "$pathname");
 		return $line =~ m/^\d+ blob .*$/;
 	}
 }
