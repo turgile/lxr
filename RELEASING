@@ -8,3 +8,4 @@ Instructions for releasing LXR
 - upload to SF servers
 - upload new changelog
 - send release notification
+- Update the tracker version numbers (bugs etc) so defects can be reported
