@@ -10,6 +10,10 @@ deny from all
 deny from all
 </Files>
 
+<Files lxr.css>
+SetHandler default-handler
+</Files>
+
 <Files ~ (find|search|source|ident|diff|cgi-bin)$>
 SetHandler cgi-script
 ForceType text/html
