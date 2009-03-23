@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.20 2004/10/18 20:45:37 brondsem Exp $
+# $Id: Mysql.pm,v 1.21 2009/03/23 12:27:18 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.20 2004/10/18 20:45:37 brondsem Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.21 2009/03/23 12:27:18 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -71,16 +71,16 @@ sub new {
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
 		  . "and i.langid = d.langid and i.type = d.declid "
-		  . "and  s.symname = ? and  r.release = ?");
+		  . "and  s.symname = ? and  r.rel = ?");
 	$self->{indexes_insert} =
 	  $self->{dbh}->prepare(
 		"insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) values (?, ?, ?, ?, ?, ?)"
 	  );
 
 	$self->{releases_select} =
-	  $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and  release = ?");
+	  $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and  rel = ?");
 	$self->{releases_insert} =
-	  $self->{dbh}->prepare("insert into ${prefix}releases (fileid, release) values (?, ?)");
+	  $self->{dbh}->prepare("insert into ${prefix}releases (fileid, rel) values (?, ?)");
 
 	$self->{status_get} =
 	  $self->{dbh}->prepare("select status from ${prefix}status where fileid = ?");
@@ -102,7 +102,7 @@ sub new {
 		  . "where s.symid = u.symid "
 		  . "and f.fileid = u.fileid "
 		  . "and u.fileid = r.fileid "
-		  . "and s.symname = ? and  r.release = ? "
+		  . "and s.symname = ? and  r.rel = ? "
 		  . "order by f.filename");
 	$self->{decl_select} =
 	  $self->{dbh}->prepare(
@@ -115,24 +115,24 @@ sub new {
 	  $self->{dbh}->prepare("delete from ${prefix}indexes "
 		  . "using ${prefix}indexes i, ${prefix}releases r "
 		  . "where i.fileid = r.fileid "
-		  . "and r.release = ?");
+		  . "and r.rel = ?");
 	$self->{delete_useage} =
 	  $self->{dbh}->prepare("delete from ${prefix}useage "
 		  . "using ${prefix}useage u, ${prefix}releases r "
 		  . "where u.fileid = r.fileid "
-		  . "and r.release = ?");
+		  . "and r.rel = ?");
 	$self->{delete_status} =
 	  $self->{dbh}->prepare("delete from ${prefix}status "
 		  . "using ${prefix}status s, ${prefix}releases r "
 		  . "where s.fileid = r.fileid "
-		  . "and r.release = ?");
+		  . "and r.rel = ?");
 	$self->{delete_releases} =
-	  $self->{dbh}->prepare("delete from ${prefix}releases " . "where release = ?");
+	  $self->{dbh}->prepare("delete from ${prefix}releases " . "where rel = ?");
 	$self->{delete_files} =
 	  $self->{dbh}->prepare("delete from ${prefix}files "
 		  . "using ${prefix}files f, ${prefix}releases r "
 		  . "where f.fileid = r.fileid "
-		  . "and r.release = ?");
+		  . "and r.rel = ?");
 
 	return $self;
 }
