@@ -109,7 +109,7 @@ in your perl module search path ? The example path I used was
 /usr/lib/perl5/site_perl which is also needed in lxr.conf
 
  'genericconf' => '/usr/lib/perl5/site_perl/LXR/Lang/generic.conf'
- 'ectagsconf' => '/usr/lib/perl5/site_perl/Lang/ectags.conf',
+ 'ectagsconf' => '/usr/lib/perl5/site_perl/LXR/Lang/ectags.conf',
 
 Next set your base URL and virtual root for LXR by setting
 
