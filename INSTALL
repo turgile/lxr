@@ -11,7 +11,7 @@ The current version of the lxr depends on the following things:
    usually available from CPAN.
 
 3) A webserver - Apache httpd (http://httpd.apache.org/) with mod_perl
-   (http://perl.apache.org/) is recommended
+   (http://perl.apache.org/) is recommended.  LXR works with Apache 1 and Apache 2.
 
 4) For freetext searching, either Glimpse (http://glimpse.cs.arizona.edu) or
    Swish-e (http://swish-e.org) version 2.1 or later.
@@ -53,7 +53,8 @@ Just ignore the errors about unimplemented functions.
 
 For MySQL:
 
-Run 'mysql' and then read in the initdb-mysql file using
+Run 'mysql' as a user that has the right to create new databases
+(often root) and then read in the initdb-mysql file using
 '\. initdb-mysql'.  This will create the database and a user called
 lxr with access rights to the database.
 
@@ -100,6 +101,7 @@ If you have swish-e installed, you should set
  'swishbin' => '/path/to/your/swishe-e/executable'
 
 Comment out the variables for the indexer you are not using.
+
 Set 'htmlsearch' to either 'html-search-swish.html' or
 'html-search-glimpse.html' depending on which indexer
 you are using.
@@ -157,23 +159,6 @@ in /path/to/cvs/repository and your cvs module is called lxr then set
   'sourceroot' => 'cvs:/path/to/cvs/repository/lxr'
   'sourcerootname' => 'A Friendly Name For Your Repository'
 
-Apache2, modperl2 and LXR
--------------------------
-Edit the .htaccess file and change "Apache::Registry" to
-"ModPerl::Registry".  You also need to let modperl2 know about
-where to find LXR perl modules. You can add a line like this
-to your Apache2 config:
-
-	PerlRequire /usr/local/lxr/require.pl
-
-with about this contents:
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#!/usr/bin/env perl -w
-@INC=(@INC,	"/usr/local/lxr",
-		"/usr/local/lxr/lib",
-		"/usr/local/lxr/lib/Files");
-1;
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Using Swish-e with LXR
 ----------------------
@@ -224,8 +209,14 @@ Alias /lxr /usr/local/lxr
    AllowOverride All
 </Directory>
 
-The distribution contains a .htaccess file set up to ensure that lxr
-will work. Edit it if you have special local policies.
+The distribution contains a .htaccess file for both Apache 1.x and
+Apache 2.x (.htaccess-apache1 and .htaccess-apache2 respectively).
+Rename the appropriate one to .htaccess:
+
+	mv .htaccess-apache2  .htaccess
+
+The supplied files should enable LXR to work out-of-the-box. Edit it
+if you have special local policies.
 
 If you are using Apache without mod_perl (running scripts as CGI),
 instead of 'Alias' in httpd.conf use 'ScriptAlias'.  Also, delete
