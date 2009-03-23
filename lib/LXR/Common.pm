@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.58 2006/12/20 19:57:56 jbglaw Exp $
+# $Id: Common.pm,v 1.59 2009/03/23 16:43:08 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.58 2006/12/20 19:57:56 jbglaw Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.59 2009/03/23 16:43:08 mbox Exp $ ';
 
 use strict;
 
@@ -538,7 +538,8 @@ sub clean_path {
 
 	if(defined $path) {
 		# First suppress anything after a dodgy character
-		$path =~ s!(^[\w_+\-,\.%\^/\!]+).*!$1!;
+	    #  Match good chars from start of string, then replace entire string with only good chars
+		$path =~ s!(^[\w\s_+\-,\.%\^/\!]+).*!$1!;
 		# Clean out /../
 		while ($path =~ m!/\.\.?/!) {
 			$path =~ s!/\.\.?/!/!g;
@@ -820,7 +821,7 @@ sub makeheader {
 			$template = <TEMPL>;
 			close(TEMPL);
 		} else {
-			warning("Template " . $config->value($tmplname) . " does not exist.");
+			warning("Template " . $config->value($tmplname) . " does not exist in ".`pwd`);
 		}
 	}
 
@@ -865,7 +866,7 @@ sub makefooter {
 			$template = <TEMPL>;
 			close(TEMPL);
 		} else {
-			warning("Template " . $config->value($tmplname) . " does not exist.");
+			warning("Template " . $config->value($tmplname) . " does not exist in ".`pwd`);
 		}
 	}
 
