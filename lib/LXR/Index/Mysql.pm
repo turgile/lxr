@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.21 2009/03/23 12:27:18 mbox Exp $
+# $Id: Mysql.pm,v 1.22 2009/03/23 13:29:15 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.21 2009/03/23 12:27:18 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.22 2009/03/23 13:29:15 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -112,24 +112,24 @@ sub new {
 		"insert into ${prefix}declarations (declid, langid, declaration) values (NULL, ?, ?)");
 
 	$self->{delete_indexes} =
-	  $self->{dbh}->prepare("delete from ${prefix}indexes "
+	  $self->{dbh}->prepare("delete from i "
 		  . "using ${prefix}indexes i, ${prefix}releases r "
 		  . "where i.fileid = r.fileid "
 		  . "and r.rel = ?");
 	$self->{delete_useage} =
-	  $self->{dbh}->prepare("delete from ${prefix}useage "
+	  $self->{dbh}->prepare("delete from u "
 		  . "using ${prefix}useage u, ${prefix}releases r "
 		  . "where u.fileid = r.fileid "
 		  . "and r.rel = ?");
 	$self->{delete_status} =
-	  $self->{dbh}->prepare("delete from ${prefix}status "
+	  $self->{dbh}->prepare("delete from s "
 		  . "using ${prefix}status s, ${prefix}releases r "
 		  . "where s.fileid = r.fileid "
 		  . "and r.rel = ?");
 	$self->{delete_releases} =
 	  $self->{dbh}->prepare("delete from ${prefix}releases " . "where rel = ?");
 	$self->{delete_files} =
-	  $self->{dbh}->prepare("delete from ${prefix}files "
+	  $self->{dbh}->prepare("delete from f "
 		  . "using ${prefix}files f, ${prefix}releases r "
 		  . "where f.fileid = r.fileid "
 		  . "and r.rel = ?");
