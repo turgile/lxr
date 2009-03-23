@@ -131,10 +131,11 @@ sub feedswish {
 		  $files->getdir($pathname, $release);
 	} else {
 		print $filelist "$pathname\n";
-		my $contents = $files->getfile($pathname, $release);
-		if ($filetype->checktype_contents($contents) =~ m%(text|message)/%
-			and length($contents) > 0)
+		my $fh = $files->getfilehandle($pathname, $release);
+		if ($files->getfilesize($pathname, $release) > 0
+			&& $filetype->checktype_filehandle($fh) =~ m%(text|message)/%)
 		{
+			my $contents = $files->getfile($pathname, $release);
 			$swish->print(
 				"Path-Name: $pathname\n",
 				"Content-Length: " . length($contents) . "\n",
@@ -144,6 +145,7 @@ sub feedswish {
 		} else {
 			$binaryfiles{$pathname} = 1;
 		}
+		close($fh);
 	}
 }
 
