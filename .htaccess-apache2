@@ -1,7 +1,5 @@
 Options Indexes ExecCGI FollowSymlinks
 
-DirectoryIndex source
-
 order deny,allow
 
 <Files lxr.conf>
