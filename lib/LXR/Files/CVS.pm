@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.34 2006/04/04 22:23:47 mbox Exp $
+# $Id: CVS.pm,v 1.35 2009/03/24 20:04:23 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.34 2006/04/04 22:23:47 mbox Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.35 2009/03/24 20:04:23 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -173,9 +173,11 @@ sub getfilehandle {
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
 	$ENV{'PATH'} = $self->{'path'};
-	open($fileh, "-|", "co -q -p$rev $clean_filename");
+	my $rtn;
+	$rtn = open($fileh, "-|", "co -q -p$rev $clean_filename");
 
-	die("Error executing \"co\"; rcs not installed?") unless $fileh;
+	die("Error executing \"co\"; rcs not installed?") unless $rtn;
+
 	return $fileh;
 }
 
