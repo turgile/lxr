@@ -16,9 +16,9 @@ use base qw(Test::Unit::TestCase);
 
 use vars qw($bkpath $bkrefdir $bkcache	);
 
-$bkpath   = getcwd() . "/bk-test-repository";
-$bkrefdir = getcwd() . "/bk-reference-files/";
-$bkcache  = getcwd() . "/bk-cache-dir";
+$bkpath   = getcwd() . "../../lxr-tools/test-data/bk-test-repository";
+$bkrefdir = getcwd() . "../../lxr-tools/test-data/bk-reference-files/";
+$bkcache  = getcwd() . "../../lxr-tools/test-data/bk-cache-dir";
 
 sub new {
 	my $self = shift()->SUPER::new(@_);

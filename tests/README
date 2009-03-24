@@ -4,7 +4,9 @@ To run these tests:
 - Execute TestRunner.pl AllTests
 
 Note: If you wish to run the Bitkeeper tests you will need to:
-- untar the bk-test-repository.tgz file
+- Grab the lxr-tools module from CVS to the same top-level as the lxr tree
+(so you have /mydir/lxr and /mydir/lxr-tools)
+- untar the bk-test-repository.tgz file in lxr-tools/test-data
 - uncomment the BKTest line in AllTests.pm
 
 
