@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.10 2006/04/08 13:37:58 mbox Exp $
+# $Id: Files.pm,v 1.11 2009/03/26 17:15:28 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.10 2006/04/08 13:37:58 mbox Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.11 2009/03/26 17:15:28 mbox Exp $ ';
 
 use strict;
 
@@ -103,6 +103,12 @@ sub isdir {
 sub isfile {
 	my $self = shift;
 	warn  "::isfile not implemented. Parameters: @_";
+}
+
+sub tmpfile {
+	my $self = shift;
+	# FIXME: This function really sucks and should be removed :)
+	warn  "::tmpfile not implemented. Parameters: @_";
 }
 
 sub toreal {
