@@ -73,21 +73,6 @@ choice. A good choice could be /usr/local/lxr so you would do
  cd /usr/local/
  tar -zxf /path/to/lxr/lxr-x.x.tgz (as root or with appropriate permissions)
 
-Now you have to put the perl modules that LXR uses into a directory on
-your system that will be searched by mod_perl when the LXR scripts are
-executed. Being an Apache 1.x user, execute:
-
- cp /usr/local/lxr/Local.pm /usr/lib/perl5/site_perl/
- cp -r /usr/local/lxr/lib/LXR /usr/lib/perl5/site_perl
-
-For Apache2, there's a clever variant to not clobber your system's
-Perl installation with foreign modules documented below in the Apache2
-section.
-
-Now you should copy the template files for LXR to your installation
-
- mv /usr/local/lxr/templates/* /usr/local/lxr/
-
 Edit the lxr config file
 ------------------------
 Go through the config file and fill in the relevant values.
@@ -106,12 +91,12 @@ Set 'htmlsearch' to either 'html-search-swish.html' or
 'html-search-glimpse.html' depending on which indexer
 you are using.
 
-Now remember you copied the perl modules to a directory
-in your perl module search path ? The example path I used was 
-/usr/lib/perl5/site_perl which is also needed in lxr.conf
+Now you need to edit the paths for generic.conf and ectags.conf -
+change the paths in lxr.conf to match where you've installed LXR (in
+our example, /usr/local/lxr):
 
- 'genericconf' => '/usr/lib/perl5/site_perl/LXR/Lang/generic.conf'
- 'ectagsconf' => '/usr/lib/perl5/site_perl/LXR/Lang/ectags.conf',
+ 'Genericconf' => '/usr/local/lxr/lib/LXR/Lang/generic.conf'
+ 'ectagsconf' => '/usr/local/lxr/LXR/Lang/ectags.conf',
 
 Next set your base URL and virtual root for LXR by setting
 
@@ -197,10 +182,15 @@ speeding the process.
 
 Set up webserver
 ----------------
-The browsing scripts supplied can run with Apache mod_perl or as cgi
-scripts.
 
-You may need to edit httpd.conf to point to the lxr files, for example
+The web front end for LXR can run as CGI scripts or using Apache's
+mod_perl.  Since there are differences between mod_perl for Apache 1.x
+and 2.x, the setup is slightly different - details below.
+
+Configuring for mod_perl
+------------------------
+
+You need to edit httpd.conf to point to the lxr files, for example
 if you have installed the lxr files in /usr/local/lxr and you want to
 have your URL be http://mysite/lxr then you would add:
 
@@ -209,24 +199,65 @@ Alias /lxr /usr/local/lxr
    AllowOverride All
 </Directory>
 
-The distribution contains a .htaccess file for both Apache 1.x and
-Apache 2.x (.htaccess-apache1 and .htaccess-apache2 respectively).
-Rename the appropriate one to .htaccess:
+   Apache 1.x specific
+   -------------------
+   Copy .htaccess-apache1 to .htaccess
+      
+   Now you have to put the perl modules that LXR uses into a directory
+   on your system that will be searched by mod_perl when the LXR
+   scripts are executed (typically site_perl):
 
-	mv .htaccess-apache2  .htaccess
+    cp /usr/local/lxr/Local.pm /usr/lib/perl5/site_perl/
+	cp -r /usr/local/lxr/lib/LXR /usr/lib/perl5/site_perl
 
-The supplied files should enable LXR to work out-of-the-box. Edit it
-if you have special local policies.
+   Apache 2.x specific
+   -------------------
 
-If you are using Apache without mod_perl (running scripts as CGI),
-instead of 'Alias' in httpd.conf use 'ScriptAlias'.  Also, delete
-.htaccess and rename .htaccess_cgi to .htaccess.
+   Copy .htaccess-apache2 to .htaccess
+
+   Add the following to your Apache2 config:
+
+      PerlRequire /usr/local/lxr/apache2-require.pl
+  
+   (replacing /usr/local/lxr with wherever you've installed LXR)
+
+   Then edit the paths in the apache2-require.pl script to point to
+   the directories where LXR is installed.
+
+Configuring for CGI
+-------------------
+
+You need to edit httpd.conf to point to the lxr files, for example
+if you have installed the lxr files in /usr/local/lxr and you want to
+have your URL be http://mysite/lxr then you would add:
+
+ScriptAlias /lxr /usr/local/lxr
+<Directory /usr/local/lxr>
+   AllowOverride All
+</Directory>
+
+Copy .htaccess_cgi to .htaccess
+
 
 That's it - lxr should now work. Fire up your webbrowser and go to
 http://yoursite/lxr/source and you should see the listing for the top
 of your source tree.
 
-If you are using a webserver other than Apache, you need to provide:
+If you don't see the LXR page, check your Apache logs, especially the
+error and access logs to see what's happening.  Problems are often
+caused by the webserver not being able to access the LXR files - make
+sure all the paths and file permissions are correct.
+
+Other webservers
+----------------
+
+Most webservers should be capable of supporting the CGI script
+versions of LXR - consult the server documentation for information on
+how to configure this.
+
+If you are using a webserver other than Apache, you need to provide
+the following icons:
+
 /icons/back.gif
 /icons/folder.gif
 /icons/c.gif
