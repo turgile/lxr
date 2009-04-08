@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.33 2005/09/10 00:09:20 mbox Exp $
+# $Id: Config.pm,v 1.34 2009/04/08 21:17:06 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,10 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.33 2005/09/10 00:09:20 mbox Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.34 2009/04/08 21:17:06 adrianissott Exp $ ';
 
 use strict;
+use File::Path;
 
 use LXR::Common;
 
@@ -116,6 +117,23 @@ sub _initialize {
 			 	"the --url parameter should be a URL (e.g. http://example.com/lxr) and must match a baseurl line in lxr.conf\n";
 		}
 	}
+	
+	# Set-up various directories as necessary
+  _ensuredirexists($self->{tmpdir});
+
+  if (exists $self->{glimpsebin} and exists $self->{swishbin}) {
+    die "Both Glimpse and Swish have been specified in $confpath.\n".
+        "Please choose one or other of them by commenting out either glimpsebin or swishbin.\n";
+  } elsif (exists $self->{glimpsebin}) {    
+    die "Please specifiy glimpsedir in $confpath\n" if !exists $self->{glimpsedir};    
+    _ensuredirexists($self->{glimpsedir});
+  } elsif (exists $self->{swishbin}) {    
+    die "Please specifiy glimpsedir in $confpath\n" if !exists $self->{swishdir};    
+    _ensuredirexists($self->{swishdir});
+  } else {
+    die "Neither Glimpse nor Swish have been specified in $confpath.\n".
+        "Please choose one or other of them by specifing a value for either glimpsebin or swishbin.\n";
+  }
 }
 
 sub allvariables {
@@ -217,5 +235,13 @@ sub mappath {
 
 	return $path;
 }
+
+sub _ensuredirexists {
+  my $dir = shift;
+  if(!-d $dir) {
+    mkpath($dir) or die "Couldn't make the directory $dir: ?!";
+  }  
+}
+
 
 1;
