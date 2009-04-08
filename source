@@ -1,5 +1,5 @@
-#!/usr/bin/perl -T
-# $Id: source,v 1.45 2005/11/02 23:39:55 mbox Exp $
+#!perl -T
+# $Id: source,v 1.46 2009/04/08 20:49:19 adrianissott Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.45 2005/11/02 23:39:55 mbox Exp $ ';
+$CVSID = '$Id: source,v 1.46 2009/04/08 20:49:19 adrianissott Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
