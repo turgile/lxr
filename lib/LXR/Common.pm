@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.59 2009/03/23 16:43:08 mbox Exp $
+# $Id: Common.pm,v 1.60 2009/04/10 20:13:31 adrianissott Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.59 2009/03/23 16:43:08 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.60 2009/04/10 20:13:31 adrianissott Exp $ ';
 
 use strict;
 
@@ -397,7 +397,7 @@ sub printhttp {
 
 	my $time = $files->getfiletime($pathname, $release);
 	my $time2 = (stat($config->confpath))[9];
-	$time = $time2 if $time2 > $time;
+	$time = $time2 if !defined $time or $time2 > $time;
 
 	# Remove this to see if we get a speed increase by not stating all
 	# the modules.  Since for most sites the modules change rarely,
@@ -479,7 +479,8 @@ sub httpinit {
 
 	# We don't clean all the parameters here, as some scripts need extended characters
 	# e.g. regexp searching
-	$HTTP->{'param'} = { map { http_wash($_) } $ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g };
+	$HTTP->{'param'} = { map { http_wash($_) } $ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g }
+	  if defined $ENV{'QUERY_STRING'};
 
 	# But do clean up these
 	$HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'version'};
