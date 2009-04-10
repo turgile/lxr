@@ -4,6 +4,8 @@
 package PlainTest;
 use strict;
 
+use FindBin;
+
 use Test::Unit;
 use lib "..";
 use lib "../lib";
@@ -16,7 +18,7 @@ use base qw(Test::Unit::TestCase);
 
 use vars qw($root);
 
-$root = "/Users/malcolmbox/dev/lxr-src/";
+$root = "$FindBin::Bin/test-src/";
 
 $config = new LXR::Config("http://test/lxr", "./lxr.conf");
 
@@ -53,7 +55,7 @@ sub test_getdir {
 	$self->assert_deep_equals(\@files, \@files2);
 	
 	# Check for invalid behaviours
-	@files = $f->getdir("/COPYING", '5.5.4');
+	@files = $f->getdir("/aFile.txt", '5.5.4');
 	$self->assert($#files == -1);
 	@files = $f->getdir("tests", '5.5.4');
 	$self->assert($#files == -1);
@@ -67,9 +69,9 @@ sub test_getfile {
 	my $self = shift;
 	my $f = $self->{'plain'};
 	
-	my $file = $f->getfile("/COPYING", '5.5.4');
+	my $file = $f->getfile("/aFile.txt", '5.5.4');
 	local ($/) = undef;
-	open FILE, "<". "$root/5.5.4/COPYING" || die "Can't open file";
+	open FILE, "<". "$root/5.5.4/aFile.txt" || die "Can't open file";
 	my $ref = <FILE>;
 	$self->assert($file eq $ref, "Files not matching");
 }
