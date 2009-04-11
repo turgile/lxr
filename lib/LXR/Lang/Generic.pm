@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.19 2006/04/04 22:23:44 mbox Exp $
+# $Id: Generic.pm,v 1.20 2009/04/11 11:23:43 adrianissott Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.19 2006/04/04 22:23:44 mbox Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.20 2009/04/11 11:23:43 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -152,15 +152,19 @@ sub parsespec {
 sub processcode {
 	my ($self, $code) = @_;
 	my ($start, $id);
-	$$code =~ s {(^|[^\w\#])([\w~][\w]*)\b}
+
 	# Replace identifier by link unless it's a reserved word
-	{
-	  $1.
-		(
-		  grep(/^$2$/, $self->langinfo('reserved')) ? "<span class='reserved'>$2</span>" : 
-		  ($index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2)
-		);
-	}ge;
+	$$code =~ 
+	  s{ 
+	     (^|[^\w\#])([\w~\#][\w]*)\b 
+	   }
+	   {
+	     $1.
+		   (
+		     $self->isreserved($2) ? "<span class='reserved'>$2</span>" : 
+		     ($index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2)
+		   );
+  	 }gex;
 }
 
 #
@@ -202,8 +206,7 @@ sub referencefile {
 					$string = $_;
 
 					#		  print "considering $string\n";
-					if (!grep(/^$string$/, $self->langinfo('reserved'))
-						&& $index->issymbol($string))
+					if (!$self->isreserved($string) && $index->issymbol($string))
 					{
 
 						#			print "adding $string to references\n";

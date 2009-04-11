@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $
+# $Id: Lang.pm,v 1.33 2009/04/11 11:23:43 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.32 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.33 2009/04/11 11:23:43 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -74,10 +74,19 @@ sub new {
 sub processinclude {
 	my ($self, $frag, $dir) = @_;
 
-	$$frag =~ s#(\")(.*?)(\")#	 
-	  $1.&LXR::Common::incref($2, "include", $2, $dir).$3 #e;
-	$$frag =~ s#(\0<)(.*?)(\0>)#  
-		  $1.&LXR::Common::incref($2, "include", $2).$3 #e;
+  # Replace reserved words
+  $$frag =~ 
+    s{
+       (^|[^\w\#])([\w~\#][\w]*)\b
+     }
+     {
+       $1.
+       ( $self->isreserved($2) ? "<span class='reserved'>$2</span>" : $2 ).
+       $3;
+     }gex;
+
+	$$frag =~ s#(\")(.*?)(\")#$1.&LXR::Common::incref($2, "include", $2, $dir).$3 #e;
+	$$frag =~ s#(\0<)(.*?)(\0>)#$1.&LXR::Common::incref($2, "include", $2).$3 #e;
 }
 
 sub processcomment {
@@ -91,6 +100,15 @@ sub referencefile {
 	my ($self) = @_;
 
 	print(STDERR ref($self), "->referencefile not implemented.\n");
+}
+
+sub isreserved {
+  my ($self, $frag) = @_;
+  
+  foreach my $word (@{$self->langinfo('reserved')}) {
+    return 1 if $frag eq $word;
+  }
+  return 0;
 }
 
 1;

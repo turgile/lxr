@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Cobol.pm,v 1.1 2004/08/10 16:14:25 brondsem Exp $
+# $Id: Cobol.pm,v 1.2 2009/04/11 11:23:43 adrianissott Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -21,7 +21,7 @@
 
 package LXR::Lang::Cobol;
 
-my $CVSID = '$Id: Cobol.pm,v 1.1 2004/08/10 16:14:25 brondsem Exp $ ';
+my $CVSID = '$Id: Cobol.pm,v 1.2 2009/04/11 11:23:43 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -39,7 +39,7 @@ sub processcode {
 	{
 	  $1.
 		( $2 eq "" ? $2 :
-		(grep(/^$2$/, $self->langinfo('reserved')) ? "<span class='reserved'>$2</span>" : 
+		($self->isreserved($2) ? "<span class='reserved'>$2</span>" : 
 		(
 		  $index->issymbol($2, $$self{'release'})) ?
 		 join($2, @{$$self{'itag'}}) :
