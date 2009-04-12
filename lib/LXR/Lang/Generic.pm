@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.21 2009/04/12 16:10:36 adrianissott Exp $
+# $Id: Generic.pm,v 1.22 2009/04/12 16:55:42 adrianissott Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.21 2009/04/12 16:10:36 adrianissott Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.22 2009/04/12 16:55:42 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -157,13 +157,11 @@ sub processcode {
 	# Replace identifier by link unless it's a reserved word
 	$$code =~ 
 	  s{ 
-	     (^|[^\w\#])([\w~\#][\w]*)\b 
+	     (^|[^\$\w\#])([-\w~\#][\w]*)\b 
 	   }
 	   {
 	     $1.
-		   (
-		     $index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2
-		   );
+		   ( $index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2 );
   	 }gex;
 }
 
@@ -182,12 +180,11 @@ sub processreserved {
   # Replace reserved words
   $$frag =~ 
     s{
-       (^|[^\w\#])([\w~\#][\w]*)\b
+       (^|[^\$\w\#])([-\w~\#][\w]*)\b 
      }
      {
        $1.
-       ( $self->isreserved($2) ? "<span class='reserved'>$2</span>" : $2 ).
-       $3;
+       ( $self->isreserved($2) ? "<span class='reserved'>$2</span>" : $2 );
      }gex;
 }
 
