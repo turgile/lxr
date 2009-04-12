@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.20 2009/04/11 11:23:43 adrianissott Exp $
+# $Id: Generic.pm,v 1.21 2009/04/12 16:10:36 adrianissott Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.20 2009/04/11 11:23:43 adrianissott Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.21 2009/04/12 16:10:36 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -134,7 +134,6 @@ sub indexfile {
 # This method returns the regexps used by SimpleParse to break the
 # code into different blocks such as code, string, include, comment etc.
 # Since this depends on the language, it's configured via generic.conf
-
 sub parsespec {
 	my ($self) = @_;
 	my @spec = $self->langinfo('spec');
@@ -153,6 +152,8 @@ sub processcode {
 	my ($self, $code) = @_;
 	my ($start, $id);
 
+  $self->processreserved($code);
+
 	# Replace identifier by link unless it's a reserved word
 	$$code =~ 
 	  s{ 
@@ -161,10 +162,33 @@ sub processcode {
 	   {
 	     $1.
 		   (
-		     $self->isreserved($2) ? "<span class='reserved'>$2</span>" : 
-		     ($index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2)
+		     $index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2
 		   );
   	 }gex;
+}
+
+sub isreserved {
+  my ($self, $frag) = @_;
+  
+  foreach my $word (@{$self->langinfo('reserved')}) {
+    return 1 if $frag eq $word;
+  }
+  return 0;
+}
+
+sub processreserved {
+	my ($self, $frag) = @_;
+
+  # Replace reserved words
+  $$frag =~ 
+    s{
+       (^|[^\w\#])([\w~\#][\w]*)\b
+     }
+     {
+       $1.
+       ( $self->isreserved($2) ? "<span class='reserved'>$2</span>" : $2 ).
+       $3;
+     }gex;
 }
 
 #
@@ -272,6 +296,11 @@ sub AUTOLOAD {
 	} else {
 		return wantarray ? @val : $val[0];
 	}
+}
+
+sub language {
+	my ($self) = @_;
+	return $self->{'language'};
 }
 
 sub langinfo {
