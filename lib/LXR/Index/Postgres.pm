@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.21 2009/04/19 09:51:18 adrianissott Exp $
+# $Id: Postgres.pm,v 1.22 2009/04/19 10:18:00 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.21 2009/04/19 09:51:18 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.22 2009/04/19 10:18:00 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -157,20 +157,26 @@ sub reference {
 }
 
 sub getindex {
-	my ($self, $symname, $release) = @_;
-	my ($rows, @ret);
+  my ($self, $symname, $release) = @_;
+  my ($rows, @ret);
 
-	$rows = $indexes_select->execute("$symname", "$release");
+  $rows = $indexes_select->execute("$symname", "$release");
 
-	while ($rows-- > 0) {
-		push(@ret, [ $indexes_select->fetchrow_array ]);
-	}
+  while ($rows-- > 0) {
+    my @row = $indexes_select->fetchrow_array;
 
-	$indexes_select->finish();
+    $row[3] = $self->symname($row[3]); # convert the symid
 
-	map { $$_[3] &&= $self->symname($$_[3]) } @ret;
+    # Also need to remove trailing whitespace erroneously added by the db 
+    # interface that isn't actually stored in the underlying db
+    $row[2] =~ s/^(.+?)\s+$/$1/;
 
-	return @ret;
+    push(@ret, \@row);
+  }
+
+  $indexes_select->finish();
+
+  return @ret;
 }
 
 sub getreference {
