@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.22 2009/04/12 16:55:42 adrianissott Exp $
+# $Id: Generic.pm,v 1.23 2009/04/19 16:52:40 adrianissott Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.22 2009/04/12 16:55:42 adrianissott Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.23 2009/04/19 16:52:40 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -227,7 +227,7 @@ sub referencefile {
 					$string = $_;
 
 					#		  print "considering $string\n";
-					if (!$self->isreserved($string) && $index->issymbol($string))
+					if (!$self->isreserved($string) && $index->issymbol($string, $$self{'release'}))
 					{
 
 						#			print "adding $string to references\n";

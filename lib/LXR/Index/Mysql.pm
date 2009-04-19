@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.23 2009/04/19 09:51:18 adrianissott Exp $
+# $Id: Mysql.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.23 2009/04/19 09:51:18 adrianissott Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -251,7 +251,7 @@ sub symname {
 }
 
 sub issymbol {
-	my ($self, $symname) = @_;
+	my ($self, $symname, $release) = @_; # TODO make use of $release
 	my ($symid);
 
 	$symid = $symcache{$symname};

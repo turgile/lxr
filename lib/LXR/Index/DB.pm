@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.14 2009/04/19 16:12:28 adrianissott Exp $
+# $Id: DB.pm,v 1.15 2009/04/19 16:52:40 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.14 2009/04/19 16:12:28 adrianissott Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.15 2009/04/19 16:52:40 adrianissott Exp $ ';
 
 use strict;
 use DB_File;
@@ -43,12 +43,12 @@ sub new {
 }
 
 sub index {
-	my ($self, $symname, $fileid, $line, $type, $rel) = @_;
+	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 	my $symid = $self->symid($symname);
 
-	$self->{'indexes'}{$symid} .= join("\t", $fileid, $line, $type, $rel) . "\0";
+	$self->{'indexes'}{$symid} .= join("\t", $fileid, $line, $type, $relsym) . "\0";
 
-	#	$$self{'index'}{$self->symid($symname, $release)} =
+	#	$$self{'index'}{$self->symid($symname)} =
 	#		join("\t", $filename, $line, $type, '');
 }
 
@@ -57,7 +57,7 @@ sub getindex {
 	my ($self, $symname, $release) = @_;
 
 	my (@d, $f);
-	foreach $f (split(/\0/, $$self{'indexes'}{ $self->symid($symname, $release) })) {
+	foreach $f (split(/\0/, $$self{'indexes'}{ $self->symid($symname) })) {
 		my ($fi, $l, $t, $s) = split(/\t/, $f);
 
 		my %r = map { ($_ => 1) } split(/;/, $self->{'releases'}{$fi});
@@ -69,13 +69,14 @@ sub getindex {
 }
 
 sub getreference {
+  my ($self, $symname, $release) = @_;
 	return ();
 }
 
 sub fileid {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $revision) = @_;
 
-	return $filename . ';' . $release;
+	return $filename . ';' . $revision;
 }
 
 # Convert from fileid to filename
@@ -105,7 +106,7 @@ sub release {
 }
 
 sub symid {
-	my ($self, $symname, $release) = @_;
+	my ($self, $symname) = @_;
 	my ($symid);
 
 	return $symname;
@@ -114,7 +115,7 @@ sub symid {
 sub issymbol {
 	my ($self, $symname, $release) = @_;
 
-	return $$self{'indexes'}{ $self->symid($symname, $release) };
+	return $$self{'indexes'}{ $self->symid($symname) };
 }
 
 sub empty_cache {

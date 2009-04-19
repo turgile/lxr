@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.23 2009/04/19 16:12:29 adrianissott Exp $
+# $Id: Postgres.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.23 2009/04/19 16:12:29 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -258,7 +258,7 @@ sub symname {
 }
 
 sub issymbol {
-	my ($self, $symname) = @_;
+	my ($self, $symname, $release) = @_; # TODO make use of $release
 
 	unless (exists($symcache{$symname})) {
 		$symbols_byname->execute($symname);

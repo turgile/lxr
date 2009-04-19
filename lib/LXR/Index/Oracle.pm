@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.12 2009/04/19 09:51:18 adrianissott Exp $
+# $Id: Oracle.pm,v 1.13 2009/04/19 16:52:40 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.12 2009/04/19 09:51:18 adrianissott Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.13 2009/04/19 16:52:40 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -252,15 +252,15 @@ sub symname {
 }
 
 sub issymbol {
-	my ($self, $symname, $release, $lang) = @_;
+	my ($self, $symname, $release) = @_; # TODO make use of $release
 	my ($symid);
 
-	$symid = $symcache{$release}{$lang}{$symname};
+	$symid = $symcache{$release}{$symname};
 	unless (defined($symid)) {
 		$self->{symbols_byname}->execute($symname);
 		($symid) = $self->{symbols_byname}->fetchrow_array();
 		$self->{symbols_byname}->finish();
-		$symcache{$release}{$lang}{$symname} = $symid;
+		$symcache{$release}{$symname} = $symid;
 	}
 
 	return $symid;
