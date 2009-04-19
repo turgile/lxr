@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.22 2009/04/19 10:18:00 adrianissott Exp $
+# $Id: Postgres.pm,v 1.23 2009/04/19 16:12:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.22 2009/04/19 10:18:00 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.23 2009/04/19 16:12:29 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -192,17 +192,6 @@ sub getreference {
 	$usage_select->finish();
 
 	return @ret;
-}
-
-sub relate {
-	my ($self, $symname, $release, $rsymname, $reltype) = @_;
-
-	#	$relation{$self->symid($symname, $release)} .=
-	#		join("\t", $self->symid($rsymname, $release), $reltype, '');
-}
-
-sub getrelations {
-	my ($self, $symname, $release) = @_;
 }
 
 sub fileid {

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.13 2004/07/21 20:44:31 brondsem Exp $
+# $Id: DB.pm,v 1.14 2009/04/19 16:12:28 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.13 2004/07/21 20:44:31 brondsem Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.14 2009/04/19 16:12:28 adrianissott Exp $ ';
 
 use strict;
 use DB_File;
@@ -70,19 +70,6 @@ sub getindex {
 
 sub getreference {
 	return ();
-}
-
-sub relate {
-	my ($self, $symname, $release, $rsymname, $reltype) = @_;
-	my $symid = $self->symid($symname, $release);
-
-	$$self{''}{$symid} = join("",
-		$$self{'relation'}{ $self->symid($symname, $release) },
-		join("\t", $self->symid($rsymname, $release), $reltype, ''));
-}
-
-sub getrelations {
-	my ($self, $symname, $release) = @_;
 }
 
 sub fileid {
