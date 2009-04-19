@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.22 2009/03/23 13:29:15 mbox Exp $
+# $Id: Mysql.pm,v 1.23 2009/04/19 09:51:18 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.22 2009/03/23 13:29:15 mbox Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.23 2009/04/19 09:51:18 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -71,7 +71,8 @@ sub new {
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
 		  . "and i.langid = d.langid and i.type = d.declid "
-		  . "and  s.symname = ? and  r.rel = ?");
+		  . "and s.symname = ? and r.rel = ? "
+		  . "order by f.filename, i.line, d.declaration");
 	$self->{indexes_insert} =
 	  $self->{dbh}->prepare(
 		"insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) values (?, ?, ?, ?, ?, ?)"
@@ -103,7 +104,7 @@ sub new {
 		  . "and f.fileid = u.fileid "
 		  . "and u.fileid = r.fileid "
 		  . "and s.symname = ? and  r.rel = ? "
-		  . "order by f.filename");
+		  . "order by f.filename, u.line");
 	$self->{decl_select} =
 	  $self->{dbh}->prepare(
 		"select declid from ${prefix}declarations where langid = ? and " . "declaration = ?");

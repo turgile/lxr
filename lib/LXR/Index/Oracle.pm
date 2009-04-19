@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.11 2004/10/18 22:19:29 brondsem Exp $
+# $Id: Oracle.pm,v 1.12 2009/04/19 09:51:18 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.11 2004/10/18 22:19:29 brondsem Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.12 2009/04/19 09:51:18 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -68,7 +68,8 @@ sub new {
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
 		  . "and i.langid = d.langid and i.type = d.declid "
-		  . "and  s.symname = ? and  r.release = ? ");
+		  . "and s.symname = ? and r.release = ? "
+		  . "order by f.filename, i.line, d.declaration");
 	$self->{indexes_insert} =
 	  $self->{dbh}->prepare(
 		"insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) values (?, ?, ?, ?, ?, ?)"
@@ -100,7 +101,7 @@ sub new {
 		  . "and f.fileid = u.fileid "
 		  . "and u.fileid = r.fileid "
 		  . "and s.symname = ? and  r.release = ? "
-		  . "order by f.filename");
+		  . "order by f.filename, u.line");
 	$self->{decl_select} =
 	  $self->{dbh}->prepare(
 		"select declid from ${prefix}declarations where langid = ? and declaration = ?");

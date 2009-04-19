@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.20 2005/04/30 01:35:54 mbox Exp $
+# $Id: Postgres.pm,v 1.21 2009/04/19 09:51:18 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.20 2005/04/30 01:35:54 mbox Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.21 2009/04/19 09:51:18 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -72,7 +72,8 @@ sub new {
 		  . "where s.symid = i.symid and i.fileid = f.fileid "
 		  . "and f.fileid = r.fileid "
 		  . "and i.langid = d.langid and i.type = d.declid "
-		  . "and s.symname = ? and r.release = ?");
+		  . "and s.symname = ? and r.release = ? "
+		  . "order by f.filename, i.line, d.declaration");
 	$indexes_insert =
 	  $dbh->prepare("insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) "
 		  . "values (?, ?, ?, ?, ?, ?)");
@@ -97,7 +98,8 @@ sub new {
 		  . "where s.symid = u.symid "
 		  . "and f.fileid = u.fileid "
 		  . "and f.fileid = r.fileid and "
-		  . "s.symname = ? and r.release = ?");
+		  . "s.symname = ? and r.release = ? "
+		  . "order by f.filename, u.line");
 
 	$declid_nextnum = $dbh->prepare("select nextval('${prefix}declnum')");
 
