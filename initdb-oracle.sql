@@ -80,9 +80,7 @@ create table lxr_indexes (
 	relsym		number,
 	constraint fk_lxr_indexes_symid foreign key (symid) references lxr_symbols(symid),
 	constraint fk_lxr_indexes_fileid foreign key (fileid) references lxr_files(fileid),
-	/*constraint fk_lxr_indexes_langid foreign key (langid, type) references lxr_declarations(langid, declid),
-	*/
-	
+	--constraint fk_lxr_indexes_langid foreign key (langid, type) references lxr_declarations(langid, declid),
 	constraint fk_lxr_indexes_relsym foreign key (relsym) references lxr_symbols(symid)
 );
 
@@ -121,7 +119,6 @@ create index lxr_i_usage on lxr_usage(symid);
 
 --grants
 
-
 grant select                         on lxr_filenum        to lxr;
 grant select                         on lxr_symnum         to lxr;
 grant select                         on lxr_declnum         to lxr;
@@ -134,3 +131,5 @@ grant select, insert, update, delete on lxr_files          to lxr;
 grant select, insert, update, delete on lxr_declarations   to lxr;
 
 commit;
+
+quit
