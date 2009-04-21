@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: search,v 1.31 2009/04/08 20:49:18 adrianissott Exp $
+# $Id: search,v 1.32 2009/04/21 19:12:25 adrianissott Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.31 2009/04/08 20:49:18 adrianissott Exp $ ';
+$CVSID = '$Id: search,v 1.32 2009/04/21 19:12:25 adrianissott Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -141,22 +141,18 @@ sub glimpsesearch {
 sub swishsearch {
 	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
 
-	if (!-e $config->swishdir . "/" . $release . ".index") {
-		print
-		  "<p align='center'><i>Version '$release' has not been indexed and is unavailable for searching.</i></p>";
+  my $swishIndex = $config->swishdir . "/" . $release . ".index";
+	if (!-e $swishIndex) {
+		print "<p align='center'><i>";
+		print "Version '$release' has not been indexed and is unavailable for searching.";
+		print "</i></p>";
 		return;
 	}
-	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
-	unless (open(SWISH, "-|")) {
-		exec($config->swishbin, "-f", $config->swishdir . "/" . $release . ".index",
-			"-w", "'(" . $searchtext . ")'");
-		open(STDERR, ">&STDOUT");
-		print(STDERR "Couldn't exec " . $config->swishbin . ": $!\n");
-		kill(9, $$);
-	}
+	
+  my $swishCommand =  join(' ', $config->swishbin, "-f", $swishIndex, "-w", "'(" . $searchtext . ")'");
+  my $ret = `$swishCommand`;
+  my @result = grep { not /^[\#\.]/ } split(/\n/, $ret);
 
-	my @result = grep { not /^[\#\.]/ } <SWISH>;
-	close(SWISH);
 	my $retval = $?;
 	my @ret;
 	if ($retval == 0) {
