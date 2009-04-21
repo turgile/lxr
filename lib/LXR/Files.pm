@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.11 2009/03/26 17:15:28 mbox Exp $
+# $Id: Files.pm,v 1.12 2009/04/21 20:03:04 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.11 2009/03/26 17:15:28 mbox Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.12 2009/04/21 20:03:04 adrianissott Exp $ ';
 
 use strict;
 
@@ -48,74 +48,102 @@ sub new {
 	return $files;
 }
 
-# Stub implementations of the Files interface
+#
+# Stub implementations of this interface
+#
 
 sub getdir {
-	my $self = shift;
-	warn  "::getdir not implemented. Parameters @_";
+  my ($self, $pathname, $release) = @_;
+  my @dircontents;
+	warn  __PACKAGE__."::getdir not implemented. Parameters @_";
+	return @dircontents;
 }
 
 sub getfile {
-	my $self = shift;
-	warn  "::getfile not implemented. Parameters @_";
+	my ($self, $pathname, $release) = @_;
+	warn  __PACKAGE__."::getfile not implemented. Parameters @_";
+	my $filecontents;
+	return $filecontents;
 }
 
 sub getannotations {
-	my $self = shift;
-	warn  "::getannotations not implemented. Parameters @_";
+	my ($self, $filename, $release) = @_;
+	warn  __PACKAGE__."::getannotations not implemented. Parameters @_";
+	my @annotations;
+	return @annotations;
 }
 
 sub getauthor {
-	my $self = shift;
-	warn  "::getauthor not implemented. Parameters @_";
+	my ($self, $filename, $revision) = @_;
+	warn  __PACKAGE__."::getauthor not implemented. Parameters @_";
+	my $author;
+	return $author;
 }
 
 sub filerev {
-	my $self = shift;
-	warn  "::filerev not implemented. Parameters @_";
+	my ($self, $filename, $release) = @_;
+	warn  __PACKAGE__."::filerev not implemented. Parameters @_";
+	my $filerev;
+	return $filerev;
 }
 
 sub getfilehandle {
-	my $self = shift;
-	warn  "::getfilehandle not implemented. Parameters @_";
+	my ($self, $filename, $release) = @_;
+	warn  __PACKAGE__."::getfilehandle not implemented. Parameters @_";
+	my $fh;
+	return $fh;
 }
 
 sub getfilesize {
-	my $self = shift;
-	warn  "::getfilesize not implemented. Parameters @_";
+	my ($self, $filename, $release) = @_;
+	warn  __PACKAGE__."::getfilesize not implemented. Parameters @_";
+	my $filesize;
+	return $filesize;
 }
 
 sub getfiletime {
-	my $self = shift;
-	warn  "::getfiletime not implemented. Parameters @_";
+	my ($self, $filename, $release) = @_;
+	warn  __PACKAGE__."::getfiletime not implemented. Parameters @_";
+	my $modificationTimeInSecondsSinceEpoch;
+	return $modificationTimeInSecondsSinceEpoch;
 }
 
 sub getindex {
-	my $self = shift;
-	warn  "::getindex not implemented. Parameters @_";
+	my ($self, $pathname, $release) = @_;
+	warn  __PACKAGE__."::getindex not implemented. Parameters @_";
+	my %index;
+	return %index;
 }
 
 sub isdir {
-	my $self = shift;
-	warn  "::isdir not implemented. Parameters: @_";
+	my ($self, $pathname, $release) = @_;
+	warn  __PACKAGE__."::isdir not implemented. Parameters: @_";
+	my $boolean;
+	return $boolean;
 }
 
 sub isfile {
-	my $self = shift;
-	warn  "::isfile not implemented. Parameters: @_";
+	my ($self, $pathname, $release) = @_;
+	warn  __PACKAGE__."::isfile not implemented. Parameters: @_";
+	my $boolean;
+	return $boolean;
 }
 
+# FIXME: This function really sucks and should be removed :)
 sub tmpfile {
-	my $self = shift;
-	# FIXME: This function really sucks and should be removed :)
-	warn  "::tmpfile not implemented. Parameters: @_";
+	my ($self, $filename, $release) = @_;
+	warn  __PACKAGE__."::tmpfile not implemented. Parameters: @_";
+	my $pathToATmpCopyOfTheFile;
+	return $pathToATmpCopyOfTheFile;
 }
 
+# FIXME: this function should probably not exist, since it doesn't make sense for 
+# all file access methods
 sub toreal {
-	# FIXME: this function should probably not exist, since it doesn't make sense for 
-	# all file access methods
+  my ($self, $pathname, $release) = @_;
 	warn "toreal called - obsolete";
-	return undef;
+	my $path;
+	return $path;
 }
 
 1;

@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.34 2009/04/12 16:10:37 adrianissott Exp $
+# $Id: Lang.pm,v 1.35 2009/04/21 20:03:04 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.34 2009/04/12 16:10:37 adrianissott Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.35 2009/04/21 20:03:04 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -87,24 +87,33 @@ sub processcomment {
 	$$frag =~ s#\n#</span>\n<span class=\"comment\">#g;
 }
 
+#
+# Stub implementations of this interface
+#
+
 sub processcode {
-	my ($self) = @_;
-	print(STDERR ref($self), "->processcode not implemented.\n");
+	my ($self, $code) = @_;
+	warn  __PACKAGE__."::processcode not implemented. Parameters @_";
+	return;
 }
 
 sub processreserved {
-	my ($self) = @_;
-	print(STDERR ref($self), "->processreserved not implemented.\n");
+	my ($self, $frag) = @_;
+	warn  __PACKAGE__."::processreserved not implemented. Parameters @_";
+	return;
 }
 
 sub referencefile {
-	my ($self) = @_;
-	print(STDERR ref($self), "->referencefile not implemented.\n");
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
+	warn  __PACKAGE__."::referencefile not implemented. Parameters @_";
+	return;
 }
 
 sub language {
 	my ($self) = @_;
-	print(STDERR ref($self), "->language not implemented.\n");
+	my $languageName;
+	warn  __PACKAGE__."::language not implemented. Parameters @_";
+	return $languageName;
 }
 
 1;
