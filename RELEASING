@@ -1,5 +1,10 @@
 Instructions for releasing LXR
 
+The easiest way to make a release is to use the makerelease.pl script
+from the lxr-tools package.
+
+The steps are:
+
 - Run all the tests & ensure they pass
 - Tag the release in CVS with a tag of the form release-x-y-z (e.g. release-0-9-4)
 - Export the tagged files to a new directory lxr-x-y-z

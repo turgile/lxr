@@ -180,8 +180,8 @@ for example on a 4Gb source tree a full run can take several
 days. However, on future runs it will only index changed files, thus
 speeding the process.
 
-Set up webserver
-----------------
+Set up the webserver
+--------------------
 
 The web front end for LXR can run as CGI scripts or using Apache's
 mod_perl.  Since there are differences between mod_perl for Apache 1.x
@@ -265,6 +265,31 @@ the following icons:
 /icons/compressed.gif
 /icons/image2.gif
 /icons/generic.gif
+
+
+Site-specific customisation
+---------------------------
+
+LXR has a large amount of flexibility in behaviour, allowing control
+over many aspects of behaviour.
+
+The places to look for customisation are:
+
+- lxr.conf: controls most basic settings, including how filenames are
+  mapped to languages, tab settings etc.
+
+- templates/html*, templates/lxr.css: Templates and CSS for the HTML
+  display.  This is where you can change how the website looks,
+  e.g. by adding site logos, links, or changing colours, fonts etc.
+
+- lib/LXR/Lang/ectags.conf: Advanced configuration for ectags when
+  parsing various language files - this is one place to look if you
+  want to add support for another language.
+
+- lib/LXR/Lang/generic.conf: Configures the generic language support
+  module that handles most of the languages LXR recognises.
+  Configuration here enables support for new languages.
+
 
 Getting help if it doesn't work:
 --------------------------------
