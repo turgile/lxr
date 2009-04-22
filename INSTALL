@@ -75,6 +75,10 @@ choice. A good choice could be /usr/local/lxr so you would do
 
 Edit the lxr config file
 ------------------------
+
+Copy the template lxr.conf file from the templates directory to the
+root of the lxr installation.
+
 Go through the config file and fill in the relevant values.
 If you have glimpse installed, you should set
 
@@ -152,14 +156,14 @@ path of this directory in the 'swishdir' variable.
 
 Using Glimpse with LXR
 --------------------------------
-Create a directory for the swish index files to go in, and put the
+Create a directory for the glimpse index files to go in, and put the
 path of this directory in the 'glimpsedir' variable.
 
 Generate index.
 ---------------
 It is now time to generate the index. This is done using the program
 "genxref". genxref takes two arguments --url= and --version= where is
-the url where the lxr cgi scripts are found.
+the url where the lxr web front-end appears.
 
 Version is a tag from cvs if you are using the cvs backend or the name
 of a directory in your "sourceroot" directory. It is worth noting that
@@ -238,7 +242,6 @@ ScriptAlias /lxr /usr/local/lxr
 
 Copy .htaccess_cgi to .htaccess
 
-
 That's it - lxr should now work. Fire up your webbrowser and go to
 http://yoursite/lxr/source and you should see the listing for the top
 of your source tree.
@@ -289,6 +292,9 @@ The places to look for customisation are:
 - lib/LXR/Lang/generic.conf: Configures the generic language support
   module that handles most of the languages LXR recognises.
   Configuration here enables support for new languages.
+
+- Local.pm: various routines that may need to be customised to provide
+  useful file summaries in the directory and file listing views.
 
 
 Getting help if it doesn't work:
