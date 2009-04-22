@@ -74,7 +74,7 @@ die "Can't create file access object " . $config->sourceroot
 $index = new LXR::Index($config->dbname, O_RDWR | O_CREAT);
 die "Can't create Index " . $config->dbname if !defined($index);
 
-our $filetype = new File::MMagic();
+our $filetype = new File::MMagic(-f 'lib/magic.mime'? ('lib/magic.mime') : ());
 our %binaryfiles;
 
 my @versions;
@@ -155,14 +155,9 @@ sub gensearch {
 
 	if ($config->glimpsedir and $config->glimpseindex) {
 
-		# Make sure the directory that the glimpse results go into
-		# already exists as glimpse won't work if the directory does
-		# not exist
-		die $config->glimpsedir . " does not exist"
-		  unless -d $config->glimpsedir;
 		$string = $config->glimpsedir . "/" . $release;
 		mkdir $string;
-		system("chmod 755 $string");
+		system("chmod 755 $string");   # TODO - fix Unix specific call?
 		my $glimpse = new IO::Handle;
 		my $pid = open($glimpse, "|-");
 		if ($pid == 0) {
