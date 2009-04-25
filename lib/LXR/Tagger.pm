@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.22 2004/07/21 20:44:30 brondsem Exp $
+# $Id: Tagger.pm,v 1.23 2009/04/25 20:40:24 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.22 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.23 2009/04/25 20:40:24 adrianissott Exp $ ';
 
 use strict;
 use FileHandle;
@@ -40,16 +40,16 @@ sub processfile {
 	if ($index) {
 		my $fileid = $index->fileid($pathname, $revision);
 
-		$index->release($fileid, $release);
+		$index->setfilerelease($fileid, $release);
 
-		if ($index->toindex($fileid)) {
-			$index->empty_cache();
+		if ($index->fileindexed($fileid)) {
+			$index->emptycache();
 			print(STDERR "--- $pathname $fileid\n");
 
 			my $path = $files->tmpfile($pathname, $release);
 
 			$lang->indexfile($pathname, $path, $fileid, $index, $config);
-			$index->setindexed($fileid);
+			$index->setfileindexed($fileid);
 			unlink($path);
 		} else {
 			print(STDERR "$pathname was already indexed\n");
@@ -77,14 +77,14 @@ sub processrefs {
 	if ($index) {
 		my $fileid = $index->fileid($pathname, $revision);
 
-		if ($index->toreference($fileid)) {
-			$index->empty_cache();
+		if ($index->filereferenced($fileid)) {
+			$index->emptycache();
 			print(STDERR "--- $pathname $fileid\n");
 
 			my $path = $files->tmpfile($pathname, $release);
 
 			$lang->referencefile($pathname, $path, $fileid, $index, $config);
-			$index->setreferenced($fileid);
+			$index->setfilereferenced($fileid);
 			unlink($path);
 		} else {
 			print STDERR "$pathname was already referenced\n";

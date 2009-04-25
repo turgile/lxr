@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $
+# $Id: Mysql.pm,v 1.25 2009/04/25 20:40:24 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.25 2009/04/25 20:40:24 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -138,21 +138,21 @@ sub new {
 	return $self;
 }
 
-sub index {
+sub setsymdeclaration {
 	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
 	$self->{indexes_insert}->execute($self->symid($symname),
 		$fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
 }
 
-sub reference {
+sub setsymreference {
 	my ($self, $symname, $fileid, $line) = @_;
 
 	$self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
 
 }
 
-sub getindex {
+sub symdeclarations {
 	my ($self, $symname, $release) = @_;
 	my ($rows, @ret);
 
@@ -169,7 +169,7 @@ sub getindex {
 	return @ret;
 }
 
-sub getreference {
+sub symreferences {
 	my ($self, $symname, $release) = @_;
 	my ($rows, @ret);
 
@@ -204,7 +204,7 @@ sub fileid {
 }
 
 # Indicate that this filerevision is part of this release
-sub release {
+sub setfilerelease {
 	my ($self, $fileid, $release) = @_;
 
 	my $rows = $self->{releases_select}->execute($fileid + 0, $release);
@@ -267,7 +267,7 @@ sub issymbol {
 
 # If this file has not been indexed earlier return true.  Return false
 # if already indexed.
-sub toindex {
+sub fileindexed {
 	my ($self, $fileid) = @_;
 	my ($status);
 
@@ -282,12 +282,12 @@ sub toindex {
 	return $status == 0;
 }
 
-sub setindexed {
+sub setfileindexed {
 	my ($self, $fileid) = @_;
 	$self->{status_update}->execute(1, $fileid, 0);
 }
 
-sub toreference {
+sub filereferenced {
 	my ($self, $fileid) = @_;
 	my ($status);
 
@@ -298,7 +298,7 @@ sub toreference {
 	return $status < 2;
 }
 
-sub setreferenced {
+sub setfilereferenced {
 	my ($self, $fileid) = @_;
 	$self->{status_update}->execute(2, $fileid, 1);
 }
@@ -306,11 +306,11 @@ sub setreferenced {
 # This function should be called before parsing each new file,
 # if this is not done the too much memory will be used and
 # tings will become very slow.
-sub empty_cache {
+sub emptycache {
 	%symcache = ();
 }
 
-sub getdecid {
+sub decid {
 	my ($self, $lang, $string) = @_;
 
 	my $rows = $self->{decl_select}->execute($lang, $string);

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.15 2009/04/19 16:52:40 adrianissott Exp $
+# $Id: DB.pm,v 1.16 2009/04/25 20:40:24 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.15 2009/04/19 16:52:40 adrianissott Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.16 2009/04/25 20:40:24 adrianissott Exp $ ';
 
 use strict;
 use DB_File;
@@ -42,18 +42,18 @@ sub new {
 	return $self;
 }
 
-sub index {
+sub setsymdeclaration {
 	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 	my $symid = $self->symid($symname);
 
 	$self->{'indexes'}{$symid} .= join("\t", $fileid, $line, $type, $relsym) . "\0";
 
-	#	$$self{'index'}{$self->symid($symname)} =
+	#	$$self{'symdeclaration'}{$self->symid($symname)} =
 	#		join("\t", $filename, $line, $type, '');
 }
 
 # Returns array of (fileid, line, type)
-sub getindex {
+sub symdeclarations {
 	my ($self, $symname, $release) = @_;
 
 	my (@d, $f);
@@ -68,7 +68,7 @@ sub getindex {
 	return @d;
 }
 
-sub getreference {
+sub symreferences {
   my ($self, $symname, $release) = @_;
 	return ();
 }
@@ -89,7 +89,7 @@ sub filename {
 
 # If this file has not been indexed earlier, mark it as being indexed
 # now and return true.  Return false if already indexed.
-sub toindex {
+sub fileindexed {
 	my ($self, $fileid) = @_;
 
 	return undef if $self->{'status'}{$fileid} >= 1;
@@ -99,7 +99,7 @@ sub toindex {
 }
 
 # Indicate that this filerevision is part of this release
-sub release {
+sub setfilerelease {
 	my ($self, $fileid, $release) = @_;
 
 	$self->{'releases'}{$fileid} .= $release . ";";
@@ -118,7 +118,7 @@ sub issymbol {
 	return $$self{'indexes'}{ $self->symid($symname) };
 }
 
-sub empty_cache {
+sub emptycache {
 }
 
 1;

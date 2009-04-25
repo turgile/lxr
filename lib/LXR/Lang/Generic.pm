@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.23 2009/04/19 16:52:40 adrianissott Exp $
+# $Id: Generic.pm,v 1.24 2009/04/25 20:40:24 adrianissott Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.23 2009/04/19 16:52:40 adrianissott Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.24 2009/04/25 20:40:24 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -72,7 +72,7 @@ sub read_config {
 	foreach my $lang (keys %$langmap) {
 		my $typemap = $langmap->{$lang}{'typemap'};
 		foreach my $type (keys %$typemap) {
-			$typemap->{$type} = $index->getdecid($langmap->{$lang}{'langid'}, $typemap->{$type});
+			$typemap->{$type} = $index->decid($langmap->{$lang}{'langid'}, $typemap->{$type});
 		}
 	}
 
@@ -124,7 +124,7 @@ sub indexfile {
 				$ext = undef;
 			}
 
-			$index->index($sym, $fileid, $line, $self->langid, $type, $ext);
+			$index->setsymdeclaration($sym, $fileid, $line, $self->langid, $type, $ext);
 		}
 		close(CTAGS);
 
@@ -231,7 +231,7 @@ sub referencefile {
 					{
 
 						#			print "adding $string to references\n";
-						$index->reference($string, $fileid, $linenum);
+						$index->setsymreference($string, $fileid, $linenum);
 					}
 
 				}

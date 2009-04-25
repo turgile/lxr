@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Index.pm,v 1.12 2009/04/21 20:03:04 adrianissott Exp $
+# $Id: Index.pm,v 1.13 2009/04/25 20:40:24 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.12 2009/04/21 20:03:04 adrianissott Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.13 2009/04/25 20:40:24 adrianissott Exp $ ';
 
 use LXR::Common;
 use strict;
@@ -43,69 +43,79 @@ sub new {
 # Stub implementations of this interface
 #
 
-sub getindex {
-  my ($self, $symname, $release) = @_;
-  my @indexes;
-	warn  __PACKAGE__."::getindex not implemented. Parameters @_";
-  return @indexes;
-}
-
-sub index {
-  my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
-	warn  __PACKAGE__."::index not implemented. Parameters @_";
-  return;
-}
-
-sub toindex {
-  my ($self, $fileid) = @_;
-  my $filefoundboolean;
-	warn  __PACKAGE__."::toindex not implemented. Parameters @_";
-  return $filefoundboolean;
-}
-
-sub setindexed {
-  my ($self, $fileid) = @_;
-	warn  __PACKAGE__."::setindexed not implemented. Parameters @_";
-  return;
-}
-
 sub fileid {
-  my ($self, $filename, $revision) = @_;
+  my ($self, $filename, $revision) = @_; 	# CAUTION: $revision is not $release!  
   my $fileid;
 	warn  __PACKAGE__."::fileid not implemented. Parameters @_";
   return $fileid;
 }
 
-sub getreference {
-  my ($self, $symname, $release) = @_;
-  my @references;
-	warn  __PACKAGE__."::getreference not implemented. Parameters @_";
-  return @references;
-}
-
-sub reference {
-  my ($self, $symname, $fileid, $line) = @_;
-	warn  __PACKAGE__."::reference not implemented. Parameters @_";
+# Indicate that the file referred to by $fileid is part of $release
+sub setfilerelease {
+  my ($self, $fileid, $release) = @_;
+	warn  __PACKAGE__."::setfilerelease not implemented. Parameters @_";
   return;
 }
 
-sub toreference {
+# If the file referred to by $fileid has already been indexed return true.
+# Otherwise return false.
+sub fileindexed {
+  my ($self, $fileid) = @_;
+  my $filefoundboolean;
+	warn  __PACKAGE__."::fileindexed not implemented. Parameters @_";
+  return $filefoundboolean;
+}
+
+sub setfileindexed {
+  my ($self, $fileid) = @_;
+	warn  __PACKAGE__."::setfileindexed not implemented. Parameters @_";
+  return;
+}
+
+sub filereferenced {
   my ($self, $fileid) = @_;
   my $referencefoundboolean;
-	warn  __PACKAGE__."::toreference not implemented. Parameters @_";
+	warn  __PACKAGE__."::filereferenced not implemented. Parameters @_";
   return $referencefoundboolean;
 }
 
-sub setreferenced {
+sub setfilereferenced {
   my ($self, $fileid) = @_;
-	warn  __PACKAGE__."::setreferenced not implemented. Parameters @_";
+	warn  __PACKAGE__."::setfilereferenced not implemented. Parameters @_";
   return;
 }
 
-sub release {
-  my ($self, $fileid, $release) = @_;
-	warn  __PACKAGE__."::release not implemented. Parameters @_";
+sub symdeclarations {
+  my ($self, $symname, $release) = @_;
+  my @indexes;
+	warn  __PACKAGE__."::symdeclarations not implemented. Parameters @_";
+  return @indexes;
+}
+
+sub setsymdeclaration {
+  my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
+	warn  __PACKAGE__."::setsymdeclaration not implemented. Parameters @_";
   return;
+}
+
+sub symreferences {
+  my ($self, $symname, $release) = @_;
+  my @references;
+	warn  __PACKAGE__."::symreferences not implemented. Parameters @_";
+  return @references;
+}
+
+sub setsymreference {
+  my ($self, $symname, $fileid, $line) = @_;
+	warn  __PACKAGE__."::setsymreference not implemented. Parameters @_";
+  return;
+}
+
+sub issymbol {
+	my ($self, $symname, $release) = @_;
+  my $symbolfoundboolean;
+	warn  __PACKAGE__."::issymbol not implemented. Parameters @_";
+  return $symbolfoundboolean;
 }
 
 sub symid {
@@ -122,23 +132,19 @@ sub symname {
   return $symname;
 }
 
-sub issymbol {
-	my ($self, $symname, $release) = @_;
-  my $symbolfoundboolean;
-	warn  __PACKAGE__."::issymbol not implemented. Parameters @_";
-  return $symbolfoundboolean;
-}
-
-sub getdecid {
+sub decid {
   my ($self, $lang, $string) = @_;
   my $decid;
-	warn  __PACKAGE__."::getdecid not implemented. Parameters @_";
+	warn  __PACKAGE__."::decid not implemented. Parameters @_";
   return $decid;
 }
 
-sub empty_cache {
+# This function should be called before parsing each new file,
+# if this is not done then too much memory will be used and
+# things will become very slow.
+sub emptycache {
   my ($self) = @_;
-	warn  __PACKAGE__."::empty_cache not implemented. Parameters @_";
+	warn  __PACKAGE__."::emptycache not implemented. Parameters @_";
   return;
 }
 

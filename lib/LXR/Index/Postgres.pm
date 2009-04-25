@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $
+# $Id: Postgres.pm,v 1.25 2009/04/25 20:40:24 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.24 2009/04/19 16:52:40 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.25 2009/04/25 20:40:24 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -131,7 +131,7 @@ sub new {
 	return $self;
 }
 
-sub empty_cache {
+sub emptycache {
 	%symcache = ();
 }
 
@@ -141,7 +141,7 @@ sub commit_if_limit {
 	}
 }
 
-sub index {
+sub setsymdeclaration {
 	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
 	$indexes_insert->execute($self->symid($symname),
@@ -149,14 +149,14 @@ sub index {
 	commit_if_limit();
 }
 
-sub reference {
+sub setsymreference {
 	my ($self, $symname, $fileid, $line) = @_;
 
 	$usage_insert->execute($fileid, $line, $self->symid($symname));
 	commit_if_limit();
 }
 
-sub getindex {
+sub symdeclarations {
   my ($self, $symname, $release) = @_;
   my ($rows, @ret);
 
@@ -179,7 +179,7 @@ sub getindex {
   return @ret;
 }
 
-sub getreference {
+sub symreferences {
 	my ($self, $symname, $release) = @_;
 	my ($rows, @ret);
 
@@ -215,7 +215,7 @@ sub fileid {
 }
 
 # Indicate that this filerevision is part of this release
-sub release {
+sub setfilerelease {
 	my ($self, $fileid, $release) = @_;
 
 	$releases_select->execute($fileid + 0, $release);
@@ -270,7 +270,7 @@ sub issymbol {
 
 # If this file has not been indexed earlier, mark it as being indexed
 # now and return true.  Return false if already indexed.
-sub toindex {
+sub fileindexed {
 	my ($self, $fileid) = @_;
 
 	$status_insert->execute($fileid + 0, $fileid + 0);
@@ -278,13 +278,13 @@ sub toindex {
 	return $status_update->execute(1, $fileid + 0, 0) > 0;
 }
 
-sub toreference {
+sub filereferenced {
 	my ($self, $fileid) = @_;
 
 	return $status_update->execute(2, $fileid, 1) > 0;
 }
 
-sub getdecid {
+sub decid {
 	my ($self, $lang, $string) = @_;
 
 	my $rows = $decl_select->execute($lang, $string);
@@ -317,12 +317,12 @@ sub purge {
 	commit_if_limit();
 }
 
-sub setindexed {
+sub setfileindexed {
 	my ($self, $fileid) = @_;
 	$status_update->execute(1, $fileid, 0);
 }
 
-sub setreferenced {
+sub setfilereferenced {
 	my ($self, $fileid) = @_;
 	$status_update->execute(2, $fileid, 1);
 }
