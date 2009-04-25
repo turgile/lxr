@@ -272,19 +272,6 @@
 # update to distinguish from *.vcf files by Joerg Jenderek: joerg dot jenderek at web dot de
 #0	regex		BEGIN[[:space:]]*[{]	application/x-awk
 
-# For Larry Wall's perl language.  The ``eval'' line recognizes an
-# outrageously clever hack for USG systems.
-#                               Keith Waclena <keith@cerberus.uchicago.edu>
-0       string          #!/bin/perl                     application/x-perl
-0       string          #!\ /bin/perl                   application/x-perl
-0       string          eval\ "exec\ /bin/perl          application/x-perl
-0       string          #!/usr/bin/perl                 application/x-perl
-0       string          #!\ /usr/bin/perl               application/x-perl
-0       string          eval\ "exec\ /usr/bin/perl      application/x-perl
-0       string          #!/usr/local/bin/perl           application/x-perl
-0       string          #!\ /usr/local/bin/perl         application/x-perl
-0       string          eval\ "exec\ /usr/local/bin/perl application/x-perl
-
 #------------------------------------------------------------------------------
 # compress:  file(1) magic for pure-compression formats (no archives)
 #
