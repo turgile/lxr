@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.14 2009/04/25 20:40:24 adrianissott Exp $
+# $Id: Oracle.pm,v 1.15 2009/04/26 09:14:37 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.14 2009/04/25 20:40:24 adrianissott Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.15 2009/04/26 09:14:37 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -131,65 +131,41 @@ sub new {
 	return $self;
 }
 
-sub setsymdeclaration {
-	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
+sub DESTROY {
+	my ($self) = @_;
+	$self->{files_select}    = undef;
+	$self->{files_insert}    = undef;
+	$self->{symbols_byname}  = undef;
+	$self->{symbols_byid}    = undef;
+	$self->{symbols_insert}  = undef;
+	$self->{indexes_insert}  = undef;
+	$self->{releases_insert} = undef;
+	$self->{status_insert}   = undef;
+	$self->{status_update}   = undef;
+	$self->{usage_insert}    = undef;
+	$self->{usage_select}    = undef;
+	$self->{decl_select}     = undef;
+	$self->{decl_insert}     = undef;
+	$self->{delete_indexes}  = undef;
+	$self->{delete_usage}   = undef;
+	$self->{delete_status}   = undef;
+	$self->{delete_releases} = undef;
+	$self->{delete_files}    = undef;
 
-	$self->{indexes_insert}->execute($self->symid($symname),
-		$fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
-}
-
-sub setsymreference {
-	my ($self, $symname, $fileid, $line) = @_;
-
-	$self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
-
-}
-
-sub symdeclarations {    # Hinzugefügt von Variable @row, While-Schleife
-	my ($self, $symname, $release) = @_;
-	my ($rows, @ret,     @row);
-
-	$rows = $self->{indexes_select}->execute("$symname", "$release");
-
-	while (@row = $self->{indexes_select}->fetchrow_array) {
-		push(@ret, [@row]);
+	if ($self->{dbh}) {
+		$self->{dbh}->disconnect();
+		$self->{dbh} = undef;
 	}
-
-	#while ($rows-- > 0) {
-	#	push(@ret, [ $self->{indexes_select}->fetchrow_array ]);
-	#}
-
-	$self->{indexes_select}->finish();
-
-	map { $$_[3] &&= $self->symname($$_[3]) } @ret;
-
-	return @ret;
 }
 
-sub symreferences {
-	my ($self, $symname, $release) = @_;
-	my ($rows, @ret,     @row);
-
-	$rows = $self->{usage_select}->execute("$symname", "$release");
-
-	while (@row = $self->{usage_select}->fetchrow_array) {
-		push(@ret, [@row]);
-	}
-
-	#while ($rows-- > 0) {
-	#	push(@ret, [ $self->{usage_select}->fetchrow_array ]);
-	#}
-
-	$self->{usage_select}->finish();
-
-	return @ret;
-}
+#
+# LXR::Index API Implementation
+#
 
 sub fileid {
 	my ($self, $filename, $revision) = @_;
 	my ($fileid);
 
-	# CAUTION: $revision is not $release!
 	unless (defined($fileid = $files{"$filename\t$revision"})) {
 		$self->{files_select}->execute($filename, $revision);
 		($fileid) = $self->{files_select}->fetchrow_array();
@@ -204,7 +180,6 @@ sub fileid {
 	return $fileid;
 }
 
-# Indicate that this filerevision is part of this release
 sub setfilerelease {
 	my ($self, $fileid, $release) = @_;
 
@@ -217,57 +192,6 @@ sub setfilerelease {
 	}
 }
 
-sub symid {
-	my ($self, $symname) = @_;
-	my ($symid);
-
-	$symid = $symcache{$symname};
-	unless (defined($symid)) {
-		$self->{symbols_byname}->execute($symname);
-		($symid) = $self->{symbols_byname}->fetchrow_array();
-		$self->{symbols_byname}->finish();
-		unless ($symid) {
-			$self->{symbols_insert}->execute($symname);
-
-			# Get the id of the new symbol
-			$self->{symbols_byname}->execute($symname);
-			($symid) = $self->{symbols_byname}->fetchrow_array();
-			$self->{symbols_byname}->finish();
-		}
-		$symcache{$symname} = $symid;
-	}
-
-	return $symid;
-}
-
-sub symname {
-	my ($self, $symid) = @_;
-	my ($symname);
-
-	$self->{symbols_byid}->execute($symid + 0);
-	($symname) = $self->{symbols_byid}->fetchrow_array();
-	$self->{symbols_byid}->finish();
-
-	return $symname;
-}
-
-sub issymbol {
-	my ($self, $symname, $release) = @_; # TODO make use of $release
-	my ($symid);
-
-	$symid = $symcache{$release}{$symname};
-	unless (defined($symid)) {
-		$self->{symbols_byname}->execute($symname);
-		($symid) = $self->{symbols_byname}->fetchrow_array();
-		$self->{symbols_byname}->finish();
-		$symcache{$release}{$symname} = $symid;
-	}
-
-	return $symid;
-}
-
-# If this file has not been indexed earlier return true.  Return false
-# if already indexed.
 sub fileindexed {
 	my ($self, $fileid) = @_;
 	my ($status);
@@ -304,11 +228,99 @@ sub setfilereferenced {
 	$self->{status_update}->execute(2, $fileid, 1);
 }
 
-# This function should be called before parsing each new file,
-# if this is not done the too much memory will be used and
-# tings will become very slow.
-sub emptycache {
-	%symcache = ();
+sub symdeclarations {
+	my ($self, $symname, $release) = @_;
+	my ($rows, @ret,     @row);
+
+	$rows = $self->{indexes_select}->execute("$symname", "$release");
+
+	while (@row = $self->{indexes_select}->fetchrow_array) {
+		push(@ret, [@row]);
+	}
+
+	$self->{indexes_select}->finish();
+
+	map { $$_[3] &&= $self->symname($$_[3]) } @ret;
+
+	return @ret;
+}
+
+sub setsymdeclaration {
+	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
+
+	$self->{indexes_insert}->execute($self->symid($symname),
+		$fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
+}
+
+sub symreferences {
+	my ($self, $symname, $release) = @_;
+	my ($rows, @ret,     @row);
+
+	$rows = $self->{usage_select}->execute("$symname", "$release");
+
+	while (@row = $self->{usage_select}->fetchrow_array) {
+		push(@ret, [@row]);
+	}
+
+	$self->{usage_select}->finish();
+
+	return @ret;
+}
+
+sub setsymreference {
+	my ($self, $symname, $fileid, $line) = @_;
+
+	$self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
+
+}
+
+sub issymbol {
+	my ($self, $symname, $release) = @_; # TODO make use of $release
+	my ($symid);
+
+	$symid = $symcache{$release}{$symname};
+	unless (defined($symid)) {
+		$self->{symbols_byname}->execute($symname);
+		($symid) = $self->{symbols_byname}->fetchrow_array();
+		$self->{symbols_byname}->finish();
+		$symcache{$release}{$symname} = $symid;
+	}
+
+	return $symid;
+}
+
+sub symid {
+	my ($self, $symname) = @_;
+	my ($symid);
+
+	$symid = $symcache{$symname};
+	unless (defined($symid)) {
+		$self->{symbols_byname}->execute($symname);
+		($symid) = $self->{symbols_byname}->fetchrow_array();
+		$self->{symbols_byname}->finish();
+		unless ($symid) {
+			$self->{symbols_insert}->execute($symname);
+
+			# Get the id of the new symbol
+			$self->{symbols_byname}->execute($symname);
+			($symid) = $self->{symbols_byname}->fetchrow_array();
+			$self->{symbols_byname}->finish();
+		}
+		$symcache{$symname} = $symid;
+	}
+
+	return $symid;
+}
+
+sub symname {
+	my ($self, $symid) = @_;
+	my ($symname);
+
+	$self->{symbols_byid}->execute($symid + 0);
+	($symname) = $self->{symbols_byid}->fetchrow_array();
+	$self->{symbols_byid}->finish();
+
+	return $symname;
 }
 
 sub decid {
@@ -328,6 +340,10 @@ sub decid {
 	return $id;
 }
 
+sub emptycache {
+	%symcache = ();
+}
+
 sub purge {
 	my ($self, $version) = @_;
 
@@ -338,33 +354,6 @@ sub purge {
 	$self->{delete_status}->execute($version);
 	$self->{delete_releases}->execute($version);
 	$self->{delete_files}->execute($version);
-}
-
-sub DESTROY {
-	my ($self) = @_;
-	$self->{files_select}    = undef;
-	$self->{files_insert}    = undef;
-	$self->{symbols_byname}  = undef;
-	$self->{symbols_byid}    = undef;
-	$self->{symbols_insert}  = undef;
-	$self->{indexes_insert}  = undef;
-	$self->{releases_insert} = undef;
-	$self->{status_insert}   = undef;
-	$self->{status_update}   = undef;
-	$self->{usage_insert}    = undef;
-	$self->{usage_select}    = undef;
-	$self->{decl_select}     = undef;
-	$self->{decl_insert}     = undef;
-	$self->{delete_indexes}  = undef;
-	$self->{delete_usage}   = undef;
-	$self->{delete_status}   = undef;
-	$self->{delete_releases} = undef;
-	$self->{delete_files}    = undef;
-
-	if ($self->{dbh}) {
-		$self->{dbh}->disconnect();
-		$self->{dbh} = undef;
-	}
 }
 
 1;

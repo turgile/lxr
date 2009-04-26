@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.25 2009/04/25 20:40:24 adrianissott Exp $
+# $Id: Postgres.pm,v 1.26 2009/04/26 09:14:37 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.25 2009/04/25 20:40:24 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.26 2009/04/26 09:14:37 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -131,204 +131,7 @@ sub new {
 	return $self;
 }
 
-sub emptycache {
-	%symcache = ();
-}
-
-sub commit_if_limit {
-	unless (++$transactions % $commitlimit) {
-		$dbh->commit();
-	}
-}
-
-sub setsymdeclaration {
-	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
-
-	$indexes_insert->execute($self->symid($symname),
-		$fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
-	commit_if_limit();
-}
-
-sub setsymreference {
-	my ($self, $symname, $fileid, $line) = @_;
-
-	$usage_insert->execute($fileid, $line, $self->symid($symname));
-	commit_if_limit();
-}
-
-sub symdeclarations {
-  my ($self, $symname, $release) = @_;
-  my ($rows, @ret);
-
-  $rows = $indexes_select->execute("$symname", "$release");
-
-  while ($rows-- > 0) {
-    my @row = $indexes_select->fetchrow_array;
-
-    $row[3] = $self->symname($row[3]); # convert the symid
-
-    # Also need to remove trailing whitespace erroneously added by the db 
-    # interface that isn't actually stored in the underlying db
-    $row[2] =~ s/^(.+?)\s+$/$1/;
-
-    push(@ret, \@row);
-  }
-
-  $indexes_select->finish();
-
-  return @ret;
-}
-
-sub symreferences {
-	my ($self, $symname, $release) = @_;
-	my ($rows, @ret);
-
-	$rows = $usage_select->execute("$symname", "$release");
-
-	while ($rows-- > 0) {
-		push(@ret, [ $usage_select->fetchrow_array ]);
-	}
-
-	$usage_select->finish();
-
-	return @ret;
-}
-
-sub fileid {
-	my ($self, $filename, $revision) = @_;
-	my ($fileid);
-
-	# CAUTION: $revision is not $release!
-
-	unless (defined($fileid = $files{"$filename\t$revision"})) {
-		$files_select->execute($filename, $revision);
-		($fileid) = $files_select->fetchrow_array();
-		unless ($fileid) {
-			$filenum_nextval->execute();
-			($fileid) = $filenum_nextval->fetchrow_array();
-			$files_insert->execute($filename, $revision, $fileid);
-		}
-		$files{"$filename\t$revision"} = $fileid;
-	}
-	commit_if_limit();
-	return $fileid;
-}
-
-# Indicate that this filerevision is part of this release
-sub setfilerelease {
-	my ($self, $fileid, $release) = @_;
-
-	$releases_select->execute($fileid + 0, $release);
-	my $firstrow = $releases_select->fetchrow_array();
-
-	#	$releases_select->finish();
-
-	unless ($firstrow) {
-		$releases_insert->execute($fileid + 0, $release);
-	}
-	commit_if_limit();
-}
-
-sub symid {
-	my ($self, $symname) = @_;
-	my ($symid);
-
-	unless (defined($symid = $symcache{$symname})) {
-		$symbols_byname->execute($symname);
-		($symid) = $symbols_byname->fetchrow_array();
-		unless ($symid) {
-			$symnum_nextval->execute();
-			($symid) = $symnum_nextval->fetchrow_array();
-			$symbols_insert->execute($symname, $symid);
-		}
-		$symcache{$symname} = $symid;
-	}
-	commit_if_limit();
-	return $symid;
-}
-
-sub symname {
-	my ($self, $symid) = @_;
-	my ($symname);
-
-	$symbols_byid->execute($symid + 0);
-	($symname) = $symbols_byid->fetchrow_array();
-
-	return $symname;
-}
-
-sub issymbol {
-	my ($self, $symname, $release) = @_; # TODO make use of $release
-
-	unless (exists($symcache{$symname})) {
-		$symbols_byname->execute($symname);
-		($symcache{$symname}) = $symbols_byname->fetchrow_array();
-	}
-
-	return $symcache{$symname};
-}
-
-# If this file has not been indexed earlier, mark it as being indexed
-# now and return true.  Return false if already indexed.
-sub fileindexed {
-	my ($self, $fileid) = @_;
-
-	$status_insert->execute($fileid + 0, $fileid + 0);
-	commit_if_limit();
-	return $status_update->execute(1, $fileid + 0, 0) > 0;
-}
-
-sub filereferenced {
-	my ($self, $fileid) = @_;
-
-	return $status_update->execute(2, $fileid, 1) > 0;
-}
-
-sub decid {
-	my ($self, $lang, $string) = @_;
-
-	my $rows = $decl_select->execute($lang, $string);
-	$decl_select->finish();
-
-	unless ($rows > 0) {
-		$declid_nextnum->execute();
-		my ($declid) = $declid_nextnum->fetchrow_array();
-		$decl_insert->execute($declid, $lang, $string);
-	}
-
-	$decl_select->execute($lang, $string);
-	my $id = $decl_select->fetchrow_array();
-	$decl_select->finish();
-
-	commit_if_limit();
-	return $id;
-}
-
-sub purge {
-	my ($self, $version) = @_;
-
-	# we don't delete symbols, because they might be used by other versions
-	# so we can end up with unused symbols, but that doesn't cause any problems
-	$delete_indexes->execute($version);
-	$delete_usage->execute($version);
-	$delete_status->execute($version);
-	$delete_releases->execute($version);
-	$delete_files->execute($version);
-	commit_if_limit();
-}
-
-sub setfileindexed {
-	my ($self, $fileid) = @_;
-	$status_update->execute(1, $fileid, 0);
-}
-
-sub setfilereferenced {
-	my ($self, $fileid) = @_;
-	$status_update->execute(2, $fileid, 1);
-}
-
 sub END {
-
 	$files_select    = undef;
 	$filenum_nextval = undef;
 	$files_insert    = undef;
@@ -357,6 +160,207 @@ sub END {
 	$dbh->commit();
 	$dbh->disconnect();
 	$dbh = undef;
+}
+
+#
+# LXR::Index API Implementation
+#
+
+sub fileid {
+	my ($self, $filename, $revision) = @_;
+	my ($fileid);
+
+	unless (defined($fileid = $files{"$filename\t$revision"})) {
+		$files_select->execute($filename, $revision);
+		($fileid) = $files_select->fetchrow_array();
+		unless ($fileid) {
+			$filenum_nextval->execute();
+			($fileid) = $filenum_nextval->fetchrow_array();
+			$files_insert->execute($filename, $revision, $fileid);
+		}
+		$files{"$filename\t$revision"} = $fileid;
+	}
+	_commitIfLimit();
+	return $fileid;
+}
+
+sub setfilerelease {
+	my ($self, $fileid, $release) = @_;
+
+	$releases_select->execute($fileid + 0, $release);
+	my $firstrow = $releases_select->fetchrow_array();
+
+	#	$releases_select->finish();
+
+	unless ($firstrow) {
+		$releases_insert->execute($fileid + 0, $release);
+	}
+	_commitIfLimit();
+}
+
+# If this file has not been indexed earlier, mark it as being indexed
+# now and return true.  Return false if already indexed.
+sub fileindexed {
+	my ($self, $fileid) = @_;
+
+	$status_insert->execute($fileid + 0, $fileid + 0);
+	_commitIfLimit();
+	return $status_update->execute(1, $fileid + 0, 0) > 0;
+}
+
+sub setfileindexed {
+	my ($self, $fileid) = @_;
+	$status_update->execute(1, $fileid, 0);
+}
+
+sub filereferenced {
+	my ($self, $fileid) = @_;
+
+	return $status_update->execute(2, $fileid, 1) > 0;
+}
+
+sub setfilereferenced {
+	my ($self, $fileid) = @_;
+	$status_update->execute(2, $fileid, 1);
+}
+
+sub symdeclarations {
+  my ($self, $symname, $release) = @_;
+  my ($rows, @ret);
+
+  $rows = $indexes_select->execute("$symname", "$release");
+
+  while ($rows-- > 0) {
+    my @row = $indexes_select->fetchrow_array;
+
+    $row[3] = $self->symname($row[3]); # convert the symid
+
+    # Also need to remove trailing whitespace erroneously added by the db 
+    # interface that isn't actually stored in the underlying db
+    $row[2] =~ s/^(.+?)\s+$/$1/;
+
+    push(@ret, \@row);
+  }
+
+  $indexes_select->finish();
+
+  return @ret;
+}
+
+sub setsymdeclaration {
+	my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
+
+	$indexes_insert->execute($self->symid($symname),
+		$fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
+	_commitIfLimit();
+}
+
+sub symreferences {
+	my ($self, $symname, $release) = @_;
+	my ($rows, @ret);
+
+	$rows = $usage_select->execute("$symname", "$release");
+
+	while ($rows-- > 0) {
+		push(@ret, [ $usage_select->fetchrow_array ]);
+	}
+
+	$usage_select->finish();
+
+	return @ret;
+}
+
+sub setsymreference {
+	my ($self, $symname, $fileid, $line) = @_;
+
+	$usage_insert->execute($fileid, $line, $self->symid($symname));
+	_commitIfLimit();
+}
+
+sub issymbol {
+	my ($self, $symname, $release) = @_; # TODO make use of $release
+
+	unless (exists($symcache{$symname})) {
+		$symbols_byname->execute($symname);
+		($symcache{$symname}) = $symbols_byname->fetchrow_array();
+	}
+
+	return $symcache{$symname};
+}
+
+sub symid {
+	my ($self, $symname) = @_;
+	my ($symid);
+
+	unless (defined($symid = $symcache{$symname})) {
+		$symbols_byname->execute($symname);
+		($symid) = $symbols_byname->fetchrow_array();
+		unless ($symid) {
+			$symnum_nextval->execute();
+			($symid) = $symnum_nextval->fetchrow_array();
+			$symbols_insert->execute($symname, $symid);
+		}
+		$symcache{$symname} = $symid;
+	}
+	_commitIfLimit();
+	return $symid;
+}
+
+sub symname {
+	my ($self, $symid) = @_;
+	my ($symname);
+
+	$symbols_byid->execute($symid + 0);
+	($symname) = $symbols_byid->fetchrow_array();
+
+	return $symname;
+}
+
+sub decid {
+	my ($self, $lang, $string) = @_;
+
+	my $rows = $decl_select->execute($lang, $string);
+	$decl_select->finish();
+
+	unless ($rows > 0) {
+		$declid_nextnum->execute();
+		my ($declid) = $declid_nextnum->fetchrow_array();
+		$decl_insert->execute($declid, $lang, $string);
+	}
+
+	$decl_select->execute($lang, $string);
+	my $id = $decl_select->fetchrow_array();
+	$decl_select->finish();
+
+	_commitIfLimit();
+	return $id;
+}
+
+sub emptycache {
+	%symcache = ();
+}
+
+sub purge {
+	my ($self, $version) = @_;
+
+	# we don't delete symbols, because they might be used by other versions
+	# so we can end up with unused symbols, but that doesn't cause any problems
+	$delete_indexes->execute($version);
+	$delete_usage->execute($version);
+	$delete_status->execute($version);
+	$delete_releases->execute($version);
+	$delete_files->execute($version);
+	_commitIfLimit();
+}
+
+#
+# Internal subroutines
+#
+
+sub _commitIfLimit {
+	unless (++$transactions % $commitlimit) {
+		$dbh->commit();
+	}
 }
 
 1;
