@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.26 2009/04/26 09:14:37 adrianissott Exp $
+# $Id: Mysql.pm,v 1.27 2009/05/06 22:37:50 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.26 2009/04/26 09:14:37 adrianissott Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.27 2009/05/06 22:37:50 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -208,15 +208,24 @@ sub fileindexed {
 	$self->{status_get}->finish();
 
 	if (!defined($status)) {
-		$self->{status_insert}->execute($fileid + 0, 0);
+		$status = 0;
 	}
-
-	return $status == 0;
+	return $status;
 }
 
 sub setfileindexed {
 	my ($self, $fileid) = @_;
-	$self->{status_update}->execute(1, $fileid, 0);
+	my ($status);
+	
+	$self->{status_get}->execute($fileid);
+	$status = $self->{status_get}->fetchrow_array();
+	$self->{status_get}->finish();
+
+	if (!defined($status)) {
+		$self->{status_insert}->execute($fileid + 0, 1);
+	} else {
+		$self->{status_update}->execute(1, $fileid, 0);
+	}
 }
 
 sub filereferenced {
@@ -227,12 +236,22 @@ sub filereferenced {
 	$status = $self->{status_get}->fetchrow_array();
 	$self->{status_get}->finish();
 
-	return $status < 2;
+	return defined($status) && $status == 2;
 }
 
 sub setfilereferenced {
 	my ($self, $fileid) = @_;
-	$self->{status_update}->execute(2, $fileid, 1);
+	my ($status);
+	
+	$self->{status_get}->execute($fileid);
+	$status = $self->{status_get}->fetchrow_array();
+	$self->{status_get}->finish();
+
+	if (!defined($status)) {
+		$self->{status_insert}->execute($fileid + 0, 2);
+	} else {
+		$self->{status_update}->execute(2, $fileid, 1);
+	}
 }
 
 sub symdeclarations {

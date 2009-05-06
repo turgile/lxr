@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.23 2009/04/25 20:40:24 adrianissott Exp $
+# $Id: Tagger.pm,v 1.24 2009/05/06 22:37:50 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.23 2009/04/25 20:40:24 adrianissott Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.24 2009/05/06 22:37:50 mbox Exp $ ';
 
 use strict;
 use FileHandle;
@@ -42,7 +42,7 @@ sub processfile {
 
 		$index->setfilerelease($fileid, $release);
 
-		if ($index->fileindexed($fileid)) {
+		if (!$index->fileindexed($fileid)) {
 			$index->emptycache();
 			print(STDERR "--- $pathname $fileid\n");
 
@@ -77,7 +77,7 @@ sub processrefs {
 	if ($index) {
 		my $fileid = $index->fileid($pathname, $revision);
 
-		if ($index->filereferenced($fileid)) {
+		if (!$index->filereferenced($fileid)) {
 			$index->emptycache();
 			print(STDERR "--- $pathname $fileid\n");
 

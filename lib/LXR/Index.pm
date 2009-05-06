@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Index.pm,v 1.13 2009/04/25 20:40:24 adrianissott Exp $
+# $Id: Index.pm,v 1.14 2009/05/06 22:37:50 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.13 2009/04/25 20:40:24 adrianissott Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.14 2009/05/06 22:37:50 mbox Exp $ ';
 
 use LXR::Common;
 use strict;
@@ -71,6 +71,11 @@ sub setfileindexed {
 	warn  __PACKAGE__."::setfileindexed not implemented. Parameters @_";
   return;
 }
+
+# If the file referred to by $fileid has already been referenced
+#  return true.  Otherwise return false.  NOTE: a file must *always*
+#  be indexed before being referenced - calling setfilereferenced
+#  implicitly sets fileindexed as well
 
 sub filereferenced {
   my ($self, $fileid) = @_;

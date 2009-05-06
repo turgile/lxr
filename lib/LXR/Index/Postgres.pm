@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Postgres.pm,v 1.26 2009/04/26 09:14:37 adrianissott Exp $
+# $Id: Postgres.pm,v 1.27 2009/05/06 22:37:50 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.26 2009/04/26 09:14:37 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.27 2009/05/06 22:37:50 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -28,7 +28,7 @@ use vars qw($dbh $transactions %files %symcache $commitlimit
   $files_select $filenum_nextval $files_insert
   $symbols_byname $symbols_byid $symnum_nextval
   $symbols_remove $symbols_insert $indexes_select $indexes_insert
-  $releases_select $releases_insert $status_insert
+  $releases_select $releases_insert $status_get $status_insert
   $status_update $usage_insert $usage_select $decl_select
   $declid_nextnum $decl_insert $delete_indexes $delete_usage
   $delete_status $delete_releases $delete_files $prefix);
@@ -81,13 +81,10 @@ sub new {
 	$releases_select =
 	  $dbh->prepare("select * from ${prefix}releases where fileid = ? and release = ?");
 	$releases_insert = $dbh->prepare("insert into ${prefix}releases values (?, ?)");
-
+	$status_get = $dbh->prepare("select status from ${prefix}status where fileid = ?");
 	$status_insert = $dbh->prepare
-
-	  #		("insert into status select ?, 0 except select fileid, 0 from status");
-	  (     "insert into ${prefix}status select ?, 0 where not exists "
-		  . "(select * from ${prefix}status where fileid = ?)");
-
+	  ("insert into ${prefix}status (fileid, status) values (?, ?)");
+	
 	$status_update =
 	  $dbh->prepare("update ${prefix}status set status = ? where fileid = ? and status <= ?");
 
@@ -198,30 +195,59 @@ sub setfilerelease {
 	_commitIfLimit();
 }
 
-# If this file has not been indexed earlier, mark it as being indexed
-# now and return true.  Return false if already indexed.
 sub fileindexed {
 	my ($self, $fileid) = @_;
+	my ($status);
 
-	$status_insert->execute($fileid + 0, $fileid + 0);
-	_commitIfLimit();
-	return $status_update->execute(1, $fileid + 0, 0) > 0;
+	$status_get->execute($fileid);
+	$status = $status_get->fetchrow_array();
+	$status_get->finish();
+
+	if (!defined($status)) {
+		$status = 0;
+	}
+	return $status;
 }
 
 sub setfileindexed {
 	my ($self, $fileid) = @_;
-	$status_update->execute(1, $fileid, 0);
+	my ($status);
+	
+	$status_get->execute($fileid);
+	$status = $status_get->fetchrow_array();
+	$status_get->finish();
+
+	if (!defined($status)) {
+		$status_insert->execute($fileid + 0, 1);
+	} else {
+		$status_update->execute(1, $fileid, 0);
+	}
 }
 
 sub filereferenced {
 	my ($self, $fileid) = @_;
+	my ($status);
 
-	return $status_update->execute(2, $fileid, 1) > 0;
+	$status_get->execute($fileid);
+	$status = $status_get->fetchrow_array();
+	$status_get->finish();
+
+	return defined($status) && $status == 2;
 }
 
 sub setfilereferenced {
 	my ($self, $fileid) = @_;
-	$status_update->execute(2, $fileid, 1);
+	my ($status);
+	
+	$status_get->execute($fileid);
+	$status = $status_get->fetchrow_array();
+	$status_get->finish();
+
+	if (!defined($status)) {
+		$status_insert->execute($fileid + 0, 2);
+	} else {
+		$status_update->execute(2, $fileid, 1);
+	}
 }
 
 sub symdeclarations {
