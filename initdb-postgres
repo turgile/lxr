@@ -1,13 +1,13 @@
 drop sequence lxr_filenum;
 drop sequence lxr_symnum;
 drop sequence lxr_declnum;
-drop table lxr_files;
-drop table lxr_symbols;
-drop table lxr_indexes;
-drop table lxr_releases;
-drop table lxr_usage;
-drop table lxr_status;
-drop table lxr_declarations;
+drop table lxr_files cascade;
+drop table lxr_symbols cascade;
+drop table lxr_indexes cascade;
+drop table lxr_releases cascade;
+drop table lxr_usage cascade;
+drop table lxr_status cascade;
+drop table lxr_declarations cascade;
 
 create sequence lxr_filenum cache 50;
 create sequence lxr_symnum cache 50;
