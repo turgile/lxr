@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Postgres.pm,v 1.28 2009/05/09 15:39:00 adrianissott Exp $
+# $Id: Postgres.pm,v 1.29 2009/05/09 15:56:56 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.28 2009/05/09 15:39:00 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.29 2009/05/09 15:56:56 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -367,15 +367,15 @@ sub emptycache {
 }
 
 sub purge {
-    my ($self, $version) = @_;
+    my ($self, $release) = @_;
 
     # we don't delete symbols, because they might be used by other versions
     # so we can end up with unused symbols, but that doesn't cause any problems
-    $delete_indexes->execute($version);
-    $delete_usage->execute($version);
-    $delete_status->execute($version);
-    $delete_releases->execute($version);
-    $delete_files->execute($version);
+    $self->{delete_indexes}->execute($release);
+    $self->{delete_usage}->execute($release);
+    $self->{delete_status}->execute($release);
+    $self->{delete_releases}->execute($release);
+    $self->{delete_files}->execute($release);
     _commitIfLimit();
 }
 

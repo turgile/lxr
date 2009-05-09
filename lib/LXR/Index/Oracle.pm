@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Oracle.pm,v 1.17 2009/05/09 15:39:00 adrianissott Exp $
+# $Id: Oracle.pm,v 1.18 2009/05/09 15:56:56 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,15 +18,18 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.17 2009/05/09 15:39:00 adrianissott Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.18 2009/05/09 15:56:56 adrianissott Exp $ ';
 
 use strict;
 use DBI;
 use LXR::Common;
 
-use vars qw(%files %symcache @ISA $prefix);
+our @ISA = ("LXR::Index");
 
-@ISA = ("LXR::Index");
+#
+# Global variables
+#
+my (%files, %symcache);
 
 sub new {
     my ($self, $dbname) = @_;
@@ -36,20 +39,20 @@ sub new {
     $self->{dbh} =
       DBI->connect($dbname, $config->{dbuser}, $config->{dbpass},
         { RaiseError => 1, AutoCommit => 1 })
-      || fatal "Can't open connection to database\n";
+      or fatal "Can't open connection to database: $DBI::errstr\n";
 
+    my $prefix;
     if (defined($config->{'dbprefix'})) {
         $prefix = $config->{'dbprefix'};
     } else {
         $prefix = "lxr_";
     }
 
-    %files    = ();
-    %symcache = ();
+    %files        = ();
+    %symcache     = ();
 
     $self->{files_select} =
-      $self->{dbh}
-      ->prepare("select fileid from ${prefix}files where filename = ? and revision = ?");
+      $self->{dbh}->prepare("select fileid from ${prefix}files where filename = ? and revision = ?");
     $self->{files_insert} =
       $self->{dbh}->prepare("insert into ${prefix}files values (?, ?, ${prefix}filenum.nextval)");
 
@@ -87,8 +90,7 @@ sub new {
       ("insert into ${prefix}status (fileid, status) values (?, ?)");
 
     $self->{status_update} =
-      $self->{dbh}
-      ->prepare("update ${prefix}status set status = ? where fileid = ? and status <= ?");
+      $self->{dbh}->prepare("update ${prefix}status set status = ? where fileid = ? and status <= ?");
 
     $self->{usage_insert} =
       $self->{dbh}->prepare("insert into ${prefix}usage (fileid, line, symid) values (?, ?, ?)");
@@ -120,7 +122,7 @@ sub new {
           . "where fileid in "
           . "  (select fileid from ${prefix}releases where release = ?)");
     $self->{delete_releases} =
-      $self->{dbh}->prepare("delete from ${prefix}releases " . "where release = ?");
+      $self->{dbh}->prepare("delete from ${prefix}releases where release = ?");
     $self->{delete_files} =
       $self->{dbh}->prepare("delete from ${prefix}files "
           . "where fileid in "
@@ -145,7 +147,7 @@ sub DESTROY {
     $self->{decl_select}     = undef;
     $self->{decl_insert}     = undef;
     $self->{delete_indexes}  = undef;
-    $self->{delete_usage}   = undef;
+    $self->{delete_usage}    = undef;
     $self->{delete_status}   = undef;
     $self->{delete_releases} = undef;
     $self->{delete_files}    = undef;
@@ -266,12 +268,12 @@ sub setsymdeclaration {
     my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
     $self->{indexes_insert}->execute($self->symid($symname),
-        $fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
+    $fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
 }
 
 sub symreferences {
     my ($self, $symname, $release) = @_;
-    my ($rows, @ret,     @row);
+    my ($rows, @ret, @row);
 
     $rows = $self->{usage_select}->execute("$symname", "$release");
 
@@ -288,11 +290,10 @@ sub setsymreference {
     my ($self, $symname, $fileid, $line) = @_;
 
     $self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
-
 }
 
 sub issymbol {
-    my ($self, $symname, $release) = @_; # TODO make use of $release
+    my ($self, $symname, $release) = @_; # TODO make full use of $release
     my ($symid);
 
     $symid = $symcache{$release}{$symname};
@@ -362,15 +363,15 @@ sub emptycache {
 }
 
 sub purge {
-    my ($self, $version) = @_;
+    my ($self, $release) = @_;
 
     # we don't delete symbols, because they might be used by other versions
     # so we can end up with unused symbols, but that doesn't cause any problems
-    $self->{delete_indexes}->execute($version);
-    $self->{delete_usage}->execute($version);
-    $self->{delete_status}->execute($version);
-    $self->{delete_releases}->execute($version);
-    $self->{delete_files}->execute($version);
+    $self->{delete_indexes}->execute($release);
+    $self->{delete_usage}->execute($release);
+    $self->{delete_status}->execute($release);
+    $self->{delete_releases}->execute($release);
+    $self->{delete_files}->execute($release);
 }
 
 1;
