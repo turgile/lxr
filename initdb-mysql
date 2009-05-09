@@ -38,7 +38,7 @@ create table lxr_releases
         primary key     (fileid,rel)
 );
 
-create table lxr_useage
+create table lxr_usage
         (fileid         int not null    references lxr_files,
         line            int not null,
         symid           int not null    references lxr_symbols
@@ -60,7 +60,7 @@ create table lxr_declarations
 
 create index lxr_indexindex on lxr_indexes  (symid) ;
 create unique index lxr_symbolindex on lxr_symbols  (symname) ;
-create index lxr_useageindex on lxr_useage  (symid) ;
+create index lxr_usageindex on lxr_usage  (symid) ;
 create index lxr_filelookup on lxr_files (filename);
 
 grant all on lxr.* to lxr@localhost;
