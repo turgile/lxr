@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Oracle.pm,v 1.15 2009/04/26 09:14:37 adrianissott Exp $
+# $Id: Oracle.pm,v 1.16 2009/05/09 14:07:13 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.15 2009/04/26 09:14:37 adrianissott Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.16 2009/05/09 14:07:13 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -201,15 +201,24 @@ sub fileindexed {
 	$self->{status_get}->finish();
 
 	if (!defined($status)) {
-		$self->{status_insert}->execute($fileid + 0, 0);
+		$status = 0;
 	}
-
-	return $status == 0;
+	return $status;
 }
 
 sub setfileindexed {
 	my ($self, $fileid) = @_;
-	$self->{status_update}->execute(1, $fileid, 0);
+	my ($status);
+	
+	$self->{status_get}->execute($fileid);
+	$status = $self->{status_get}->fetchrow_array();
+	$self->{status_get}->finish();
+
+	if (!defined($status)) {
+		$self->{status_insert}->execute($fileid + 0, 1);
+	} else {
+		$self->{status_update}->execute(1, $fileid, 0);
+	}
 }
 
 sub filereferenced {
@@ -220,12 +229,22 @@ sub filereferenced {
 	$status = $self->{status_get}->fetchrow_array();
 	$self->{status_get}->finish();
 
-	return $status < 2;
+	return defined($status) && $status == 2;
 }
 
 sub setfilereferenced {
 	my ($self, $fileid) = @_;
-	$self->{status_update}->execute(2, $fileid, 1);
+	my ($status);
+	
+	$self->{status_get}->execute($fileid);
+	$status = $self->{status_get}->fetchrow_array();
+	$self->{status_get}->finish();
+
+	if (!defined($status)) {
+		$self->{status_insert}->execute($fileid + 0, 2);
+	} else {
+		$self->{status_update}->execute(2, $fileid, 1);
+	}
 }
 
 sub symdeclarations {
