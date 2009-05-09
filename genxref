@@ -95,6 +95,8 @@ foreach my $version (@versions) {
 	genrefs('/', $version);
 }
 
+$index->DESTROY();
+
 sub genindex {
 	my ($pathname, $release) = @_;
 

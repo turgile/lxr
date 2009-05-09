@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.16 2009/04/25 20:40:24 adrianissott Exp $
+# $Id: DB.pm,v 1.17 2009/05/09 21:57:34 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.16 2009/04/25 20:40:24 adrianissott Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.17 2009/05/09 21:57:34 adrianissott Exp $ ';
 
 use strict;
 use DB_File;
@@ -119,6 +119,9 @@ sub issymbol {
 }
 
 sub emptycache {
+}
+
+sub DESTROY {
 }
 
 1;

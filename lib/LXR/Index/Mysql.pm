@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.29 2009/05/09 18:55:31 adrianissott Exp $
+# $Id: Mysql.pm,v 1.30 2009/05/09 21:57:34 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.29 2009/05/09 18:55:31 adrianissott Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.30 2009/05/09 21:57:34 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -157,7 +157,7 @@ sub DESTROY {
     $self->{delete_files}    = undef;
 
     if ($self->{dbh}) {
-        $self->{dbh}->disconnect();
+        $self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
         $self->{dbh} = undef;
     }
 }

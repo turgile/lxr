@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.60 2009/04/10 20:13:31 adrianissott Exp $
+# $Id: Common.pm,v 1.61 2009/05/09 21:57:34 adrianissott Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.60 2009/04/10 20:13:31 adrianissott Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.61 2009/05/09 21:57:34 adrianissott Exp $ ';
 
 use strict;
 
@@ -553,6 +553,8 @@ sub clean_path {
 sub httpclean {
 	$config = undef;
 	$files  = undef;
+
+	$index->DESTROY();
 	$index  = undef;
 }
 
