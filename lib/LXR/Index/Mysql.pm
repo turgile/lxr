@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.28 2009/05/09 15:39:00 adrianissott Exp $
+# $Id: Mysql.pm,v 1.29 2009/05/09 18:55:31 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.28 2009/05/09 15:39:00 adrianissott Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.29 2009/05/09 18:55:31 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -255,14 +255,11 @@ sub symdeclarations {
     my ($rows, @ret, @row);
 
     $rows = $self->{indexes_select}->execute("$symname", "$release");
-
     while (@row = $self->{indexes_select}->fetchrow_array) {
+        $row[3] &&= $self->symname($row[3]); # convert the symid
         push(@ret, [@row]);
     }
-
     $self->{indexes_select}->finish();
-
-    map { $$_[3] &&= $self->symname($$_[3]) } @ret;
 
     return @ret;
 }
@@ -271,7 +268,7 @@ sub setsymdeclaration {
     my ($self, $symname, $fileid, $line, $langid, $type, $relsym) = @_;
 
     $self->{indexes_insert}->execute($self->symid($symname),
-        $fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
+    $fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
 }
 
 sub symreferences {
@@ -293,7 +290,6 @@ sub setsymreference {
     my ($self, $symname, $fileid, $line) = @_;
 
     $self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
-
 }
 
 sub issymbol {

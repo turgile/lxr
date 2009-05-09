@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Postgres.pm,v 1.29 2009/05/09 15:56:56 adrianissott Exp $
+# $Id: Postgres.pm,v 1.30 2009/05/09 18:55:31 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.29 2009/05/09 15:56:56 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.30 2009/05/09 18:55:31 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -251,26 +251,23 @@ sub setfilereferenced {
 }
 
 sub symdeclarations {
-  my ($self, $symname, $release) = @_;
-  my ($rows, @ret);
+    my ($self, $symname, $release) = @_;
+    my ($rows, @ret, @row);
 
-  $rows = $indexes_select->execute("$symname", "$release");
+    $rows = $indexes_select->execute("$symname", "$release");
 
-  while ($rows-- > 0) {
-    my @row = $indexes_select->fetchrow_array;
+    while (@row = $indexes_select->fetchrow_array) {
+        $row[3] &&= $self->symname($row[3]); # convert the symid
 
-    $row[3] = $self->symname($row[3]); # convert the symid
+        # Also need to remove trailing whitespace erroneously added by the db 
+        # interface that isn't actually stored in the underlying db
+        $row[2] =~ s/^(.+?)\s+$/$1/;
 
-    # Also need to remove trailing whitespace erroneously added by the db 
-    # interface that isn't actually stored in the underlying db
-    $row[2] =~ s/^(.+?)\s+$/$1/;
+        push(@ret, [@row]);
+    }
+    $indexes_select->finish();
 
-    push(@ret, \@row);
-  }
-
-  $indexes_select->finish();
-
-  return @ret;
+    return @ret;
 }
 
 sub setsymdeclaration {

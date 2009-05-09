@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Oracle.pm,v 1.18 2009/05/09 15:56:56 adrianissott Exp $
+# $Id: Oracle.pm,v 1.19 2009/05/09 18:55:31 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.18 2009/05/09 15:56:56 adrianissott Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.19 2009/05/09 18:55:31 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -188,7 +188,6 @@ sub setfilerelease {
 
     unless ($rows > 0) {
         $self->{releases_insert}->execute($fileid, $release);
-        $self->{releases_insert}->finish();
     }
 }
 
@@ -249,17 +248,14 @@ sub setfilereferenced {
 
 sub symdeclarations {
     my ($self, $symname, $release) = @_;
-    my ($rows, @ret,     @row);
+    my ($rows, @ret, @row);
 
     $rows = $self->{indexes_select}->execute("$symname", "$release");
-
     while (@row = $self->{indexes_select}->fetchrow_array) {
+        $row[3] &&= $self->symname($row[3]); # convert the symid
         push(@ret, [@row]);
     }
-
     $self->{indexes_select}->finish();
-
-    map { $$_[3] &&= $self->symname($$_[3]) } @ret;
 
     return @ret;
 }
