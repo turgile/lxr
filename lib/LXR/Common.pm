@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.61 2009/05/09 21:57:34 adrianissott Exp $
+# $Id: Common.pm,v 1.62 2009/05/10 11:54:29 adrianissott Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,20 +20,20 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.61 2009/05/09 21:57:34 adrianissott Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.62 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 
 require Exporter;
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
-  $files $index $config $pathname $identifier $release
+  $files $index $config $pathname $identifier $releaseid
   $HTTP $wwwdebug $tmpcounter);
 
 @ISA = qw(Exporter);
 
 @EXPORT    = qw($files $index $config &fatal);
-@EXPORT_OK = qw($files $index $config $pathname $identifier $release
+@EXPORT_OK = qw($files $index $config $pathname $identifier $releaseid
   $HTTP
   &warning &fatal &abortall &fflush &urlargs &fileref
   &idref &incref &htmlquote &freetextmarkup &markupfile
@@ -156,7 +156,7 @@ sub incref {
 	foreach $dir (@paths) {
 		$dir =~ s/\/+$//;
 		$path = $config->mappath($dir . "/" . $file);
-		return &fileref($name, $css, $path) if $files->isfile($path, $release);
+		return &fileref($name, $css, $path) if $files->isfile($path, $releaseid);
 
 	}
 
@@ -265,7 +265,7 @@ sub markupfile {
 	$ltag[3] .= " ";
 
 	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
-	my $lang = new LXR::Lang($pathname, $release, @itag);
+	my $lang = new LXR::Lang($pathname, $releaseid, @itag);
 
 	# A source code file
 	if ($lang) {
@@ -376,7 +376,7 @@ sub fixpaths {
 	while ($node =~ s|/[^/]+/\.\./|/|g) { }
 	$node =~ s|/\.\./|/|g;
 
-	$node .= '/' if $files->isdir($node, $release);
+	$node .= '/' if $files->isdir($node, $releaseid);
 	$node =~ s|//+|/|g;
 
 	return $node;
@@ -395,7 +395,7 @@ sub printhttp {
 
 	# Todo: check lxr.conf.
 
-	my $time = $files->getfiletime($pathname, $release);
+	my $time = $files->getfiletime($pathname, $releaseid);
 	my $time2 = (stat($config->confpath))[9];
 	$time = $time2 if !defined $time or $time2 > $time;
 
@@ -504,8 +504,8 @@ sub httpinit {
 		delete $HTTP->{'param'}->{$_};
 	}
 
-	$release  = clean_release($config->variable('v'));
-	$config->variable('v', $release);  # put back into config obj
+	$releaseid  = clean_release($config->variable('v'));
+	$config->variable('v', $releaseid);  # put back into config obj
 
 	$HTTP->{'param'}->{'file'} = clean_path($HTTP->{'param'}->{'file'});
 	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
@@ -514,15 +514,15 @@ sub httpinit {
 }
 
 sub clean_release {
-	my $release = shift;
+	my $releaseid = shift;
 	my @rels= $config->varrange('v');
 	my %test;
 	@test{@rels} = undef;
 
-	if(!exists $test{$release}) {
-		$release = $config->vardefault('v');
+	if(!exists $test{$releaseid}) {
+		$releaseid = $config->vardefault('v');
 	}
-	return $release;
+	return $releaseid;
 }
 
 sub clean_identifier {

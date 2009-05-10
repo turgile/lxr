@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: diff,v 1.17 2009/04/08 20:49:19 adrianissott Exp $
+# $Id: diff,v 1.18 2009/05/10 11:54:29 adrianissott Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.17 2009/04/08 20:49:19 adrianissott Exp $ ';
+$CVSID = '$Id: diff,v 1.18 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -84,7 +84,7 @@ sub printdiff {
 
 	my $origval  = $config->variable($diffvar);
 	my $origname = $pathname;
-	my $origtemp = $files->tmpfile($origname, $release);
+	my $origtemp = $files->tmpfile($origname, $releaseid);
 
 	$config->variable($diffvar, $diffval);
 	my $diffname = $config->mappath($pathname);

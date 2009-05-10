@@ -90,8 +90,8 @@ commit;
 
 create table lxr_releases (	
 	fileid		number,
-	release		varchar2(250),
-	constraint pk_lxr_releases primary key (fileid,release),
+	releaseid		varchar2(250),
+	constraint pk_lxr_releases primary key (fileid,releaseid),
 	constraint fk_lxr_releases_fileid foreign key (fileid) references lxr_files(fileid)
 );
 

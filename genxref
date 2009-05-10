@@ -98,46 +98,46 @@ foreach my $version (@versions) {
 $index->DESTROY();
 
 sub genindex {
-	my ($pathname, $release) = @_;
+	my ($pathname, $releaseid) = @_;
 
-	print(STDERR "*** $pathname $release \n");
+	print(STDERR "*** $pathname $releaseid \n");
 
 	if ($pathname =~ m|/$|) {
-		map { genindex($pathname . $_, $release) } $files->getdir($pathname, $release);
+		map { genindex($pathname . $_, $releaseid) } $files->getdir($pathname, $releaseid);
 	} else {
-		&LXR::Tagger::processfile($pathname, $release, $config, $files, $index)
+		&LXR::Tagger::processfile($pathname, $releaseid, $config, $files, $index)
 		  unless exists $binaryfiles{$pathname};
 	}
 }
 
 sub genrefs {
-	my ($pathname, $release) = @_;
+	my ($pathname, $releaseid) = @_;
 
-	print(STDERR "### $pathname $release \n");
+	print(STDERR "### $pathname $releaseid \n");
 
 	if ($pathname =~ m|/$|) {
-		map { genrefs($pathname . $_, $release) } $files->getdir($pathname, $release);
+		map { genrefs($pathname . $_, $releaseid) } $files->getdir($pathname, $releaseid);
 	} else {
-		&LXR::Tagger::processrefs($pathname, $release, $config, $files, $index)
+		&LXR::Tagger::processrefs($pathname, $releaseid, $config, $files, $index)
 		  unless exists $binaryfiles{$pathname};
 	}
 }
 
 sub feedswish {
-	my ($pathname, $release, $swish, $filelist) = @_;
+	my ($pathname, $releaseid, $swish, $filelist) = @_;
 
-	print(STDERR "&&& $pathname $release \n");
+	print(STDERR "&&& $pathname $releaseid \n");
 
 	if ($pathname =~ m|/$|) {
-		map { feedswish($pathname . $_, $release, $swish, $filelist) }
-		  $files->getdir($pathname, $release);
+		map { feedswish($pathname . $_, $releaseid, $swish, $filelist) }
+		  $files->getdir($pathname, $releaseid);
 	} else {
 		print $filelist "$pathname\n";
-		my $fh = $files->getfilehandle($pathname, $release);
-		if ($files->getfilesize($pathname, $release) > 0
+		my $fh = $files->getfilehandle($pathname, $releaseid);
+		if ($files->getfilesize($pathname, $releaseid) > 0
 			&& $filetype->checktype_filehandle($fh) =~ m%(text|message)/%)
 		{
-			my $contents = $files->getfile($pathname, $release);
+			my $contents = $files->getfile($pathname, $releaseid);
 			$swish->print(
 				"Path-Name: $pathname\n",
 				"Content-Length: " . length($contents) . "\n",
@@ -152,20 +152,20 @@ sub feedswish {
 }
 
 sub gensearch {
-	my ($release) = @_;
+	my ($releaseid) = @_;
 	my $string;
 
 	if ($config->glimpsedir and $config->glimpseindex) {
 
-		$string = $config->glimpsedir . "/" . $release;
+		$string = $config->glimpsedir . "/" . $releaseid;
 		mkdir $string;
 		system("chmod 755 $string");   # TODO - fix Unix specific call?
 		my $glimpse = new IO::Handle;
 		my $pid = open($glimpse, "|-");
 		if ($pid == 0) {
 			exec($config->glimpseindex, "-n", "-o", "-H",
-				$config->glimpsedir . "/$release",
-				$config->sourceroot . "/" . $release
+				$config->glimpsedir . "/$releaseid",
+				$config->sourceroot . "/" . $releaseid
 			);
 			print(STDERR "Couldn't exec " . $config->glimpseindex . ": $!\n");
 			kill(9, $$);
@@ -173,15 +173,15 @@ sub gensearch {
 		$glimpse->close();
 
 		# Need to chmod the glimpse files so everybody can read them.
-		$string = $config->glimpsedir . "/" . $release . "/.glimpse\*";
+		$string = $config->glimpsedir . "/" . $releaseid . "/.glimpse\*";
 		system("chmod 644 $string");
 	}
 
 	if ($config->swishdir and $config->swishbin) {
 		my $swish = new IO::Handle;
 		die $config->swishdir . " does not exist" unless -d $config->swishdir;
-		my $filelist = new IO::File $config->swishdir . "/$release.filenames", "w"
-		  or die "can't open $release.filenames for writing";
+		my $filelist = new IO::File $config->swishdir . "/$releaseid.filenames", "w"
+		  or die "can't open $releaseid.filenames for writing";
 
 		# execute swish, as a pipe we can write to
 
@@ -190,11 +190,11 @@ sub gensearch {
 			  . $config->swishbin
 			  . " -S prog -i stdin -v 1 -c swish-e.conf -f "
 			  . $config->swishdir . "/"
-			  . $release
+			  . $releaseid
 			  . ".index")
 		  or die "Couldn't exec " . $config->swishbin . ": $!\n";
 
-		feedswish("/", $release, $swish, $filelist);
+		feedswish("/", $releaseid, $swish, $filelist);
 
 		$swish->close();
 		$filelist->close();

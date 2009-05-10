@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Postgres.pm,v 1.31 2009/05/09 21:57:34 adrianissott Exp $
+# $Id: Postgres.pm,v 1.32 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.31 2009/05/09 21:57:34 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.32 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use DBI;
@@ -77,14 +77,14 @@ sub new {
           . "where s.symid = i.symid and i.fileid = f.fileid "
           . "and f.fileid = r.fileid "
           . "and i.langid = d.langid and i.type = d.declid "
-          . "and s.symname = ? and r.release = ? "
+          . "and s.symname = ? and r.releaseid = ? "
           . "order by f.filename, i.line, d.declaration");
     $self->{indexes_insert} =
       $self->{dbh}->prepare("insert into ${prefix}indexes (symid, fileid, line, langid, type, relsym) "
           . "values (?, ?, ?, ?, ?, ?)");
 
     $self->{releases_select} =
-      $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and release = ?");
+      $self->{dbh}->prepare("select * from ${prefix}releases where fileid = ? and releaseid = ?");
     $self->{releases_insert} =
       $self->{dbh}->prepare("insert into ${prefix}releases values (?, ?)");
 
@@ -103,7 +103,7 @@ sub new {
           . "where s.symid = u.symid "
           . "and f.fileid = u.fileid "
           . "and u.fileid = r.fileid "
-          . "and s.symname = ? and  r.release = ? "
+          . "and s.symname = ? and  r.releaseid = ? "
           . "order by f.filename, u.line");
 
     $self->{declid_nextnum} = 
@@ -119,21 +119,21 @@ sub new {
     $self->{delete_indexes} =
       $self->{dbh}->prepare("delete from ${prefix}indexes "
           . "where fileid in "
-          . "  (select fileid from ${prefix}releases where release = ?)");
+          . "  (select fileid from ${prefix}releases where releaseid = ?)");
     $self->{delete_usage} =
       $self->{dbh}->prepare("delete from ${prefix}usage "
           . "where fileid in "
-          . "  (select fileid from ${prefix}releases where release = ?)");
+          . "  (select fileid from ${prefix}releases where releaseid = ?)");
     $self->{delete_status} =
       $self->{dbh}->prepare("delete from ${prefix}status "
           . "where fileid in "
-          . "  (select fileid from ${prefix}releases where release = ?)");
+          . "  (select fileid from ${prefix}releases where releaseid = ?)");
     $self->{delete_releases} =
-      $self->{dbh}->prepare("delete from ${prefix}releases where release = ?");
+      $self->{dbh}->prepare("delete from ${prefix}releases where releaseid = ?");
     $self->{delete_files} =
       $self->{dbh}->prepare("delete from ${prefix}files "
           . "where fileid in "
-          . "  (select fileid from ${prefix}releases where release = ?)");
+          . "  (select fileid from ${prefix}releases where releaseid = ?)");
 
     return $self;
 }
@@ -199,15 +199,15 @@ sub fileid {
 }
 
 sub setfilerelease {
-    my ($self, $fileid, $release) = @_;
+    my ($self, $fileid, $releaseid) = @_;
 
-    $self->{releases_select}->execute($fileid + 0, $release);
+    $self->{releases_select}->execute($fileid + 0, $releaseid);
     my $firstrow = $self->{releases_select}->fetchrow_array();
 
 #    $self->{releases_select}->finish();
 
     unless ($firstrow) {
-        $self->{releases_insert}->execute($fileid + 0, $release);
+        $self->{releases_insert}->execute($fileid + 0, $releaseid);
         $self->_commitIfLimit();
     }
 }
@@ -270,10 +270,10 @@ sub setfilereferenced {
 }
 
 sub symdeclarations {
-    my ($self, $symname, $release) = @_;
+    my ($self, $symname, $releaseid) = @_;
     my ($rows, @ret, @row);
 
-    $rows = $self->{indexes_select }->execute("$symname", "$release");
+    $rows = $self->{indexes_select }->execute("$symname", "$releaseid");
 
     while (@row = $self->{indexes_select }->fetchrow_array) {
         $row[3] &&= $self->symname($row[3]); # convert the symid
@@ -298,10 +298,10 @@ sub setsymdeclaration {
 }
 
 sub symreferences {
-    my ($self, $symname, $release) = @_;
+    my ($self, $symname, $releaseid) = @_;
     my ($rows, @ret, @row);
 
-    $rows = $self->{usage_select}->execute("$symname", "$release");
+    $rows = $self->{usage_select}->execute("$symname", "$releaseid");
 
     while (@row = $self->{usage_select}->fetchrow_array) {
         push(@ret, [@row]);
@@ -320,7 +320,7 @@ sub setsymreference {
 }
 
 sub issymbol {
-    my ($self, $symname, $release) = @_; # TODO make full use of $release
+    my ($self, $symname, $releaseid) = @_; # TODO make full use of $releaseid
 
     unless (exists($symcache{$symname})) {
         $self->{symbols_byname}->execute($symname);
@@ -383,15 +383,15 @@ sub emptycache {
 }
 
 sub purge {
-    my ($self, $release) = @_;
+    my ($self, $releaseid) = @_;
 
     # we don't delete symbols, because they might be used by other versions
     # so we can end up with unused symbols, but that doesn't cause any problems
-    $self->{delete_indexes}->execute($release);
-    $self->{delete_usage}->execute($release);
-    $self->{delete_status}->execute($release);
-    $self->{delete_releases}->execute($release);
-    $self->{delete_files}->execute($release);
+    $self->{delete_indexes}->execute($releaseid);
+    $self->{delete_usage}->execute($releaseid);
+    $self->{delete_status}->execute($releaseid);
+    $self->{delete_releases}->execute($releaseid);
+    $self->{delete_files}->execute($releaseid);
 
     $self->{dbh}->commit() or die "Commit failed: $DBI::errstr";
     $self->{dbh}->begin_work() or die "begin_work failed: $DBI::errstr";

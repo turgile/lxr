@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: source,v 1.46 2009/04/08 20:49:19 adrianissott Exp $
+# $Id: source,v 1.47 2009/05/10 11:54:29 adrianissott Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.46 2009/04/08 20:49:19 adrianissott Exp $ ';
+$CVSID = '$Id: source,v 1.47 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -89,7 +89,7 @@ sub filename {
 sub filesize {
 	my ($templ, $node, $dir) = @_;
 
-	my $s = $files->getfilesize($dir . $node, $release);
+	my $s = $files->getfilesize($dir . $node, $releaseid);
 	my $str;
 
 	if ($s < 1 << 10) {
@@ -117,7 +117,7 @@ sub modtime {
 	my ($templ, $node, $dir) = @_;
 
 	my $current_time = time;
-	my $file_time    = $files->getfiletime($dir . $node, $release);
+	my $file_time    = $files->getfiletime($dir . $node, $releaseid);
 
 	return '-' unless defined($file_time);
 
@@ -148,7 +148,7 @@ sub direxpand {
 	my @nodes;
 	my $node;
 
-	@nodes = $files->getdir($dir, $release);
+	@nodes = $files->getdir($dir, $releaseid);
 	unless (@nodes) {
 		print(  "<p align=\"center\">\n<i>The directory " . $dir
 			  . " does not exist.</i>\n");
@@ -176,7 +176,7 @@ sub direxpand {
 					'bgcolor'     => sub { bgcolor(@_,  $line++) },
 					'css'         => sub { rowclass(@_, $line++) },
 					'description' =>
-					  sub { descexpand(@_, $node, $dir, $release) }
+					  sub { descexpand(@_, $node, $dir, $releaseid) }
 				)
 			);
 		} else {
@@ -193,12 +193,12 @@ sub direxpand {
 					'description' => sub {
 						(
 							$files->isa('LXR::Files::CVS')
-							  && $files->toreal($dir . $node, $release) =~
+							  && $files->toreal($dir . $node, $releaseid) =~
 							  m|/Attic/|
 							? "<i>In Attic</i>  "
 							: ""
 						  )
-						  . descexpand(@_, $node, $dir, $release);
+						  . descexpand(@_, $node, $dir, $releaseid);
 					}
 				)
 			);
@@ -224,7 +224,7 @@ sub printdir {
 	}
 
 	# print the description of the current directory
-	print dirdesc($dir, $release);
+	print dirdesc($dir, $releaseid);
 
 	# print the listing itself
 	print(expandtemplate($templ, ('files' => sub { direxpand(@_, $dir) })));
@@ -236,7 +236,7 @@ sub printfile {
 	if ($pathname =~ m|/$|) {
 		printdir($pathname);
 	} else {
-		my $fileh = $files->getfilehandle($pathname, $release);
+		my $fileh = $files->getfilehandle($pathname, $releaseid);
 
 		if ($fileh) {
 			if ($raw) {
@@ -251,7 +251,7 @@ sub printfile {
 			else {
 				if ($config->cvswebprefix) {
 					my $revtarget = "";
-					$revtarget = "#rev$release" if lc($release) ne "head";
+					$revtarget = "#rev$releaseid" if lc($releaseid) ne "head";
 					print "<a href='"
 					  . $config->cvswebprefix
 					  . $pathname
@@ -259,7 +259,7 @@ sub printfile {
 					  . $revtarget
 					  . "'>View CVS Log</a>";
 				}
-				my @ann = $files->getannotations($pathname, $release);
+				my @ann = $files->getannotations($pathname, $releaseid);
 
 				if (@ann) {
 					my ($a, $b);

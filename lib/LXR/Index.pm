@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Index.pm,v 1.15 2009/05/09 15:39:00 adrianissott Exp $
+# $Id: Index.pm,v 1.16 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.15 2009/05/09 15:39:00 adrianissott Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.16 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use LXR::Common;
 use strict;
@@ -44,15 +44,15 @@ sub new {
 #
 
 sub fileid {
-    my ($self, $filename, $revision) = @_;     # CAUTION: $revision is not $release!  
+    my ($self, $filename, $revision) = @_;     # CAUTION: $revision is not $releaseid!  
     my $fileid;
     warn  __PACKAGE__."::fileid not implemented. Parameters @_";
     return $fileid;
 }
 
-# Indicate that the file referred to by $fileid is part of $release
+# Indicate that the file referred to by $fileid is part of $releaseid
 sub setfilerelease {
-    my ($self, $fileid, $release) = @_;
+    my ($self, $fileid, $releaseid) = @_;
     warn  __PACKAGE__."::setfilerelease not implemented. Parameters @_";
     return;
 }
@@ -91,7 +91,7 @@ sub setfilereferenced {
 }
 
 sub symdeclarations {
-    my ($self, $symname, $release) = @_;
+    my ($self, $symname, $releaseid) = @_;
     my @indexes;
     warn  __PACKAGE__."::symdeclarations not implemented. Parameters @_";
     return @indexes;
@@ -104,7 +104,7 @@ sub setsymdeclaration {
 }
 
 sub symreferences {
-    my ($self, $symname, $release) = @_;
+    my ($self, $symname, $releaseid) = @_;
     my @references;
     warn  __PACKAGE__."::symreferences not implemented. Parameters @_";
     return @references;
@@ -117,7 +117,7 @@ sub setsymreference {
 }
 
 sub issymbol {
-    my ($self, $symname, $release) = @_;
+    my ($self, $symname, $releaseid) = @_;
     my $symbolfoundboolean;
     warn  __PACKAGE__."::issymbol not implemented. Parameters @_";
     return $symbolfoundboolean;
@@ -154,7 +154,7 @@ sub emptycache {
 }
 
 sub purge {
-    my ($self, $release) = @_;
+    my ($self, $releaseid) = @_;
     warn  __PACKAGE__."::purge not implemented. Parameters @_";
     return;
 }

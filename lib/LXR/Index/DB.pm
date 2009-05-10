@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: DB.pm,v 1.17 2009/05/09 21:57:34 adrianissott Exp $
+# $Id: DB.pm,v 1.18 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::DB;
 
-$CVSID = '$Id: DB.pm,v 1.17 2009/05/09 21:57:34 adrianissott Exp $ ';
+$CVSID = '$Id: DB.pm,v 1.18 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use DB_File;
@@ -54,14 +54,14 @@ sub setsymdeclaration {
 
 # Returns array of (fileid, line, type)
 sub symdeclarations {
-	my ($self, $symname, $release) = @_;
+	my ($self, $symname, $releaseid) = @_;
 
 	my (@d, $f);
 	foreach $f (split(/\0/, $$self{'indexes'}{ $self->symid($symname) })) {
 		my ($fi, $l, $t, $s) = split(/\t/, $f);
 
 		my %r = map { ($_ => 1) } split(/;/, $self->{'releases'}{$fi});
-		next unless $r{$release};
+		next unless $r{$releaseid};
 
 		push(@d, [ $self->filename($fi), $l, $t, $s ]);
 	}
@@ -69,7 +69,7 @@ sub symdeclarations {
 }
 
 sub symreferences {
-  my ($self, $symname, $release) = @_;
+  my ($self, $symname, $releaseid) = @_;
 	return ();
 }
 
@@ -98,11 +98,11 @@ sub fileindexed {
 	return 1;
 }
 
-# Indicate that this filerevision is part of this release
+# Indicate that this filerevision is part of this releaseid
 sub setfilerelease {
-	my ($self, $fileid, $release) = @_;
+	my ($self, $fileid, $releaseid) = @_;
 
-	$self->{'releases'}{$fileid} .= $release . ";";
+	$self->{'releases'}{$fileid} .= $releaseid . ";";
 }
 
 sub symid {
@@ -113,7 +113,7 @@ sub symid {
 }
 
 sub issymbol {
-	my ($self, $symname, $release) = @_;
+	my ($self, $symname, $releaseid) = @_;
 
 	return $$self{'indexes'}{ $self->symid($symname) };
 }

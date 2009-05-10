@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.24 2009/05/06 22:37:50 mbox Exp $
+# $Id: Tagger.pm,v 1.25 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,35 +18,35 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.24 2009/05/06 22:37:50 mbox Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.25 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use FileHandle;
 use LXR::Lang;
 
 sub processfile {
-	my ($pathname, $release, $config, $files, $index) = @_;
+	my ($pathname, $releaseid, $config, $files, $index) = @_;
 
-	my $lang = new LXR::Lang($pathname, $release);
+	my $lang = new LXR::Lang($pathname, $releaseid);
 
 	return unless $lang;
 
-	my $revision = $files->filerev($pathname, $release);
+	my $revision = $files->filerev($pathname, $releaseid);
 
 	return unless $revision;
 
-	print(STDERR "--- $pathname $release $revision\n");
+	print(STDERR "--- $pathname $releaseid $revision\n");
 
 	if ($index) {
 		my $fileid = $index->fileid($pathname, $revision);
 
-		$index->setfilerelease($fileid, $release);
+		$index->setfilerelease($fileid, $releaseid);
 
 		if (!$index->fileindexed($fileid)) {
 			$index->emptycache();
 			print(STDERR "--- $pathname $fileid\n");
 
-			my $path = $files->tmpfile($pathname, $release);
+			my $path = $files->tmpfile($pathname, $releaseid);
 
 			$lang->indexfile($pathname, $path, $fileid, $index, $config);
 			$index->setfileindexed($fileid);
@@ -62,17 +62,17 @@ sub processfile {
 }
 
 sub processrefs {
-	my ($pathname, $release, $config, $files, $index) = @_;
+	my ($pathname, $releaseid, $config, $files, $index) = @_;
 
-	my $lang = new LXR::Lang($pathname, $release);
+	my $lang = new LXR::Lang($pathname, $releaseid);
 
 	return unless $lang;
 
-	my $revision = $files->filerev($pathname, $release);
+	my $revision = $files->filerev($pathname, $releaseid);
 
 	return unless $revision;
 
-	print(STDERR "--- $pathname $release $revision\n");
+	print(STDERR "--- $pathname $releaseid $revision\n");
 
 	if ($index) {
 		my $fileid = $index->fileid($pathname, $revision);
@@ -81,7 +81,7 @@ sub processrefs {
 			$index->emptycache();
 			print(STDERR "--- $pathname $fileid\n");
 
-			my $path = $files->tmpfile($pathname, $release);
+			my $path = $files->tmpfile($pathname, $releaseid);
 
 			$lang->referencefile($pathname, $path, $fileid, $index, $config);
 			$index->setfilereferenced($fileid);

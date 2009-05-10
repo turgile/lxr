@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: CVS.pm,v 1.35 2009/03/24 20:04:23 mbox Exp $
+# $Id: CVS.pm,v 1.36 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.35 2009/03/24 20:04:23 mbox Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.36 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use FileHandle;
@@ -52,26 +52,26 @@ sub new {
 }
 
 sub filerev {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	if ($release =~ /rev_([\d\.]+)/) {
+	if ($releaseid =~ /rev_([\d\.]+)/) {
 		return $1;
-	} elsif ($release =~ /^([\d\.]+)$/) {
+	} elsif ($releaseid =~ /^([\d\.]+)$/) {
 		return $1;
 	} else {
 		$self->parsecvs($filename);
-		return $cvs{'header'}{'symbols'}{$release};
+		return $cvs{'header'}{'symbols'}{$releaseid};
 	}
 }
 
 sub getfiletime {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	return undef if $self->isdir($filename, $release);
+	return undef if $self->isdir($filename, $releaseid);
 
 	$self->parsecvs($filename);
 
-	my $rev = $self->filerev($filename, $release);
+	my $rev = $self->filerev($filename, $releaseid);
 
 	return undef unless defined($rev);
 
@@ -84,31 +84,31 @@ sub getfiletime {
 }
 
 sub getfilesize {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	return length($self->getfile($filename, $release));
+	return length($self->getfile($filename, $releaseid));
 }
 
 sub getfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	my $fileh = $self->getfilehandle($filename, $release);
+	my $fileh = $self->getfilehandle($filename, $releaseid);
 	return undef unless $fileh;
 	return join('', $fileh->getlines);
 }
 
 sub getannotations {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
 	$self->parsecvs($filename);
 
-	my $rev = $self->filerev($filename, $release);
+	my $rev = $self->filerev($filename, $releaseid);
 	return () unless defined($rev);
 
 	my $hrev = $cvs{'header'}{'head'};
 	my $lrev;
 	my @anno;
-	my $headfh = $self->getfilehandle($filename, $release);
+	my $headfh = $self->getfilehandle($filename, $releaseid);
 	my @head   = $headfh->getlines;
 
 	while (1) {
@@ -156,19 +156,19 @@ sub getauthor {
 }
 
 sub getfilehandle {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($fileh);
 
 	$self->parsecvs($filename);
 
-	my $rev = $self->filerev($filename, $release);
+	my $rev = $self->filerev($filename, $releaseid);
 	return undef unless defined($rev);
 
-	return undef unless defined($self->toreal($filename, $release));
+	return undef unless defined($self->toreal($filename, $releaseid));
 
 	$rev =~ /([\d\.]*)/;
 	$rev = $1;    # untaint
-	my $clean_filename = $self->cleanstring($self->toreal($filename, $release));
+	my $clean_filename = $self->cleanstring($self->toreal($filename, $releaseid));
 	$clean_filename =~ /(.*)/;
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
@@ -211,10 +211,10 @@ sub getdiff {
 }
 
 sub tmpfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($tmp,  $buf);
 
-	$buf = $self->getfile($filename, $release);
+	$buf = $self->getfile($filename, $releaseid);
 	return undef unless defined($buf);
 
 	$tmp = $config->tmpdir . '/lxrtmp.' . time . '.' . $$ . '.' . &LXR::Common::tmpcounter;
@@ -226,10 +226,10 @@ sub tmpfile {
 }
 
 sub dirempty {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	my ($node, @dirs, @files);
 	my $DIRH = new IO::Handle;
-	my $real = $self->toreal($pathname, $release);
+	my $real = $self->toreal($pathname, $releaseid);
 
 	opendir($DIRH, $real) || return 1;
 	while (defined($node = readdir($DIRH))) {
@@ -245,20 +245,20 @@ sub dirempty {
 	closedir($DIRH);
 
 	foreach $node (@files) {
-		return 0 if $self->filerev($pathname . $node, $release);
+		return 0 if $self->filerev($pathname . $node, $releaseid);
 	}
 
 	foreach $node (@dirs) {
-		return 0 unless $self->dirempty($pathname . $node, $release);
+		return 0 unless $self->dirempty($pathname . $node, $releaseid);
 	}
 	return 1;
 }
 
 sub getdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	my ($node, @dirs, @files);
 	my $DIRH = new IO::Handle;
-	my $real = $self->toreal($pathname, $release);
+	my $real = $self->toreal($pathname, $releaseid);
 
 	opendir($DIRH, $real) || return ();
   FILE: while (defined($node = readdir($DIRH))) {
@@ -269,11 +269,11 @@ sub getdir {
 				next FILE if $node eq $ignoredir;
 			}
 			if ($node eq 'Attic') {
-				push(@files, $self->getdir($pathname . $node . '/', $release));
+				push(@files, $self->getdir($pathname . $node . '/', $releaseid));
 			} else {
 				push(@dirs, $node . '/')
-				  unless defined($release)
-				  && $self->dirempty($pathname . $node . '/', $release);
+				  unless defined($releaseid)
+				  && $self->dirempty($pathname . $node . '/', $releaseid);
 			}
 		} elsif ($node =~ /(.*),v$/) {
 			if (!$$LXR::Common::HTTP{'param'}{'showattic'}) {
@@ -281,14 +281,14 @@ sub getdir {
   # you can't just check for 'Attic' because for certain versions the file is alive even if in Attic
 				$self->parsecvs($pathname . substr($node, 0, length($node) - 2))
 				  ;    # substr is to remove the ',v'
-				my $rev = $cvs{'header'}{'symbols'}{$release};
+				my $rev = $cvs{'header'}{'symbols'}{$releaseid};
 				if ($cvs{'branch'}{$rev}{'state'} eq "dead") {
 					next;
 				}
 			}
 			push(@files, $1)
-			  if !defined($release)
-			  || $self->getfiletime($pathname . $1, $release);
+			  if !defined($releaseid)
+			  || $self->getfiletime($pathname . $1, $releaseid);
 		}
 	}
 	closedir($DIRH);
@@ -297,7 +297,7 @@ sub getdir {
 }
 
 sub toreal {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	my $real = $self->{'rootpath'} . $pathname;
 
 # nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
@@ -311,7 +311,7 @@ sub toreal {
 
   # you can't just check for 'Attic' because for certain versions the file is alive even if in Attic
 		$self->parsecvs($pathname);
-		my $rev = $cvs{'header'}{'symbols'}{$release};
+		my $rev = $cvs{'header'}{'symbols'}{$releaseid};
 		if ($cvs{'branch'}{$rev}{'state'} eq "dead") {
 			return undef;
 		}
@@ -345,21 +345,21 @@ sub cleanstring {
 }
 
 sub isdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	return -d $self->toreal($pathname, $release);
+	return -d $self->toreal($pathname, $releaseid);
 }
 
 sub isfile {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	return -f $self->toreal($pathname, $release);
+	return -f $self->toreal($pathname, $releaseid);
 }
 
 sub getindex {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	my $index = $self->getfile($pathname, $release);
+	my $index = $self->getfile($pathname, $releaseid);
 
 	return $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
 }

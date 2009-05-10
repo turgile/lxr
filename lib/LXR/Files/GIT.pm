@@ -21,7 +21,7 @@
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.3 2006/12/21 09:33:36 jbglaw Exp $';
+$CVSID = '$Id: GIT.pm,v 1.4 2009/05/10 11:54:29 adrianissott Exp $';
 
 use strict;
 use FileHandle;
@@ -47,39 +47,39 @@ sub new {
 }
 
 sub isdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
 	$pathname =~ s/^\///;
 	if ($pathname eq "") {
 		return 1 == 1;
 	} else {
 		my $repo = Git->repository (Directory => "$self->{'rootpath'}");
-		my $line = $repo->command_oneline ("ls-tree", "$release", "$pathname");
+		my $line = $repo->command_oneline ("ls-tree", "$releaseid", "$pathname");
 		return $line =~ m/^\d+ tree .*$/;
 	}
 }
 
 sub isfile {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
 	$pathname =~ s/^\///;
 	if ($pathname eq "") {
 		return 1 == 0;
 	} else {
 		my $repo = Git->repository (Directory => "$self->{'rootpath'}");
-		my $line = $repo->command_oneline ("ls-tree", "$release", "$pathname");
+		my $line = $repo->command_oneline ("ls-tree", "$releaseid", "$pathname");
 		return $line =~ m/^\d+ blob .*$/;
 	}
 }
 
 sub getdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	my ($dir, $node, @dirs, @files);
 	my $repo = Git->repository (Directory => "$self->{'rootpath'}");
 
 	$pathname =~ s/^\///;
 
-	my ($fh, $c) = $repo->command_output_pipe ("ls-tree", "$release", "$pathname");
+	my ($fh, $c) = $repo->command_output_pipe ("ls-tree", "$releaseid", "$pathname");
 	while (<$fh>) {
 		if (m/(\d+) (\w+) ([[:xdigit:]]+)\t(.*)/) {
 			my ($entrymode, $entrytype, $objectid, $entryname) = ($1, $2, $3, $4);
@@ -111,12 +111,12 @@ sub getdir {
 }
 
 sub getfilesize {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my $repo = Git->repository (Directory => "$self->{'rootpath'}");
 
 	$filename =~ s/^\///;
 
-	my $sha1hashline = $repo->command_oneline ("ls-tree", "$release", "$filename");
+	my $sha1hashline = $repo->command_oneline ("ls-tree", "$releaseid", "$filename");
 
 	if ($sha1hashline =~ m/\d+ blob ([[:xdigit:]]+)\t.*/) {
 		return $repo->command_oneline ("cat-file", "-s", "$1");
@@ -126,12 +126,12 @@ sub getfilesize {
 }
 
 sub tmpfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($tmp, $fileh);
 
 	$tmp = $config->tmpdir . '/lxrtmp.' . time . '.' . $$ . '.' . &LXR::Common::tmpcounter;
 	open (TMP, "> $tmp") || return undef;
-	$fileh = $self->getfilehandle ($filename, $release);
+	$fileh = $self->getfilehandle ($filename, $releaseid);
 	print (TMP <$fileh>);
 	close ($fileh);
 	close (TMP);
@@ -140,12 +140,12 @@ sub tmpfile {
 }
 
 sub filerev {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my $repo = Git->repository (Directory => "$self->{'rootpath'}");
 
 	$filename =~ s/^\///;
 
-	my $sha1hashline = $repo->command_oneline ("ls-tree", "$release", "$filename");
+	my $sha1hashline = $repo->command_oneline ("ls-tree", "$releaseid", "$filename");
 
 	if ($sha1hashline =~ m/\d+ blob ([[:xdigit:]]+)\t.*/) {
 		return $1;
@@ -155,7 +155,7 @@ sub filerev {
 }
 
 sub getfiletime {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
 	$filename =~ s/^\///;
 
@@ -167,7 +167,7 @@ sub getfiletime {
 	}
 
 	my $repo = Git->repository (Directory => "$self->{'rootpath'}");
-	my $lastcommitline = $repo->command_oneline ("log", "--max-count=1", "--pretty=oneline", "$release", "--", "$filename");
+	my $lastcommitline = $repo->command_oneline ("log", "--max-count=1", "--pretty=oneline", "$releaseid", "--", "$filename");
 	if ($lastcommitline =~ m/([[:xdigit:]]+) /) {
 		my $commithash = $1;
 
@@ -184,12 +184,12 @@ sub getfiletime {
 }
 
 sub getfilehandle {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my $repo = Git->repository (Directory => "$self->{'rootpath'}");
 
 	$filename =~ s/^\///;
 
-	my $sha1hashline = $repo->command_oneline ("ls-tree", "$release",  "$filename");
+	my $sha1hashline = $repo->command_oneline ("ls-tree", "$releaseid",  "$filename");
 
 	if ($sha1hashline =~ m/^\d+ blob ([[:xdigit:]]+)\t.*/) {
 		my ($fh, $c) = $repo->command_output_pipe ("cat-file", "blob", "$1");
@@ -200,14 +200,14 @@ sub getfilehandle {
 }
 
 sub getannotations {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
 	if ($self->{'do_annotations'}) {
 		my $repo = Git->repository (Directory => "$self->{'rootpath'}");
 		my @revlist = ();
 		$filename =~ s/^\///;
 
-		my (@lines, $c) = $repo->command ("blame", "-l", "$release", "--", "$filename");
+		my (@lines, $c) = $repo->command ("blame", "-l", "$releaseid", "--", "$filename");
 
 		foreach my $line (@lines) {
 			if ($line =~ m/^([[:xdigit:]]+) .*/) {
@@ -224,10 +224,10 @@ sub getannotations {
 }
 
 sub getauthor {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
 	#
-	# Note that $release is a real commit this time
+	# Note that $releaseid is a real commit this time
 	# (returned by getannotations() above). This is
 	# _not_ a tag name!
 	#
@@ -238,7 +238,7 @@ sub getauthor {
 
 		$pathname =~ s/^\///;
 
-		my (@lines, $c) = $repo->command ("cat-file", "commit", "$release");
+		my (@lines, $c) = $repo->command ("cat-file", "commit", "$releaseid");
 		foreach my $line (@lines) {
 			if ($line =~ m/^author (.*) </) {
 				return $1

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Files.pm,v 1.12 2009/04/21 20:03:04 adrianissott Exp $
+# $Id: Files.pm,v 1.13 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.12 2009/04/21 20:03:04 adrianissott Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.13 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 
@@ -53,21 +53,21 @@ sub new {
 #
 
 sub getdir {
-  my ($self, $pathname, $release) = @_;
+  my ($self, $pathname, $releaseid) = @_;
   my @dircontents;
 	warn  __PACKAGE__."::getdir not implemented. Parameters @_";
 	return @dircontents;
 }
 
 sub getfile {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	warn  __PACKAGE__."::getfile not implemented. Parameters @_";
 	my $filecontents;
 	return $filecontents;
 }
 
 sub getannotations {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	warn  __PACKAGE__."::getannotations not implemented. Parameters @_";
 	my @annotations;
 	return @annotations;
@@ -81,49 +81,49 @@ sub getauthor {
 }
 
 sub filerev {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	warn  __PACKAGE__."::filerev not implemented. Parameters @_";
 	my $filerev;
 	return $filerev;
 }
 
 sub getfilehandle {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	warn  __PACKAGE__."::getfilehandle not implemented. Parameters @_";
 	my $fh;
 	return $fh;
 }
 
 sub getfilesize {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	warn  __PACKAGE__."::getfilesize not implemented. Parameters @_";
 	my $filesize;
 	return $filesize;
 }
 
 sub getfiletime {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	warn  __PACKAGE__."::getfiletime not implemented. Parameters @_";
 	my $modificationTimeInSecondsSinceEpoch;
 	return $modificationTimeInSecondsSinceEpoch;
 }
 
 sub getindex {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	warn  __PACKAGE__."::getindex not implemented. Parameters @_";
 	my %index;
 	return %index;
 }
 
 sub isdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	warn  __PACKAGE__."::isdir not implemented. Parameters: @_";
 	my $boolean;
 	return $boolean;
 }
 
 sub isfile {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	warn  __PACKAGE__."::isfile not implemented. Parameters: @_";
 	my $boolean;
 	return $boolean;
@@ -131,7 +131,7 @@ sub isfile {
 
 # FIXME: This function really sucks and should be removed :)
 sub tmpfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	warn  __PACKAGE__."::tmpfile not implemented. Parameters: @_";
 	my $pathToATmpCopyOfTheFile;
 	return $pathToATmpCopyOfTheFile;
@@ -140,7 +140,7 @@ sub tmpfile {
 # FIXME: this function should probably not exist, since it doesn't make sense for 
 # all file access methods
 sub toreal {
-  my ($self, $pathname, $release) = @_;
+  my ($self, $pathname, $releaseid) = @_;
 	warn "toreal called - obsolete";
 	my $path;
 	return $path;

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.20 2004/07/21 20:44:30 brondsem Exp $
+# $Id: Local.pm,v 1.21 2009/05/10 11:54:29 adrianissott Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.20 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.21 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -74,7 +74,7 @@ use LXR::Common qw(:html);
 sub fdescexpand {
 	my $filename  = shift;
 	my $dir       = shift;
-	my $release   = shift;
+	my $releaseid   = shift;
 	my $linecount = 0;
 	my $copy      = "";
 	local $desc = "";
@@ -91,7 +91,7 @@ sub fdescexpand {
 		return ("\&nbsp\;");
 	}
 
-	if ($fh = $files->getfilehandle($dir . $filename, $release)) {
+	if ($fh = $files->getfilehandle($dir . $filename, $releaseid)) {
 		while (<$fh>) {
 			$desc = $desc . $_;
 			if ($linecount++ > 60) {
@@ -280,13 +280,13 @@ sub fdescexpand {
 # In Mozilla, if the directory has a README file look in it for lines
 # like the ones used in source code: "directoryname --- A short description"
 sub descexpand {
-	my ($templ, $node, $dir, $release) = @_;
-	if ($files->isdir($dir . $node, $release)) {
+	my ($templ, $node, $dir, $releaseid) = @_;
+	if ($files->isdir($dir . $node, $releaseid)) {
 		return LXR::Common::expandtemplate($templ,
-			('desctext' => sub { return dirdesc($dir . $node, $release); }));
+			('desctext' => sub { return dirdesc($dir . $node, $releaseid); }));
 	} else {
 		return LXR::Common::expandtemplate($templ,
-			('desctext' => sub { return fdescexpand($node, $dir, $release); }));
+			('desctext' => sub { return fdescexpand($node, $dir, $releaseid); }));
 	}
 }
 
@@ -299,21 +299,21 @@ sub descexpand {
 # possible make this work for randomly formatted files rather than
 # inventing strict rules which create gobbeldygook when they're broken.
 sub dirdesc {
-	my ($path, $release) = @_;
-	if ($files->isfile($path . "README.txt", $release)) {
-		descreadme($path . "README.txt", $release);
-	} elsif ($files->isfile($path . "README", $release)) {
-		descreadme($path . "README", $release);
-	} elsif ($files->isfile($path . "README.html", $release)) {
-		descreadmehtml($path . "README.html", $release);
+	my ($path, $releaseid) = @_;
+	if ($files->isfile($path . "README.txt", $releaseid)) {
+		descreadme($path . "README.txt", $releaseid);
+	} elsif ($files->isfile($path . "README", $releaseid)) {
+		descreadme($path . "README", $releaseid);
+	} elsif ($files->isfile($path . "README.html", $releaseid)) {
+		descreadmehtml($path . "README.html", $releaseid);
 	}
 }
 
 sub descreadmehtml {
-	my ($file, $release) = @_;
+	my ($file, $releaseid) = @_;
 
 	my $string = "";
-	return if !($desc = $files->getfilehandle($file, $release));
+	return if !($desc = $files->getfilehandle($file, $releaseid));
 
 	#    undef $/;
 	$string = <$desc>;
@@ -346,7 +346,7 @@ sub descreadmehtml {
 }
 
 sub descreadme {
-	my ($file, $release) = @_;
+	my ($file, $releaseid) = @_;
 
 	my $string = "";
 
@@ -359,7 +359,7 @@ sub descreadme {
 	my $minlines = 5;     # Too small. Go back and add another paragraph.
 	my $chopto   = 10;    # Truncate long READMEs to this length
 
-	return if !($desc = $files->getfilehandle($file, $release));
+	return if !($desc = $files->getfilehandle($file, $releaseid));
 
 	#    undef $/;
 	$string = <$desc>;

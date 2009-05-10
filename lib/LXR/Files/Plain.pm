@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.25 2005/11/02 23:39:55 mbox Exp $
+# $Id: Plain.pm,v 1.26 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.25 2005/11/02 23:39:55 mbox Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.26 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use FileHandle;
@@ -35,52 +35,52 @@ sub new {
 }
 
 sub filerev {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	#	return $release;
+	#	return $releaseid;
 	return
-	  join("-", $self->getfiletime($filename, $release), $self->getfilesize($filename, $release));
+	  join("-", $self->getfiletime($filename, $releaseid), $self->getfilesize($filename, $releaseid));
 }
 
 sub getfiletime {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	return (stat($self->toreal($filename, $release)))[9];
+	return (stat($self->toreal($filename, $releaseid)))[9];
 }
 
 sub getfilesize {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	return -s $self->toreal($filename, $release);
+	return -s $self->toreal($filename, $releaseid);
 }
 
 sub getfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($buffer);
 	local ($/) = undef;
 
-	open(FILE, "<", $self->toreal($filename, $release)) || return undef;
+	open(FILE, "<", $self->toreal($filename, $releaseid)) || return undef;
 	$buffer = <FILE>;
 	close(FILE);
 	return $buffer;
 }
 
 sub getfilehandle {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($fileh);
 
-	$fileh = new FileHandle($self->toreal($filename, $release));
+	$fileh = new FileHandle($self->toreal($filename, $releaseid));
 	return $fileh;
 }
 
 sub tmpfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($tmp, $tries);
 	local ($/) = undef;
 
 	$tmp = $config->tmpdir . '/lxrtmp.' . time . '.' . $$ . '.' . &LXR::Common::tmpcounter;
 	open(TMP, "> $tmp") || return undef;
-	open(FILE, "<", $self->toreal($filename, $release)) || return undef;
+	open(FILE, "<", $self->toreal($filename, $releaseid)) || return undef;
 	print(TMP <FILE>);
 	close(FILE);
 	close(TMP);
@@ -97,14 +97,14 @@ sub getauthor {
 }
 
 sub getdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	my ($dir, $node, @dirs, @files);
 
 	if($pathname !~ m!/$!) {
 		$pathname = $pathname . '/';
 	}
 		
-	$dir = $self->toreal($pathname, $release);
+	$dir = $self->toreal($pathname, $releaseid);
 	opendir(DIR, $dir) || return ();
   FILE: while (defined($node = readdir(DIR))) {
 		next if $node =~ /^\.|~$|\.orig$/;
@@ -130,32 +130,32 @@ sub getdir {
 # other possible File classes.)
 
 sub toreal {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
 # nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
 	foreach my $ignoredir ($config->ignoredirs) {
 		return undef if $pathname =~ m|/$ignoredir/|;
 	}
 
-	return ($self->{'rootpath'} . $release . $pathname);
+	return ($self->{'rootpath'} . $releaseid . $pathname);
 }
 
 sub isdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	return -d $self->toreal($pathname, $release);
+	return -d $self->toreal($pathname, $releaseid);
 }
 
 sub isfile {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	return -f $self->toreal($pathname, $release);
+	return -f $self->toreal($pathname, $releaseid);
 }
 
 sub getindex {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	my ($index, %index);
-	my $indexname = $self->toreal($pathname, $release) . "00-INDEX";
+	my $indexname = $self->toreal($pathname, $releaseid) . "00-INDEX";
 
 	if (-f $indexname) {
 		open(INDEX, "<", $indexname)

@@ -34,8 +34,8 @@ create table lxr_indexes (
 
 create table lxr_releases 
         (fileid         int not null references lxr_files,
-        rel             char(255) binary not null,
-        primary key     (fileid,rel)
+        releaseid             char(255) binary not null,
+        primary key     (fileid,releaseid)
 );
 
 create table lxr_usage

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.24 2009/04/25 20:40:24 adrianissott Exp $
+# $Id: Generic.pm,v 1.25 2009/05/10 11:54:29 adrianissott Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.24 2009/04/25 20:40:24 adrianissott Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.25 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -35,11 +35,11 @@ my $generic_config;
 @LXR::Lang::Generic::ISA = ('LXR::Lang');
 
 sub new {
-	my ($proto, $pathname, $release, $lang) = @_;
+	my ($proto, $pathname, $releaseid, $lang) = @_;
 	my $class = ref($proto) || $proto;
 	my $self = {};
 	bless($self, $class);
-	$$self{'release'}  = $release;
+	$$self{'releaseid'}  = $releaseid;
 	$$self{'language'} = $lang;
 
 	read_config() unless defined $generic_config;
@@ -161,7 +161,7 @@ sub processcode {
 	   }
 	   {
 	     $1.
-		   ( $index->issymbol($2, $$self{'release'}) ? join($2, @{$$self{'itag'}}) : $2 );
+		   ( $index->issymbol($2, $$self{'releaseid'}) ? join($2, @{$$self{'itag'}}) : $2 );
   	 }gex;
 }
 
@@ -227,7 +227,7 @@ sub referencefile {
 					$string = $_;
 
 					#		  print "considering $string\n";
-					if (!$self->isreserved($string) && $index->issymbol($string, $$self{'release'}))
+					if (!$self->isreserved($string) && $index->issymbol($string, $$self{'releaseid'}))
 					{
 
 						#			print "adding $string to references\n";

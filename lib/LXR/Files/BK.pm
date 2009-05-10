@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: BK.pm,v 1.4 2006/12/20 19:49:29 jbglaw Exp $
+# $Id: BK.pm,v 1.5 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::BK;
 
-$CVSID = '$Id: BK.pm,v 1.4 2006/12/20 19:49:29 jbglaw Exp $ ';
+$CVSID = '$Id: BK.pm,v 1.5 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use File::Spec;
@@ -50,21 +50,21 @@ sub new {
 #
 
 sub getdir {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	$self->fill_cache($release);
+	$self->fill_cache($releaseid);
 	$pathname = canonise($pathname);
 	$pathname = File::Spec->rootdir() if $pathname eq '';
-	my @nodes = keys %{ $tree_cache{$release}->{$pathname} };
+	my @nodes = keys %{ $tree_cache{$releaseid}->{$pathname} };
 	my @dirs = grep m!/$!, @nodes;
 	my @files = grep !m!/$!, @nodes;
 	return (sort(@dirs), sort(@files));
 }
 
 sub getfile {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	$pathname = canonise($pathname);
-	my $fileh = $self->getfilehandle($pathname, $release);
+	my $fileh = $self->getfilehandle($pathname, $releaseid);
 
 	return undef unless $fileh;
 	my $buffer = join('', $fileh->getlines);
@@ -73,11 +73,11 @@ sub getfile {
 }
 
 sub getfilehandle {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 	$pathname = canonise($pathname);
 	my $fileh = undef;
-	if ($self->file_exists($pathname, $release)) {
-		my $info  = $self->getfileinfo($pathname, $release);
+	if ($self->file_exists($pathname, $releaseid)) {
+		my $info  = $self->getfileinfo($pathname, $releaseid);
 		my $ver   = $info->{'revision'};
 		my $where = $info->{'curpath'};
 		$fileh = $self->openbkcommand("bk get -p -r$ver $where 2>/dev/null |");
@@ -86,16 +86,16 @@ sub getfilehandle {
 }
 
 sub filerev {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 
-	my $info = $self->getfileinfo($filename, $release);
+	my $info = $self->getfileinfo($filename, $releaseid);
 	return sha1_hex($info->{'curpath'} . '-' . $info->{'revision'});
 }
 
 sub getfiletime {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	my $info = $self->getfileinfo($pathname, $release);
+	my $info = $self->getfileinfo($pathname, $releaseid);
 	return undef if !defined $info;
 
 	if (!defined($info->{'filetime'})) {
@@ -112,22 +112,22 @@ sub getfiletime {
 }
 
 sub getfilesize {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	my $info = $self->getfileinfo($pathname, $release);
+	my $info = $self->getfileinfo($pathname, $releaseid);
 	return undef if !defined($info);
 
 	if (!defined($info->{'filesize'})) {
-		$info->{'filesize'} = length($self->getfile($pathname, $release));
+		$info->{'filesize'} = length($self->getfile($pathname, $releaseid));
 	}
 	return $info->{'filesize'};
 }
 
 
 sub getauthor {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
-	my $info = $self->getfileinfo($pathname, $release);
+	my $info = $self->getfileinfo($pathname, $releaseid);
 	return undef if !defined $info;
 
 	if (!defined($info->{'author'})) {
@@ -158,24 +158,24 @@ sub openbkcommand {
 }
 
 sub isdir {
-	my ($self, $pathname, $release) = @_;
-	$self->fill_cache($release);
+	my ($self, $pathname, $releaseid) = @_;
+	$self->fill_cache($releaseid);
 	$pathname = canonise($pathname);
-	my $info = $tree_cache{$release}{$pathname};
+	my $info = $tree_cache{$releaseid}{$pathname};
 	return (defined($info));
 }
 
 sub isfile {
-	my ($self, $pathname, $release) = @_;
-	my $info = $self->getfileinfo($pathname, $release);
+	my ($self, $pathname, $releaseid) = @_;
+	my $info = $self->getfileinfo($pathname, $releaseid);
 	return (defined($info));
 }
 
 sub tmpfile {
-	my ($self, $filename, $release) = @_;
+	my ($self, $filename, $releaseid) = @_;
 	my ($tmp,  $buf);
 
-	$buf = $self->getfile($filename, $release);
+	$buf = $self->getfile($filename, $releaseid);
 	return undef unless defined($buf);
 
 	$tmp =
@@ -202,12 +202,12 @@ sub insert_entry {
 }
 
 sub fill_cache {
-	my ($self, $release) = @_;
+	my ($self, $releaseid) = @_;
 
-	return if (defined $tree_cache{$release});
+	return if (defined $tree_cache{$releaseid});
 
 	# Not in cache, so need to build
-	my @all_entries = $self->get_tree($release);
+	my @all_entries = $self->get_tree($releaseid);
 	$memcachecount++;
 
 	my %newtree = ();
@@ -233,32 +233,32 @@ sub fill_cache {
 	$newtree{ File::Spec->rootdir() } = $newtree{''};
 	delete $newtree{''};
 
-	$tree_cache{$release} = \%newtree;
+	$tree_cache{$releaseid} = \%newtree;
 }
 
 sub get_tree {
-	my ($self, $release) = @_;
+	my ($self, $releaseid) = @_;
 
 	# Return entire tree as provided by 'bk rset'
 	# First, check if cache exists
 
 	my $fileh = new IO::File;
 
-	if (-r $self->cachename($release)) {
-		$fileh->open($self->cachename($release)) or die "Whoops, can't open cached version";
+	if (-r $self->cachename($releaseid)) {
+		$fileh->open($self->cachename($releaseid)) or die "Whoops, can't open cached version";
 	} else {
 		# This command provide 3 part output - the current filename, the historical filename & the revision
-		$fileh = $self->openbkcommand("bk rset -h -l$release 2>/dev/null |");
+		$fileh = $self->openbkcommand("bk rset -h -l$releaseid 2>/dev/null |");
 		my $line_to_junk = <$fileh>;    # Remove the Changelist|Changelist line at start
 		# Now create the cached copy if we can
-		if(open(CACHE, ">", $self->cachename($release))) {
+		if(open(CACHE, ">", $self->cachename($releaseid))) {
 			$diskcachecount++;
 			my @data = <$fileh>;
 			close $fileh;
 			print CACHE @data;
 			close CACHE;
 			$fileh = new IO::File;
-			$fileh->open($self->cachename($release)) or die "Couldn't open cached version!";
+			$fileh->open($self->cachename($releaseid)) or die "Couldn't open cached version!";
 		}
 	}
 
@@ -273,8 +273,8 @@ sub get_tree {
 }
 
 sub cachename {
-	my ($self, $release) = @_;
-	return $self->{'cache'}."/treecache-".$release;
+	my ($self, $releaseid) = @_;
+	return $self->{'cache'}."/treecache-".$releaseid;
 }
 
 sub canonise {
@@ -285,21 +285,21 @@ sub canonise {
 
 # Check that the specified pathname, version combination exists in repository
 sub file_exists {
-	my ($self, $pathname, $release) = @_;
+	my ($self, $pathname, $releaseid) = @_;
 
 	# Look the file up in the treecache
-	return defined($self->getfileinfo($pathname, $release));
+	return defined($self->getfileinfo($pathname, $releaseid));
 }
 
 sub getfileinfo {
-	my ($self, $pathname, $release) = @_;
-	$self->fill_cache($release);    # Normally expect this to be present anyway
+	my ($self, $pathname, $releaseid) = @_;
+	$self->fill_cache($releaseid);    # Normally expect this to be present anyway
 	$pathname = canonise($pathname);
 
 	my ($vol, $path, $file) = File::Spec->splitpath($pathname);
 	$path = File::Spec->rootdir() if $path eq '';
 
-	return $tree_cache{$release}{$path}{$file};
+	return $tree_cache{$releaseid}{$path}{$file};
 }
 
 1;

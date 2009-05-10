@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.35 2009/04/21 20:03:04 adrianissott Exp $
+# $Id: Lang.pm,v 1.36 2009/05/10 11:54:29 adrianissott Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,20 +18,20 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.35 2009/04/21 20:03:04 adrianissott Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.36 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use LXR::Common;
 
 sub new {
-	my ($self, $pathname, $release, @itag) = @_;
+	my ($self, $pathname, $releaseid, @itag) = @_;
 	my ($lang, $type);
 
 	foreach $type (values %{ $config->filetype }) {
 		if ($pathname =~ /$$type[1]/) {
 			eval "require $$type[2]";
 			die "Unable to load $$type[2] Lang class, $@" if $@;
-			my $create = "new $$type[2]" . '($pathname, $release, $$type[0])';
+			my $create = "new $$type[2]" . '($pathname, $releaseid, $$type[0])';
 			$lang = eval($create);
 			die "Unable to create $$type[2] Lang object, $@" unless defined $lang;
 			last;
@@ -41,7 +41,7 @@ sub new {
 	if (!defined $lang) {
 
 		# Try to see if it's a script
-		my $fh = $files->getfilehandle($pathname, $release);
+		my $fh = $files->getfilehandle($pathname, $releaseid);
 		return undef if !defined $fh;
 		$fh->getline =~ /^\#!\s*(\S+)/s;
 
@@ -55,7 +55,7 @@ sub new {
 				die "Unable to load $filetype{$inter{$patt}}[2] Lang class, $@" if $@;
 				my $create = "new "
 				  . $filetype{ $inter{$patt} }[2]
-				  . '($pathname, $release, $filetype{$inter{$patt}}[0])';
+				  . '($pathname, $releaseid, $filetype{$inter{$patt}}[0])';
 				$lang = eval($create);
 				last if defined $lang;
 				die "Unable to create $filetype{$inter{$patt}}[2] Lang object, $@";

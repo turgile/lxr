@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: find,v 1.25 2009/04/08 20:49:19 adrianissott Exp $
+# $Id: find,v 1.26 2009/05/10 11:54:29 adrianissott Exp $
 
 # find   --	Find files
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: find,v 1.25 2009/04/08 20:49:19 adrianissott Exp $ ';
+$CVSID = '$Id: find,v 1.26 2009/05/10 11:54:29 adrianissott Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -66,7 +66,7 @@ sub dofind {
 	my @ret;
 
 	if ($searchtext ne "") {
-		my $sourceroot = $config->sourceroot . '/' . $release . '/';
+		my $sourceroot = $config->sourceroot . '/' . $releaseid . '/';
 		while (my $file = <$FILELISTING>) {
 			chomp $file;
 			$file =~ s/^$sourceroot//;
@@ -113,21 +113,21 @@ sub find {
 
 	my $FILELISTING;
 	if ($config->swishdir and $config->swishbin) {
-		unless ($FILELISTING = new IO::File($config->swishdir . "/$release.filenames")) {
+		unless ($FILELISTING = new IO::File($config->swishdir . "/$releaseid.filenames")) {
 			&warning(
-				"Version '$release' has not been indexed and is unavailable for searching<br>Could not open "
+				"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
 				  . $config->swishdir
-				  . "/$release.filenames.");
+				  . "/$releaseid.filenames.");
 			return;
 		}
 	} elsif ($config->glimpsedir and $config->glimpsebin) {
 		unless ($FILELISTING =
-			new IO::File($config->glimpsedir . "/" . $release . "/.glimpse_filenames"))
+			new IO::File($config->glimpsedir . "/" . $releaseid . "/.glimpse_filenames"))
 		{
 			&warning(
-				"Version '$release' has not been indexed and is unavailable for searching<br>Could not open "
+				"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
 				  . $config->glimpsedir
-				  . "/$release/.glimpse_filenames.");
+				  . "/$releaseid/.glimpse_filenames.");
 			return;
 		}
 	} else {
