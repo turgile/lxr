@@ -93,6 +93,7 @@ foreach my $version (@versions) {
 	gensearch($version);
 	genindex('/', $version);
 	genrefs('/', $version);
+	$index->commit;
 }
 
 $index->DESTROY();
@@ -107,6 +108,7 @@ sub genindex {
 	} else {
 		&LXR::Tagger::processfile($pathname, $releaseid, $config, $files, $index)
 		  unless exists $binaryfiles{$pathname};
+		$index->commit;
 	}
 }
 
@@ -120,6 +122,7 @@ sub genrefs {
 	} else {
 		&LXR::Tagger::processrefs($pathname, $releaseid, $config, $files, $index)
 		  unless exists $binaryfiles{$pathname};
+		$index->commit;
 	}
 }
 

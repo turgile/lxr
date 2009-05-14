@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Mysql.pm,v 1.31 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Mysql.pm,v 1.32 2009/05/14 21:13:07 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.31 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.32 2009/05/14 21:13:07 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -357,6 +357,13 @@ sub decid {
 
     return $id;
 }
+
+sub commit {
+    my ($self) = @_;
+    $self->{dbh}->commit;
+	$self->{dbh}->begin_work;
+}
+
 
 sub emptycache {
     %symcache = ();

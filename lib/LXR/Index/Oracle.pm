@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Oracle.pm,v 1.21 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Oracle.pm,v 1.22 2009/05/14 21:13:07 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.21 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.22 2009/05/14 21:13:07 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -353,6 +353,13 @@ sub decid {
 
     return $id;
 }
+
+sub commit {
+    my ($self) = @_;
+    $self->{dbh}->commit;
+	$self->{dbh}->begin_work;
+}
+
 
 sub emptycache {
     %symcache = ();

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Index.pm,v 1.16 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Index.pm,v 1.17 2009/05/14 21:13:07 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.16 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.17 2009/05/14 21:13:07 mbox Exp $ ';
 
 use LXR::Common;
 use strict;
@@ -30,9 +30,6 @@ sub new {
     if ($dbname =~ /^DBI:/i) {
         require LXR::Index::DBI;
         $index = new LXR::Index::DBI($dbname, @args);
-    } elsif ($dbname =~ /^DBM:/i) {
-        require LXR::Index::DB;
-        $index = new LXR::Index::DB($dbname, @args);
     } else {
         die "Can't find database, $dbname";
     }
@@ -142,6 +139,14 @@ sub decid {
     my $decid;
     warn  __PACKAGE__."::decid not implemented. Parameters @_";
     return $decid;
+}
+
+# Commit the last set of operations and start a new transaction
+# If transactions are not supported, it's OK for this to be a no-op
+
+sub commit {
+    my ($self) = @_;
+    warn  __PACKAGE__."::commit not implemented. Parameters @_";
 }
 
 # This function should be called before parsing each new file,

@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: DBI.pm,v 1.23 2009/04/21 20:03:04 adrianissott Exp $
+# $Id: DBI.pm,v 1.24 2009/05/14 21:13:07 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 # there being derived classes that provide a concrete implementation 
 package LXR::Index::DBI;
 
-$CVSID = '$Id: DBI.pm,v 1.23 2009/04/21 20:03:04 adrianissott Exp $ ';
+$CVSID = '$Id: DBI.pm,v 1.24 2009/05/14 21:13:07 mbox Exp $ ';
 
 use strict;
 
@@ -40,6 +40,7 @@ sub new {
 		$index = new LXR::Index::Oracle($dbname);
 	}
 	return $index;
-} 
+}
+
 
 1;

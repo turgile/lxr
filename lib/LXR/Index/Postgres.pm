@@ -1,6 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*- ###############################
 #
-# $Id: Postgres.pm,v 1.32 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Postgres.pm,v 1.33 2009/05/14 21:13:07 mbox Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.32 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.33 2009/05/14 21:13:07 mbox Exp $ ';
 
 use strict;
 use DBI;
@@ -31,8 +31,6 @@ our @ISA = ("LXR::Index");
 #
 my (%files, %symcache);
 
-my ($commitlimit, $transactions, $dbConnection);
-
 sub new {
     my ($self, $dbname) = @_;
 
@@ -41,8 +39,6 @@ sub new {
       or fatal "Can't open connection to database: $DBI::errstr\n";
 
     $self->{dbh}->begin_work() or die "begin_work failed: $DBI::errstr";
-    $commitlimit  = 100;
-    $transactions = 0;
     
     %files        = ();
     %symcache     = ();    
@@ -168,7 +164,6 @@ sub DESTROY {
 
     if ($self->{dbh}) {
         $self->{dbh}->commit() or die "Commit failed: $DBI::errstr";
-        $transactions = 0;
         $self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
         $self->{dbh} = undef;
     }    
@@ -189,7 +184,6 @@ sub fileid {
             $self->{filenum_nextval}->execute();
             ($fileid) = $self->{filenum_nextval}->fetchrow_array();
             $self->{files_insert}->execute($filename, $revision, $fileid);
-            $self->_commitIfLimit();
         }
         $files{"$filename\t$revision"} = $fileid;
 #        $self->{files_select}->finish();
@@ -208,7 +202,6 @@ sub setfilerelease {
 
     unless ($firstrow) {
         $self->{releases_insert}->execute($fileid + 0, $releaseid);
-        $self->_commitIfLimit();
     }
 }
 
@@ -239,7 +232,6 @@ sub setfileindexed {
     } else {
         $self->{status_update}->execute(1, $fileid, 0);
     }
-    $self->_commitIfLimit();
 }
 
 sub filereferenced {
@@ -266,7 +258,6 @@ sub setfilereferenced {
     } else {
         $self->{status_update}->execute(2, $fileid, 1);
     }
-    $self->_commitIfLimit();
 }
 
 sub symdeclarations {
@@ -294,7 +285,6 @@ sub setsymdeclaration {
 
     $self->{indexes_insert}->execute($self->symid($symname),
     $fileid, $line, $langid, $type, $relsym ? $self->symid($relsym) : undef);
-    $self->_commitIfLimit();
 }
 
 sub symreferences {
@@ -316,7 +306,6 @@ sub setsymreference {
     my ($self, $symname, $fileid, $line) = @_;
 
     $self->{usage_insert}->execute($fileid, $line, $self->symid($symname));
-    $self->_commitIfLimit();
 }
 
 sub issymbol {
@@ -341,7 +330,6 @@ sub symid {
             $self->{symnum_nextval}->execute();
             ($symid) = $self->{symnum_nextval}->fetchrow_array();
             $self->{symbols_insert}->execute($symname, $symid);
-            $self->_commitIfLimit();
         }
         $symcache{$symname} = $symid;
     }
@@ -368,7 +356,6 @@ sub decid {
         $self->{declid_nextnum}->execute();
         my ($declid) = $self->{declid_nextnum}->fetchrow_array();
         $self->{decl_insert}->execute($declid, $lang, $string);
-        $self->_commitIfLimit();
     }
 
     $self->{decl_select}->execute($lang, $string);
@@ -393,21 +380,14 @@ sub purge {
     $self->{delete_releases}->execute($releaseid);
     $self->{delete_files}->execute($releaseid);
 
-    $self->{dbh}->commit() or die "Commit failed: $DBI::errstr";
-    $self->{dbh}->begin_work() or die "begin_work failed: $DBI::errstr";
-    $transactions = 0;
+    $self->commit() or die "Commit failed: $DBI::errstr";
 }
 
-#
-# Internal subroutines
-#
-
-sub _commitIfLimit {
-    my $self = shift;
-    unless (++$transactions % $commitlimit) {
-        $self->{dbh}->commit() or die "Commit failed: $DBI::errstr";
-        $self->{dbh}->begin_work() or die "begin_work failed: $DBI::errstr";
-    }
+sub commit {
+    my ($self) = @_;
+    $self->{dbh}->commit;
+	$self->{dbh}->begin_work;
 }
+
 
 1;
