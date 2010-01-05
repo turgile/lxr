@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.62 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Common.pm,v 1.63 2010/01/05 17:59:38 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.62 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.63 2010/01/05 17:59:38 mbox Exp $ ';
 
 use strict;
 
@@ -526,9 +526,13 @@ sub clean_release {
 }
 
 sub clean_identifier {
+	# Cleans up the identifier parameter
+	# Result should be HTML-safe and a valid identifier in
+	# any supported language...
+	# Well, not Lisp symbols since they can contain anything
 	my $id = shift;
 
-	$id =~ s/(^[\w`:.,]+).*/$1/ if defined $id;
+	$id =~ s/[^\w`:.,\-_ ]//g if defined $id;
 
 	return $id;
 }
