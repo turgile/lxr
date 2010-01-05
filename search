@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: search,v 1.33 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: search,v 1.34 2010/01/05 18:00:58 mbox Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.33 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: search,v 1.34 2010/01/05 18:00:58 mbox Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -288,8 +288,8 @@ sub search {
 		$templ,
 		(
 			variables          => sub { varinputs(@_) },
-			searchtext         => sub { return $searchtext },
-			searchtext_escaped => sub { $_ = $searchtext; s/\"/&quot;/g; return $_; },
+			searchtext         => sub { $_ = $searchtext; s/</&lt;/g; s/>/&gt;/g; return $_; },
+			searchtext_escaped => sub { $_ = $searchtext; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; },
 			filetext_escaped   => sub { $_ = $filetext; s/\"/&quot;/g; return $_; },
 			advancedchecked      => sub { return $advanced      ? "checked" : "" },
 			casesensitivechecked => sub { return $casesensitive ? "checked" : "" },

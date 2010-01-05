@@ -1,5 +1,5 @@
-#!perl -T
-# $Id: ident,v 1.24 2009/05/10 11:54:29 adrianissott Exp $
+#!/usr/bin/perl -T
+# $Id: ident,v 1.25 2010/01/05 18:00:58 mbox Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.24 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: ident,v 1.25 2010/01/05 18:00:58 mbox Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -49,7 +49,7 @@ sub refexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	my @refs = $index->symdeclarations($identifier, $releaseid);
+	my @refs = $index->getindex($identifier, $release);
 
 	my $file_hits = 0;
 	my $last_file;
@@ -86,7 +86,7 @@ sub usesexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	my @uses = $index->symreferences($identifier, $releaseid);
+	my @uses = $index->getreference($identifier, $release);
 	my $file_hits = 0;
 	my $last_file;
 	foreach my $ref (sort { $$a[0] cmp $$b[0] } @uses) {
@@ -146,8 +146,8 @@ sub printident {
 			$templ,
 			(
 				variables          => \&varinputs,
-				identifier         => sub { return $identifier },
-				identifier_escaped => sub { $_ = $identifier; s/\"/&quot;/g; return $_; },
+				identifier         => sub { $_ = $identifier; s/</&lt;/g; s/>/&gt;/g; return $_; },
+				identifier_escaped => sub { $_ = $identifier; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; },
 				refs => sub { refexpand(@_) },
 			)
 		)
