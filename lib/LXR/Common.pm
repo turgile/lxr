@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.63 2010/01/05 17:59:38 mbox Exp $
+# $Id: Common.pm,v 1.64 2010/01/15 23:23:20 mbox Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.63 2010/01/05 17:59:38 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.64 2010/01/15 23:23:20 mbox Exp $ ';
 
 use strict;
 
@@ -633,6 +633,8 @@ sub titleexpand {
 		return $config->sourcerootname . ' identifier search' . ($i ? ": $i" : '');
 	} elsif ($who eq 'search') {
 		my $s = $HTTP->{'param'}->{'string'};
+		$s =~ s/</&lt;/g;
+		$s =~ s/>/&gt;/g;
 		return $config->sourcerootname . ' general search' . ($s ? ": $s" : '');
 	}
 }
