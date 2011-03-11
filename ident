@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: ident,v 1.25 2010/01/05 18:00:58 mbox Exp $
+# $Id: ident,v 1.26 2011/03/11 21:15:21 ajlittoz Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.25 2010/01/05 18:00:58 mbox Exp $ ';
+$CVSID = '$Id: ident,v 1.26 2011/03/11 21:15:21 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -49,7 +49,7 @@ sub refexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	my @refs = $index->getindex($identifier, $release);
+	my @refs = $index->symdeclarations($identifier, $releaseid);
 
 	my $file_hits = 0;
 	my $last_file;
@@ -86,7 +86,7 @@ sub usesexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	my @uses = $index->getreference($identifier, $release);
+	my @uses = $index->symreferences($identifier, $releaseid);
 	my $file_hits = 0;
 	my $last_file;
 	foreach my $ref (sort { $$a[0] cmp $$b[0] } @uses) {
