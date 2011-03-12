@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.66 2011/03/12 10:24:13 ajlittoz Exp $
+# $Id: Common.pm,v 1.67 2011/03/12 11:02:39 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.66 2011/03/12 10:24:13 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.67 2011/03/12 11:02:39 ajlittoz Exp $ ';
 
 use strict;
 
@@ -450,10 +450,10 @@ sub printhttp {
 		} else {
 			print("Content-Type: text/plain\n");
 		}
-	} else {
-		print("Content-Type: text/html; charset=iso-8859-1\n");
-
-		# print("Content-Type: text/html\n");
+	}
+	else
+	{
+		print("Content-Type: text/html; charset=", $config->{'encoding'}, "\n");
 	}
 
 	# Close the HTTP header block.
