@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: source,v 1.47 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: source,v 1.48 2011/03/12 13:36:57 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.47 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: source,v 1.48 2011/03/12 13:36:57 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -151,12 +151,18 @@ sub direxpand {
 	@nodes = $files->getdir($dir, $releaseid);
 	unless (@nodes) {
 		print(  "<p align=\"center\">\n<i>The directory " . $dir
-			  . " does not exist.</i>\n");
-		print(
-			"\<p align=\"center\">\n<i>This directory might exist in other versions, try 'Show attic files' or select a different Version.</i>\n"
-		  )
-		  if $files->isa("LXR::Files::CVS")
-		  and !$HTTP->{'param'}->{'showattic'};
+			  . " does not exist.</i>\n</p>\n");
+		if ($files->isa("LXR::Files::CVS")
+			and !$HTTP->{'param'}->{'showattic'})
+		{
+			print("\<p align=\"center\">\n");
+			print("<i>This directory might exist in other versions,");
+			print	( " try 'Show attic files' or select a different",
+					, $config->{'variables'}{'v'}{'name'}
+					, ".</i>\n"
+					);
+			print("</p>\n");
+		}
 
 		return;
 	}
@@ -288,15 +294,22 @@ sub printfile {
 				&$outfun("</pre>\n");
 			}
 
-		} else {
+		}
+		else {
 			print(
-				"\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n"
+				"\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n</p>\n"
 			);
-			print(
-				"\<p align=\"center\">\n<i>This file might exist in other versions, try 'Show attic files' or select a different Version.</i>\n"
-			  )
-			  if $files->isa("LXR::Files::CVS")
-			  and !$HTTP->{'param'}->{'showattic'};
+			if ($files->isa("LXR::Files::CVS")
+				and !$HTTP->{'param'}->{'showattic'})
+			{
+				print("\<p align=\"center\">\n");
+				print("<i>This directory might exist in other versions,");
+				print	( " try 'Show attic files' or select a different",
+						, $config->{'variables'}{'v'}{'name'}
+						, ".</i>\n"
+						);
+				print("</p>\n");
+			}
 		}
 	}
 }
@@ -305,7 +318,7 @@ httpinit;
 
 if ($config->filter && $pathname !~ $config->filter) {
 	makeheader('source');
-	print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n");
+	print("\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n</p>\n");
 	makefooter('source');
 	exit;
 }
