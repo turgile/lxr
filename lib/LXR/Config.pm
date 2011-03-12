@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.35 2011/03/12 11:02:39 ajlittoz Exp $
+# $Id: Config.pm,v 1.36 2011/03/12 17:04:06 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.35 2011/03/12 11:02:39 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.36 2011/03/12 17:04:06 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -110,8 +110,12 @@ sub _initialize {
 
 	$$self{'encoding'} = "iso-8859-1" unless (exists $self->{'encoding'});
 
-	if(!defined $$self{baseurl}) {
-		if($url =~ m!http://.+\.!) {
+	if(!exists $self->{baseurl}) {
+		if("genxref" ne ($0 =~ /([^\/]*)$/)) {
+			$$self{'configerror'} = "nobaseurl";
+			return 1;
+		}
+		elsif($url =~ m!http://.+\.!) {
 			die "Can't find config for $url: make sure there is a 'baseurl' line that matches in lxr.conf\n";
 		} else {	
 			# wasn't a url, so probably genxref with a bad --url parameter
