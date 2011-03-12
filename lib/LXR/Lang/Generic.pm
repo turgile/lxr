@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.25 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Generic.pm,v 1.26 2011/03/12 08:33:08 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.25 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.26 2011/03/12 08:33:08 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -48,6 +48,11 @@ sub new {
 	# Set langid
 	$$self{'langid'} = $self->langinfo('langid');
 	die "No langid for language $lang" if !defined $self->langid;
+
+	# Make sure that at least a default identifier definition exists
+	#	default must also cover C and C++ reserved words and Perl -variables
+	$$self{'langmap'}{$lang}{'identdef'} = '[-\w~\#][\w]*'
+		unless defined $self->langinfo('identdef');
 
 	return $self;
 }
@@ -147,22 +152,37 @@ sub parsespec {
 # Parameters:
 #   $code - reference to the code to markup
 #   @itag - ???
-# TODO : Make the handling of identifier recognition language dependant
+
 sub processcode {
 	my ($self, $code) = @_;
 	my ($start, $id);
 
-  $self->processreserved($code);
+	my $source = $$code;
+	my $answer = '';
 
-	# Replace identifier by link unless it's a reserved word
-	$$code =~ 
-	  s{ 
-	     (^|[^\$\w\#])([-\w~\#][\w]*)\b 
-	   }
-	   {
-	     $1.
-		   ( $index->issymbol($2, $$self{'releaseid'}) ? join($2, @{$$self{'itag'}}) : $2 );
-  	 }gex;
+# Repeatedly remove what looks like an identifier from the head of
+# the source line and mark it if it is a reserved word or known 
+# identifier.
+# NOTE: loop instead of s///g to prevent the substituted string
+#		from being rescanned and HTML tags being eventually
+#		marked themselves.
+# NOTE: processreserved is inlined to proceed with the different
+#		markings simultaneously to avoid interferences.
+
+	while ( $source =~ s/^(.*?)($identdef)\b//s)
+	{
+		$answer .= "$1" .
+		( $self->isreserved($2)
+		? "<span class='reserved'>$2</span>"
+		: 
+		   ( $index->issymbol($2, $$self{'releaseid'})
+		   ? join($2, @{$$self{'itag'}})
+		   : $2
+		   )
+		);
+	}
+	# don't forget the last chunk of the line containing no target
+	$$code = $answer . $source;
 }
 
 sub isreserved {
