@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.65 2011/03/12 10:06:08 ajlittoz Exp $
+# $Id: Common.pm,v 1.66 2011/03/12 10:24:13 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.65 2011/03/12 10:06:08 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.66 2011/03/12 10:24:13 ajlittoz Exp $ ';
 
 use strict;
 
@@ -261,9 +261,10 @@ sub markupfile {
 	my $graphic = $config->graphicfile;
 
 	my $line = '001';
-	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a)(.*\#)001(\">)1(<\/a>)$/;
-	$ltag[0] .= ' name=';
-	$ltag[3] .= " ";
+	# Don't keep href=... in anchor definition
+	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a.*?)(?:href.*\#)001(\">)1(<\/a>)$/;
+	$ltag[0] .= 'name="';
+	$ltag[2] .= " ";
 
 	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
 	my $lang = new LXR::Lang($pathname, $releaseid, @itag);
