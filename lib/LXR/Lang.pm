@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.37 2011/03/12 09:20:13 ajlittoz Exp $
+# $Id: Lang.pm,v 1.38 2011/03/12 13:05:59 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.37 2011/03/12 09:20:13 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.38 2011/03/12 13:05:59 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -40,17 +40,19 @@ sub new {
 
 	if (!defined $lang) {
 
-		# Try to see if it's a script
+		# Try to see if it's a #! script or an emacs mode-tagged file
 		my $fh = $files->getfilehandle($pathname, $releaseid);
 		return undef if !defined $fh;
-		$fh->getline =~ /^\#!\s*(\S+)/s;
+		my $line = $fh->getline;
+		($line =~ /^\#!\s*(\S+)/s)
+		|| ($line =~ /^.*-[*]-.*?[ \t;]mode:[ \t]*(\w+).*-[*]-/);
 
 		my $shebang  = $1;
 		my %filetype = %{ $config->filetype };
 		my %inter    = %{ $config->interpreters };
 
 		foreach my $patt (keys %inter) {
-			if ($shebang =~ /\/$patt/) {
+			if ($shebang =~ /$patt$/) {
 				eval "require $filetype{$inter{$patt}}[2]";
 				die "Unable to load $filetype{$inter{$patt}}[2] Lang class, $@" if $@;
 				my $create = "new "
