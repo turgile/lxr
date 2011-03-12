@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.64 2010/01/15 23:23:20 mbox Exp $
+# $Id: Common.pm,v 1.65 2011/03/12 10:06:08 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.64 2010/01/15 23:23:20 mbox Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.65 2011/03/12 10:06:08 ajlittoz Exp $ ';
 
 use strict;
 
@@ -258,6 +258,7 @@ sub markupfile {
 	#while called from diff
 	my ($fileh, $outfun) = @_;
 	my ($dir) = $pathname =~ m|^(.*/)|;
+	my $graphic = $config->graphicfile;
 
 	my $line = '001';
 	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a)(.*\#)001(\">)1(<\/a>)$/;
@@ -312,14 +313,18 @@ sub markupfile {
 		}
 
 		#&$outfun("</pre>");
-	} elsif ($pathname =~ /$config->graphicfile/) {
-		&$outfun("<ul><table><tr><th valign=\"center\"><b>Image: </b></th>");
-		&$outfun("<img src=\"$config->{virtroot}/source"
-			  . $pathname
-			  . &urlargs("raw=1")
-			  . "\" border=\"0\" alt=\"$pathname\">\n");
-		&$outfun("</tr></td></table></ul>");
-	} elsif ($pathname =~ m|/CREDITS$|) {
+	} 
+	elsif ($pathname =~ /$graphic/)
+	{
+		&$outfun("<ul><table><tr><th valign=\"center\"><b>Image: </b></th></tr>\n");
+		&$outfun("<tr><td>");
+		&$outfun("<img src=\""
+			  . $config->{virtroot} . $pathname
+			  . "\" border=\"0\""
+			  . " alt=\"$pathname cannot be displayed by this browser\">\n");
+		&$outfun("</td></tr></table></ul>");
+	}
+	elsif ($pathname =~ m|/CREDITS$|) {
 		while (defined($_ = $fileh->getline)) {
 			&LXR::SimpleParse::untabify($_);
 			&markspecials($_);
