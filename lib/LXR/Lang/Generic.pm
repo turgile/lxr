@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.26 2011/03/12 08:33:08 ajlittoz Exp $
+# $Id: Generic.pm,v 1.27 2011/03/12 11:21:34 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.26 2011/03/12 08:33:08 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.27 2011/03/12 11:21:34 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -167,7 +167,8 @@ sub processcode {
 #		from being rescanned and HTML tags being eventually
 #		marked themselves.
 # NOTE: processreserved is inlined to proceed with the different
-#		markings simultaneously to avoid interferences.
+#		markings simultaneously to avoid interferences;
+#		second reason, $2 is not a reference
 
 	while ( $source =~ s/^(.*?)($identdef)\b//s)
 	{
@@ -186,12 +187,14 @@ sub processcode {
 }
 
 sub isreserved {
-  my ($self, $frag) = @_;
-  
-  foreach my $word (@{$self->langinfo('reserved')}) {
-    return 1 if $frag eq $word;
-  }
-  return 0;
+	my ($self, $frag) = @_;
+
+	$frag =~ s/\s//g ;        # for those who write # include
+	foreach my $word (@{$self->langinfo('reserved')})
+	{
+		return 1 if $frag eq $word;
+	}
+	return 0;
 }
 
 sub processreserved {
