@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.27 2011/03/12 11:21:34 ajlittoz Exp $
+# $Id: Generic.pm,v 1.28 2011/03/17 14:17:57 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.27 2011/03/12 11:21:34 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.28 2011/03/17 14:17:57 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -143,6 +143,100 @@ sub parsespec {
 	my ($self) = @_;
 	my @spec = $self->langinfo('spec');
 	return @spec;
+}
+
+# Process an include directive
+# If no 'include' specification in generic.conf, proceed as in Lang.pm
+# TODO: is there a way to call the base method so that there is no
+#		maintenance issue? (parallel modifications in 2 locations)
+# 'include' pattern must provide exactly 5 capture buffers:
+#	$1	directive name
+#	$2	spacer
+#	$3	left delimiter
+#	$4	include object
+#	$5	right delimiter
+# The "include object" can be transformed with 'first', 'global' and 'last'
+# substitutions before being handed to incref where the path can further
+# be manipulated with 'ignoredirs', 'incprefix' and 'maps'.
+sub processinclude {
+	my ($self, $frag, $dir) = @_;
+
+	my $source = $$frag;
+	my $dirname;	# include directive name
+	my $spacer;		# spacing
+	my $file;		# language include file
+	my $path;		# OS include file
+	my $lsep;		# left separator
+	my $rsep;		# right separator
+	my $m;			# matching pattern
+	my $s;			# substitution string
+
+	my $incspec = $self->langinfo('include');
+	if (defined $incspec) {
+		my $patdir = $incspec->{'directive'};
+		$source =~ s/^$patdir//s;	# remove directive
+		$dirname = $1;
+		$spacer  = $2;
+		$lsep    = $3;
+		$file    = $4;
+		$path    = $4;
+		$rsep    = $5;
+		my @pat;
+
+		if ($incspec->{'first'}) {
+			@pat = @{$incspec->{'first'}};
+			while (@pat) {
+				($m, $s) = @pat[0, 1];
+				shift @pat; shift @pat;
+				last if (!$s);
+				$path =~ s@$m@$s@;
+			}
+		}
+
+		if ($incspec->{'global'}) {
+			@pat = @{$incspec->{'global'}};
+			while (@pat) {
+				($m, $s) = @pat[0, 1];
+				shift @pat; shift @pat;
+				last if (!$s);
+				$path =~ s@$m@$s@g;
+			}
+		}
+
+		if ($incspec->{'last'}) {
+			@pat = @{$incspec->{'last'}};
+			while (@pat) {
+				($m, $s) = @pat[0, 1];
+				shift @pat; shift @pat;
+				last if (!$s);
+				$path =~ s@$m@$s@;
+			}
+		}
+	}
+	else {
+	$source =~ s/^					# reminder: no initial space in the grammar
+				([\w\#]\s*[\w]*)	# reserved keyword for include construct
+				(\s+)				# space
+				(?|	(\")(.+?)(\")	# C syntax
+				|	(\0<)(.+?)(\0>)	# C alternate syntax
+				|	()([\w:]+)(\b)	# Perl and others
+				)
+				//sx ;
+		$dirname = $1;
+		$spacer  = $2;
+		$lsep    = $3;
+		$file    = $4;
+		$path    = $4;
+		$rsep    = $5;
+	}
+	$$frag =	( $self->isreserved($dirname)
+				? "<span class='reserved'>$dirname</span>"
+				: $dirname
+				)
+			.	$spacer . $lsep
+			.	&LXR::Common::incref($file, "include" ,$path ,$dir)
+			.	$rsep
+			. $source;		# tail if any (e.g. in Perl)
 }
 
 # Process a chunk of code
