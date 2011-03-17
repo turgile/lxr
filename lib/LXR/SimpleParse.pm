@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: SimpleParse.pm,v 1.17 2004/07/21 20:44:30 brondsem Exp $
+# $Id: SimpleParse.pm,v 1.18 2011/03/17 10:29:04 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.17 2004/07/21 20:44:30 brondsem Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.18 2011/03/17 10:29:04 ajlittoz Exp $ ';
 
 use strict;
 use integer;
@@ -35,8 +35,10 @@ my @frags;       # Fragments in queue
 my @bodyid;      # Array of body type ids
 my @open;        # Fragment opening delimiters
 my @term;        # Fragment closing delimiters
+my @stay;        # Fragment maintaining current context
 my $split;       # Fragmentation regexp
 my $open;        # Fragment opening regexp
+my $continue;	 # Fragment maintaining current context for "no category"
 my $tabwidth;    # Tab width
 
 sub init {
@@ -47,30 +49,39 @@ sub init {
 	@bodyid   = ();
 	@open     = ();
 	@term     = ();
+	@stay     = ();
 	$split    = "";
 	$open     = "";
+	$continue = "";
 	$tabwidth = 8;
 	my $tabhint;
 
 	($fileh, $tabhint, @blksep) = @_;
 	$tabwidth = $tabhint || $tabwidth;
 
-	while (@_ = splice(@blksep, 0, 3)) {
-		push(@bodyid, $_[0]);
-		push(@open,   $_[1]);
-		push(@term,   $_[2]);
+	foreach my $s (@blksep) {
+		my $k = (keys(%$s))[0];
+		if ($k eq "atom") {		# special case for uncategorised fragments
+			$continue = $$s{$k};
+		}
+		else {
+			my $v = @$s{$k};
+			push (@bodyid, $k);
+			push (@open, $$v[0]);
+			if (defined($$v[1]))
+					{ push (@term, $$v[1]); }
+			else	{ push (@term, undef); }
+			if (defined($$v[2]))
+					{ push (@stay, $$v[2]); }
+			else	{ push (@stay, ''); }
+		}
 	}
 
 	foreach (@open) {
-		$open  .= "($_)|";
+		$open  .= "^($_)\$|";
 		$split .= "$_|";
 	}
 	chop($open);
-
-	foreach (@term) {
-		next if $_ eq '';
-		$split .= "$_|";
-	}
 	chop($split);
 }
 
@@ -85,9 +96,11 @@ sub untabify {
 sub nextfrag {
 	my $btype = undef;
 	my $frag  = undef;
+	my $term  = undef;
+	my $stay  = $continue;
 	my $line  = '';
 
-	#	print "nextfrag called\n";
+# 		print "nextfrag called\n";
 
 	while (1) {
 
@@ -99,20 +112,17 @@ sub nextfrag {
 			if (   $. <= 2
 				&& $line =~ /^.*-[*]-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-[*]-/)
 			{
-
 				# make sure there really is a non-zero tabwidth
 				if ($1) { $tabwidth = $1; }
 			}
 
-			#			&untabify($line, $tabwidth); # We inline this for performance.
-
-			# Optimize for common case.
+				#			&untabify($line, $tabwidth); # We inline this for performance.
+				# Optimize for common case.
 			if (defined($line)) {
 				$line =~ s/^(\t+)/' ' x ($tabwidth * length($1))/ge;
 				$line =~ s/([^\t]*)\t/$1.(' ' x ($tabwidth - (length($1) % $tabwidth)))/ge;
 
-				# split the line into fragments
-				@frags = split(/($split)/, $line);
+				$frags[0] = $line;
 			}
 		}
 
@@ -123,33 +133,88 @@ sub nextfrag {
 			shift(@frags);
 		}
 
+		# check for "stay" atoms
+		my $next = shift(@frags);
+		if ($stay ne '') {
+			while ($next =~ /$stay/) {
+		# Make sure $stay occurs BEFORE $split if no $term
+		#	else $stay before $term
+				$next =~ /^(.*?)($stay)/s;
+				my $spos = undef;
+				if (defined($2)) {
+					$spos = length($1) || 0;
+				}
+				my $opos = undef;
+				my $change = $term || $split;
+				if ($next =~ /$change/) {
+					$next =~ /^(.*?)($change)/s;
+					if (defined($2)) {
+						$opos = length($1) || 0 ;
+					}
+				}
+				last if (defined($opos) && ($spos > $opos));
+		# There definitely is a "stay" atom, shift it into fragment
+				$next =~ s/^(.*?)($stay)//s;
+#				$frag = "" unless defined($frag);
+				$frag .= $1 . $2;
+			}
+		}
+
 		# check if we are inside a fragment
 		if (defined($frag)) {
 			if (defined($btype)) {
-				my $next = shift(@frags);
+				if ($next =~ /$term/) {			# A close delim in this fragment?
+					$next =~ /^(.*?)($term)(.*)/s;
+					if ($3 ne '') {
+						unshift(@frags, $3);	# Requeue last part
+					}
+					$frag .= $1 . $2;
+					last;						# We are done, terminator met
+				}
 
 				# Add to the fragment
 				$frag .= $next;
 
-				# We are done if this was the terminator
-				last if $next =~ /^$term[$btype]$/;
-
-			} else {
-				if ($frags[0] =~ /^$open$/) {
-
+			}
+			else {
+				if ($next =~ /^($split)/) {
+					unshift(@frags, $next);	# requeue block
 					#					print "encountered open token while btype was $btype\n";
 					last;
 				}
-				$frag .= shift(@frags);
+				if ($next =~ /$split/) {		# An open delim in this fragment?
+					$next =~ /^(.*?)($split)(.*)/s;
+					if ($3 ne '') {
+						unshift(@frags, $3);	# Requeue last part
+					}
+					unshift(@frags, $2);		# Requeue open delimiter
+					$next = $1
+				}
+				$frag .= $next;
 			}
-		} else {
+		}
 
-			#			print "start of new fragment\n";
+		else {
+					#	print "start of new fragment\n";
 			# Find the blocktype of the current block
-			$frag = shift(@frags);
-			if (defined($frag) && (@_ = $frag =~ /^$open$/)) {
-
-				#				print "hit\n";
+			if ($next =~ /$split/) {			# An open delim in this fragment?
+				$next =~ /^(.*?)($split)(.*)/s;	# Split fragment at first
+				if ($3 ne '') {
+					unshift(@frags, $3);		# Requeue last part
+				}
+				if ($1 ne '') {					# Choose which frag to process
+					unshift(@frags, $2);		# Queue delimiter
+					$frag = $1;
+				}
+				else {
+					$frag = $2;
+				}
+			}
+			else {								# Full fragment (no delim)
+				$frag = $next;
+			}
+			if (defined($frag) && (@_ = $frag =~ /$open/)) {
+						#		print "hit:$frag\n";
 				# grep in a scalar context returns the number of times
 				# EXPR evaluates to true, which is this case will be
 				# the index of the first defined element in @_.
@@ -159,6 +224,10 @@ sub nextfrag {
 				if (!defined($term[$btype])) {
 					print "fragment without terminator\n";
 					last;
+				}
+				else {
+					$term = $term[$btype];
+					$stay = $stay[$btype];
 				}
 			}
 		}
