@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.69 2011/03/20 15:00:58 ajlittoz Exp $
+# $Id: Common.pm,v 1.70 2011/03/22 08:41:41 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.69 2011/03/20 15:00:58 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.70 2011/03/22 08:41:41 ajlittoz Exp $ ';
 
 use strict;
 
@@ -872,7 +872,7 @@ sub makefooter {
 
 	$tmplname = $who . "tail";
 
-	unless ($who ne "sourcedir" || $config->sourcedirhead) {
+	unless ($who ne "sourcedir" || $config->sourcedirtail) {
 		$tmplname = "sourcetail";
 	}
 	unless ($config->value($tmplname)) {
