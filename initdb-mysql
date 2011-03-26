@@ -18,8 +18,8 @@ create table lxr_files (
 create table lxr_symbols (
         symname         char(255) binary not null,
         symid           int not null auto_increment,
-        primary key     (symid),
-        unique          (symname)
+        primary key     (symid) /*,
+        unique          (symname) */
 
 );
 
