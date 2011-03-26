@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.72 2011/03/26 13:00:32 ajlittoz Exp $
+# $Id: Common.pm,v 1.73 2011/03/26 13:06:13 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.72 2011/03/26 13:00:32 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.73 2011/03/26 13:06:13 ajlittoz Exp $ ';
 
 use strict;
 
@@ -619,13 +619,11 @@ sub bannerexpand {
 		foreach ($pathname =~ m|([^/]+/?)|g) {
 			$fpath .= $_;
 
-			# jwz: put a space after each / in the banner so that it's
-			# possible for the pathnames to wrap.  The <wbr> tag ought
-			# to do this, but it is ignored when sizing table cells,
-			# so we have to use a real space.  It's somewhat ugly to
-			# have these spaces be visible, but not as ugly as getting
-			# a horizontal scrollbar...
-			$furl .= ' ' . fileref($_, "banner", "/$fpath");
+			# ajl: put a zero-width space after each / in the banner
+			# so that it's possible for the pathnames to wrap.
+			# The <wbr> tag ought to do this, but it is ignored when
+			# sizing table cells, so we have to use a real character.
+			$furl .= '&#x200B; ' . fileref($_, "banner", "/$fpath");
 		}
 		$furl =~ s|/</a>|</a>/|gi;
 
