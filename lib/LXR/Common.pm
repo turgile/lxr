@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.71 2011/03/26 12:45:48 ajlittoz Exp $
+# $Id: Common.pm,v 1.72 2011/03/26 13:00:32 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.71 2011/03/26 12:45:48 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.72 2011/03/26 13:00:32 ajlittoz Exp $ ';
 
 use strict;
 
@@ -48,6 +48,13 @@ require LXR::Config;
 require LXR::Files;
 require LXR::Index;
 require LXR::Lang;
+#ajl
+#	LXRversion has been stored in an independant file
+#	so that changing its number will not mess up CVS Id
+#	leading to believe that some bug has been fixed or
+#	a feature added
+#
+require LXRversion;
 
 $wwwdebug = 0;
 
@@ -847,19 +854,19 @@ sub makeheader {
 	print(
 		expandtemplate(
 			$template,
-			(
-				'title'      => sub { titleexpand(@_,  $who) },
-				'banner'     => sub { bannerexpand(@_, $who) },
-				'baseurl'    => sub { baseurl(@_) },
-				'stylesheet' => sub { stylesheet(@_) },
-				'dotdoturl'  => sub { dotdoturl(@_) },
-				'thisurl'    => sub { thisurl(@_) },
-				'pathname'   => sub { pathname(@_) },
-				'modes'      => sub { modeexpand(@_,   $who) },
-				'variables'  => sub { varexpand(@_,    $who) },
-				'devinfo'    => sub { devinfo(@_) },
-				'atticlink'  => sub { atticlink(@_) },
-				'encoding'   => sub { return $config->{'encoding'}; },
+			(	'title'      => sub { titleexpand(@_,  $who) }
+			,	'banner'     => sub { bannerexpand(@_, $who) }
+			,	'baseurl'    => sub { baseurl(@_) }
+			,	'stylesheet' => sub { stylesheet(@_) }
+			,	'dotdoturl'  => sub { dotdoturl(@_) }
+			,	'thisurl'    => sub { thisurl(@_) }
+			,	'pathname'   => sub { pathname(@_) }
+			,	'modes'      => sub { modeexpand(@_,   $who) }
+			,	'variables'  => sub { varexpand(@_,    $who) }
+			,	'devinfo'    => sub { devinfo(@_) }
+			,	'atticlink'  => sub { atticlink(@_) }
+			,	'encoding'   => sub { return $config->{'encoding'} }
+			,	'LXRversion' => sub { return $LXRversion::LXRversion }
 			)
 		)
 	);
@@ -892,12 +899,12 @@ sub makefooter {
 	print(
 		expandtemplate(
 			$template,
-			(
-				'banner'    => sub { bannerexpand(@_, $who) },
-				'thisurl'   => sub { thisurl(@_) },
-				'modes'     => sub { modeexpand(@_,   $who) },
-				'variables' => sub { varexpand(@_,    $who) },
-				'devinfo'   => sub { devinfo(@_) }
+			(	'banner'    => sub { bannerexpand(@_, $who) }
+			,	'thisurl'   => sub { thisurl(@_) }
+			,	'modes'     => sub { modeexpand(@_,   $who) }
+			,	'variables' => sub { varexpand(@_,    $who) }
+			,	'devinfo'   => sub { devinfo(@_) } 
+			,	'LXRversion' => sub { return $LXRversion::LXRversion }
 			)
 		)
 	);
