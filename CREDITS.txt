@@ -5,17 +5,20 @@ Original authors of LXR
 -----------------------
 
 Arne Georg Gleditsch <lxr@linux.no>
-Per Kristian Gjermshus <lxr@linux.no> 
+Per Kristian Gjermshus <lxr@linux.no>
 
 Current Maintainer
------------------- 
+------------------
+Andre-Littoz <ajlittoz@users.sf.net>
+
+Special thanks to long time maintainer
+--------------------------------------
 Malcolm Box <mbox@users.sf.net>
 
 Principal Developers
 --------------------
 
 Peder O. Klingenberg <peder@klingenberg.no>
-
 Contributors
 ------------
 
@@ -25,7 +28,7 @@ Joseph Corral <joseph_corral@hp.com>
 Kristoffer Gleditsch <toffer@ping.uio.no>		Postgres patches
 Guido Sohne						Updated INSTALL document
 Jens Heimann <jens.heimann@materna.de>			Oracle database support
-
+Andre-Littoz <ajlittoz@users.sf.net>			User's manual
 
 
 -------------------------------------------------------------------------
@@ -33,4 +36,4 @@ To get your name added to this list, see:
  
    http://sf.net/projects/lxr
  
-Last updated: $Date: 2002/02/26 16:18:46 $
+Last updated: $Date: 2011/03/26 13:22:52 $
