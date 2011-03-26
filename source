@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: source,v 1.48 2011/03/12 13:36:57 ajlittoz Exp $
+# $Id: source,v 1.49 2011/03/26 12:45:48 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.48 2011/03/12 13:36:57 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.49 2011/03/26 12:45:48 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -61,18 +61,19 @@ sub dirname {
 sub fileicon {
 	my ($templ, $node, $dir) = @_;
 	my $img;
+	my $graphic = $config->graphicfile;
 
-	if ($node =~ /^.*\.[ch]$/) {
+	if ($node =~ /\.[ch]$/) {
 		$img = "/icons/c.gif";
-	} elsif ($node =~ /^.*\.(cpp|cc|java)$/) {
+	} elsif ($node =~ /\.(cpp|cc|java)$/) {
 
 		# TODO: Find a nice icon for c++ files (KDE?)
 		$img = "/icons/c.gif";
-	} elsif ($node =~ /^.*\.(txt)$/) {
+	} elsif ($node =~ /\.(txt)$/) {
 		$img = "/icons/text.gif";
-	} elsif ($node =~ /^.*\.(jar|war|ear|zip|tar|gz|tgz|cab)$/) {
+	} elsif ($node =~ /\.(jar|war|ear|zip|tar|gz|tgz|cab)$/) {
 		$img = "/icons/compressed.gif";
-	} elsif ($node =~ /^.*\.(jpg|jpeg|gif|bmp|png)$/) {
+	} elsif ($node =~ /\.$graphic$/) {
 		$img = "/icons/image2.gif";
 	} else {
 		$img = "/icons/generic.gif";

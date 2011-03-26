@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.70 2011/03/22 08:41:41 ajlittoz Exp $
+# $Id: Common.pm,v 1.71 2011/03/26 12:45:48 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.70 2011/03/22 08:41:41 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.71 2011/03/26 12:45:48 ajlittoz Exp $ ';
 
 use strict;
 
@@ -315,7 +315,7 @@ sub markupfile {
 
 		#&$outfun("</pre>");
 	} 
-	elsif ($pathname =~ /$graphic/)
+	elsif ($pathname =~ /\.$graphic$/)
 	{
 		&$outfun("<ul><table><tr><th valign=\"center\"><b>Image: </b></th></tr>\n");
 		&$outfun("<tr><td>");
