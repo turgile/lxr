@@ -1,6 +1,7 @@
 #!/usr/bin/env perl -w
-@INC=(@INC,"/usr/local/lxr",
-	 "/usr/local/lxr/lib",
-	 "/usr/local/lxr/lib/Files");
+@INC=	( @INC
+		, "/usr/local/share/lxr"
+		, "/usr/local/share/lxr/lib",
+		);
 
 1;
