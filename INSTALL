@@ -89,14 +89,12 @@ For MySQL:
 Create a user for lxr and give the user permission to create databases:
 		mysql -u root -p
 		(give root's password)
-		create user 'lxr' identified by 'foo';
-		grant alter, delete, index, insert, select, update,
-			create,drop, grant, references on *.* to 'lxr'@'%';
-		quit
+		create user 'lxr'@'localhost' identified by 'foo';
+		grant usage *.* to 'lxr'@'localhost' identified by 'foo';
 Note: it is more comfortable and less error-prone ti use phpMyAdmin
 	if it is installed.
-Reenter MySQL as 'lxr' to initialise the database (reading a script)
-		mysql -u lxr -p
+
+Initialise the database (reading a script in mysql)
 		\. initdb-mysql
 
 For Oracle:
@@ -131,7 +129,8 @@ our example, /home/yourself/lxr or /usr/local/share/lxr):
 
 Set 'htmlsearch' to either 'html-search-swish.html' or
 'html-search-glimpse.html' depending on which indexer
-you are using.
+you are using. Make 'stylesheet' point to templates/lxr.css
+or copy lxr.css into LXR root directory.
 
 Now you need to edit the paths for generic.conf (file content subsection) -
 change the paths in lxr.conf to match where you've installed LXR (in
@@ -205,7 +204,7 @@ It is now time to generate the index. This is done using the program
 --url is equal to baseurl (or one of baseurl_aliases).
 --version is ythe name of one of the versions.
 
-  genxref --url=http://your.host.name/your_lxr_virtual_root --version=v3
+  ./genxref --url=http://your.host.name/your_lxr_virtual_root --version=v3
 
 It is VERY IMPORTANT that the --url argument be EQUAL to baseurlxx
 (including http:).
@@ -219,7 +218,7 @@ url argument.
 If you are setting up LXR to use files in a CVS repository, you
 probably want to use the 'head' version (default).
 
-  genxref --url=http://path/to/lxr --version=head
+  ./genxref --url=http://path/to/lxr --version=head
 
 You can also use the --allversions argument to automatically index all
 the versions defined in the versions variable.
