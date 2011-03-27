@@ -277,8 +277,11 @@ If you fear security attacks, change the above directive to
   
    (replacing /usr/local/share/lxr with wherever you've installed LXR)
 
-   Then edit the paths in the apache2-require.pl script to point to
-   the directories where LXR is installed.
+   You should not need to edit the paths in the apache2-require.pl script
+   to point to the directories where LXR is installed. This script ships
+   with locations in the relative form. If LXR does not work and Apache
+   log mentions problems with @INC, then change the path with absolute
+   form as in:
 	  @INC= ( @INC
 			, "/usr/local/share/lxr"      # <- LXR root directory
 			, "/usr/local/share/lxr/lib", # <- LXR library directory

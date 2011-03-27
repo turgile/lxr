@@ -1,7 +1,7 @@
 #!/usr/bin/env perl -w
 @INC=	( @INC
-		, "/usr/local/share/lxr"
-		, "/usr/local/share/lxr/lib",
+		, "."		# <- LXR root directory
+		, "./lib"	# <- LXR library directory
 		);
 
 1;
