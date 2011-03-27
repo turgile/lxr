@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.28 2011/03/17 14:17:57 ajlittoz Exp $
+# $Id: Generic.pm,v 1.29 2011/03/27 09:51:25 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.28 2011/03/17 14:17:57 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.29 2011/03/27 09:51:25 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -253,6 +253,7 @@ sub processcode {
 
 	my $source = $$code;
 	my $answer = '';
+	my $identdef = $self->langinfo('identdef');
 
 # Repeatedly remove what looks like an identifier from the head of
 # the source line and mark it if it is a reserved word or known 
