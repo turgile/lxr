@@ -258,7 +258,7 @@ If you fear security attacks, change the above directive to
 
    Apache 1.x specific
    -------------------
-   Copy htaccess-apache1 to .htaccess (mind the dot!)
+   Copy .htaccess-apache1 to .htaccess (mind the dot!)
       
    Now you have to put the perl modules that LXR uses into a directory
    on your system that will be searched by mod_perl when the LXR
@@ -270,7 +270,7 @@ If you fear security attacks, change the above directive to
    Apache 2.x specific
    -------------------
 
-   Copy htaccess-apache2 to .htaccess (pay attention to the dot!)
+   Copy .htaccess-apache2 to .htaccess (pay attention to the dot!)
 
    Add the following to your Apache2 config (lxrserver.conf):
 
@@ -298,7 +298,7 @@ ScriptAlias /lxr /usr/local/share/lxr
    AllowOverride All
 </Directory>
 
-Copy htaccess_cgi to .htaccess (once again beware of the dot!)
+Copy .htaccess_cgi to .htaccess (once again beware of the dot!)
 
 Remember mod_perl and CGI are exclusive: you have to choose one or
 the other, not both.
