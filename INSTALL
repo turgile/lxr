@@ -1,5 +1,18 @@
 Installation
 ------------
+(updated March 2011 for 0.9.9 release)
+These instructions are also available on the web site at
+            http://lxr.sourceforge.net
+
+
+Note: if you already know LXR, read file CHANGES for compatibility
+issues (index database, configuration files, customised templates,
+etc.). If you are lucky, you avoid reindexing your tree.
+
+
+
+A/ Required tools
+-----------------
 The current version of the lxr depends on the following things:
 
 1) A recent version of the exuberant ctags program.  Available from
@@ -30,8 +43,30 @@ The current version of the lxr depends on the following things:
 	BitKeeper (bk) installed
 	Digest::SHA module (available from CPAN)
 
-Installing the database
------------------------
+Before attempting to load these resources directly (sometimes as source
+you must compile and install), always poke the packages of your favorite
+distribution to spare you pain and failures.
+
+B/ Create lxr installation directory
+------------------------------------
+Expand the tarball in the LXR distribution into a directory of your
+choice. If you just want to have a try, expand in your home directory,
+say /home/yourself/lxr. If you want to install system-wide,
+a good choice could be /usr/local/share/lxr so you would do
+
+ cd ~
+ tar -zxf /path/to/lxr/lxr-x.y.tgz
+or
+ cd /usr/local/share
+ tar -zxf /path/to/lxr/lxr-x.y.tgz (as root or with appropriate permissions)
+
+Then, get rid of the release number in the directory name and enter into it:
+
+ mv lxr-x.y lxr
+ cd lxr
+
+C/ Installing the database
+--------------------------
 You will need to create a database for lxr, and possibly create a user
 as well.  If you are unsure how to do this, or don't have admin rights
 to the database, consult the documentation or your sysadmin
@@ -50,79 +85,93 @@ Initialise the database:
 	   \i initdb-postgres
 Just ignore the errors about unimplemented functions.
 
-
 For MySQL:
+Create a user for lxr and give the user permission to create databases:
+		mysql -u root -p
+		(give root's password)
+		create user 'lxr' identified by 'foo';
+		grant alter, delete, index, insert, select, update,
+			create,drop, grant, references on *.* to 'lxr'@'%';
+		quit
+Note: it is more comfortable and less error-prone ti use phpMyAdmin
+	if it is installed.
+Reenter MySQL as 'lxr' to initialise the database (reading a script)
+		mysql -u lxr -p
+		\. initdb-mysql
 
-Run 'mysql' as a user that has the right to create new databases
-(often root) and then read in the initdb-mysql file using
-'\. initdb-mysql'.  This will create the database and a user called
-lxr with access rights to the database.
-
-For Oracle
-
+For Oracle:
 Start script in sqlplus with:
 
 @/[pathTo]/initdb-oracle.sql;
 
-
-Create lxr installation directory
----------------------------------
-Expand the tarball in the LXR distribution into a directory of your
-choice. A good choice could be /usr/local/lxr so you would do
-
- cd /usr/local/
- tar -zxf /path/to/lxr/lxr-x.x.tgz (as root or with appropriate permissions)
-
-Edit the lxr config file
-------------------------
+D/ Edit the lxr config file
+---------------------------
 
 Copy the template lxr.conf file from the templates directory to the
 root of the lxr installation.
 
-Go through the config file and fill in the relevant values.
+Go through the config file, global configuration section and
+fill in the relevant values.
 If you have glimpse installed, you should set
 
- 'glimpsebin' => '/path/to/your/glimpse/executable'
- 'glimpseindex' => '/path/to/your/glimpseindex/executable'
+ , 'glimpsebin' => '/path/to/your/glimpse/executable'
+ , 'glimpseindex' => '/path/to/your/glimpseindex/executable'
 
 If you have swish-e installed, you should set
 
- 'swishbin' => '/path/to/your/swishe-e/executable'
+ , 'swishbin' => '/path/to/your/swishe-e/executable'
 
 Comment out the variables for the indexer you are not using.
+
+Now you need to edit the paths for ectags.conf -
+change the paths in lxr.conf to match where you've installed LXR (in
+our example, /home/yourself/lxr or /usr/local/share/lxr):
+
+ , 'ectagsconf' => '/usr/local/share/lxr/lib/LXR/Lang/ectags.conf'
 
 Set 'htmlsearch' to either 'html-search-swish.html' or
 'html-search-glimpse.html' depending on which indexer
 you are using.
 
-Now you need to edit the paths for generic.conf and ectags.conf -
+Now you need to edit the paths for generic.conf (file content subsection) -
 change the paths in lxr.conf to match where you've installed LXR (in
-our example, /usr/local/lxr):
+our example, /home/yourself/lxr or /usr/local/share/lxr):
 
- 'Genericconf' => '/usr/local/lxr/lib/LXR/Lang/generic.conf'
- 'ectagsconf' => '/usr/local/lxr/LXR/Lang/ectags.conf',
+ , 'genericconf' => '/usr/local/share/lxr/lib/LXR/Lang/generic.conf'
 
+Proceed to the tree configuration section.
 Next set your base URL and virtual root for LXR by setting
 
- 'baseurl' => 'http://your.host.name/your_lxr_virtual_root
- 'virtroot' => '/your_lxr_virtual_root'
+ , 'baseurl' => 'http://your.host.name/your_lxr_virtual_root
+ , 'virtroot' => '/your_lxr_virtual_root'
 
-Fill in the dbname, dbpass and dbuser variable to the right values for
-the database you created above.
+In the tree location subsection, set the 'sourceroot' variable to point
+to the source code that you want to index and browse and give that code
+a nice name:
 
+ , 'sourceroot' => '/home/yourself/tree'
+ , 'sourcerootname' => 'Example'
+
+Go to the version selection subsection.
 The 'v' (Version) variable needs to have the list of versions of your
 sourcecode that you want to index.  This list can be in the lxr.conf
 file, read from a file or calculated at runtime.  Select the right
 method for your setup in the lxr.conf file.
 
-Set the 'sourceroot' variable to point to the source code that you
-want to index and browse.
+Finally, in the data storage subsection, fill in the dbname, dbpass and
+dbuser variable to the right values for the database you created above.
+
+  Create a directory for the swish index files to go in, and put the
+  path of this directory in the 'swishdir' variable.
+Or
+  Create a directory for the glimpse index files to go in, and put the
+  path of this directory in the 'glimpsedir' variable.
 
 You may also want to configure the 'graphicfile', 'filetype' and
 'incprefix' variables, but the defaults should be reasonable for most setups.
 
-Getting LXR to work with CVS
-----------------------------
+* Getting LXR to work with CVS
+------------------------------
 Currently LXR cannot index CVS files with glimpse.  You must use swish-e.
 
 If you want lxr to work on files that are located in a CVS repository, edit
@@ -145,25 +194,21 @@ Next, set the source root variable to point to the directory containing
 the versions of your project in CVS. If your cvs repository in stored
 in /path/to/cvs/repository and your cvs module is called lxr then set
 
-  'sourceroot' => 'cvs:/path/to/cvs/repository/lxr'
-  'sourcerootname' => 'A Friendly Name For Your Repository'
+ , 'sourceroot' => 'cvs:/path/to/cvs/repository/lxr'
+ , 'sourcerootname' => 'A Friendly Name For Your Repository'
 
 
-Using Swish-e with LXR
-----------------------
-Create a directory for the swish index files to go in, and put the
-path of this directory in the 'swishdir' variable.
-
-Using Glimpse with LXR
---------------------------------
-Create a directory for the glimpse index files to go in, and put the
-path of this directory in the 'glimpsedir' variable.
-
-Generate index.
----------------
+E/ Generate index
+-----------------
 It is now time to generate the index. This is done using the program
-"genxref". genxref takes two arguments --url= and --version= where is
-the url where the lxr web front-end appears.
+"genxref". genxref takes two arguments --url= and --version=.
+--url is equal to baseurl (or one of baseurl_aliases).
+--version is ythe name of one of the versions.
+
+  genxref --url=http://your.host.name/your_lxr_virtual_root --version=v3
+
+It is VERY IMPORTANT that the --url argument be EQUAL to baseurlxx
+(including http:).
 
 Version is a tag from cvs if you are using the cvs backend or the name
 of a directory in your "sourceroot" directory. It is worth noting that
@@ -174,7 +219,7 @@ url argument.
 If you are setting up LXR to use files in a CVS repository, you
 probably want to use the 'head' version (default).
 
-  genxref --url=/path/to/lxr --version=head
+  genxref --url=http://path/to/lxr --version=head
 
 You can also use the --allversions argument to automatically index all
 the versions defined in the versions variable.
@@ -191,56 +236,74 @@ The web front end for LXR can run as CGI scripts or using Apache's
 mod_perl.  Since there are differences between mod_perl for Apache 1.x
 and 2.x, the setup is slightly different - details below.
 
+You are advised not to edit httpd.conf if possible. Prefer to create a
+new private configuration file in the conf.d directory (/etc/httpd/conf.d),
+say lxrserver.conf. The following text refers to lxrserver.conf, but if you
+really must, you can read httpd.conf.
+
 Configuring for mod_perl
 ------------------------
 
-You need to edit httpd.conf to point to the lxr files, for example
-if you have installed the lxr files in /usr/local/lxr and you want to
+You need to edit lxrserver.conf to point to the lxr files, for example
+if you have installed the lxr files in /usr/local/share/lxr and you want to
 have your URL be http://mysite/lxr then you would add:
 
-Alias /lxr /usr/local/lxr
-<Directory /usr/local/lxr>
+Alias /lxr /usr/local/share/lxr
+<Directory /usr/local/share/lxr>
    AllowOverride All
 </Directory>
 
+If you fear security attacks, change the above directive to
+   AllowOverride FileInfo Limit Options
+
    Apache 1.x specific
    -------------------
-   Copy .htaccess-apache1 to .htaccess
+   Copy htaccess-apache1 to .htaccess (mind the dot!)
       
    Now you have to put the perl modules that LXR uses into a directory
    on your system that will be searched by mod_perl when the LXR
    scripts are executed (typically site_perl):
 
-    cp /usr/local/lxr/Local.pm /usr/lib/perl5/site_perl/
-	cp -r /usr/local/lxr/lib/LXR /usr/lib/perl5/site_perl
+    cp /usr/local/share/lxr/Local.pm /usr/lib/perl5/site_perl/
+	cp -r /usr/local/share/lxr/lib/LXR /usr/lib/perl5/site_perl
 
    Apache 2.x specific
    -------------------
 
-   Copy .htaccess-apache2 to .htaccess
+   Copy htaccess-apache2 to .htaccess (pay attention to the dot!)
 
-   Add the following to your Apache2 config:
+   Add the following to your Apache2 config (lxrserver.conf):
 
-      PerlRequire /usr/local/lxr/apache2-require.pl
+      PerlRequire /usr/local/share/lxr/apache2-require.pl
   
-   (replacing /usr/local/lxr with wherever you've installed LXR)
+   (replacing /usr/local/share/lxr with wherever you've installed LXR)
 
    Then edit the paths in the apache2-require.pl script to point to
    the directories where LXR is installed.
+	  @INC= ( @INC
+			, "/usr/local/share/lxr"      # <- LXR root directory
+			, "/usr/local/share/lxr/lib", # <- LXR library directory
+			);
+
 
 Configuring for CGI
 -------------------
 
-You need to edit httpd.conf to point to the lxr files, for example
-if you have installed the lxr files in /usr/local/lxr and you want to
+You need to edit lxrserver.conf to point to the lxr files, for example
+if you have installed the lxr files in /usr/local/share/lxr and you want to
 have your URL be http://mysite/lxr then you would add:
 
-ScriptAlias /lxr /usr/local/lxr
-<Directory /usr/local/lxr>
+ScriptAlias /lxr /usr/local/share/lxr
+<Directory /usr/local/share/lxr>
    AllowOverride All
 </Directory>
 
-Copy .htaccess_cgi to .htaccess
+Copy htaccess_cgi to .htaccess (once again beware of the dot!)
+
+Remember mod_perl and CGI are exclusive: you have to choose one or
+the other, not both.
+
+
 
 That's it - lxr should now work. Fire up your webbrowser and go to
 http://yoursite/lxr/source and you should see the listing for the top
@@ -323,3 +386,14 @@ HTML.  This can normally be solved by changing the value of $wwwdebug
 to 0 in Common.pm.  But please report the warning message as a bug at
 http://sf.net/projects/lxr first!
 
+
+Security advisory
+-----------------
+LXR ships with a very restrictive robots.txt for preventing (well-behaved
+only) robots from crawling inside your site. You may want to allow public
+access. Just change the name of the file.
+
+
+Other sources of information
+----------------------------
+Read the manual. Browse the http://lxr.sourceforge.net site.
