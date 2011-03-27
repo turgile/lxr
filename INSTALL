@@ -90,8 +90,7 @@ Create a user for lxr and give the user permission to create databases:
 		mysql -u root -p
 		(give root's password)
 		create user 'lxr'@'localhost' identified by 'foo';
-		grant usage *.* to 'lxr'@'localhost' identified by 'foo';
-Note: it is more comfortable and less error-prone ti use phpMyAdmin
+Note: it is more comfortable and less error-prone to use phpMyAdmin
 	if it is installed.
 
 Initialise the database (reading a script in mysql)
@@ -177,17 +176,17 @@ If you want lxr to work on files that are located in a CVS repository, edit
 lxr.conf and set the range variable so that it uses a subroutine instead
 of the default setting that reads the src/cvsversions file.
 
-  'range' => sub { return
+ , 'range' => sub { return
                   ($files->allreleases($LXR::Common::pathname),
                    $files->allrevisions($LXR::Common::pathname))
-               }, # deferred function call.
+               }  # deferred function call.
 
 You should also set the default version retrieved to a version that really
 does exist otherwise you will receive errors when generating your index.
 
 A good value for the default version is head.
 
-  'default' => 'head'
+ , 'default' => 'head'
 
 Next, set the source root variable to point to the directory containing
 the versions of your project in CVS. If your cvs repository in stored
