@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.73 2011/03/26 13:06:13 ajlittoz Exp $
+# $Id: Common.pm,v 1.74 2011/03/28 14:12:07 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.73 2011/03/26 13:06:13 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.74 2011/03/28 14:12:07 ajlittoz Exp $ ';
 
 use strict;
 
@@ -623,7 +623,7 @@ sub bannerexpand {
 			# so that it's possible for the pathnames to wrap.
 			# The <wbr> tag ought to do this, but it is ignored when
 			# sizing table cells, so we have to use a real character.
-			$furl .= '&#x200B; ' . fileref($_, "banner", "/$fpath");
+			$furl .= '&#x200B;' . fileref($_, "banner", "/$fpath");
 		}
 		$furl =~ s|/</a>|</a>/|gi;
 
