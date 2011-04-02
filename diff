@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: diff,v 1.18 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: diff,v 1.19 2011/04/02 13:48:01 ajlittoz Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.18 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: diff,v 1.19 2011/04/02 13:48:01 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -195,8 +195,22 @@ sub printdiff {
 		my $o = htmlsub($orig[$i], 50);
 		my $n = $new[$i];
 
-		my $diffmark =
-		  $chg{ $i + 1 } ? ("<span class=\"diff-mark\">" . $chg{ $i + 1 } . "</span>") : "  ";
+		my $diffmark = "  ";
+		if ($chg{ $i + 1 }) {
+			$diffmark = "<span class=\"diff-mark\">" . $chg{ $i + 1 } . "</span>";
+			if ("&lt;&lt;" eq $chg{ $i + 1 }) {
+				$o =~ s|</a> |</a> <span class=\"diff-left\">|;
+			}
+			if ("&gt;&gt;" eq $chg{ $i + 1 }) {
+				$n =~ s|</a> |</a> <span class=\"diff-right\">|;
+			}
+			if ("!!" eq $chg{ $i + 1 }) {
+				$o =~ s|</a> |</a> <span class=\"diff-both\">|;
+				$n =~ s|</a> |</a> <span class=\"diff-both\">|;
+			}
+			$o .= "</span>";
+			$n .= "</span>";
+		}
 
 		#print("$o <span class=\"diff-mark\">",
 		#      ($chg{$i+1} || "  "), "</span> $n\n");

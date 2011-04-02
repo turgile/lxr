@@ -1,10 +1,31 @@
-/*********************************/
-/* general style to be inherited */
-/*********************************/
+/*******************/
+/* Font definition */
+/*******************/
+  body
+, a.dirfile
+, a.dirfolder
+{ font-family: Baskerville, Times, "Times New Roman", serif
+}
+  .main
+, .banner
+, .modes
+, .modes-sel
+, /*.modes*/ button
+/*, .modes-sel button*/
+, .varlink
+, .var-sel
+, .dirrow1
+, .dirrow2
+, select
+{ font-family: "Gill Sans", Helvetica, Arial, sans
+}
+
+/*****************/
+/* global styles */
+/*****************/
 body
 { color: #000000
 ; background-color: white
-; font-family: Baskerville, Times, "Times New Roman", serif
 }
 
 /* general link behavior */
@@ -16,7 +37,8 @@ a:hover
 { text-decoration: underline
 }
 
-a:visited {
+a:visited
+{
 }
 
 /* the main page title etc. */
@@ -24,7 +46,6 @@ a:visited {
 { color: #000066
 ; font-size: 24pt
 ; font-weight: bold
-; font-family: "Gill Sans", Helvetica, Arial, sans
 }
 
 h1.main
@@ -40,13 +61,6 @@ h2.main
 .banner
 { font-size: 14pt
 ; color: #339966
-; font-family: "Gill Sans", Helvetica, Arial, sans
-}
-
-.modes, .varlink
-{ font-size: 10pt
-; font-family: "Gill Sans", Helvetica, Arial, sans
-; color: blue
 }
 
 .file
@@ -55,27 +69,78 @@ h2.main
 /****************************************/
 /* menus, "variables" */
 /****************************************/
-a.modes, a.varlink
-{ text-decoration: none
+  .modes
+, .varlink
+{ font-size: 10pt
 ; color: blue
 }
 
-a.modes:visited, a.varlink:visited
+  a.modes
+, a.varlink
+{ text-decoration: none
+; color: blue
+}
+  a.modes:visited
+, a.varlink:visited
 { color: blue
 }
 
-a.modes:hover, a.varlink:hover 
+  a.modes:hover
+, a.varlink:hover 
 { background-color: #ddffcc
 ; text-decoration: none
 }
-
 /* currently selected mode/variable */
-.modes-sel, .var-sel  /* selected one */
+  span.modes-sel
+, span.var-sel  /* selected one */
 { font-style: italic
 ; font-weight: bold
 ; font-size: 10pt
-; font-family: "Gill Sans", Helvetica, Arial, sans
 ; background-color: #cceeff
+}
+
+  form.modes
+, form.modes-sel
+, form.vars
+{ margin: 1px
+; padding: 1px
+}
+  .modes-sel button
+{ font-style: italic
+/* ; font-size: 9pt */
+; font-weight: bold
+; background-color: #cceeff
+}
+  .modes button
+{ font-style: normal
+/* ; font-size: 8pt */
+; color: blue
+; background-color: #eeeeee
+}
+
+  .vars button
+{ /*font-style: normal*/
+/*;*/ font-size: 11pt
+/*; color: blue
+; background-color: #eeeeee*/
+}
+  .vars select
+{ color: blue
+; background-color: white
+}
+  option.varlink
+{ color: blue
+; background-color: #eeeeee
+}
+  option.var-sel
+{ color: black
+; background-color: #eeeeee
+; font-weight: bold
+; font-style: italic
+}
+
+  form.diff-form
+{ display: inline
 }
 
 /************************************/
@@ -84,13 +149,11 @@ a.modes:hover, a.varlink:hover
 
 /* link to file or folder in the source view */
 a.dirfile
-{ font-family: Baskerville, Times, "Times New Roman", serif
-; font-size: 12pt
+{ font-size: 12pt
 }
 
 a.dirfolder
-{ font-family: Baskerville, Times, "Times New Roman", serif
-; font-size: 12pt
+{ font-size: 12pt
 }
 
 /* directory listing area */
@@ -111,14 +174,12 @@ th
 /* "odd" lines (three at once) */
 .dirrow1
 { background-color: #ffffff
-; font-family: "Gill Sans", Helvetica, Arial, sans
 ; font-size: 10pt
 }
 
 /* "even" lines (three at once) */
 .dirrow2
 { background-color: #eeeeee
-; font-family: "Gill Sans", Helvetica, Arial, sans
 ; font-size: 10pt
 }
 
@@ -246,3 +307,15 @@ pre.file {
 .diff-mark
 { color: red
 }
+
+/* background of differing lines */
+  .diff-left
+{ background-color: #ffccdd
+}
+  .diff-both
+{ background-color: #ffffaa
+}
+  .diff-right
+{ background-color: #ddffdd
+}
+
