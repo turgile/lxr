@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.74 2011/03/28 14:12:07 ajlittoz Exp $
+# $Id: Common.pm,v 1.75 2011/04/02 09:52:24 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.74 2011/03/28 14:12:07 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.75 2011/04/02 09:52:24 ajlittoz Exp $ ';
 
 use strict;
 
@@ -677,45 +677,98 @@ sub dotdoturl {
 	return ($url);
 }
 
+sub modelink2button
+{	my ($ref) = @_;
+
+	$ref =~ s|<a|<form method="get"|;
+	$ref =~ s|href|action|;
+	if ($ref =~ s|\?|">?|) {
+		$ref =~ s|">([^?])|<button type="submit">$1|;
+		$ref =~ s|[?&;](\w+)=(.*?)(?=[&;<])|<input type="hidden" name="$1" value="$2">|g;
+	}
+	else {
+		$ref =~ s|">|"><button type="submit">$1|;
+	}
+	$ref =~ s|/a|/button></form|;
+	return $ref;
+}
+
 # This one isn't too bad either.  We just expand the "modes" template
 # by filling in all the relevant values in the nested "modelink"
 # template.
 sub modeexpand {
 	my ($templ, $who) = @_;
 	my $modex = '';
+	my $ref;
 	my @mlist = ();
+	my @mblist = ();
 	my $mode;
+	my $modebtn;
 
-	if ($who eq 'source' || $who eq 'sourcedir') {
-		push(@mlist, "<span class='modes-sel'>source navigation</span>");
-	} else {
-		push(@mlist, fileref("source navigation", "modes", $pathname));
+	if ($who eq 'source' || $who eq 'sourcedir')
+	{	push(@mlist, "<span class='modes-sel'>source navigation</span>");
+		push	( @mblist
+				, "<form method='get' class='modes-sel' action=''>"
+					. "<button type='submit' disabled>source navigation</button>"
+					. "</form>"
+				);
+	} else
+	{	$ref = fileref("source navigation", "modes", $pathname);
+		push(@mlist, $ref);
+		push(@mblist, modelink2button($ref));
 	}
 
-	if ($who eq 'diff') {
-		push(@mlist, "<span class='modes-sel'>diff markup</span>");
-	} elsif ($who eq 'source' && $pathname !~ m|/$|) {
-		push(@mlist, diffref("diff markup", "modes", $pathname));
+	if ($who eq 'diff')
+	{	push(@mlist, "<span class='modes-sel'>diff markup</span>");
+		push	( @mblist
+				, "<form method='get' class='modes-sel' action=''>"
+					. "<button type='submit' disabled>diff markup</button>"
+					. "</form>"
+				);
+	} elsif ($who eq 'source' && $pathname !~ m|/$|)
+	{	$ref = diffref("diff markup", "modes", $pathname);
+		push(@mlist, $ref);
+		push(@mblist, modelink2button($ref));
 	}
 
-	if ($who eq 'ident') {
-		push(@mlist, "<span class='modes-sel'>identifier search</span>");
-	} else {
-		push(@mlist, idref("identifier search", "modes", ""));
+	if ($who eq 'ident')
+	{	push(@mlist, "<span class='modes-sel'>identifier search</span>");
+		push	( @mblist
+				, "<form method='get' class='modes-sel' action=''>"
+					. "<button type='submit' disabled>identifier search</button>"
+					. "</form>"
+				);
+	} else
+	{	$ref = idref("identifier search", "modes", "");
+		push(@mlist, $ref);
+		push(@mblist, modelink2button($ref));
 	}
 
-	if ($who eq 'search') {
-		push(@mlist, "<span class='modes-sel'>general search</span>");
-	} else {
-		push(@mlist,
-			    "<a class=\"modes\" "
+	if ($who eq 'search')
+	{	push(@mlist, "<span class='modes-sel'>general search</span>");
+		push	( @mblist
+				, "<form method='get' class='modes-sel' action=''>"
+					. "<button type='submit' disabled>general search</button>"
+					. "</form>"
+				);
+	} else
+	{	$ref = "<a class=\"modes\" "
 			  . "href=\"$config->{virtroot}/search"
 			  . urlargs
-			  . "\">general search</a>");
+			  . "\">general search</a>";
+		push(@mlist, $ref);
+		push	( @mblist
+				, modelink2button($ref)
+				);
 	}
 
-	foreach $mode (@mlist) {
-		$modex .= expandtemplate($templ, ('modelink' => sub { return $mode }));
+	foreach $mode (@mlist)
+	{ 	$modebtn = shift(@mblist);
+		$modex .= expandtemplate	(
+					$templ,
+					(	'modelink'	=> sub { return $mode }
+					,	'modebtn' 	=> sub { return $modebtn }
+					)				);
 	}
 
 	return ($modex);
@@ -757,6 +810,85 @@ sub varlinks {
 	return ($vlex);
 }
 
+sub varmenu {
+	my ($var) = @_;
+	my $val;
+	my $valmenu = '';
+
+	my $oldval = $config->variable($var);
+	my $defval = $config->vardefault($var);
+	foreach $val ($config->varrange($var)) {
+		$valmenu .= "<option class=\"";
+		if ($val eq $oldval)
+		{	$valmenu .= "var-sel\" selected";
+		} else
+		{	$valmenu .= "varlink\"";
+		}
+# TODO Find a way of preventing sending the default value (though harmless)
+# 		if ($val eq $defval)
+# 		{	$valmenu .= "???";
+# 		}
+		$valmenu .= ">$val</option>";
+	}
+	return ($valmenu);
+}
+
+my $hidden;
+sub varlink2action
+{	my ($ref) = @_;
+	my $var;
+	my $val;
+
+	$hidden = "";
+	$ref =~ s|<a.*href=||;
+	$ref =~ s|>.*$||;
+	$ref =~ s|\?(.*)"$|"|;
+	my $param = $1;
+	while ($param =~ s/(.*?)=(.*?)([&;]|$)//) {
+		$var = $1;
+		$val = $2;
+		# Don't duplicate variables (they will be sent by 'submit')
+		next if exists $config->{variables}{$var};
+		$hidden .= "<input type='hidden' name='"
+				. $var
+				. "' value='"
+				. $val
+				. "'>";
+	}
+	return $ref;
+}
+
+sub varaction {
+	my ($who) = @_;
+	my $val;
+	my $valaction;
+
+	if ($who eq 'source' || $who eq 'sourcedir') {
+# TODO $varaction is used, but for diffhead, outside the "variables" template.
+#		We thus have no idea of the current values of the variables.
+#		To get them, we need to wait until the submit button is clicked.
+#		Then we could apply mappath. Unhappily, $pathname is not
+#		guaranteed to be an 'original' path; it may already have undergone
+#		a mappath transformation. It is then not safe to apply a second time.
+# 		$valaction = varlink2action(&fileref("$val", ""
+# 									, $config->mappath($pathname, "$var=$val")
+# 									, 0, "$var=$val")
+# 								  );
+		$valaction = varlink2action(&fileref("", "", $pathname, 0));
+	} elsif ($who eq 'diff') {
+		$valaction = varlink2action(&diffref("", "", $pathname));
+	} elsif ($who eq 'ident') {
+		$valaction = varlink2action(&idref("", "", $identifier));
+	} elsif ($who eq 'search') {
+		$valaction = varlink2action(
+			"\"$config->{virtroot}/search"
+		  . &urlargs("string=" . $HTTP->{'param'}->{'string'})
+		  . "\""
+								);
+	}
+	return $valaction;
+}
+
 sub varexpand {
 	my ($templ, $who) = @_;
 	my $varex = '';
@@ -765,9 +897,11 @@ sub varexpand {
 	foreach $var ($config->allvariables) {
 		$varex .= expandtemplate(
 			$templ,
-			(
-				'varname'  => sub { $config->vardescription($var) },
-				'varlinks' => sub { varlinks(@_, $who, $var) }
+			( 'varname'  => sub { $config->vardescription($var) }
+			, 'varid'    => sub { return $var }
+			, 'varlinks' => sub { varlinks(@_, $who, $var) }
+			, 'varmenu'  => sub { varmenu($var) }
+			, 'varaction'=> sub { varaction($who) }
 			)
 		);
 	}
@@ -865,6 +999,8 @@ sub makeheader {
 			,	'atticlink'  => sub { atticlink(@_) }
 			,	'encoding'   => sub { return $config->{'encoding'} }
 			,	'LXRversion' => sub { return $LXRversion::LXRversion }
+			,	'varaction'	 => sub { varaction($who) }
+			,	'varparam'	 => sub { $hidden }
 			)
 		)
 	);
@@ -903,6 +1039,8 @@ sub makefooter {
 			,	'variables' => sub { varexpand(@_,    $who) }
 			,	'devinfo'   => sub { devinfo(@_) } 
 			,	'LXRversion' => sub { return $LXRversion::LXRversion }
+			,	'varaction'	 => sub { varaction($who) }
+			,	'varparam'	 => sub { $hidden }
 			)
 		)
 	);
