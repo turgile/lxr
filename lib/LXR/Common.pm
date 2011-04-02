@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.75 2011/04/02 09:52:24 ajlittoz Exp $
+# $Id: Common.pm,v 1.76 2011/04/02 11:40:13 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.75 2011/04/02 09:52:24 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.76 2011/04/02 11:40:13 ajlittoz Exp $ ';
 
 use strict;
 
@@ -847,8 +847,6 @@ sub varlink2action
 	while ($param =~ s/(.*?)=(.*?)([&;]|$)//) {
 		$var = $1;
 		$val = $2;
-		# Don't duplicate variables (they will be sent by 'submit')
-		next if exists $config->{variables}{$var};
 		$hidden .= "<input type='hidden' name='"
 				. $var
 				. "' value='"
@@ -902,6 +900,7 @@ sub varexpand {
 			, 'varlinks' => sub { varlinks(@_, $who, $var) }
 			, 'varmenu'  => sub { varmenu($var) }
 			, 'varaction'=> sub { varaction($who) }
+			, 'varparam' => sub { $hidden }
 			)
 		);
 	}
