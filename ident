@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: ident,v 1.26 2011/03/11 21:15:21 ajlittoz Exp $
+# $Id: ident,v 1.27 2011/04/02 15:39:14 ajlittoz Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.26 2011/03/11 21:15:21 ajlittoz Exp $ ';
+$CVSID = '$Id: ident,v 1.27 2011/04/02 15:39:14 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -32,6 +32,7 @@ use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
 use LXR::Common qw(:html);
 use Local;
 
+my $defonly = undef;
 my $reference_hits;
 my $declare_hits;
 
@@ -144,22 +145,28 @@ sub printident {
 	print(
 		expandtemplate(
 			$templ,
-			(
-				variables          => \&varinputs,
-				identifier         => sub { $_ = $identifier; s/</&lt;/g; s/>/&gt;/g; return $_; },
-				identifier_escaped => sub { $_ = $identifier; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; },
-				refs => sub { refexpand(@_) },
+			( variables			=> \&varinputs
+			, identifier		=> sub { $_ = $identifier; s/</&lt;/g; s/>/&gt;/g; return $_; },
+			, identifier_escaped=> sub { $_ = $identifier; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; },
+			, checked			=> sub { $defonly ? 'checked="checked"' : "" }
+			, refs				=> sub { refexpand(@_) },
 			)
 		)
 	);
 	print $declare_hits;
-	print(expandtemplate($templ_refs, (uses => sub { usesexpand(@_) },)));
+	print(expandtemplate($templ_refs, (uses => sub { usesexpand(@_) },)))
+		unless $defonly;
 	print $reference_hits;
 }
 
 httpinit;
 
 makeheader('ident');
+$defonly = 1 if	($HTTP->{'param'}->{'identdefonly'}
+				||	($config->{'identdefonly'}
+					&& !exists($HTTP->{'param'}->{'remember'})
+					)
+				);
 printident;
 makefooter('ident');
 httpclean;
