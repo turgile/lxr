@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.76 2011/04/02 11:40:13 ajlittoz Exp $
+# $Id: Common.pm,v 1.77 2011/04/02 13:55:59 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.76 2011/04/02 11:40:13 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.77 2011/04/02 13:55:59 ajlittoz Exp $ ';
 
 use strict;
 
@@ -269,7 +269,7 @@ sub markupfile {
 
 	my $line = '001';
 	# Don't keep href=... in anchor definition
-	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a.*?)(?:href.*\#)001(\">)1(<\/a>)$/;
+	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a.*?)(?:href.*\#)\d+(\">)\d+(<\/a>)$/;
 	$ltag[0] .= 'name="';
 	$ltag[2] .= " ";
 
