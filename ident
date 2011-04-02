@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: ident,v 1.27 2011/04/02 15:39:14 ajlittoz Exp $
+# $Id: ident,v 1.28 2011/04/02 18:12:39 ajlittoz Exp $
 
 # ident --	Look up identifiers
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.27 2011/04/02 15:39:14 ajlittoz Exp $ ';
+$CVSID = '$Id: ident,v 1.28 2011/04/02 18:12:39 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -163,7 +163,7 @@ httpinit;
 
 makeheader('ident');
 $defonly = 1 if	($HTTP->{'param'}->{'identdefonly'}
-				||	($config->{'identdefonly'}
+				||	($config->{'identdefonly'} eq 'true'
 					&& !exists($HTTP->{'param'}->{'remember'})
 					)
 				);
