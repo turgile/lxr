@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: search,v 1.34 2010/01/05 18:00:58 mbox Exp $
+# $Id: search,v 1.35 2011/04/08 19:13:51 ajlittoz Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.34 2010/01/05 18:00:58 mbox Exp $ ';
+$CVSID = '$Id: search,v 1.35 2011/04/08 19:13:51 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -141,6 +141,7 @@ sub glimpsesearch {
 sub swishsearch {
 	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
 
+	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
   my $swishIndex = $config->swishdir . "/" . $releaseid . ".index";
 	if (!-e $swishIndex) {
 		print "<p align='center'><i>";
