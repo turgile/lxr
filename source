@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: source,v 1.49 2011/03/26 12:45:48 ajlittoz Exp $
+# $Id: source,v 1.50 2011/04/08 16:00:43 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.49 2011/03/26 12:45:48 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.50 2011/04/08 16:00:43 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -281,6 +281,9 @@ sub printfile {
 						  ' ' x (6 - length($a))
 						  . $files->getauthor($pathname, $a);
 						$a .= ' ' x (16 - length($a));
+						if (length($a) > 16) {
+							substr($a, 15, 10000, '*');
+						}
 					}
 				}
 
