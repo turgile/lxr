@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.77 2011/04/02 13:55:59 ajlittoz Exp $
+# $Id: Common.pm,v 1.78 2011/04/14 18:00:40 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.77 2011/04/02 13:55:59 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.78 2011/04/14 18:00:40 ajlittoz Exp $ ';
 
 use strict;
 
@@ -520,11 +520,11 @@ sub httpinit {
 		delete $HTTP->{'param'}->{$_};
 	}
 
-	$releaseid  = clean_release($config->variable('v'));
-	$config->variable('v', $releaseid);  # put back into config obj
-
 	$HTTP->{'param'}->{'file'} = clean_path($HTTP->{'param'}->{'file'});
 	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
+
+	$releaseid  = clean_release($config->variable('v'));
+	$config->variable('v', $releaseid);  # put back into config obj
 
 	printhttp;
 }
