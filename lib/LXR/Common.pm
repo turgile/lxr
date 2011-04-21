@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.78 2011/04/14 18:00:40 ajlittoz Exp $
+# $Id: Common.pm,v 1.79 2011/04/21 07:44:53 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.78 2011/04/14 18:00:40 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.79 2011/04/21 07:44:53 ajlittoz Exp $ ';
 
 use strict;
 
@@ -689,7 +689,7 @@ sub modelink2button
 	else {
 		$ref =~ s|">|"><button type="submit">$1|;
 	}
-	$ref =~ s|/a|/button></form|;
+	$ref =~ s|</a>|</button></form>|;
 	return $ref;
 }
 
