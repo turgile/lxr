@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.79 2011/04/21 07:44:53 ajlittoz Exp $
+# $Id: Common.pm,v 1.80 2011/05/07 13:39:56 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.79 2011/04/21 07:44:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.80 2011/05/07 13:39:56 ajlittoz Exp $ ';
 
 use strict;
 
@@ -327,9 +327,11 @@ sub markupfile {
 		&$outfun("<ul><table><tr><th valign=\"center\"><b>Image: </b></th></tr>\n");
 		&$outfun("<tr><td>");
 		&$outfun("<img src=\""
-			  . $config->{virtroot} . $pathname
+			  . $config->{'sourceaccess'}
+			  . "/" . $config->variable('v')
+			  . $pathname
 			  . "\" border=\"0\""
-			  . " alt=\"$pathname cannot be displayed by this browser\">\n");
+			  . " alt=\"$pathname cannot be displayed from this browser\">\n");
 		&$outfun("</td></tr></table></ul>");
 	}
 	elsif ($pathname =~ m|/CREDITS$|) {
