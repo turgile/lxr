@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: diff,v 1.19 2011/04/02 13:48:01 ajlittoz Exp $
+# $Id: diff,v 1.20 2011/05/07 12:55:19 ajlittoz Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.19 2011/04/02 13:48:01 ajlittoz Exp $ ';
+$CVSID = '$Id: diff,v 1.20 2011/05/07 12:55:19 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -190,9 +190,12 @@ sub printdiff {
 	my @orig = split(/\n/, $orig);
 	my @new  = split(/\n/, $new);
 
+	my $leftwidth = $$HTTP{'param'}{'.diffleftwidth'}
+					|| $config->{'diffleftwidth'}
+					|| 50;
 	print("<pre class=\"file\">\n");
 	foreach $i (0 .. $len) {
-		my $o = htmlsub($orig[$i], 50);
+		my $o = htmlsub($orig[$i], $leftwidth);
 		my $n = $new[$i];
 
 		my $diffmark = "  ";
