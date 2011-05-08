@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.22 2011/05/08 16:49:19 ajlittoz Exp $
+# $Id: Local.pm,v 1.23 2011/05/08 19:11:30 ajlittoz Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.22 2011/05/08 16:49:19 ajlittoz Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.23 2011/05/08 19:11:30 ajlittoz Exp $ ';
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -301,24 +301,24 @@ sub descexpand {
 sub dirdesc {
 	my ($path, $releaseid) = @_;
 	if ($files->isfile($path . "README.txt", $releaseid)) {
-		descreadme($path . "README.txt", $releaseid);
+		descreadme($path, "README.txt", $releaseid);
 	} elsif ($files->isfile($path . "README", $releaseid)) {
-		descreadme($path . "README", $releaseid);
+		descreadme($path, "README", $releaseid);
 	} elsif ($files->isfile($path . "README.html", $releaseid)) {
-		descreadmehtml($path . "README.html", $releaseid);
+		descreadmehtml($path, "README.html", $releaseid);
 	}
 }
 
 sub descreadmehtml {
-	my ($file, $releaseid) = @_;
+	my ($dir, $file, $releaseid) = @_;
 
 	my $string = "";
-	return if !($desc = $files->getfilehandle($file, $releaseid));
+	return if !($desc = $files->getfilehandle($dir . $file, $releaseid));
 
-	#    undef $/;
+    undef $/;
 	$string = <$desc>;
 
-	#    $/ = "\n";
+    $/ = "\n";
 	close($desc);
 
 	# if the README is 0 length then give up
@@ -335,18 +335,26 @@ sub descreadmehtml {
 	{
 		$long = $1;
 		if (!($long =~ /<span.*?\<span/is)) {
-			return ($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
+			return	( $long
+					. "<p>\nSEE ALSO: "
+					. fileref($file, '', $dir . $file)
+					. "</p>\n"
+					);
 		}
 	} elsif ($string =~ /<span class=["']?lxrlongdesc['"]?>(.*?)<\/span>/is) {
 		$long = $1;
 		if (!($long =~ /\<span/is)) {
-			return ($long . "<p>\nSEE ALSO: <a href=\"README.html\">README</a></p>\n");
+			return	( $long
+					. "<p>\nSEE ALSO: "
+					. fileref($file, '', $dir . $file)
+					. "</p>\n"
+					);
 		}
 	}
 }
 
 sub descreadme {
-	my ($file, $releaseid) = @_;
+	my ($dir, $file, $releaseid) = @_;
 
 	my $string = "";
 
@@ -359,12 +367,12 @@ sub descreadme {
 	my $minlines = 5;     # Too small. Go back and add another paragraph.
 	my $chopto   = 10;    # Truncate long READMEs to this length
 
-	return if !($desc = $files->getfilehandle($file, $releaseid));
+	return if !($desc = $files->getfilehandle($dir . $file, $releaseid));
 
-	#    undef $/;
+    undef $/;
 	$string = <$desc>;
 
-	#    $/ = "\n";
+    $/ = "\n";
 	close($desc);
 
 	# if the README is 0 length then give up
@@ -379,8 +387,7 @@ sub descreadme {
 	$string =~ s/.*The contents of this .* All Rights.*Reserved\.//s;
 
 	# strip the short description from the beginning
-	$path   =~ s#/(.+)/#$1#;
-	$string =~ s/.*$path\/*\s+--- .*//;
+	$string =~ s/.*$file\s+--- .*//;
 
 	# strip away junk
 	$string =~ s/#+\s*\n/\n/;
@@ -397,7 +404,7 @@ sub descreadme {
 	# If the file is small there's not much use splitting it up.
 	# Just print it all
 	if ($count <= $maxlines) {
-		$string = markupstring($string, $Path->{'virt'});
+		$string = markupstring($string, $dir);
 		$string = convertwhitespace($string);
 		return ($string);
 	} else {
@@ -431,39 +438,41 @@ sub descreadme {
 			$string = $string . "\n...";
 		}
 
+		$string = markupstring($string, $dir);
+
 		# since not all of the README is displayed here,
 		# add a link to it.
 		chomp($string);
 		if ($string =~ /SEE ALSO/) {
-			$string = $string . ", README";
+			$string = $string . ", ";
 		} else {
-			$string = $string . "\n\nSEE ALSO: README";
+			$string = $string . "\n\nSEE ALSO: ";
 		}
+		$string =~ s|SEE ALSO|</div>\nSEE ALSO|;
+		$string .= fileref($file, '', $dir . $file);
 
-		$string = markupstring($string, $Path->{'virt'});
-		$string = convertwhitespace($string);
+		$string = convertwhitespace($string). "\n\n";
 
 		# strip blank lines at beginning and end of file again
 		$string =~ s/^\s*\n//gs;
 		$string =~ s/\s*\n$//gs;
 		chomp($string);
 
-		return ($string);
+		return ("<div class=\"lxrdesc\">" . $string . "\n");
 	}
 }
 
-# dme: substitute carraige returns and spaces in original text
+# dme: substitute carriage returns and spaces in original text
 # for html equivalent so we don't need to use <pre> and can
 # use variable width fonts but preserve the formatting
 sub convertwhitespace {
 	my ($string) = @_;
 
 	# handle ascii bulleted lists
-	$string =~ s/<p>\n\s+o\s/<p>\n\&nbsp\;\&nbsp\;o /sg;
 	$string =~ s/\n\s+o\s/&nbsp\;\n<br>\&nbsp\;\&nbsp\;o /sg;
 
-	#find paragraph breaks and replace with <p>
-	$string =~ s/\n\s*\n/<p>\n/sg;
+	#find paragraph breaks and replace with <br>
+	$string =~ s/(([\S\t ]*?\n)+?)[\t ]*(\n|$)/$1<br>\n/sg;
 
 	return ($string);
 }
