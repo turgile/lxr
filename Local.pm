@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.21 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Local.pm,v 1.22 2011/05/08 16:49:19 ajlittoz Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.21 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.22 2011/05/08 16:49:19 ajlittoz Exp $ ';
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -180,7 +180,7 @@ sub fdescexpand {
 			$desc =~ s#[^\w]*##ms;
 
 			#htmlify the comments making links to symbols and files
-			$desc = markupstring($desc, $Path->{'virt'});
+			$desc = markupstring($desc, $dir);
 			return ($desc);
 		}
 	}
@@ -264,7 +264,7 @@ sub fdescexpand {
 	}
 
 	# htmlify the comments, making links to symbols and files
-	$desc = markupstring($desc, $Path->{'virt'});
+	$desc = markupstring($desc, $dir);
 
 	if ($desc) {
 		return ($desc);
