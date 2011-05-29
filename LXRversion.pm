@@ -11,13 +11,13 @@
 package LXRversion;
 
 use strict;
+use warnings;
 
 require Exporter;
 
-use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+our @ISA = qw(Exporter);
+our @EXPORT = qw($LXRversion);
 
-@EXPORT_OK = qw($LXRversion);
-
-our $LXRversion = "0.9.9";
+our $LXRversion = "0.9.10";
 
 1;
