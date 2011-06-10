@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Local.pm,v 1.23 2011/05/08 19:11:30 ajlittoz Exp $
+# $Id: Local.pm,v 1.24 2011/06/10 15:22:00 ajlittoz Exp $
 #
 # Local.pm -- Subroutines that need to be customized for each installation
 #
@@ -28,7 +28,7 @@
 
 package Local;
 
-$CVSID = '$Id: Local.pm,v 1.23 2011/05/08 19:11:30 ajlittoz Exp $ ';
+$CVSID = '$Id: Local.pm,v 1.24 2011/06/10 15:22:00 ajlittoz Exp $ ';
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -301,12 +301,13 @@ sub descexpand {
 sub dirdesc {
 	my ($path, $releaseid) = @_;
 	if ($files->isfile($path . "README.txt", $releaseid)) {
-		descreadme($path, "README.txt", $releaseid);
+		return descreadme($path, "README.txt", $releaseid);
 	} elsif ($files->isfile($path . "README", $releaseid)) {
-		descreadme($path, "README", $releaseid);
+		return descreadme($path, "README", $releaseid);
 	} elsif ($files->isfile($path . "README.html", $releaseid)) {
-		descreadmehtml($path, "README.html", $releaseid);
+		return descreadmehtml($path, "README.html", $releaseid);
 	}
+	return "&nbsp;";
 }
 
 sub descreadmehtml {
