@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.81 2011/06/10 15:40:52 ajlittoz Exp $
+# $Id: Common.pm,v 1.82 2011/06/10 15:48:35 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.81 2011/06/10 15:40:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.82 2011/06/10 15:48:35 ajlittoz Exp $ ';
 
 use strict;
 
@@ -482,6 +482,8 @@ sub printhttp {
 sub httpinit {
 	$SIG{__WARN__} = \&warning;
 	$SIG{__DIE__}  = \&fatal;
+
+	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 
 	$HTTP->{'path_info'} = http_wash($ENV{'PATH_INFO'});
 
