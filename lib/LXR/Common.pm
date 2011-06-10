@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.80 2011/05/07 13:39:56 ajlittoz Exp $
+# $Id: Common.pm,v 1.81 2011/06/10 15:40:52 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.80 2011/05/07 13:39:56 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.81 2011/06/10 15:40:52 ajlittoz Exp $ ';
 
 use strict;
 
@@ -215,7 +215,7 @@ sub markupstring {
 
 	# HTMLify file names, assuming file is in the current directory.
 	$string =~
-	  s#\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b#<a href=\"$config->{virtroot}/source$virtp$1\">$1</a>#g;
+	  s#\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b#{fileref($1, '', $virtp . $1);}#ge;
 
 	return ($string);
 }
@@ -232,6 +232,7 @@ sub is_linkworthy {
 	if (
 		$string =~ /....../
 		&& ($string =~ /_/ || $string =~ /.[A-Z]/)
+		&& $string !~ /README/
 
 		#		&& defined($xref{$string}) FIXME
 	  )
