@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.36 2011/03/12 17:04:06 ajlittoz Exp $
+# $Id: Config.pm,v 1.37 2011/06/10 17:08:11 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.36 2011/03/12 17:04:06 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.37 2011/06/10 17:08:11 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -159,8 +159,14 @@ sub variable {
 sub vardefault {
 	my ($self, $var) = @_;
 
-	return $self->{variables}{$var}{default}
-	  || $self->{variables}{$var}{range}[0];
+	if (exists($self->{variables}{$var}{default})) {
+		return $self->{variables}{$var}{default}
+	}
+	if (ref($self->{variables}{$var}{range}) eq "CODE") {
+		my @vr = varrange($var);
+		return $vr[0] if scalar(@vr); return "head"
+	}
+	return	$self->{variables}{$var}{range}[0];
 }
 
 sub vardescription {
@@ -173,6 +179,8 @@ sub vardescription {
 
 sub varrange {
 	my ($self, $var) = @_;
+	no strict "refs";	# ajl: temporary, I hope. Without it
+						# following line fails in $var!
 
 	if (ref($self->{variables}{$var}{range}) eq "CODE") {
 		return &{ $self->{variables}{$var}{range} };
