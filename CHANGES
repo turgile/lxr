@@ -1,5 +1,17 @@
 This file draws your attention on changes made for
 
+        ==========================
+        LXR 0.9.9  -->  LXR 0.9.10
+        ==========================
+
+This version is mainly a bug fix release.
+
+Change in generic parser for string was too specific and could result in loss of synchronisation under certain circumstances (i.e. string interpreted as code and code considered as string). Thanks to users feed-back, C, C++, Perl and Python are validated.
+
+It contains partial implementation of features announced for 0.10. DO NOT RELY on them, they are unstable.
+
+For up-to-date information, connect to http://lxr.sourceforge.net
+
         =========================
         LXR 0.9.8  -->  LXR 0.9.9
         =========================
