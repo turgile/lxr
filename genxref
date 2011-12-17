@@ -66,7 +66,26 @@ die("URL must be specified. Try \"genxref --help\".\n")
 
 $config = new LXR::Config($option{'url'});
 
-die("No matching configuration") unless $config->sourceroot;
+# Check tools version
+my $ctags;
+if ($config->ectagsbin) {
+	$ctags = $config->ectagsbin;
+} else {
+	print("Parameter 'ectagsbin' not defined - trying default path\n");
+	$ctags = "ctags";
+}
+print("Checking ctags version: ");
+my $version = `$ctags --version`;
+$version =~ /Exuberant ctags +(\d+)/i;
+print("$1");
+if ($1 < 5) {
+	print("\n");
+	die "Exuberant ctags version 5 or above required, found $version\n";
+} else {
+	print(" ... OK\n");
+}
+
+die("No matching configuration") unless $config->{'sourceroot'};
 
 $files = new LXR::Files($config->sourceroot, $config->sourceparams);
 die "Can't create file access object " . $config->sourceroot
