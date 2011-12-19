@@ -40,6 +40,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our @EXPORT = qw(
+	gettemplate
 	expandtemplate
 	makeheader
 	makefooter
@@ -50,6 +51,72 @@ our @EXPORT = qw(
 use LXR::Common;
 use LXR::Config;
 use LXR::Files;
+
+
+=head2 C<gettemplate ($who, $prefix, $suffix)>
+
+Function C<gettemplate> returns the contents of the designated
+template.
+In case the template name has not been defined in lxr.conf or
+if the target file does not exist,
+an alternate template is generated based on default values
+supplied by the arguments.
+
+=over
+
+=item 1 C<$who>
+
+a I<string> containing the template name
+
+=item 1 C<$prefix>
+
+a I<string> containing the head of the alternate template
+=item 1 C<$suffix>
+
+a I<string> containing the tail of the alternate prefix
+
+=back
+
+B<Caveat:>
+
+=over
+
+A warning message may be inserted between $prefix and $suffix.
+Care must be taken to ensure that this message is placed in the
+E(lt)bodyE(gt) part of the HTML page.
+
+B<This> caveat B<is particularly aimed at this sub use in makeheader
+where the page has not been started yet.>
+
+=back
+
+=cut
+
+sub gettemplate {
+my ($who, $prefix, $suffix) = @_;
+
+	my $template = $prefix;
+	if (exists $config->{$who}) {
+		if (open(TEMPL, $config->{$who})) {
+			local ($/) = undef;
+			$template = <TEMPL>;
+			close(TEMPL);
+		} else {
+			$template .= warning
+							( "Template file '$who' => '"
+							. $config->{$who}
+							. "' does not exist"
+							);
+			$template .= $suffix;
+		}
+	} else {
+		$template .= warning
+						( "Template '$who' is not defined"
+						);
+			$template .= $suffix;
+	}
+	return $template
+}
 
 =head2 C<expandtemplate ($templ, %expfunc)>
 
@@ -217,8 +284,8 @@ sub expandtemplate {
 # delimiters of a function call argument by inactive delimiters
 # until $templ is left only with unnested function calls.
 	while ($templ =~ s/(\{[^\{\}]*)\{([^\{\}]*)\}/$1\x01$2\x02/s) { }
-#						 ^			^			^
-#	first left brace-----+			|			|
+#	                     ^          ^           ^
+#	first left brace-----+          |           |
 #	nested brace-delimited block----+-----------+
 
 # Repeatedly find the variables or function calls
@@ -990,32 +1057,21 @@ An error is also logged for the administrator.
 sub makeheader {
 	my $who = shift;
 	my $tmplname;
-	my $template = "<html><body>\n<hr>\n";
+	my $template;
 
 	$tmplname = $who . "head";
-	unless	($who ne "sourcedir" || $config->sourcedirhead) {
+	unless	($who ne "sourcedir" || exists $config->{'sourcedirhead'}) {
 		$tmplname = "sourcehead";
 	}
-	unless ($config->value($tmplname)) {
+	unless (exists $config->{$tmplname}) {
 		$tmplname = "htmlhead";
 	}
 
-	if ($config->value($tmplname)) {
-		if (open(TEMPL, $config->value($tmplname))) {
-			local ($/) = undef;
-			$template = <TEMPL>;
-			close(TEMPL);
-		} else {
-			$template .= warning
-							( "Template "
-							. $config->value($tmplname)
-							. " does not exist in "
-							. `pwd`
-							)
-						. "<hr>\n" ;
-			$template .= "<p>Trying to display $pathname</p>\n"
-		}
-	}
+	$template = gettemplate
+					( $tmplname
+					, "<html><body>\n<hr>\n"
+					, "<hr>\n<p>Trying to display \$pathname</p>\n"
+					);
 
 	print(
 		expandtemplate
@@ -1065,31 +1121,21 @@ An error is also logged for the administrator.
 sub makefooter {
 	my $who = shift;
 	my $tmplname;
-	my $template = "<hr>\n";
+	my $template;
 
 	$tmplname = $who . "tail";
-	unless ($who ne "sourcedir" || $config->sourcedirtail) {
+	unless ($who ne "sourcedir" || exists $config->{'sourcedirtail'}) {
 		$tmplname = "sourcetail";
 	}
-	unless ($config->value($tmplname)) {
+	unless (exists $config->{$tmplname}) {
 		$tmplname = "htmltail";
 	}
 
-	if ($config->value($tmplname)) {
-		if (open(TEMPL, $config->value($tmplname))) {
-			local ($/) = undef;
-			$template = <TEMPL>;
-			close(TEMPL);
-		} else {
-			$template .= warning
-							( "Template "
-							. $config->value($tmplname)
-							. " does not exist in "
-							. `pwd`
-							)
-						. "<hr>\n</body></html>\n";
-		}
-	}
+	$template = gettemplate
+					( $tmplname
+					, "<hr>\n"
+					, "\n<hr>\n</body></html>\n"
+					);
 
 	print(
 		expandtemplate
@@ -1136,28 +1182,16 @@ Consequently, there is no call to makeheader or makefooter.
 sub makeerrorpage {
 	my $who = shift;
 	my $tmplname;
-	my $template = "<html><body><hr>\n";
+	my $template;
 
-	$tmplname = $who;
-	if ($config->value($tmplname)) {
-		if (open(TEMPL, $config->value($tmplname))) {
-			local ($/) = undef;
-			$template = <TEMPL>;
-			close(TEMPL);
-		}
-		else {
-			$template .= warning
-							( "Template "
-							. $config->value($tmplname)
-							. " does not exist in "
-							. `pwd`
-							)
-						. "<hr>\n"
+	$template = gettemplate
+					( $who
+					, "<html><body><hr>\n"
+ 					,  "<hr>\n"
 						. "<h1 style='text-align:center'>Unrecoverable Error</h1>\n"
 						. "<p>Source-tree \$tree unknown</p>\n"
-						. "</body></html>\n";
-		}
-	}
+						. "</body></html>\n"
+					);
 
 # Emit a simple HTTP header
 	print("Content-Type: text/html; charset=iso-8859-1\n");
