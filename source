@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: source,v 1.50 2011/04/08 16:00:43 ajlittoz Exp $
+# $Id: source,v 1.51 2011/12/21 17:27:51 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.50 2011/04/08 16:00:43 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.51 2011/12/21 17:27:51 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -154,7 +154,7 @@ sub direxpand {
 		print(  "<p align=\"center\">\n<i>The directory " . $dir
 			  . " does not exist.</i>\n</p>\n");
 		if ($files->isa("LXR::Files::CVS")
-			and !$HTTP->{'param'}->{'showattic'})
+			and !$HTTP->{'param'}->{'_showattic'})
 		{
 			print("\<p align=\"center\">\n");
 			print("<i>This directory might exist in other versions,");
@@ -304,7 +304,7 @@ sub printfile {
 				"\<p align=\"center\">\n<i>The file $pathname does not exist.</i>\n</p>\n"
 			);
 			if ($files->isa("LXR::Files::CVS")
-				and !$HTTP->{'param'}->{'showattic'})
+				and !$HTTP->{'param'}->{'_showattic'})
 			{
 				print("\<p align=\"center\">\n");
 				print("<i>This directory might exist in other versions,");
@@ -328,7 +328,7 @@ if ($config->filter && $pathname !~ $config->filter) {
 }
 
 # If the file is html then simply pump it out.
-if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'raw'}) {
+if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'_raw'}) {
 	printfile(1);
 } else {
 	my $type = ($pathname !~ m|/$| ? 'source' : 'sourcedir');

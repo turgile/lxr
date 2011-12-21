@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.82 2011/06/10 15:48:35 ajlittoz Exp $
+# $Id: Common.pm,v 1.83 2011/12/21 17:27:51 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,7 +20,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.82 2011/06/10 15:48:35 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.83 2011/12/21 17:27:51 ajlittoz Exp $ ';
 
 use strict;
 
@@ -143,14 +143,14 @@ sub diffref {
 
 	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
 	return ("<a class='$css' href=\"$config->{virtroot}/diff$path"
-		  . &urlargs(($darg ? "diffvar=$darg" : ""), ($dval ? "diffval=$dval" : ""))
+		  . &urlargs(($darg ? "_diffvar=$darg" : ""), ($dval ? "_diffval=$dval" : ""))
 		  . "\"\>$desc</a>");
 }
 
 sub idref {
 	my ($desc, $css, $id, @args) = @_;
 	return ("<a class='$css' href=\"$config->{virtroot}/ident"
-		  . &urlargs(($id ? "i=$id" : ""), @args)
+		  . &urlargs(($id ? "_i=$id" : ""), @args)
 		  . "\"\>$desc</a>");
 }
 
@@ -364,7 +364,7 @@ sub markupfile {
 			my $uname = $pathname;
 			$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 
-			&$outfun("<a href=\"$config->{virtroot}/source" . $uname . &urlargs("raw=1") . "\">");
+			&$outfun("<a href=\"$config->{virtroot}/source" . $uname . &urlargs("_raw=1") . "\">");
 			&$outfun("$pathname</a></b>");
 			&$outfun("</ul>");
 
@@ -447,7 +447,7 @@ sub printhttp {
 			$wday, $mday, $mon, $year, $hour, $min, $sec);
 	}
 
-	if ($HTTP->{'param'}->{'raw'}) {
+	if ($HTTP->{'param'}->{'_raw'}) {
 
 		#FIXME - need more types here
 		my %type = (
@@ -501,14 +501,14 @@ sub httpinit {
 	  if defined $ENV{'QUERY_STRING'};
 
 	# But do clean up these
-	$HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'version'};
-	$HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'arch'};
-	$HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};
+	$HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'_version'};
+	$HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'_arch'};
+	$HTTP->{'param'}->{'_i'} ||= $HTTP->{'param'}->{'_identifier'};
 
-	$identifier = clean_identifier($HTTP->{'param'}->{'i'});
+	$identifier = clean_identifier($HTTP->{'param'}->{'_i'});
 	# remove the param versions to prevent unclean versions being used
-	delete $HTTP->{'param'}->{'i'};
-	delete $HTTP->{'param'}->{'identifier'};
+	delete $HTTP->{'param'}->{'_i'};
+	delete $HTTP->{'param'}->{'_identifier'};
 
 	$config     = new LXR::Config($HTTP->{'this_url'});
 	if (exists $config->{'configerror'}) {
@@ -525,8 +525,8 @@ sub httpinit {
 		delete $HTTP->{'param'}->{$_};
 	}
 
-	$HTTP->{'param'}->{'file'} = clean_path($HTTP->{'param'}->{'file'});
-	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
+	$HTTP->{'param'}->{'_file'} = clean_path($HTTP->{'param'}->{'_file'});
+	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'_file'});
 
 	$releaseid  = clean_release($config->variable('v'));
 	$config->variable('v', $releaseid);  # put back into config obj
@@ -648,10 +648,10 @@ sub titleexpand {
 	if ($who eq 'source' || $who eq 'diff' || $who eq 'sourcedir') {
 		return $config->sourcerootname . $pathname;
 	} elsif ($who eq 'ident') {
-		my $i = $HTTP->{'param'}->{'i'};
+		my $i = $HTTP->{'param'}->{'_i'};
 		return $config->sourcerootname . ' identifier search' . ($i ? ": $i" : '');
 	} elsif ($who eq 'search') {
-		my $s = $HTTP->{'param'}->{'string'};
+		my $s = $HTTP->{'param'}->{'_string'};
 		$s =~ s/</&lt;/g;
 		$s =~ s/>/&gt;/g;
 		return $config->sourcerootname . ' general search' . ($s ? ": $s" : '');
@@ -885,7 +885,7 @@ sub varaction {
 	} elsif ($who eq 'search') {
 		$valaction = varlink2action(
 			"\"$config->{virtroot}/search"
-		  . &urlargs("string=" . $HTTP->{'param'}->{'string'})
+		  . &urlargs("_string=" . $HTTP->{'param'}->{'_string'})
 		  . "\""
 								);
 	}
@@ -952,12 +952,12 @@ sub atticlink {
 	if ($HTTP->{'param'}->{'showattic'}) {
 		return ("<a class='modes' href=\"$config->{virtroot}/source"
 			  . $HTTP->{'path_info'}
-			  . &urlargs("showattic=0")
+			  . &urlargs("_showattic=0")
 			  . "\">Hide attic files</a>");
 	} else {
 		return ("<a class='modes' href=\"$config->{virtroot}/source"
 			  . $HTTP->{'path_info'}
-			  . &urlargs("showattic=1")
+			  . &urlargs("_showattic=1")
 			  . "\">Show attic files</a>");
 	}
 }

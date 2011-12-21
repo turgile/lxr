@@ -1,5 +1,5 @@
 #!perl -T
-# $Id: search,v 1.35 2011/04/08 19:13:51 ajlittoz Exp $
+# $Id: search,v 1.36 2011/12/21 17:27:51 ajlittoz Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.35 2011/04/08 19:13:51 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.36 2011/12/21 17:27:51 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -236,10 +236,10 @@ sub search {
 		die "'htmlsearch' template not configured";
 	}
 
-	my $searchtext    = $HTTP->{'param'}->{'string'};
-	my $filetext      = $HTTP->{'param'}->{'filestring'};
-	my $advanced      = $HTTP->{'param'}->{'advanced'};
-	my $casesensitive = $HTTP->{'param'}->{'casesensitive'};
+	my $searchtext    = $HTTP->{'param'}->{'_string'};
+	my $filetext      = $HTTP->{'param'}->{'_filestring'};
+	my $advanced      = $HTTP->{'param'}->{'_advanced'};
+	my $casesensitive = $HTTP->{'param'}->{'_casesensitive'};
 
 	my @results;
 	if ($searchtext ne "") {

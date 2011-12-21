@@ -518,11 +518,11 @@ sub titleexpand {
 	if ($who eq 'source' || $who eq 'diff' || $who eq 'sourcedir') {
 		$ret = $config->sourcerootname . $pathname;
 	} elsif ($who eq 'ident') {
-		my $i = $HTTP->{'param'}->{'i'};
+		my $i = $HTTP->{'param'}->{'_i'};
 		$ret = $config->sourcerootname . ' identifier search'
 				. ($i ? ": $i" : '');
 	} elsif ($who eq 'search') {
-		my $s = $HTTP->{'param'}->{'string'};
+		my $s = $HTTP->{'param'}->{'_string'};
 		$ret = $config->sourcerootname . ' general search'
 				. ($s ? ": $s" : '');
 	}
@@ -785,7 +785,7 @@ sub varlinks {
 			} elsif ($who eq 'search') {
 				$vallink =
 				    "<a class=\"varlink\" href=\"$config->{virtroot}/search"
-				  . &urlargs("$var=$val", "string=" . $HTTP->{'param'}->{'string'})
+				  . &urlargs("$var=$val", "_string=" . $HTTP->{'param'}->{'_string'})
 				  . "\">$val</a>";
 			}
 		}
@@ -869,7 +869,7 @@ sub varaction {
 	} elsif ($who eq 'search') {
 		$valaction = varlink2action(
 			"\"$config->{virtroot}/search"
-		  . &urlargs("string=" . $HTTP->{'param'}->{'string'})
+		  . &urlargs("_string=" . $HTTP->{'param'}->{'_string'})
 		  . "\""
 								);
 	}
@@ -1020,15 +1020,15 @@ sub atticlink {
 	return "&nbsp;" if !$files->isa("LXR::Files::CVS");
 	return "&nbsp;" if $ENV{'SCRIPT_NAME'} !~ m|/source$|;
 # Now build the opposite of the current state
-	if ($HTTP->{'param'}->{'showattic'}) {
+	if ($HTTP->{'param'}->{'_showattic'}) {
 		return ("<a class='modes' href=\"$config->{virtroot}/source"
 			  . $HTTP->{'path_info'}
-			  . &urlargs("showattic=0")
+			  . &urlargs("_showattic=0")
 			  . "\">Hide attic files</a>");
 	} else {
 		return ("<a class='modes' href=\"$config->{virtroot}/source"
 			  . $HTTP->{'path_info'}
-			  . &urlargs("showattic=1")
+			  . &urlargs("_showattic=1")
 			  . "\">Show attic files</a>");
 	}
 }
