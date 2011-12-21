@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 # -*- tab-width: 4 -*-"
+# $Id: genxref,v 1.46 2011/12/21 20:15:11 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,8 +72,19 @@ my $ctags;
 if ($config->ectagsbin) {
 	$ctags = $config->ectagsbin;
 } else {
-	print("Parameter 'ectagsbin' not defined - trying default path\n");
-	$ctags = "ctags";
+	print("Parameter 'ectagsbin' not defined - trying to find ctags\n");
+	my $ctagsloc = `which ctags`;
+	$ctagsloc =~ s/\n$//s;
+	if (!$ctagsloc) {
+		print "ctags not found, `which ctags` returned a null string\n";
+		print "genxref can't index source-tree without ctags\n";
+		print "Find its location or install it and fix 'ectagsbin'\n";
+		exit(1)
+	}
+	$config->{'ectagsbin'} = $ctagsloc;
+	$ctags = $ctagsloc;
+	print "'ectagsbin' temporarily adjusted to $ctagsloc\n";
+	print "Manually update lxr.conf for permanent setting\n";
 }
 print("Checking ctags version: ");
 my $version = `$ctags --version`;
