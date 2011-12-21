@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.83 2011/12/21 17:27:51 ajlittoz Exp $
+# $Id: Common.pm,v 1.84 2011/12/21 19:35:54 ajlittoz Exp $
 #
 # FIXME: java doesn't support super() or super.x
 
@@ -20,50 +20,62 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.83 2011/12/21 17:27:51 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.84 2011/12/21 19:35:54 ajlittoz Exp $ ';
 
 use strict;
 
 require Exporter;
 
-use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
-  $files $index $config $pathname $identifier $releaseid
-  $HTTP $wwwdebug $tmpcounter);
+# use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
+#   $files $index $config $pathname $identifier $releaseid
+#   $HTTP $wwwdebug $tmpcounter);
 
-@ISA = qw(Exporter);
+our @ISA = qw(Exporter);
 
-@EXPORT    = qw($files $index $config &fatal);
-@EXPORT_OK = qw($files $index $config $pathname $identifier $releaseid
-  $HTTP
-  &warning &fatal &abortall &fflush &urlargs &fileref
-  &idref &incref &htmlquote &freetextmarkup &markupfile
-  &markupstring &httpinit &makeheader &makefooter
-  &expandtemplate &httpclean);
+our @EXPORT = qw(
+	$files $index $config
+	$HTTP
+	$pathname $releaseid $identifier
+	&warning &fatal
+	 &fflush
+	&urlargs &fileref &diffref &idref &incref
+	&httpinit &httpclean
+);
+# our @EXPORT_OK = qw(
+#   &abortall 
+#   );
 
-%EXPORT_TAGS = ('html' => [@EXPORT_OK]);
+# our %EXPORT_TAGS = ('html' => [@EXPORT_OK]);
 
 require Local;
 require LXR::SimpleParse;
 require LXR::Config;
 require LXR::Files;
 require LXR::Index;
+require LXR::Template;
 require LXR::Lang;
-#ajl
-#	LXRversion has been stored in an independant file
-#	so that changing its number will not mess up CVS Id
-#	leading to believe that some bug has been fixed or
-#	a feature added
-#
 require LXRversion;
+
+our $config;
+our $files;
+our $index;
+our $pathname;
+our $releaseid;
+our $identifier;
+our $HTTP;
 
 $wwwdebug = 0;
 
 $tmpcounter = 23;
 
 sub warning {
+	my $msg = shift;
 	my $c = join(", line ", (caller)[ 0, 2 ]);
-	print(STDERR "[", scalar(localtime), "] warning: $c: $_[0]\n");
-	print("<h4 align=\"center\"><i>** Warning: $_[0]</i></h4>\n") if $wwwdebug;
+	print(STDERR "[", scalar(localtime), "] warning: $c: $msg\n");
+	$msg =~ s/</&lt;/g;
+	$msg =~ s/>/&gt;/g;
+	return ("<h4 class=\"warning\"><i>** Warning: $msg</i></h4>\n") if $wwwdebug;
+	return '';
 }
 
 sub fatal {
@@ -71,7 +83,7 @@ sub fatal {
 	print(STDERR "[", scalar(localtime), "] fatal: $c: $_[0]\n");
 	print(STDERR '[@INC ', join(" ", @INC), ' $0 ', $0, "\n");
 	print(STDERR '$config', join(" ", %$config), "\n") if ref($config) eq "HASH";
-	print("<h4 align=\"center\"><i>** Fatal: $_[0]</i></h4>\n") if $wwwdebug;
+	print("<h4 class=\"fatal\"><i>** Fatal: $_[0]</i></h4>\n") if $wwwdebug;
 	exit(1);
 }
 
@@ -127,8 +139,8 @@ sub fileref {
 	# jwz: URL-quote any special characters.
 	$path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 
-	if ($line > 0 && length($line) < 3) {
-		$line = ('0' x (3 - length($line))) . $line;
+	if ($line > 0 && length($line) < 4) {
+		$line = ('0' x (4 - length($line))) . $line;
 	}
 
 	return ("<a class='$css' href=\"$config->{virtroot}/source$path"
@@ -179,211 +191,6 @@ sub http_wash {
 	$t =~ s/\%([\da-f][\da-f])/pack("C", hex($1))/gie;
 
 	return ($t);
-}
-
-# dme: Smaller version of the markupfile function meant for marking up
-# the descriptions in source directory listings.
-sub markupstring {
-	my ($string, $virtp) = @_;
-
-	# Mark special characters so they don't get processed just yet.
-	$string =~ s/([\&\<\>])/\0$1/g;
-
-	# Look for identifiers and create links with identifier search query.
-	# TODO: Is there a performance problem with this?
-	$string =~ s#(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b#
-		$1.(is_linkworthy($2) ? &idref($2, "", $2) : $2)#ge;
-
-	# HTMLify the special characters we marked earlier,
-	# but not the ones in the recently added xref html links.
-	$string =~ s/\0&/&amp;/g;
-	$string =~ s/\0</&lt;/g;
-	$string =~ s/\0>/&gt;/g;
-
-	# HTMLify email addresses and urls.
-	$string =~
-	  s#((ftp|http|nntp|snews|news)://(\w|\w\.\w|\~|\-|\/|\#)+(?!\.\b))#<a href=\"$1\">$1</a>#g;
-
-	# htmlify certain addresses which aren't surrounded by <>
-	$string =~ s/([\w\-\_]*\@netscape.com)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
-	$string =~ s/([\w\-\_]*\@mozilla.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
-	$string =~ s/([\w\-\_]*\@gnome.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
-	$string =~ s/([\w\-\_]*\@linux.no)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
-	$string =~ s/([\w\-\_]*\@sourceforge.net)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
-	$string =~ s/([\w\-\_]*\@sf.net)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
-	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
-
-	# HTMLify file names, assuming file is in the current directory.
-	$string =~
-	  s#\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b#{fileref($1, '', $virtp . $1);}#ge;
-
-	return ($string);
-}
-
-# dme: Return true if string is in the identifier db and it seems like its
-# use in the sentence is as an identifier and its not just some word that
-# happens to have been used as a variable name somewhere. We don't want
-# words like "of", "to" and "a" to get links. The string must be long
-# enough, and  either contain "_" or if some letter besides the first
-# is capitalized
-sub is_linkworthy {
-	my ($string) = @_;
-
-	if (
-		$string =~ /....../
-		&& ($string =~ /_/ || $string =~ /.[A-Z]/)
-		&& $string !~ /README/
-
-		#		&& defined($xref{$string}) FIXME
-	  )
-	{
-		return (1);
-	} else {
-		return (0);
-	}
-}
-
-sub markspecials {
-	$_[0] =~ s/([\&\<\>])/\0$1/g;
-}
-
-sub htmlquote {
-	$_[0] =~ s/\0&/&amp;/g;
-	$_[0] =~ s/\0</&lt;/g;
-	$_[0] =~ s/\0>/&gt;/g;
-}
-
-sub freetextmarkup {
-	$_[0] =~ s{((f|ht)tp://[^\s<>\0]*[^\s<>\0.])}
-			  {<a class='offshore' href="$1">$1</a>}g;
-	$_[0] =~ s{(\0<([^\s<>\0]+@[^\s<>\0]+)\0>)}
-			  {<a class='offshore' href="mailto:$2">$1</a>}g;
-}
-
-sub markupfile {
-
-	#_PH_ supress block is here to avoid the <pre> tag output
-	#while called from diff
-	my ($fileh, $outfun) = @_;
-	my ($dir) = $pathname =~ m|^(.*/)|;
-	my $graphic = $config->graphicfile;
-
-	my $line = '001';
-	# Don't keep href=... in anchor definition
-	my @ltag = &fileref(1, "fline", $pathname, 1) =~ /^(<a.*?)(?:href.*\#)\d+(\">)\d+(<\/a>)$/;
-	$ltag[0] .= 'name="';
-	$ltag[2] .= " ";
-
-	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
-	my $lang = new LXR::Lang($pathname, $releaseid, @itag);
-
-	# A source code file
-	if ($lang) {
-		my $language = $lang->language;    # To get back to the key to lookup the tabwidth.
-		&LXR::SimpleParse::init($fileh, $config->filetype->{$language}[3], $lang->parsespec);
-
-		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
-
-		#&$outfun("<pre class=\"file\">\n");
-		&$outfun(join($line++, @ltag)) if defined($frag);
-
-		while (defined($frag)) {
-			&markspecials($frag);
-
-			if ($btype eq 'comment') {
-
-				# Comment
-				# Convert mail adresses to mailto:
-				&freetextmarkup($frag);
-				$lang->processcomment(\$frag);
-			} elsif ($btype eq 'string') {
-
-				# String
-				$frag = "<span class='string'>$frag</span>";
-			} elsif ($btype eq 'include') {
-
-				# Include directive
-				$lang->processinclude(\$frag, $dir);
-			} else {
-
-				# Code
-				$lang->processcode(\$frag);
-			}
-
-			&htmlquote($frag);
-			my $ofrag = $frag;
-
-			($btype, $frag) = &LXR::SimpleParse::nextfrag;
-
-			$ofrag =~ s/\n$// unless defined($frag);
-			$ofrag =~ s/\n/"\n".join($line++, @ltag)/ge;
-
-			&$outfun($ofrag);
-		}
-
-		#&$outfun("</pre>");
-	} 
-	elsif ($pathname =~ /\.$graphic$/)
-	{
-		&$outfun("<ul><table><tr><th valign=\"center\"><b>Image: </b></th></tr>\n");
-		&$outfun("<tr><td>");
-		&$outfun("<img src=\""
-			  . $config->{'sourceaccess'}
-			  . "/" . $config->variable('v')
-			  . $pathname
-			  . "\" border=\"0\""
-			  . " alt=\"$pathname cannot be displayed from this browser\">\n");
-		&$outfun("</td></tr></table></ul>");
-	}
-	elsif ($pathname =~ m|/CREDITS$|) {
-		while (defined($_ = $fileh->getline)) {
-			&LXR::SimpleParse::untabify($_);
-			&markspecials($_);
-			&htmlquote($_);
-			s/^N:\s+(.*)/<strong>$1<\/strong>/gm;
-			s/^(E:\s+)(\S+@\S+)/$1<a href=\"mailto:$2\">$2<\/a>/gm;
-			s/^(W:\s+)(.*)/$1<a href=\"$2\">$2<\/a>/gm;
-
-			# &$outfun("<a name=\"L$.\"><\/a>".$_);
-			&$outfun(join($line++, @ltag) . $_);
-		}
-	} else {
-		return unless defined($_ = $fileh->getline);
-
-		# If it's not a script or something with an Emacs spec header and
-		# the first line is very long or containts control characters...
-		if (   !/^\#!/
-			&& !/-\*-.*-\*-/i
-			&& (length($_) > 132 || /[\000-\010\013\014\016-\037\200-Ÿ]/))
-		{
-
-			# We postulate that it's a binary file.
-			&$outfun("<ul><b>Binary File: ");
-
-			# jwz: URL-quote any special characters.
-			my $uname = $pathname;
-			$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
-
-			&$outfun("<a href=\"$config->{virtroot}/source" . $uname . &urlargs("_raw=1") . "\">");
-			&$outfun("$pathname</a></b>");
-			&$outfun("</ul>");
-
-		} else {
-
-			#&$outfun("<pre class=\"file\">\n");
-			do {
-				&LXR::SimpleParse::untabify($_);
-				&markspecials($_);
-				&freetextmarkup($_);
-				&htmlquote($_);
-
-				#		&$outfun("<a name=\"L$.\"><\/a>".$_);
-				&$outfun(join($line++, @ltag) . $_);
-			} while (defined($_ = $fileh->getline));
-
-			#&$outfun("</pre>");
-		}
-	}
 }
 
 sub fixpaths {
@@ -456,7 +263,7 @@ sub printhttp {
 		);
 
 		if ($pathname =~ /\.([^.]+)$/ && $type{$1}) {
-			print("Content-type: ", $type{$1}, "\n");
+			print("Content-Type: ", $type{$1}, "\n");
 		} else {
 			print("Content-Type: text/plain\n");
 		}
@@ -511,8 +318,8 @@ sub httpinit {
 	delete $HTTP->{'param'}->{'_identifier'};
 
 	$config     = new LXR::Config($HTTP->{'this_url'});
-	if (exists $config->{'configerror'}) {
-		makeerrorpage('htmlfatal');
+	unless (exists $config->{'sourceroot'}) {
+		LXR::Template::makeerrorpage('htmlfatal');
 		die "Can't find config for " . $HTTP->{'this_url'};
 	}
 	$files = new LXR::Files($config->sourceroot, $config->sourceparams);
@@ -580,518 +387,6 @@ sub httpclean {
 	$files  = undef;
 
 	$index->DESTROY();
-	$index  = undef;
-}
-
-sub expandtemplate {
-	my ($templ, %expfunc) = @_;
-	my ($expfun, $exppar);
-
-	while ($templ =~ s/(\{[^\{\}]*)\{([^\{\}]*)\}/$1\01$2\02/s) { }
-
-	$templ =~ s/(\$(\w+)(\{([^\}]*)\}|))/{
-		if (defined($expfun = $expfunc{$2})) {
-			if ($3 eq '') {
-				&$expfun(undef);
-			}
-			else {
-				$exppar = $4;
-				$exppar =~ s#\01#\{#gs;
-				$exppar =~ s#\02#\}#gs;
-				&$expfun($exppar);
-			}
-		}
-		else {
-			$1;
-		}
-	}/ges;
-
-	$templ =~ s/\01/\{/gs;
-	$templ =~ s/\02/\}/gs;
-	return ($templ);
-}
-
-# What follows is somewhat less hairy way of expanding nested
-# templates than it used to be.  State information is passed via
-# function arguments, as God intended.
-sub bannerexpand {
-	my ($templ, $who) = @_;
-
-	if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
-		my $fpath = '';
-		my $furl  = fileref($config->sourcerootname . '/', "banner", '/');
-
-		foreach ($pathname =~ m|([^/]+/?)|g) {
-			$fpath .= $_;
-
-			# ajl: put a zero-width space after each / in the banner
-			# so that it's possible for the pathnames to wrap.
-			# The <wbr> tag ought to do this, but it is ignored when
-			# sizing table cells, so we have to use a real character.
-			$furl .= '&#x200B;' . fileref($_, "banner", "/$fpath");
-		}
-		$furl =~ s|/</a>|</a>/|gi;
-
-		return "<span class=\"banner\">$furl</span>";
-	} else {
-		return '';
-	}
-}
-
-sub pathname {
-	return $pathname;
-}
-
-sub titleexpand {
-	my ($templ, $who) = @_;
-
-	if ($who eq 'source' || $who eq 'diff' || $who eq 'sourcedir') {
-		return $config->sourcerootname . $pathname;
-	} elsif ($who eq 'ident') {
-		my $i = $HTTP->{'param'}->{'_i'};
-		return $config->sourcerootname . ' identifier search' . ($i ? ": $i" : '');
-	} elsif ($who eq 'search') {
-		my $s = $HTTP->{'param'}->{'_string'};
-		$s =~ s/</&lt;/g;
-		$s =~ s/>/&gt;/g;
-		return $config->sourcerootname . ' general search' . ($s ? ": $s" : '');
-	}
-}
-
-sub thisurl {
-	my $url = $HTTP->{'this_url'};
-
-	$url =~ s/([\?\&\;\=])/sprintf('%%%02x',(unpack('c',$1)))/ge;
-	return ($url);
-}
-
-sub baseurl {
-	(my $url = $config->baseurl) =~ s|/*$|/|;
-
-	return $url;
-}
-
-sub stylesheet {
-	return $config->stylesheet;
-}
-
-sub dotdoturl {
-	my $url = $config->baseurl;
-	$url =~ s@/$@@;
-	$url =~ s@/[^/]*$@@;
-	return ($url);
-}
-
-sub modelink2button
-{	my ($ref) = @_;
-
-	$ref =~ s|<a|<form method="get"|;
-	$ref =~ s|href|action|;
-	if ($ref =~ s|\?|">?|) {
-		$ref =~ s|">([^?])|<button type="submit">$1|;
-		$ref =~ s|[?&;](\w+)=(.*?)(?=[&;<])|<input type="hidden" name="$1" value="$2">|g;
-	}
-	else {
-		$ref =~ s|">|"><button type="submit">$1|;
-	}
-	$ref =~ s|</a>|</button></form>|;
-	return $ref;
-}
-
-# This one isn't too bad either.  We just expand the "modes" template
-# by filling in all the relevant values in the nested "modelink"
-# template.
-sub modeexpand {
-	my ($templ, $who) = @_;
-	my $modex = '';
-	my $ref;
-	my @mlist = ();
-	my @mblist = ();
-	my $mode;
-	my $modebtn;
-
-	if ($who eq 'source' || $who eq 'sourcedir')
-	{	push(@mlist, "<span class='modes-sel'>source navigation</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>source navigation</button>"
-					. "</form>"
-				);
-	} else
-	{	$ref = fileref("source navigation", "modes", $pathname);
-		push(@mlist, $ref);
-		push(@mblist, modelink2button($ref));
-	}
-
-	if ($who eq 'diff')
-	{	push(@mlist, "<span class='modes-sel'>diff markup</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>diff markup</button>"
-					. "</form>"
-				);
-	} elsif ($who eq 'source' && $pathname !~ m|/$|)
-	{	$ref = diffref("diff markup", "modes", $pathname);
-		push(@mlist, $ref);
-		push(@mblist, modelink2button($ref));
-	}
-
-	if ($who eq 'ident')
-	{	push(@mlist, "<span class='modes-sel'>identifier search</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>identifier search</button>"
-					. "</form>"
-				);
-	} else
-	{	$ref = idref("identifier search", "modes", "");
-		push(@mlist, $ref);
-		push(@mblist, modelink2button($ref));
-	}
-
-	if ($who eq 'search')
-	{	push(@mlist, "<span class='modes-sel'>general search</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>general search</button>"
-					. "</form>"
-				);
-	} else
-	{	$ref = "<a class=\"modes\" "
-			  . "href=\"$config->{virtroot}/search"
-			  . urlargs
-			  . "\">general search</a>";
-		push(@mlist, $ref);
-		push	( @mblist
-				, modelink2button($ref)
-				);
-	}
-
-	foreach $mode (@mlist)
-	{ 	$modebtn = shift(@mblist);
-		$modex .= expandtemplate	(
-					$templ,
-					(	'modelink'	=> sub { return $mode }
-					,	'modebtn' 	=> sub { return $modebtn }
-					)				);
-	}
-
-	return ($modex);
-}
-
-# This is where it gets a bit tricky.  varexpand expands the
-# "variables" template using varname and varlinks, the latter in turn
-# expands the nested "varlinks" template using varval.
-sub varlinks {
-	my ($templ, $who, $var) = @_;
-	my $vlex = '';
-	my ($val, $oldval);
-	my $vallink;
-
-	$oldval = $config->variable($var);
-	foreach $val ($config->varrange($var)) {
-		if ($val eq $oldval) {
-			$vallink = "<span class=\"var-sel\">$val</span>";
-		} else {
-			if ($who eq 'source' || $who eq 'sourcedir') {
-				$vallink = &fileref($val, "varlink", $config->mappath($pathname, "$var=$val"),
-					0, "$var=$val");
-
-			} elsif ($who eq 'diff') {
-				$vallink = &diffref($val, "varlink", $pathname, "$var=$val");
-			} elsif ($who eq 'ident') {
-				$vallink = &idref($val, "varlink", $identifier, "$var=$val");
-			} elsif ($who eq 'search') {
-				$vallink =
-				    "<a class=\"varlink\" href=\"$config->{virtroot}/search"
-				  . &urlargs("$var=$val", "string=" . $HTTP->{'param'}->{'string'})
-				  . "\">$val</a>";
-			}
-		}
-
-		$vlex .= expandtemplate($templ, ('varvalue' => sub { return $vallink }));
-
-	}
-	return ($vlex);
-}
-
-sub varmenu {
-	my ($var) = @_;
-	my $val;
-	my $valmenu = '';
-
-	my $oldval = $config->variable($var);
-	my $defval = $config->vardefault($var);
-	foreach $val ($config->varrange($var)) {
-		$valmenu .= "<option class=\"";
-		if ($val eq $oldval)
-		{	$valmenu .= "var-sel\" selected";
-		} else
-		{	$valmenu .= "varlink\"";
-		}
-# TODO Find a way of preventing sending the default value (though harmless)
-# 		if ($val eq $defval)
-# 		{	$valmenu .= "???";
-# 		}
-		$valmenu .= ">$val</option>";
-	}
-	return ($valmenu);
-}
-
-my $hidden;
-sub varlink2action
-{	my ($ref) = @_;
-	my $var;
-	my $val;
-
-	$hidden = "";
-	$ref =~ s|<a.*href=||;
-	$ref =~ s|>.*$||;
-	$ref =~ s|\?(.*)"$|"|;
-	my $param = $1;
-	while ($param =~ s/(.*?)=(.*?)([&;]|$)//) {
-		$var = $1;
-		$val = $2;
-		$hidden .= "<input type='hidden' name='"
-				. $var
-				. "' value='"
-				. $val
-				. "'>";
-	}
-	return $ref;
-}
-
-sub varaction {
-	my ($who) = @_;
-	my $val;
-	my $valaction;
-
-	if ($who eq 'source' || $who eq 'sourcedir') {
-# TODO $varaction is used, but for diffhead, outside the "variables" template.
-#		We thus have no idea of the current values of the variables.
-#		To get them, we need to wait until the submit button is clicked.
-#		Then we could apply mappath. Unhappily, $pathname is not
-#		guaranteed to be an 'original' path; it may already have undergone
-#		a mappath transformation. It is then not safe to apply a second time.
-# 		$valaction = varlink2action(&fileref("$val", ""
-# 									, $config->mappath($pathname, "$var=$val")
-# 									, 0, "$var=$val")
-# 								  );
-		$valaction = varlink2action(&fileref("", "", $pathname, 0));
-	} elsif ($who eq 'diff') {
-		$valaction = varlink2action(&diffref("", "", $pathname));
-	} elsif ($who eq 'ident') {
-		$valaction = varlink2action(&idref("", "", $identifier));
-	} elsif ($who eq 'search') {
-		$valaction = varlink2action(
-			"\"$config->{virtroot}/search"
-		  . &urlargs("_string=" . $HTTP->{'param'}->{'_string'})
-		  . "\""
-								);
-	}
-	return $valaction;
-}
-
-sub varexpand {
-	my ($templ, $who) = @_;
-	my $varex = '';
-	my $var;
-
-	foreach $var ($config->allvariables) {
-		$varex .= expandtemplate(
-			$templ,
-			( 'varname'  => sub { $config->vardescription($var) }
-			, 'varid'    => sub { return $var }
-			, 'varlinks' => sub { varlinks(@_, $who, $var) }
-			, 'varmenu'  => sub { varmenu($var) }
-			, 'varaction'=> sub { varaction($who) }
-			, 'varparam' => sub { $hidden }
-			)
-		);
-	}
-	return ($varex);
-}
-
-sub devinfo {
-	my ($templ) = @_;
-	my (@mods, $mod, $path);
-	my %mods = ('main' => $0, %INC);
-
-	while (($mod, $path) = each %mods) {
-		$mod  =~ s/.pm$//;
-		$mod  =~ s|/|::|g;
-		$path =~ s|/+|/|g;
-
-		no strict 'refs';
-		next unless ${ $mod . '::CVSID' };
-
-		push(@mods, [ ${ $mod . '::CVSID' }, $path, (stat($path))[9] ]);
-	}
-
-	return join(
-		'',
-		map {
-			expandtemplate(
-				$templ,
-				(
-					'moduleid' => sub { $$_[0] },
-					'modpath'  => sub { $$_[1] },
-					'modtime'  => sub { scalar(localtime($$_[2])) }
-				)
-			);
-		  }
-		  sort {
-			$$b[2] <=> $$a[2]
-		  } @mods
-	);
-}
-
-sub atticlink {
-	return "&nbsp;" if !$files->isa("LXR::Files::CVS");
-	return "&nbsp;" if $ENV{'SCRIPT_NAME'} !~ m|/source$|;
-	if ($HTTP->{'param'}->{'showattic'}) {
-		return ("<a class='modes' href=\"$config->{virtroot}/source"
-			  . $HTTP->{'path_info'}
-			  . &urlargs("_showattic=0")
-			  . "\">Hide attic files</a>");
-	} else {
-		return ("<a class='modes' href=\"$config->{virtroot}/source"
-			  . $HTTP->{'path_info'}
-			  . &urlargs("_showattic=1")
-			  . "\">Show attic files</a>");
-	}
-}
-
-sub makeheader {
-	my $who = shift;
-	my $tmplname;
-	my $template = "<html><body>\n<hr>\n";
-
-	$tmplname = $who . "head";
-
-	unless ($who ne "sourcedir" || $config->sourcedirhead) {
-		$tmplname = "sourcehead";
-	}
-	unless ($config->value($tmplname)) {
-		$tmplname = "htmlhead";
-	}
-
-	if ($config->value($tmplname)) {
-		if (open(TEMPL, $config->value($tmplname))) {
-			local ($/) = undef;
-			$template = <TEMPL>;
-			close(TEMPL);
-		} else {
-			warning("Template " . $config->value($tmplname) . " does not exist in ".`pwd`);
-		}
-	}
-
-	#CSS checked _PH_
-	print(
-		expandtemplate(
-			$template,
-			(	'title'      => sub { titleexpand(@_,  $who) }
-			,	'banner'     => sub { bannerexpand(@_, $who) }
-			,	'baseurl'    => sub { baseurl(@_) }
-			,	'stylesheet' => sub { stylesheet(@_) }
-			,	'dotdoturl'  => sub { dotdoturl(@_) }
-			,	'thisurl'    => sub { thisurl(@_) }
-			,	'pathname'   => sub { pathname(@_) }
-			,	'modes'      => sub { modeexpand(@_,   $who) }
-			,	'variables'  => sub { varexpand(@_,    $who) }
-			,	'devinfo'    => sub { devinfo(@_) }
-			,	'atticlink'  => sub { atticlink(@_) }
-			,	'encoding'   => sub { return $config->{'encoding'} }
-			,	'LXRversion' => sub { return $LXRversion::LXRversion }
-			,	'varaction'	 => sub { varaction($who) }
-			,	'varparam'	 => sub { $hidden }
-			)
-		)
-	);
-}
-
-sub makefooter {
-	my $who = shift;
-	my $tmplname;
-	my $template = "<hr>\n</body>\n";
-
-	$tmplname = $who . "tail";
-
-	unless ($who ne "sourcedir" || $config->sourcedirtail) {
-		$tmplname = "sourcetail";
-	}
-	unless ($config->value($tmplname)) {
-		$tmplname = "htmltail";
-	}
-
-	if ($config->value($tmplname)) {
-		if (open(TEMPL, $config->value($tmplname))) {
-			local ($/) = undef;
-			$template = <TEMPL>;
-			close(TEMPL);
-		} else {
-			warning("Template " . $config->value($tmplname) . " does not exist in ".`pwd`);
-		}
-	}
-
-	print(
-		expandtemplate(
-			$template,
-			(	'banner'    => sub { bannerexpand(@_, $who) }
-			,	'thisurl'   => sub { thisurl(@_) }
-			,	'modes'     => sub { modeexpand(@_,   $who) }
-			,	'variables' => sub { varexpand(@_,    $who) }
-			,	'devinfo'   => sub { devinfo(@_) } 
-			,	'LXRversion' => sub { return $LXRversion::LXRversion }
-			,	'varaction'	 => sub { varaction($who) }
-			,	'varparam'	 => sub { $hidden }
-			)
-		)
-	);
-}
-
-# Send an error page in case source tree was not found
-sub makeerrorpage {
-	my $who = shift;
-	my $tmplname;
-	my $template = "<html><body><hr>\n"
-		      . "<div align='center'>\n"
-		      . "<h1>Unrecoverable Error</h1><br>\n"
-		      . "\$tree unknown\n"
-		      . "</div>\n</body></html>\n";
-
-	$tmplname = $who;
-
-	if ($config->value($tmplname)) {
-		if (open(TEMPL, $config->value($tmplname))) {
-			local ($/) = undef;
-			$template = <TEMPL>;
-			close(TEMPL);
-		}
-		else {
-			warning("Template " . $config->value($tmplname) . " does not exist in ".`pwd`);
-		}
-	}
-
-	print("Content-Type: text/html; charset=iso-8859-1\n");
-	print("\n");
-
-	my $treeextract = '([^/]*)/[^/]*$'; # default: capture before-last fragment
-	if (exists ($config->{'treeextract'})) {
-		$treeextract = $config->treeextract;
-	}
-
-	print(
-		expandtemplate(
-			$template,
-			(
-				'tree'    => sub { $_ = $ENV{'SCRIPT_NAME' }; m!$treeextract!; return $1; },
-				'stylesheet' => sub { stylesheet(@_) },
-			)
-		)
-	);
-	$config = undef;
-	$files  = undef;
 	$index  = undef;
 }
 
