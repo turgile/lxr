@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.38 2011/12/21 19:49:20 ajlittoz Exp $
+# $Id: Config.pm,v 1.39 2011/12/22 13:09:29 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.38 2011/12/21 19:49:20 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.39 2011/12/22 13:09:29 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -105,12 +105,16 @@ sub _initialize {
 							// $self->{'host_names'}
 							}
 			if exists($config->{'host_names'}) // exists($config->{'host_names'});
+		my $virtroot = 	$config->{'virtroot'};
+		my $hits = $virtroot =~ s!/*$!!;	# ensure no ending /
+		$hits += $virtroot =~ s!^/*!/!;		# and a single starting /
+		if ($hits > 0) { $config->{'virtroot'} = $virtroot }
 		if (scalar(@hostnames)>0) {
 			foreach my $rt (@hostnames) {
 				$rt =~ s!/*$!!;		# remove trailing /
 				$rt =~ s!^//!http://!; # allow for a shortened form
 				if	(	$host eq $rt
-					&&	$script_path eq $config->{'virtroot'}
+					&&	$script_path eq $virtroot
 					) {
 					$config->{'baseurl'} = $rt . $script_path;
 					%$self = (%$self, %$config);
