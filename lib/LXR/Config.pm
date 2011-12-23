@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.39 2011/12/22 13:09:29 ajlittoz Exp $
+# $Id: Config.pm,v 1.40 2011/12/23 20:01:19 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.39 2011/12/22 13:09:29 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.40 2011/12/23 20:01:19 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -101,13 +101,15 @@ sub _initialize {
 	$script_path =~ s!/[^/]*$!!;	# path to script
 	$script_path =~ s!^/*!/!;		# ensure a single starting /
   CANDIDATE: foreach $config (@config[1..$#config]) {
-		my @hostnames = 	@{ $config->{'host_names'}
-							// $self->{'host_names'}
-							}
-			if exists($config->{'host_names'}) // exists($config->{'host_names'});
-		my $virtroot = 	$config->{'virtroot'};
-		my $hits = $virtroot =~ s!/*$!!;	# ensure no ending /
-		$hits += $virtroot =~ s!^/*!/!;		# and a single starting /
+		my @hostnames;
+		if (exists($config->{'host_names'})) {
+			@hostnames = @{$config->{'host_names'}};
+		} elsif (exists($self->{'host_names'})) {
+			@hostnames = @{$self->{'host_names'}};
+		};
+		my $virtroot = $config->{'virtroot'};
+		my $hits = $virtroot =~ s!/+$!!;	# ensure no ending /
+		$hits += $virtroot =~ s!^/+!/!;		# and a single starting /
 		if ($hits > 0) { $config->{'virtroot'} = $virtroot }
 		if (scalar(@hostnames)>0) {
 			foreach my $rt (@hostnames) {
