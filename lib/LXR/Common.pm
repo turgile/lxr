@@ -1,9 +1,7 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Common.pm,v 1.84 2011/12/21 19:35:54 ajlittoz Exp $
+# $Id: Common.pm,v 1.85 2011/12/23 17:59:10 ajlittoz Exp $
 #
-# FIXME: java doesn't support super() or super.x
-
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -20,7 +18,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.84 2011/12/21 19:35:54 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.85 2011/12/23 17:59:10 ajlittoz Exp $ ';
 
 use strict;
 
@@ -38,7 +36,7 @@ our @EXPORT = qw(
 	$pathname $releaseid $identifier
 	&warning &fatal
 	 &fflush
-	&urlargs &fileref &diffref &idref &incref
+	&urlargs &nonvarargs &fileref &diffref &idref &incref
 	&httpinit &httpclean
 );
 # our @EXPORT_OK = qw(
@@ -110,6 +108,20 @@ sub tmpcounter {
 	return $tmpcounter++;
 }
 
+sub nonvarargs {
+	my @args;
+
+	foreach my $param (keys $HTTP->{'param'}) {
+		next unless $param =~ m!^_!;
+		my $val = $HTTP->{'param'}->{$param};
+		if (length($val)) {
+			push(@args, "$param=$HTTP->{'param'}->{$param}");
+		}
+	}
+
+	return @args;
+}
+
 sub urlargs {
 	my @args = @_;
 	my %args = ();
@@ -150,19 +162,25 @@ sub fileref {
 }
 
 sub diffref {
-	my ($desc, $css, $path, $darg) = @_;
-	my $dval;
+	my ($desc, $css, $path, @args) = @_;
+	my ($darg, $dval);
 
-	($darg, $dval) = $darg =~ /(.*?)=(.*)/;
+	($darg, $dval) = $args[0] =~ /(.*?)=(.*)/;
 	return ("<a class='$css' href=\"$config->{virtroot}/diff$path"
-		  . &urlargs(($darg ? "_diffvar=$darg" : ""), ($dval ? "_diffval=$dval" : ""))
+		  . &urlargs	( &nonvarargs()
+						, ($darg ? "_diffvar=$darg" : "")
+						, ($dval ? "_diffval=$dval" : "")
+						)
 		  . "\"\>$desc</a>");
 }
 
 sub idref {
 	my ($desc, $css, $id, @args) = @_;
 	return ("<a class='$css' href=\"$config->{virtroot}/ident"
-		  . &urlargs(($id ? "_i=$id" : ""), @args)
+		  . &urlargs	( ($id ? "_i=$id" : "")
+						, &nonvarargs()
+						, @args
+						)
 		  . "\"\>$desc</a>");
 }
 
@@ -298,7 +316,10 @@ sub httpinit {
 	$HTTP->{'this_url'} = 'http://' . $ENV{'SERVER_NAME'};
 	$HTTP->{'this_url'} .= ':' . $ENV{'SERVER_PORT'}
 	  if $ENV{'SERVER_PORT'} != 80;
-	$HTTP->{'this_url'} .= $ENV{'SCRIPT_NAME'} . $ENV{'PATH_INFO'};
+	$HTTP->{'this_url'} .= $ENV{'SCRIPT_NAME'};
+	my $script_path = $HTTP->{'this_url'};
+	$script_path =~ s!/[^/]*$!!;
+	$HTTP->{'this_url'} .= $ENV{'PATH_INFO'};
 	$HTTP->{'this_url'} .= '?' . $ENV{'QUERY_STRING'}
 	  if $ENV{'QUERY_STRING'};
 
@@ -317,11 +338,26 @@ sub httpinit {
 	delete $HTTP->{'param'}->{'_i'};
 	delete $HTTP->{'param'}->{'_identifier'};
 
-	$config     = new LXR::Config($HTTP->{'this_url'});
+	$config     = new LXR::Config($script_path);
 	unless (exists $config->{'sourceroot'}) {
 		LXR::Template::makeerrorpage('htmlfatal');
 		die "Can't find config for " . $HTTP->{'this_url'};
 	}
+
+	# override the 'variables' value if necessary
+	foreach my $param (keys $HTTP->{'param'}) {
+		my $var = $param;
+		next unless $var =~ s!^\$!!;
+		if (exists($config->{'variables'}->{$var})) {
+			if (exists($HTTP->{'param'}->{$var})) {
+				$HTTP->{'param'}->{$var} = $HTTP->{'param'}->{$param};
+			} else {
+				$config->variable($_, $HTTP->{'param'}->{$param});
+			}
+		}
+		delete $HTTP->{'param'}->{$param};
+	}
+
 	$files = new LXR::Files($config->sourceroot, $config->sourceparams);
 	die "Can't create Files for " . $config->sourceroot if !defined($files);
 	$index = new LXR::Index($config->dbname);

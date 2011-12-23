@@ -83,7 +83,7 @@ B<Caveat:>
 
 A warning message may be inserted between $prefix and $suffix.
 Care must be taken to ensure that this message is placed in the
-E(lt)bodyE(gt) part of the HTML page.
+E<lt>bodyE<gt> part of the HTML page.
 
 B<This> caveat B<is particularly aimed at this sub use in makeheader
 where the page has not been started yet.>
@@ -276,7 +276,7 @@ sub expandtemplate {
 	my ($templ, %expfunc) = @_;
 	my ($expfun, $exppar);
 
-# Remove the non-sticky comments (see definition above)
+	# Remove the non-sticky comments (see definition above)
 	$templ =~ s/<!--\s.*?-->//gs;
 	$templ =~ s/\n\n+/\n/gs;
 
@@ -288,8 +288,8 @@ sub expandtemplate {
 #	first left brace-----+          |           |
 #	nested brace-delimited block----+-----------+
 
-# Repeatedly find the variables or function calls
-# and apply replacement rule
+	# Repeatedly find the variables or function calls
+	# and apply replacement rule
 	$templ =~ s/(\$(\w+)(\{([^\}]*)\}|))/{
 		if (defined($expfun = $expfunc{$2})) {
 			if ($3 eq '') {
@@ -301,13 +301,13 @@ sub expandtemplate {
 			}
 		}
 		else {
-# This variable or function has no replacement rule,
-# leave the fragment unchanged in $templ
+	# This variable or function has no replacement rule,
+	# leave the fragment unchanged in $templ
 			$1;
 		}
 	}/ges;
 
-# Restore the unused inactive delimiters
+	# Restore the unused inactive delimiters
 	$templ =~ tr/\x01\x02/\{\}/;
 	return $templ;
 }
@@ -351,9 +351,9 @@ diff, ident or search) requesting this substitution
 sub treeexpand {
 	my ($templ, $who) = @_;
 
-# Try to extract meaningful information from the URL
-# Just in case the 'treeextract' pattern is not globally defined,
-# apply a sensible default: tree name before the script-name
+	# Try to extract meaningful information from the URL
+	# Just in case the 'treeextract' pattern is not globally defined,
+	# apply a sensible default: tree name before the script-name
 	my $treeextract = '([^/]*)/[^/]*$';
 	if (exists ($config->{'treeextract'})) {
 		$treeextract = $config->{'treeextract'};
@@ -400,8 +400,8 @@ sub captionexpand {
 	my ($templ, $who) = @_;
 
 	my $ret = $config->{'caption'}
-# If config parameter is not defined, try to produce
-# a string by extracting a relevant part from the URL.
+	# If config parameter is not defined, try to produce
+	# a string by extracting a relevant part from the URL.
 		|| expandtemplate
 				(	"\$tree  by courtesy of the LXR Cross Referencer"
 				,	( 'tree'    => sub { treeexpand(@_, $who) }
@@ -449,23 +449,23 @@ diff, ident or search) requesting this substitution
 sub bannerexpand {
 	my ($templ, $who) = @_;
 
-# Substitution is meaningful only for scripts dealing with files
+	# Substitution is meaningful only for scripts dealing with files
 	if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 		my $fpath = '';
-# Instead of an empty root, put there the name of the tree
+	# Instead of an empty root, put there the name of the tree
 		my $furl  = fileref($config->sourcerootname . '/', "banner", '/');
 
-# Process each intermediate directory
+	# Process each intermediate directory
 		foreach ($pathname =~ m!([^/]+/?)!g) {
 			$fpath .= $_;
-# To have a nice string, insert a zero-width space after each /
-# so that it's possible for the pathnames to wrap.
+	# To have a nice string, insert a zero-width space after each /
+	# so that it's possible for the pathnames to wrap.
 			$furl .= '&#x200B;' . fileref($_, "banner", "/$fpath");
 		}
-# We captured above the intermediate directory with both start
-# and end delimiters. To avoid display of duplicate delimiters
-# remove the end delimiter (since we forced a start delimiter)
-# inside the <a> comment block.
+	# We captured above the intermediate directory with both start
+	# and end delimiters. To avoid display of duplicate delimiters
+	# remove the end delimiter (since we forced a start delimiter)
+	# inside the <a> comment block.
 		$furl =~ s!/</a>!</a>/!gi;
 
 		return "<span class=\"banner\">$furl</span>";
@@ -473,10 +473,6 @@ sub bannerexpand {
 		return '';
 	}
 }
-# 
-# sub pathname {
-# 	return $pathname;
-# }
 
 
 =head2 C<titleexpand ($templ, $who)>
@@ -538,7 +534,8 @@ Function C<thisurl> is a "$variable" substitution function.
 It returns an HTML-encoded string suitable for use as the
 target href of a C<< <a> >> tag.
 
-The string is the URL used to access the current page.
+The string is the URL used to access the current page (complete
+with the ?query string).
 
 =cut
 
@@ -567,10 +564,6 @@ sub baseurl {
 	return $url;
 }
 
-sub stylesheet {
-	return $config->stylesheet;
-}
-
 
 =head2 C<dotdoturl ()>
 
@@ -594,27 +587,13 @@ sub dotdoturl {
 	return $url;
 }
 
-sub modelink2button
-{	my ($ref) = @_;
 
-	$ref =~ s!<a!<form method="get"!;
-	$ref =~ s!href!action!;
-	if ($ref =~ s!\?!">?!) {
-		$ref =~ s!">([^?])!<button type="submit">$1!;
-		$ref =~ s![?&;](\w+)=(.*?)(?=[&;<])!<input type="hidden" name="$1" value="$2">!g;
-	} else {
-		$ref =~ s!">!"><button type="submit">$1!;
-	}
-	$ref =~ s!</a>!</button></form>!;
-	return $ref;
-}
+=head2 C<urlexpand ($templ, $who)>
 
-
-=head2 C<modeexpand ($templ, $who)>
-
-Function C<modeexpand> is a "function" substitution function.
+Function C<urlexpand> is a "$function" substitution function.
 It returns an HTML string which is the concatenation of its
-expanded argument applied to all the LXR nodes.
+expanded argument applied to all the URL arguments of the
+current page.
 
 =over
 
@@ -632,15 +611,84 @@ it is here considered as the "mode"
 
 =head3 Algorithm
 
-It first constructs a list (Perl C<@>vector) made of HTML
-fragments describing the state of the mode (presently selected
-or not).
-This fragment is arbitrary: from simple decorated text to complex
-forms containing buttons.
+It makes use of sub C<urlargs> to retrieve the filteres list of
+variables values.
+If necessary, other URL arguments may be added depending on the mode
+(known from C<$who>.
 
 The argument template is then expanded through C<expandtemplate>
-for each mode with a replacement rule for C<$modelink> and
-C<$modebtn> allowing the inclusion of the selected HTML fragment.
+for each URL argument with a replacement rule for its name and value.
+
+=cut
+
+sub urlexpand {
+	my ($templ, $who) = @_;
+	my $urlex;
+	my $args;
+
+	# diff needs special processing: the current selected version
+	# of the file needs to be transferred to _diffvar and _diffval
+	# variables, so that the standard selection mechanism will give
+	# the version to compare to in the current value of the variables.
+# TODO: The present implementation allows for a single version
+# variable, which may break the desired version (e.g. when LXRing
+# the Linux kernel which uses v and a!
+# HINT: Transfer in variable _diffx=value_of_x (just add prefix
+# _diff to the name of x
+	if ($who eq 'diff') {
+		my @args = ();
+		foreach ($config->allvariables) {
+			push(@args, "$_=".$config->variable($_));
+		}
+		diffref ("", "", $pathname, @args) =~ m!^.*?(\?.*?)"!;
+		$args = $1;
+	} else {
+		$args = &urlargs();
+	}
+
+	while ($args =~ m![?&;]((?:\$|\w)+)=(.*?)(?=[&;]|$)!g) {
+		my $var = $1;
+		my $val = $2;
+		$urlex .= expandtemplate
+					( $templ
+					,	( 'urlvar' => sub { $var }
+						, 'urlval' => sub { $val }
+						)
+					);
+	}
+
+	return ($urlex);
+}
+
+
+=head2 C<modeexpand ($templ, $who)>
+
+Function C<modeexpand> is a "$function" substitution function.
+It returns an HTML string which is the concatenation of its
+expanded argument applied to all the LXR modes.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$who>
+
+a I<string> containing the script name (i.e. cource, sourcedir,
+diff, ident or search) requesting this substitution;
+it is here considered as the "mode"
+
+=back
+
+=head3 Algorithm
+
+It first constructs a list (Perl C<@>vector) of hashes describing
+the state of the mode: its name, selection state, link or action,
+CSS class.
+
+The argument template is then expanded through C<expandtemplate>
+for each mode with a replacement rule for each attribute.
 
 The result is the concatenation of the repeated expansion.
 
@@ -648,76 +696,121 @@ The result is the concatenation of the repeated expansion.
 
 sub modeexpand {
 	my ($templ, $who) = @_;
-	my $modex = '';
-	my $ref;
-	my @mlist = ();
-	my @mblist = ();
+	my $modex;
 	my $mode;
-	my $modebtn;
+	my @mlist = ();
+	my $modelink;
+	my $modename;
+	my $modecss;
+	my $modeaction;
+	my $modeoff;
 
+	$modename = "Source navigation";
 	if ($who eq 'source' || $who eq 'sourcedir')
-	{	push(@mlist, "<span class='modes-sel'>source navigation</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>source navigation</button>"
-					. "</form>"
-				);
+	{	$modelink = "<span class='modes-sel'>$modename</span>";
+		$modecss  = "modes-sel";
+		$modeaction= "";
+		$modeoff  = "disabled";
 	} else {
-		$ref = fileref("source navigation", "modes", $pathname);
-		push(@mlist, $ref);
-		push(@mblist, modelink2button($ref));
+		$modelink = fileref($modename, "modes", $pathname);
+		$modecss  = "modes";
+		$modelink =~ m!href="(.*?)(\?|">)!;	# extract href target as action
+		$modeaction = "$config->{virtroot}/source";
+		$modeoff  = "";
 	}
+	push(@mlist,	{ 'name' => $modename
+					, 'link' => $modelink
+					, 'css'  => $modecss
+					, 'action'=> $modeaction
+					, 'off'  => $modeoff
+					}
+		);
 
+	$modename = "Diff markup";
 	if ($who eq 'diff')
-	{	push(@mlist, "<span class='modes-sel'>diff markup</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>diff markup</button>"
-					. "</form>"
-				);
+	{	$modelink = "<span class='modes-sel'>$modename</span>";
+		$modecss  = "modes-sel";
+		$modeaction= "";
+		$modeoff  = "disabled";
+		push(@mlist,	{ 'name' => $modename
+						, 'link' => $modelink
+						, 'css'  => $modecss
+						, 'action'=> $modeaction
+						, 'off'  => $modeoff
+						}
+			);
 	} elsif ($who eq 'source' && $pathname !~ m|/$|) {
-		$ref = diffref("diff markup", "modes", $pathname);
-		push(@mlist, $ref);
-		push(@mblist, modelink2button($ref));
+		$modelink = diffref($modename, "modes", $pathname);
+		$modecss  = "modes";
+		$modelink =~ m!href="(.*?)(\?|">)!;	# extract href target as action
+		$modeaction = $1;
+		$modeoff  = "";
+		push(@mlist,	{ 'name' => $modename
+						, 'link' => $modelink
+						, 'css'  => $modecss
+						, 'action'=> $modeaction
+						, 'off'  => $modeoff
+						}
+			);
 	}
 
+	$modename = "Identifier search";
 	if ($who eq 'ident')
-	{	push(@mlist, "<span class='modes-sel'>identifier search</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>identifier search</button>"
-					. "</form>"
-				);
+	{	$modelink = "<span class='modes-sel'>$modename</span>";
+		$modecss  = "modes-sel";
+		$modeaction= "";
+		$modeoff  = "disabled";
 	} else {
-		$ref = idref("identifier search", "modes", "");
-		push(@mlist, $ref);
-		push(@mblist, modelink2button($ref));
+		$modelink = idref($modename, "modes", "");
+		$modecss  = "modes";
+		$modeaction = "$config->{virtroot}/ident";
+		$modeoff  = "";
 	}
+	push(@mlist,	{ 'name' => $modename
+					, 'link' => $modelink
+					, 'css'  => $modecss
+					, 'action'=> $modeaction
+					, 'off'  => $modeoff
+					}
+		);
 
+	$modename = "General search";
 	if ($who eq 'search')
-	{	push(@mlist, "<span class='modes-sel'>general search</span>");
-		push	( @mblist
-				, "<form method='get' class='modes-sel' action=''>"
-					. "<button type='submit' disabled>general search</button>"
-					. "</form>"
-				);
+	{	$modelink = "<span class='modes-sel'>$modename</span>";
+		$modecss  = "modes-sel";
+		$modeaction= "";
+		$modeoff  = "disabled";
 	} else {
-		$ref = "<a class=\"modes\" "
-			  . "href=\"$config->{virtroot}/search"
-			  . urlargs
-			  . "\">general search</a>";
-		push(@mlist, $ref);
-		push	( @mblist
-				, modelink2button($ref)
-				);
+		$modelink = "<a class=\"modes\" "
+					. "href=\"$config->{virtroot}/search"
+					. urlargs
+					. "\">general search</a>";
+		$modecss  = "modes";
+		$modeaction = "$config->{virtroot}/search";
+		$modeoff  = "";
 	}
+	push(@mlist,	{ 'name' => $modename
+					, 'link' => $modelink
+					, 'css'  => $modecss
+					, 'action'=> $modeaction
+					, 'off'  => $modeoff
+					}
+		);
 
 	foreach $mode (@mlist) {
-		$modebtn = shift(@mblist);
+		$modename = $$mode{'name'};
+		$modelink = $$mode{'link'};
+		$modecss  = $$mode{'css'};
+		$modeaction = $$mode{'action'};
+		$modeoff  = $$mode{'off'};
 		$modex .= expandtemplate
 					( $templ
-					,	( 'modelink' => sub { return $mode }
-						, 'modebtn'  => sub { return $modebtn }
+					,	( 'modelink' => sub { $modelink }
+						, 'modecss'  => sub {  $modecss }
+						, 'modeaction' => sub { $modeaction }
+						, 'modeoff'  => sub { $modeoff }
+						, 'modename' => sub { $modename }
+						, 'urlargs' => sub { urlexpand (@_, $who) }
 						)
 					);
 	}
@@ -728,7 +821,7 @@ sub modeexpand {
 
 =head2 C<varlinks ($templ, $who, $var)>
 
-Function C<varlinks> is a "function" substitution function.
+Function C<varlinks> is a "$function" substitution function.
 It returns an HTML string which is the concatenation of its
 expanded argument applied to all the values of $var.
 
@@ -799,56 +892,86 @@ sub varlinks {
 	return ($vlex);
 }
 
-sub varmenu {
-	my ($var) = @_;
+
+=head2 C<varmenuexpand ($var)>
+
+Function C<varmenuexpand> is a "$function" substitution function.
+It returns an HTML string which is the concatenation of
+C<< <option> >> tags, each one corresponding to the values
+defined in variable $var's 'range'.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$var>
+
+a I<string> containing the variable name
+
+=back
+
+=cut
+
+sub varmenuexpand {
+	my ($templ, $who, $var) = @_;
 	my $val;
-	my $valmenu = '';
+	my $class;
+	my $sel;
+	my $menuex;
 
 	my $oldval = $config->variable($var);
-	my $defval = $config->vardefault($var);
 	foreach $val ($config->varrange($var)) {
-		$valmenu .= "<option class=\"";
-		if ($val eq $oldval)
-		{	$valmenu .= "var-sel\" selected";
+		if ($val eq $oldval) {
+			$class = "var-sel";
+			$sel = "selected";
 		} else {
-			$valmenu .= "varlink\"";
+			$class = "varlink";
+			$sel = "";
 		}
-# TODO Find a way to prevent sending the default value (though harmless)
-# 		if ($val eq $defval)
-# 		{	$valmenu .= "???";
-# 		}
-		$valmenu .= ">$val</option>";
+
+		$menuex .= expandtemplate
+					( $templ
+					,	( 'itemclass' => sub { $class }
+						, 'itemsel'   => sub { $sel }
+						, 'varvalue'  => sub { $val }
+						)
+					);
 	}
-	return ($valmenu);
+	return ($menuex);
 }
 
-my $hidden;
-sub varlink2action
-{	my ($ref) = @_;
-	my $var;
-	my $val;
 
-	$hidden = "";
-	$ref =~ s!<a.*href=!!;
-	$ref =~ s!>.*$!!;
-	$ref =~ s!\?(.*)"$!"!;
-	my $param = $1;
-	while ($param =~ s/(.*?)=(.*?)([&;]|$)//) {
-		$var = $1;
-		$val = $2;
-		$hidden .= "<input type='hidden' name='"
-				. $var
-				. "' value='"
-				. $val
-				. "'>";
-	}
-	return $ref;
-}
+=head2 C<varbtnaction ($templ, $who)>
 
-sub varaction {
-	my ($who) = @_;
-	my $val;
-	my $valaction;
+Function C<varbtnaction> is a "$variable" substitution function.
+It returns a string suitable for use in the C< action > attribute
+of a C<< <form> >> tag.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$who>
+
+a I<string> containing the script name
+
+=back
+
+It passes a skeletal reference to sub C<varlink2action> to do the job.
+The reference depends on the script.
+
+Though not mentioned in the code, it relies on C<varlink2action>'s
+side-effect to set the value of C<$varparam>.
+
+=cut
+
+sub varbtnaction {
+	my ($templ, $who) = @_;
+	my $action;
 
 	if ($who eq 'source' || $who eq 'sourcedir') {
 # TODO $varaction is used, but for diffhead, outside the "variables" template.
@@ -861,25 +984,24 @@ sub varaction {
 # 									, $config->mappath($pathname, "$var=$val")
 # 									, 0, "$var=$val")
 # 								  );
-		$valaction = varlink2action(&fileref("", "", $pathname));
+		$action = &fileref("", "", $pathname);
 	} elsif ($who eq 'diff') {
-		$valaction = varlink2action(&diffref("", "", $pathname));
+		$action = &diffref("", "", $pathname);
 	} elsif ($who eq 'ident') {
-		$valaction = varlink2action(&idref("", "", $identifier));
+		$action = &idref("", "", $identifier);
 	} elsif ($who eq 'search') {
-		$valaction = varlink2action(
-			"\"$config->{virtroot}/search"
-		  . &urlargs("_string=" . $HTTP->{'param'}->{'_string'})
-		  . "\""
-								);
+		$action =	"\"$config->{virtroot}/search"
+						. &urlargs(&nonvarargs())
+						. "\"";
 	}
-	return $valaction;
+	$action =~ m!href="(.*?)(\?|">)!;	# extract href target as action
+	return $1;
 }
 
 
 =head2 C<varexpand ($templ, $who)>
 
-Function C<varexpand> is a "function" substitution function.
+Function C<varexpand> is a "$function" substitution function.
 It returns an HTML string which is the concatenation of its
 expanded argument applied to all configuration variables
 (those defined in the C<'variables'> configuration parameter).
@@ -916,10 +1038,10 @@ sub varexpand {
 					( $templ
 					,	( 'varname'  => sub { $config->vardescription($var) }
 						, 'varid'    => sub { return $var }
+						, 'varvalue' => sub { $config->variable($var) }
 						, 'varlinks' => sub { varlinks(@_, $who, $var) }
-						, 'varmenu'  => sub { varmenu($var) }
-						, 'varaction'=> sub { varaction($who) }
-						, 'varparam' => sub { $hidden }
+						, 'varmenu'  => sub { varmenuexpand(@_, $who, $var) }
+						, 'varbtnaction'=> \&varbtnaction
 						)
 					);
 	}
@@ -932,7 +1054,7 @@ sub varexpand {
 Function C<dotdoturl> is a "$variable" substitution function.
 It returns a string giving information about the LXR modules.
 
-This is a developper debugging substitution. It is not meaningful
+This is a developer debugging substitution. It is not meaningful
 for the average user.
 
 =over
@@ -1076,22 +1198,28 @@ sub makeheader {
 	print(
 		expandtemplate
 		(	$template
-		,	(	'title'      => sub { titleexpand(@_, $who) }
+		,	( # --for <head> section--
+				'title'      => sub { titleexpand(@_, $who) }
+			,	'baseurl'    => sub { baseurl(@_) }
+			,	'encoding'   => sub { $config->{'encoding'} }
+			,	'stylesheet' => sub { $config->{'stylesheet'} }
+			  # --header decoration--
 			,	'caption'    => sub { captionexpand(@_, $who) }
 			,	'banner'     => sub { bannerexpand(@_, $who) }
-			,	'baseurl'    => sub { baseurl(@_) }
-			,	'stylesheet' => sub { stylesheet(@_) }
-			,	'dotdoturl'  => sub { dotdoturl(@_) }
-			,	'thisurl'    => sub { thisurl(@_) }
-			,	'pathname'   => sub { return $pathname }
+			,	'pathname'   => sub { $pathname }
+			,	'atticlink'  => \&atticlink
+			,	'LXRversion' => sub { $LXRversion::LXRversion }
+			  # --modes buttons & links--
 			,	'modes'      => sub { modeexpand(@_, $who) }
+			  # --variables buttons & links--
 			,	'variables'  => sub { varexpand(@_, $who) }
-			,	'devinfo'    => sub { devinfo(@_) }
-			,	'atticlink'  => sub { atticlink(@_) }
-			,	'encoding'   => sub { return $config->{'encoding'} }
-			,	'LXRversion' => sub { return $LXRversion::LXRversion }
-			,	'varaction'	 => sub { varaction($who) }
-			,	'varparam'	 => sub { $hidden }
+			,	'varbtnaction'	 => sub { varbtnaction(@_, $who) }
+			,	'urlargs'    => sub { urlexpand(@_, $who) }
+			  # --various URLs, useless probably--
+			,	'dotdoturl'  => sub { dotdoturl(@_) }
+			,	'thisurl'    => \&thisurl
+			  # --for developers only--
+			,	'devinfo'    => \&devinfo
 			)
 		)
 	);
@@ -1140,14 +1268,22 @@ sub makefooter {
 	print(
 		expandtemplate
 		(	$template
-		,	(	'banner'    => sub { bannerexpand(@_, $who) }
-			,	'thisurl'   => sub { thisurl(@_) }
-			,	'modes'     => sub { modeexpand(@_, $who) }
-			,	'variables' => sub { varexpand(@_, $who) }
-			,	'devinfo'   => sub { devinfo(@_) } 
-			,	'LXRversion' => sub { return $LXRversion::LXRversion }
-			,	'varaction'	 => sub { varaction($who) }
-			,	'varparam'	 => sub { $hidden }
+		,	( # --decoration--
+				'caption'    => sub { captionexpand(@_, $who) }
+			,	'banner'     => sub { bannerexpand(@_, $who) }
+			,	'pathname'   => sub { $pathname }
+			,	'LXRversion' => sub { $LXRversion::LXRversion }
+			  # --modes buttons & links--
+			,	'modes'      => sub { modeexpand(@_, $who) }
+			  # --variables buttons & links--
+			,	'variables'  => sub { varexpand(@_, $who) }
+			,	'varbtnaction'	 => sub { varbtnaction(@_, $who) }
+			,	'urlargs'    => sub { urlexpand(@_, $who) }
+			  # --various URLs, useless probably--
+			,	'dotdoturl'  => sub { dotdoturl(@_) }
+			,	'thisurl'    => \&thisurl
+			  # --for developers only--
+			,	'devinfo'    => \&devinfo
 			)
 		)
 	);
@@ -1201,7 +1337,8 @@ sub makeerrorpage {
 		expandtemplate
 		(	$template
 		,	( 'tree'    =>  sub { treeexpand(@_, $who) }
-			, 'stylesheet' => sub { stylesheet(@_) }
+			, 'stylesheet' => \&stylesheet
+			, 'LXRversion' => sub { $LXRversion::LXRversion }
 			)
 		)
 	);
