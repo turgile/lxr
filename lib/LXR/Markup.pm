@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Markup.pm,v 1.1 2011/12/21 18:10:20 ajlittoz Exp $
+# $Id: Markup.pm,v 1.2 2011/12/26 09:54:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ syntactic components or otherwise interesting elements of a block.
 
 package LXR::Markup;
 
-$CVSID = '$Id: Markup.pm,v 1.1 2011/12/21 18:10:20 ajlittoz Exp $';
+$CVSID = '$Id: Markup.pm,v 1.2 2011/12/26 09:54:25 ajlittoz Exp $';
 
 use strict;
 
@@ -153,7 +153,13 @@ sub markupfile {
 	$ltag[1] = $3;
 	$ltag[2] = $4 . " ";
 
-	my @itag = &idref(1, "fid", 1) =~ /^(.*=)1(\">)1(<\/a>)$/;
+	# As an optimisation, the skeleton of the <A> link marking for an
+	# identifier will be cached in the $lang object.
+	# To guard against any modification of the <A> link structure by
+	# sub idref, a very specific (and improbable) identifier is used.
+	# This allows to make no assumption on idref result.
+	my $itagtarget = "!!!";
+	my @itag = &idref("$itagtarget", "fid", $itagtarget) =~ /^(.*)$itagtarget(.*)$itagtarget(.*)$/;
 	my $lang = new LXR::Lang($pathname, $releaseid, @itag);
 
 	# A source code file
@@ -229,7 +235,7 @@ sub markupfile {
 		# the first line is very long or containts control characters...
 		if (   !/^\#!/
 			&& !/-\*-.*-\*-/i
-			&& (length($_) > 132 || /[\000-\010\013\014\016-\037\200-Ÿ]/))
+			&& (length($_) > 132 || /[\000-\010\013\014\016-\037\200-ï¿½]/))
 		{
 
 			# We postulate that it's a binary file.
