@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # -*- tab-width: 4 -*-"
-# $Id: genxref,v 1.48 2011/12/26 13:25:41 ajlittoz Exp $
+# $Id: genxref,v 1.49 2011/12/27 19:34:22 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ my $VTgreen = "${VTbold}${CSI}32m";
 
 my $failure = 0;	# Cumulative failure indicator
 
-printf "Perl interpreter version %vd ... ", $^V;
+printf "Checking Perl version ... %vd ", $^V;
 if ($^V gt v5.10.0) {
 	print "${VTgreen} OK ${VTnorm}\n";
 } else {
@@ -165,7 +165,7 @@ if ($config && $config->{'glimpsebin'}) {
 	print "Manually update lxr.conf for permanent setting\n";
 }
 print("Checking glimpse version ... ");
-$version = `$tool --version`;
+$version = `$tool -V`;
 if ($version eq '') {
 	print "?? ";
 	print "${VTred}FAIL${VTnorm}";
@@ -204,9 +204,24 @@ if ($config && $config->{'glimpseindex'}) {
 	print "'glimpseindex' temporarily adjusted to ${VTyellow}$toolloc${VTnorm}\n";
 	print "Manually update lxr.conf for permanent setting\n";
 }
+print("Checking glimpseindex version ... ");
+$version = `$tool -V`;
+if ($version eq '') {
+	print "?? ";
+	print "${VTred}FAIL${VTnorm}";
+	$failure = 1
+} else {
+	$version =~ /.*glimpseindex .*?((\d+\.)*\d+)/i;
+	print "${VTyellow}$1${VTnorm} ";
+# 	if ($1 < 5) {
+# 		print "${VTred}FAIL${VTnorm}\n";
+# 		print "Glimpse version xx or above required, found $version\n";
+# } else {
+# 	print "${VTgreen} OK ${VTnorm}\n";
+}
+print "\n";
 END_TEST_GLIMPSEINDEX:
 
-$version = '';
 if ($config && $config->{'swishbin'}) {
 	$tool = $config->{'swishbin'};
 	$toolloc = `which swhish-e`;
@@ -256,7 +271,7 @@ die "${VTred}Can't create Index ${VTnorm}" . $config->dbname if !defined($index)
 
 # End of general checks
 if ($failure) {
-	exit(1);
+	die "${VTred}Aborting due to previous errors${VTnorm}";
 }
 if ($option{'checkonly'}) {
 	print "${VTyellow}genxref stopped without indexing by --checkonly option${VTnorm}\n";
