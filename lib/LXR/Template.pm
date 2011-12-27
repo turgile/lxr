@@ -990,9 +990,9 @@ sub varbtnaction {
 	} elsif ($who eq 'ident') {
 		$action = &idref("", "", $identifier);
 	} elsif ($who eq 'search') {
-		$action =	"\"$config->{virtroot}/search"
+		$action =	"href=\"$config->{virtroot}/search"
 						. &urlargs(&nonvarargs())
-						. "\"";
+						. "\">";
 	}
 	$action =~ m!href="(.*?)(\?|">)!;	# extract href target as action
 	return $1;
