@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.40 2011/12/23 20:01:19 ajlittoz Exp $
+# $Id: Config.pm,v 1.41 2011/12/30 10:51:10 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.40 2011/12/23 20:01:19 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.41 2011/12/30 10:51:10 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -162,16 +162,16 @@ sub _initialize {
 
   if (exists $self->{'glimpsebin'} and exists $self->{'swishbin'}) {
     die "Both Glimpse and Swish have been specified in $confpath.\n".
-        "Please choose one or other of them by commenting out either glimpsebin or swishbin.\n";
+        "Please choose one of them by commenting out either glimpsebin or swishbin.\n";
   } elsif (exists $self->{'glimpsebin'}) {    
-    die "Please specifiy glimpsedir in $confpath\n" if !exists $self->{'glimpsedir'};    
+    die "Please specifiy glimpsedir in $confpath\n" unless exists $self->{'glimpsedir'};    
     _ensuredirexists($self->{'glimpsedir'});
   } elsif (exists $self->{'swishbin'}) {    
-    die "Please specifiy glimpsedir in $confpath\n" if !exists $self->{'swishdir'};    
+    die "Please specifiy swishdir in $confpath\n" unless exists $self->{'swishdir'};    
     _ensuredirexists($self->{'swishdir'});
   } else {
     die "Neither Glimpse nor Swish have been specified in $confpath.\n".
-        "Please choose one or other of them by specifing a value for either glimpsebin or swishbin.\n";
+        "Please choose one of them by specifing a value for either glimpsebin or swishbin.\n";
   }
 }
 
