@@ -341,8 +341,27 @@ template value for a variable substitution request. >
 
 =item 1 C<$who>
 
-a I<string> containing the script name (i.e. cource, sourcedir,
+a I<string> containing the script name (i.e. source, sourcedir,
 diff, ident or search) requesting this substitution
+
+=back
+
+B<Note:>
+
+=over 4
+
+Should this sub be renamed to avoid confusion with treesexpand?
+Its sole role is to find the possible root of a missing tree.
+Give it 'rootexpand' name?
+
+Anyway, this sub is not fool-proof. It implicitly relies on a
+personal convention for multiple trees by the maintainer.
+This convention can be defeated by anyone prefering something else.
+It is hoped that the C<'treeextract'> parameter mecanism is powerful
+enough to cope with any convention.
+
+Should also this parameter be renamed to have some similarity with
+this sub? C<'rootextract'> ?
 
 =back
 
@@ -389,7 +408,7 @@ template value for a variable substitution request. >
 
 =item 1 C<$who>
 
-a I<string> containing the script name (i.e. cource, sourcedir,
+a I<string> containing the script name (i.e. source, sourcedir,
 diff, ident or search) requesting this substitution
 
 =back
@@ -439,7 +458,7 @@ template value for a variable substitution request. >
 
 =item 1 C<$who>
 
-a I<string> containing the script name (i.e. cource, sourcedir,
+a I<string> containing the script name (i.e. source, sourcedir,
 diff, ident or search) requesting this substitution
 
 =back
@@ -500,7 +519,7 @@ template value for a variable substitution request. >
 
 =item 1 C<$who>
 
-a I<string> containing the script name (i.e. cource, sourcedir,
+a I<string> containing the script name (i.e. source, sourcedir,
 diff, ident or search) requesting this substitution
 
 =back
@@ -563,6 +582,59 @@ sub stylesheet {
 }
 
 
+=head2 C<altstyleexpand ($templ, $who)>
+
+Function C<altstyleexpand> is a "$function" substitution function.
+It returns an HTML string which is the concatenation of its
+expanded argument applied to all the alternate stylesheet definitions
+found in the configuration file.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$who>
+
+a I<string> containing the script name (i.e. source, sourcedir,
+diff, ident or search) requesting this substitution;
+it is here considered as the "mode"
+
+=back
+
+=head3 Algorithm
+
+It retrieves the configuration array 'alternate_stylesheet'
+if it exists.
+
+The argument template is then expanded through C<expandtemplate>
+for each URL argument with a replacement rule for its name and value.
+
+=cut
+
+sub altstyleexpand {
+	my ($templ, $who) = @_;
+	my $altex;
+
+	if (exists $config->{'alternate_stylesheet'}) {
+		for my $sheet (@{$config->{'alternate_stylesheet'}}) {
+			$altex .= expandtemplate
+						( $templ
+						,	( 'stylesheet' => sub { $sheet }
+							, 'stylename' =>
+								sub { my $nm = $sheet;
+									  $nm =~ s/\.[^.]*$//;
+									  return $nm
+									}
+							)
+						);
+		}
+	}
+
+	return ($altex);
+}
+
 =head2 C<thisurl ()>
 
 Function C<thisurl> is a "$variable" substitution function.
@@ -623,6 +695,210 @@ sub dotdoturl {
 }
 
 
+=head2 C<treesexpand ($templ, $who)>
+
+Function C<treesexpand> is a "$function" substitution function.
+It returns an HTML string which contains links to the shareable trees
+of the configuration file.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$who>
+
+a I<string> containing the script name (i.e. source, sourcedir,
+diff, ident or search) requesting this substitution
+
+=back
+
+=head3 Algorithm
+
+It reads the configuration file into an array.
+
+The elements, except the first (index 0), are scanned to see
+if parameter 'shortcaption' is defined,
+which means this tree is shareable.
+
+If none is found, the template is not expanded.
+The returned string is void, thus avoiding any stray legend
+in the page.
+
+Otherwise, the argument template is then expanded
+through C<expandtemplate> with a replacement rule for theœ
+C<'treelinks'> attribute.
+
+=cut
+
+sub treesexpand {
+	my ($templ, $who) = @_;
+	my @configgroups = $config->readconfig();
+	my $trex;
+
+	# Scan the parameter groups for 'shortcaption'
+	# to see if there is at least one shareable tree.
+	my $shareable = 0;
+	foreach my $group (@configgroups[1..$#configgroups]) {
+		++$shareable if exists($group->{'shortcaption'});
+	}
+	# No shareable tree or only one, return a void string to
+	# wipe out any fixed text (titles, captions, ...)
+	return '' if ($shareable<2);
+	# Shareable trees exist, do the job
+	$trex .= expandtemplate
+				(	$templ
+				,	( 'treelinks' => sub { treelinks(@_, $who, @configgroups) }
+					)
+				);
+
+	return ($trex);
+}
+
+
+=head2 C<treelinks ($templ, $who, $var)>
+
+Function C<varlinks> is a "$function" substitution function.
+It returns an HTML string which is the concatenation of its
+expanded argument applied to all the shareable trees of the
+configuration file.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$who>
+
+a I<string> containing the script name
+
+=item 1 C<$confgroups>
+
+a I<array> containing a copy of the configuration file
+
+=back
+
+=head3 Algorithm
+
+It uses the copy of the configuration file passed as an array argument.
+
+The elements, except the first (index 0), are scanned to see
+if parameter 'shortcaption' is defined,
+which means this tree is shareable.
+Parameters C<'host_names'> and C<'virtroot'> are retrieved to build
+an URL to launch LXR on that tree.
+
+C<'virtroot'> is supposed to be unique for each tree.
+C<'host_names'>, if not locally defined, is fetched from the global
+parameters (index 0 element).
+
+The presently used hostname is extracted from the URL.
+If it exists in the C<'host_names'> list, it is used for the link.
+Otherwise, the first name is used.
+
+If this is the case, the argument template is then expanded
+through C<expandtemplate> with a replacement rule for each attribute.
+
+The result is the concatenation of the repeated expansion.
+
+B<Potential problem:>
+
+=over
+
+The LXR server may be accessed simultaneously under different names,
+e.g. C<localhost> on the computer, a short name on the LAN and a full
+URL from the Net.
+
+Choosing the first name in C<'host_names'> may not give the correct name
+for the current user (C<localhost> instead of a fully qualified URL).
+But extracting the hostname from the page URL is not guaranteed to
+be the correct choice in all circumstances.
+
+This might be solved with a more complex structure in C<'host_names'>
+made of 2 lists, one for "local" mode, the other for "remote" mode.
+But, once again, how to chose reliably and automatically the correct
+option?
+
+With these two lists, an approach could be to note the index of the
+hostname for the successfully identified trees.
+If it is always the same, then determine if this is a local or remote
+hostname and use the first hostname in the corresponding list for
+the unknown tree.
+
+=back
+
+=cut
+
+sub treelinks {
+	my ($templ, $who, @confgroups) = @_;
+	my $tlex;
+	my $treelink;
+	my $global = shift @confgroups;
+
+	$who =~ s/^sourcedir$/source/;
+
+	# Scan the configuration groups, skipping non-shareable trees
+	for my $group (@confgroups) {
+		next unless exists($group->{'shortcaption'});
+		my $shortcap =  $group->{'shortcaption'};
+		my $virtroot =  $group->{'virtroot'};
+		my @hosts = @{$group->{'host_names'} || $global->{'host_names'}};
+		my $hostname;
+
+		my $url;
+		for my $hostname (@hosts) {
+	# Add http: if it was dropped in the hostname
+			if ($hostname !~ m!^.+?://!) {
+				$hostname = "http:" . $hostname;
+			}
+			$url = $hostname.$virtroot;
+	# Is this the presently used hostname?
+			last if $url eq $HTTP->{'script_path'};
+			$url = undef;
+		}
+		if (defined($url)) {
+	# The current tree has been found, give it a highlight
+			$treelink = "<span class=\"tree-sel\">$shortcap</span>";
+		} else {
+	# This is an alternate tree, try to see if the current hostname
+	# is on the list for this this tree
+			$HTTP->{'script_path'} =~ m!//([^/]+)(/|$)!;
+			my $the_host = $1;
+			$the_host = quotemeta($the_host);
+			$url = undef;
+			for my $hostname (@hosts) {
+				if ($hostname =~ m!//$the_host$!) {
+					$url = $hostname;
+					last;
+				}
+			}
+	# The current hostname is not on the list for this tree.
+	# Take the first name but NOTE it is not reliable
+			if (!defined($url)) {
+				$url = $group->{'host_names'}->[0]
+					|| $global->{'host_names'}->[0];
+			}
+			$url = "http:" . $url unless ($url =~ m!^.+?://!);
+			$treelink =
+				"<a class=\"treelink\" href=\"$url$virtroot/$who\">$shortcap</a>";
+		}
+		$tlex .= expandtemplate
+					( 	$templ
+					,	( 'caption' => sub { $shortcap }
+						, 'link' => sub { $url }
+				# NOTE $caption and $link are reserved for future
+				# extensions and must not be used in templates
+				# as their semantics is not well defined
+						, 'treelink' => sub { $treelink }
+						)
+					);
+	}
+	return $tlex;
+}
+
+
 =head2 C<urlexpand ($templ, $who)>
 
 Function C<urlexpand> is a "$function" substitution function.
@@ -638,7 +914,7 @@ a I<string> containing the template (i.e. argument)
 
 =item 1 C<$who>
 
-a I<string> containing the script name (i.e. cource, sourcedir,
+a I<string> containing the script name (i.e. source, sourcedir,
 diff, ident or search) requesting this substitution;
 it is here considered as the "mode"
 
@@ -646,7 +922,7 @@ it is here considered as the "mode"
 
 =head3 Algorithm
 
-It makes use of sub C<urlargs> to retrieve the filteres list of
+It makes use of sub C<urlargs> to retrieve the filtered list of
 variables values.
 If necessary, other URL arguments may be added depending on the mode
 (known from C<$who>.
@@ -696,6 +972,73 @@ sub urlexpand {
 }
 
 
+=head2 C<incexpand ($templ, $who)>
+
+Function C<incexpand> is a "$function" substitution function.
+It returns an HTML string which is the concatenation of its
+expanded argument applied to all the include-specific arguments
+of the current page.
+
+It is similar to C<urlexpand>.
+
+=over
+
+=item 1 C<$templ>
+
+a I<string> containing the template (i.e. argument)
+
+=item 1 C<$who>
+
+a I<string> containing the script name (i.e. source, sourcedir,
+diff, ident or search) requesting this substitution;
+it is here considered as the "mode"
+
+=back
+
+=head3 Algorithm
+
+It checks to see the existence of HTTP parameter C<_file>,
+which is a signature for a file accessed through an include link.
+If that parameter exists, both C<_file> and C<_dir> are considered
+for template expansion.
+Otherwise, the result is a null string.
+
+The argument template is then expanded through C<expandtemplate>
+for each URL argument with a replacement rule for its name and value.
+
+=cut
+
+sub incexpand {
+	my ($templ, $who) = @_;
+	my $urlex;
+	my $args;
+
+	if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
+		if (exists($HTTP->{'param'}->{'_file'})) {
+			$args = "?_file=" . $HTTP->{'param'}->{'_file'};
+			$args .= ";_dir=" . $HTTP->{'param'}->{'_dir'};
+		} else {
+			return '';
+		}
+	} else {
+		return '';
+	}
+
+	while ($args =~ m![?&;]((?:\$|\w)+)=(.*?)(?=[&;]|$)!g) {
+		my $var = $1;
+		my $val = $2;
+		$urlex .= expandtemplate
+					( $templ
+					,	( 'urlvar' => sub { $var }
+						, 'urlval' => sub { $val }
+						)
+					);
+	}
+
+	return ($urlex);
+}
+
+
 =head2 C<modeexpand ($templ, $who)>
 
 Function C<modeexpand> is a "$function" substitution function.
@@ -710,7 +1053,7 @@ a I<string> containing the template (i.e. argument)
 
 =item 1 C<$who>
 
-a I<string> containing the script name (i.e. cource, sourcedir,
+a I<string> containing the script name (i.e. source, sourcedir,
 diff, ident or search) requesting this substitution;
 it is here considered as the "mode"
 
@@ -889,6 +1232,28 @@ the HTML fragment.
 
 The result is the concatenation of the repeated expansion.
 
+B<Note:>
+
+=over
+
+If the current target directory or file was selected by an
+'include' link, the path must be recomputed with the new
+variable value.
+Theoretically, we should restart the whole process from the fragments
+in the include directive, which is no longer known at this stage.
+Though _file and _dir arguments have been added in the URL to allow
+accurate computation in all circumstances,
+we don't use them in this version.
+Instead, we assume that 'maps' transformation is not that twisted
+as to need a recomputation from start.
+That is, we assume that reapplying the 'maps' transformation a second
+time with a different variable value will undo the first application
+and give the correct result.
+
+This is not guaranteed to work always.
+
+=back
+
 =cut
 
 sub varlinks {
@@ -903,8 +1268,12 @@ sub varlinks {
 			$vallink = "<span class=\"var-sel\">$val</span>";
 		} else {
 			if ($who eq 'source' || $who eq 'sourcedir') {
-				$vallink = &fileref($val, "varlink", $config->mappath($pathname, "$var=$val"),
-					0 , "$var=$val");
+				$vallink = &fileref	( $val
+									, "varlink"
+									, $config->mappath($pathname, "$var=$val")
+									, 0
+									, "$var=$val"
+									);
 
 			} elsif ($who eq 'diff') {
 				$vallink = &diffref($val, "varlink", $pathname, "$var=$val");
@@ -920,7 +1289,7 @@ sub varlinks {
 
 		$vlex .= expandtemplate
 					( $templ
-					, ('varvalue' => sub { return $vallink })
+					, ('varvalue' => sub { $vallink })
 					);
 
 	}
@@ -1009,7 +1378,7 @@ sub varbtnaction {
 	my $action;
 
 	if ($who eq 'source' || $who eq 'sourcedir') {
-# TODO $varaction is used, but for diffhead, outside the "variables" template.
+# TODO $varaction is used outside the "variables" template.
 #		We thus have no idea of the current values of the variables.
 #		To get them, we need to wait until the submit button is clicked.
 #		Then we could apply mappath. Unhappily, $pathname is not
@@ -1144,7 +1513,7 @@ sub devinfo {
 
 =head2 C<atticlink ($templ)>
 
-Function C<dotdoturl> is a "$variable" substitution function.
+Function C<atticlink> is a "$variable" substitution function.
 It returns an HTML-string containing an C<< <a> >> link to
 display/hide CVS files in the "attic" directory.
 
@@ -1179,12 +1548,12 @@ sub atticlink {
 # Now build the opposite of the current state
 	if ($HTTP->{'param'}->{'_showattic'}) {
 		return ("<a class='modes' href=\"$config->{virtroot}/source"
-			  . $HTTP->{'path_info'}
+			  . $pathname
 			  . &urlargs("_showattic=0")
 			  . "\">Hide attic files</a>");
 	} else {
 		return ("<a class='modes' href=\"$config->{virtroot}/source"
-			  . $HTTP->{'path_info'}
+			  . $pathname
 			  . &urlargs("_showattic=1")
 			  . "\">Show attic files</a>");
 	}
@@ -1238,6 +1607,7 @@ sub makeheader {
 			,	'baseurl'    => sub { baseurl(@_) }
 			,	'encoding'   => sub { $config->{'encoding'} }
 			,	'stylesheet' => \&stylesheet
+			,	'alternatestyle' => sub { altstyleexpand(@_, $who) }
 			  # --header decoration--
 			,	'caption'    => sub { captionexpand(@_, $who) }
 			,	'banner'     => sub { bannerexpand(@_, $who) }
@@ -1246,10 +1616,13 @@ sub makeheader {
 			,	'LXRversion' => sub { $LXRversion::LXRversion }
 			  # --modes buttons & links--
 			,	'modes'      => sub { modeexpand(@_, $who) }
+			  # --other trees--
+			,	'trees'      => sub { treesexpand(@_, $who) }
 			  # --variables buttons & links--
 			,	'variables'  => sub { varexpand(@_, $who) }
 			,	'varbtnaction'	 => sub { varbtnaction(@_, $who) }
 			,	'urlargs'    => sub { urlexpand(@_, $who) }
+			,	'incargs'    => sub { incexpand(@_, $who) }
 			  # --various URLs, useless probably--
 			,	'dotdoturl'  => \&dotdoturl
 			,	'thisurl'    => \&thisurl
@@ -1314,6 +1687,7 @@ sub makefooter {
 			,	'variables'  => sub { varexpand(@_, $who) }
 			,	'varbtnaction'	 => sub { varbtnaction(@_, $who) }
 			,	'urlargs'    => sub { urlexpand(@_, $who) }
+			,	'incargs'    => sub { incexpand(@_, $who) }
 			  # --various URLs, useless probably--
 			,	'dotdoturl'  => \&dotdoturl
 			,	'thisurl'    => \&thisurl

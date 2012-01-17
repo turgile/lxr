@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.41 2011/12/30 10:51:10 ajlittoz Exp $
+# $Id: Config.pm,v 1.42 2012/01/17 15:36:45 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.41 2011/12/30 10:51:10 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.42 2012/01/17 15:36:45 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -38,6 +38,24 @@ sub new {
 	$self->_initialize(@parms);
 	return ($self);
 	die("Foo!\n");
+}
+
+sub readconfig {
+	my $self = shift;
+	my $confpath = $$self{'confpath'};
+
+	unless (open(CONFIG, $confpath)) {
+		die("Couldn't open configuration file \"$confpath\".");
+	}
+
+	local ($/) = undef;
+	my $config_contents = <CONFIG>;
+	$config_contents =~ /(.*)/s;
+	$config_contents = $1;    #untaint it
+	my @config = eval("\n#line 1 \"configuration file\"\n" . $config_contents);
+	die($@) if $@;
+
+	return wantarray ? @config : $config[0];
 }
 
 sub readfile {

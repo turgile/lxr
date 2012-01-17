@@ -1,6 +1,7 @@
-# -*- tab-width: 4 -*- ###############################################
+# -*- tab-width: 4 -*-
+###############################################
 #
-# $Id: Common.pm,v 1.86 2012/01/03 13:57:28 ajlittoz Exp $
+# $Id: Common.pm,v 1.87 2012/01/17 15:36:44 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +19,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.86 2012/01/03 13:57:28 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.87 2012/01/17 15:36:44 ajlittoz Exp $ ';
 
 use strict;
 
@@ -50,8 +51,8 @@ require LXR::SimpleParse;
 require LXR::Config;
 require LXR::Files;
 require LXR::Index;
-require LXR::Template;
 require LXR::Lang;
+require LXR::Template;
 require LXRversion;
 
 our $config;
@@ -62,9 +63,9 @@ our $releaseid;
 our $identifier;
 our $HTTP;
 
-$wwwdebug = 0;
+my $wwwdebug = 0;
 
-$tmpcounter = 23;
+my $tmpcounter = 23;
 
 sub warning {
 	my $msg = shift;
@@ -184,20 +185,57 @@ sub idref {
 		  . "\"\>$desc</a>");
 }
 
-sub incref {
-	my ($name, $css, $file, @paths) = @_;
-	my ($dir, $path);
+sub incfindfile {
+	my ($filewanted, $file, @paths) = @_;
+	my $path;
 
 	push(@paths, $config->incprefix);
 
-	foreach $dir (@paths) {
+	foreach my $dir (@paths) {
 		$dir =~ s/\/+$//;
 		$path = $config->mappath($dir . "/" . $file);
-		return &fileref($name, $css, $path) if $files->isfile($path, $releaseid);
-
+		if ($filewanted){
+			return $path if $files->isfile($path, $releaseid);
+		} else {
+			return $path if $files->isdir($path, $releaseid);
+		}
 	}
 
-	return $name;
+	return undef;
+}
+
+sub incref {
+	my ($name, $css, $file, @paths) = @_;
+	my ($path, $urlenc, $dirarg);
+
+	($dirarg = $paths[0]) =~ s!([?&;='"])!sprintf('%%%02x',(unpack('c',$1)))!ge;
+	($urlenc = $file) =~ s!([?&;='"])!sprintf('%%%02x',(unpack('c',$1)))!ge;
+	$path = incfindfile(1, $file, @paths);
+	return undef unless $path;
+	return &fileref	( $name
+					, $css
+					, $path
+					, 0
+					, "_file=$urlenc"
+					, ($dirarg ? "_dir=$dirarg" : "")
+					);
+}
+
+sub incdirref {
+	my ($name, $css, $file, @paths) = @_;
+	my ($path, $urlenc, $dirarg);
+
+	($dirarg = $paths[0]) =~ s!([?&;='"])!sprintf('%%%02x',(unpack('c',$1)))!ge;
+	($urlenc = $file) =~ s!([?&;='"])!sprintf('%%%02x',(unpack('c',$1)))!ge;
+	$path = incfindfile(0, $file, @paths);
+	return $name unless $path;
+	return &fileref	( $name
+					, $css
+					, $path.'/'
+					, 0
+					, "_file=$urlenc"
+					, ($dirarg ? "_dir=$dirarg" : "")
+					);
 }
 
 sub http_wash {
@@ -319,6 +357,7 @@ sub httpinit {
 	$HTTP->{'this_url'} .= $ENV{'SCRIPT_NAME'};
 	my $script_path = $HTTP->{'this_url'};
 	$script_path =~ s!/[^/]*$!!;
+	$HTTP->{'script_path'} = $script_path;
 	$HTTP->{'this_url'} .= $ENV{'PATH_INFO'};
 	$HTTP->{'this_url'} .= '?' . $ENV{'QUERY_STRING'}
 	  if $ENV{'QUERY_STRING'};
@@ -333,8 +372,6 @@ sub httpinit {
 	$HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'_arch'};
 	$HTTP->{'param'}->{'_i'} ||= $HTTP->{'param'}->{'_identifier'};
 
-	foreach my $param (keys %{$HTTP->{'param'}}) {
-	}
 	$identifier = clean_identifier($HTTP->{'param'}->{'_i'});
 	# remove the param versions to prevent unclean versions being used
 	delete $HTTP->{'param'}->{'_i'};
@@ -370,11 +407,22 @@ sub httpinit {
 		delete $HTTP->{'param'}->{$_};
 	}
 
-	$HTTP->{'param'}->{'_file'} = clean_path($HTTP->{'param'}->{'_file'});
-	$pathname = fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'_file'});
-
 	$releaseid  = clean_release($config->variable('v'));
 	$config->variable('v', $releaseid);  # put back into config obj
+
+	$pathname = fixpaths($HTTP->{'path_info'});
+	if (exists($HTTP->{'param'}->{'_file'})) {
+		$HTTP->{'param'}->{'_file'} = clean_path(http_wash($HTTP->{'param'}->{'_file'}));
+		$HTTP->{'param'}->{'_dir'} = clean_path(http_wash($HTTP->{'param'}->{'_dir'}));
+		my $incfile = incfindfile
+						( ($HTTP->{'param'}->{'_file'}=~m!/$! ? 0 : 1)
+						, $HTTP->{'param'}->{'_file'}
+						, $HTTP->{'param'}->{'_dir'}
+						);
+		if ($incfile) {
+			$pathname = fixpaths($incfile);
+		}
+	}
 
 	printhttp;
 }
