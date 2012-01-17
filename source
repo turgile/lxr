@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.54 2011/12/30 11:30:33 ajlittoz Exp $
+# $Id: source,v 1.55 2012/01/17 13:22:53 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.54 2011/12/30 11:30:33 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.55 2012/01/17 13:22:53 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -362,8 +362,10 @@ if ($config->filter && $pathname !~ $config->filter) {
 	exit;
 }
 
-# If the file is html then simply pump it out.
-if ($pathname =~ /\.(html)$/ || $HTTP->{'param'}->{'_raw'}) {
+# Formerly, if the file was html, it was sent out as is.
+# Now, since we want to parse HTML files too, use URL parameter _raw
+# to interpret it through the browser, the same as for other files.
+if ($HTTP->{'param'}->{'_raw'}) {
 	printfile(1);
 } else {
 	my $type = ($pathname !~ m|/$| ? 'source' : 'sourcedir');
