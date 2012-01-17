@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.38 2012/01/04 14:35:24 ajlittoz Exp $
+# $Id: search,v 1.39 2012/01/17 13:18:21 ajlittoz Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.38 2012/01/04 14:35:24 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.39 2012/01/17 13:18:21 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -41,13 +41,13 @@ sub varinputs {
 
 	foreach ($config->allvariables) {
 		if ($config->variable($_) ne $config->vardefault($_)) {
-			$ret .= expandtemplate(
-				$templ,
-				(
-					variable => sub { $_ },
-					value    => sub { $config->variable($_) },
-				)
-			);
+			$ret .= expandtemplate
+						( $templ
+						,	( 'variable' => sub { $_ }
+							, 'value'    => sub { $config->variable($_) }
+							, 'varname'  => sub { $config->vardescription($_) }
+							)
+						);
 		}
 	}
 	return $ret;
@@ -125,7 +125,8 @@ sub glimpsesearch {
 		} continue {
 			$i++;
 		}
-		return @ret;
+# Sort the results ascending per file name
+		return sort {$$a[0] cmp $$b[0]} @ret;
 	} elsif ($retval == 1) {
 		my $glimpsebin = $config->glimpsebin;
 		my $glimpseresponse = join("<br>", @glimpselines);
@@ -134,7 +135,7 @@ sub glimpsesearch {
 		print("<p class='error'>Search failed</p>\n<p>$glimpseresponse</p>\n");
 		return;
 	} else {
-		print("<p class='error'>Unexpected return value $retval from Glimpse (usually means <i>syntax error</i></p>\n");
+		print("<p class='error'>Unexpected return value $retval from Glimpse (usually means <i>syntax error</i>)</p>\n");
 		return;
 	}
 }
@@ -142,7 +143,6 @@ sub glimpsesearch {
 sub swishsearch {
 	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
 
-	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
   my $swishIndex = $config->swishdir . "/" . $releaseid . ".index";
 	if (!-e $swishIndex) {
 		print "<p class='error'>";
@@ -151,6 +151,7 @@ sub swishsearch {
 		return;
 	}
 	
+	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
   my $swishCommand =  join(' ', $config->swishbin, "-f", $swishIndex, "-w", "'(" . $searchtext . ")'");
   my $ret = `$swishCommand`;
   my @result = grep { not /^[\#\.]/ } split(/\n/, $ret);
@@ -188,7 +189,7 @@ sub printresults {
 
 	foreach (@results) {
 
-		# filename, glimpse and swish-e searches provide different data for each result
+			# filename, glimpse and swish-e searches provide different data for each result
 		if (!ref) {
 			$file = $_;
 			my $fileonce = $file if $lastfile ne $file;
@@ -218,9 +219,10 @@ sub printresults {
 			my $fileonce = $file if $lastfile ne $file;
 			my $line     = $params[1];
 			my $text     = $params[2];
+			my $searchtextq = quotemeta ($searchtext);
 # May not work always because glimpse pattern are different form Perl's
 # but when it works highlights the occurence of searchtext
-			$text =~ s!($searchtext)!<span class="searchtext">$1</span>!g;
+			$text =~ s!($searchtextq)!<span class="searchtext">$1</span>!g;
 
 			$ret .= expandtemplate
 				( $templ
@@ -281,8 +283,8 @@ sub search {
 							, $errorsig
 							, "<h2 class\"error\">Free-text search not available without 'htmlsearch' template</h2>\n"
 							);
-		if ($templ =~ m/^$errorsig/) {
-			die "'htmlsearch' template not configured";
+	if ($templ =~ m/^$errorsig/) {
+		die "'htmlsearch' template not configured";
 	}
 
 	my $searchtext    = $HTTP->{'param'}->{'_string'};
@@ -336,9 +338,7 @@ sub search {
 
 	print expandtemplate
 		( $templ
-		,	( 'variables'          => sub { varinputs(0, @_) }
-			, 'variablesbutv'      => sub { varinputs(1, @_) }
-			, 'variablev'          => sub { varinputs(2, @_) }
+		,	( 'variables'          => sub { varinputs( @_) }
 			, 'searchtext'         => sub { $_ = $searchtext; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 			, 'searchtext_escaped' => sub { $_ = $searchtext; s/\"/&quot;/g; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 			, 'filetext_escaped'   => sub { $_ = $filetext; s/\"/&quot;/g; return $_; }
@@ -357,7 +357,11 @@ sub search {
 }
 httpinit;
 makeheader('search');
-&search;
+if ($files->isa("LXR::Files::Plain")) {
+	&search;
+} else {
+	print "<h2 class='error'>Free-text search not available with VCSs!</h2>\n";
+}
 makefooter('search');
 
 httpclean;
