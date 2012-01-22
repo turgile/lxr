@@ -1,7 +1,7 @@
-<!--$Id: html-search-glimpse.html,v 1.7 2011/12/26 08:16:56 ajlittoz Exp $ -->
+<!--$Id: html-search-swish.html,v 1.1 2012/01/22 14:22:47 ajlittoz Exp $ -->
 
-<!--				html-search-glimpse.html
-		A template for free-text search with glimpse
+<!--				html-search-swish.html
+		A template for free-text search with swish-e
 		and display of the results	-->
 
 <!-- ajlittoz <ajlittoz@users.sf.net>	-->
@@ -21,18 +21,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
-<h1>Free-text search with Glimpse</h1>
+<h1>Free-text search with SWISH-E</h1>
 <p>
 Type a string to find:
 <br>1) all files for which that string occurs in the path,
 <br>or 2) all files containing that string.
 <br>
 <br>Matches are case-insensitive unless you check the box below.
-<br>Characters ^ $ \ [ ] ( ) | , ; ~ have special meaning for Glimpse
-and can be used for building simple regex.
-To use full-fledged Perl regex, check the other box below.
-<br>Files ending in ",v" (CVS internal) or "~' (editor backup) are excluded from the search.
-</p>
+<br>To use full-fledged Perl regex, check the other box below.
 
 <form method="get" action="search">
 $variables{<input type="hidden" name="$variable" value="$value">}
@@ -55,6 +51,15 @@ $variables{<input type="hidden" name="$variable" value="$value">}
 			</td>
 			<td>
 				<input id="focus" type="text" name="_string" value="$searchtext_escaped" size="50">
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<p>
+	Supported operators: AND, OR, NOT, ( ) boolean grouping, trailing *, " " phrase grouping<br>
+	Example: (book* OR magazine*) NOT "my magazine"<br>
+				</p>
 			</td>
 		</tr>
 		<tr>
@@ -83,23 +88,18 @@ $variables{<input type="hidden" name="$variable" value="$value">}
 	&nbsp;&nbsp;&nbsp;&nbsp;
 				<input type="submit" value="Search">
 			</td>
-		</tr>
-<!--		<tr>
-			<td colspan="2">
-				&nbsp;
-			</td>
-		</tr>-->
 	</table>
-    <br>
+	<br>
 </form>
-<p>
-	Powered by <a href="http://webglimpse.net" target="_blank">Glimpse</a>.
-	(<a href="http://webglimpse.net/docs/tips.html">Tips for search syntax.</a>)
-</p>
 <hr>
 <p>
+	Powered by <a href="http://swish-e.org" target="_blank">Swish-E</a>.
+	(<a href="http://swish-e.org/docs/swish-search.html" target="_blank">Full
+	search syntax documentation</a>)
+</p>
+<p>
 	$maxhits_message
-	$resultcount occurences found.
+	$resultcount files found.
 </p>
    
 <h2>Results for <span class="searchident">$searchtext</span></h2>
@@ -108,15 +108,13 @@ $variables{<input type="hidden" name="$variable" value="$value">}
 		<thead>
 			<tr>
 				<th class="searchfile">File</th>
-				<th class="searchline">Line</th>
-				<th class="searchtext">Text</th>
+				<th class="searchtext">Score</th>
 			</tr>
 		</thead>
 		<tbody>
   $results{
 			<tr>
-				<td class="$tdfile">$fileonce</td>
-				<td class="searchline">$line</td>
+				<td class="$tdfile">$file</td>
 				<td class="searchtext">$text</td>
 			</tr>
   }
