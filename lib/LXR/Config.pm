@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.42 2012/01/17 15:36:45 ajlittoz Exp $
+# $Id: Config.pm,v 1.43 2012/01/22 13:52:23 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.42 2012/01/17 15:36:45 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.43 2012/01/22 13:52:23 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -35,9 +35,11 @@ sub new {
 	my ($class, @parms) = @_;
 	my $self = {};
 	bless($self);
-	$self->_initialize(@parms);
-	return ($self);
-	die("Foo!\n");
+	if ($self->_initialize(@parms)) {
+		return ($self);
+	} else {
+		return undef;
+	}
 }
 
 sub readconfig {
@@ -164,11 +166,11 @@ sub _initialize {
 
 	if(!exists $self->{'baseurl'}) {
 		if("genxref" ne ($0 =~ /([^\/]*)$/)) {
-			return 1;
+			return 0;
 		}
 		elsif($url =~ m!https?://.+\.!) {
 			die "Can't find config for $url: make sure there is a 'baseurl' line that matches in lxr.conf\n";
-		} else {	
+		} else {
 			# wasn't a url, so probably genxref with a bad --url parameter
 			die "Can't find config for $url: " . 
 			 	"the --url parameter should be a URL (e.g. http://example.com/lxr) and must match a baseurl line in lxr.conf\n";
@@ -191,6 +193,7 @@ sub _initialize {
     die "Neither Glimpse nor Swish have been specified in $confpath.\n".
         "Please choose one of them by specifing a value for either glimpsebin or swishbin.\n";
   }
+	return 1;
 }
 
 sub allvariables {

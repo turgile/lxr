@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.87 2012/01/17 15:36:44 ajlittoz Exp $
+# $Id: Common.pm,v 1.88 2012/01/22 13:52:23 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.87 2012/01/17 15:36:44 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.88 2012/01/22 13:52:23 ajlittoz Exp $ ';
 
 use strict;
 
@@ -378,7 +378,7 @@ sub httpinit {
 	delete $HTTP->{'param'}->{'_identifier'};
 
 	$config     = new LXR::Config($script_path);
-	unless (exists $config->{'sourceroot'}) {
+	unless (defined $config) {
 		LXR::Template::makeerrorpage('htmlfatal');
 		die "Can't find config for " . $HTTP->{'this_url'};
 	}
