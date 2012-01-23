@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: initdb-config.sh,v 1.4 2012/01/19 17:44:28 ajlittoz Exp $
+# $Id: initdb-config.sh,v 1.1 2012/01/23 08:55:02 ajlittoz Exp $
 
-echo "*** initdb script configurator for LXR (\$Revision: 1.4 $) ***"
+echo "*** initdb script configurator for LXR (\$Revision: 1.1 $) ***"
 echo ""
 echo "      In case you make a mistake, you can cancel the"
 echo "      whole process by typing ctl-C."
@@ -34,8 +34,8 @@ while : ; do
 	fi
 done
 
-template="templates/initdb-${dbengine}-template.sql"
-outscript="initdb-${dbengine}-custom.sql"
+template="templates/initdb/initdb-${dbengine}-template.sql"
+outscript="lxrconf.d/initdb-${dbengine}-custom.sql"
 
 if [ "$dbengine" != "oracle" ] ; then
 	read -p "Which is your database name? [lxr] " dbname
