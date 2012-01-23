@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: initial-config.sh,v 1.2 2012/01/23 09:57:30 ajlittoz Exp $
+# $Id: initial-config.sh,v 1.3 2012/01/23 10:06:00 ajlittoz Exp $
 
 CSI=$'\x1b[';	# CSI = esc [
 VTbold="${CSI}1m";
@@ -8,7 +8,7 @@ VTred="${VTbold}${CSI}31m";
 VTyellow="${VTbold}${CSI}33m";
 VTgreen="${VTbold}${CSI}32m";
 
-echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.2 $) ${VTyellow}***${VTnorm}"
+echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.3 $) ${VTyellow}***${VTnorm}"
 echo
 
 while : ; do

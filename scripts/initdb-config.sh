@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: initdb-config.sh,v 1.2 2012/01/23 09:57:30 ajlittoz Exp $
+# $Id: initdb-config.sh,v 1.3 2012/01/23 10:06:00 ajlittoz Exp $
 
-echo "*** initdb script configurator for LXR (\$Revision: 1.2 $) ***"
+echo "*** initdb script configurator for LXR (\$Revision: 1.3 $) ***"
 echo ""
 echo "      In case you make a mistake, you can cancel the"
 echo "      whole process by typing ctl-C."
