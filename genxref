@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # -*- tab-width: 4 -*-"
-# $Id: genxref,v 1.52 2012/01/22 13:52:22 ajlittoz Exp $
+# $Id: genxref,v 1.53 2012/01/23 08:09:10 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -263,7 +263,7 @@ if ($version eq '') {
 print "\n";
 END_TEST_SWISHE:
 
-die("${VTred}No matching configuration${VTnorm}") unless defined($config);
+die("${VTred}No matching configuration${VTnorm}") unless exists($config->{'sourceroot'});
 
 if ($config && $config->{'glimpsebin'} && $config->{'swishbin'}) {
 	print "${VTred}Both 'glimpsebin' and 'swishbin' defined${VTnorm}\n";
@@ -287,7 +287,7 @@ if ($config && !$config->{'glimpsebin'} && !$config->{'swishbin'}) {
 	}
 }
 
-if (!defined($config)) {
+if (!exists($config->{'sourceroot'})) {
 	print "${VTred}No 'sourceroot' - Can't run${VTnorm}\n";
 	$failure = 1; 
 }
