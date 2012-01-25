@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.8 2012/01/25 17:29:34 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.9 2012/01/25 21:03:01 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -77,6 +77,7 @@
 { padding: 0
 ; margin: 0
 }
+
 /***********************/
 /* headers and footers */
 /***********************/
@@ -140,6 +141,49 @@
   .rightmost.compact BUTTON
 { width: 9em
 /* ; display: inline-block */
+}
+
+/************************/
+/* links to other trees */
+/************************/
+  .treelink
+, SPAN.tree-sel
+{ font-size: 10pt
+}
+
+  A.treelink
+, A.treelink:visited
+{ color: silver
+; background-color: #ffdddd
+; font-weight: bold
+; padding: 0 5pt
+; border: thin solid red
+}
+
+  .treelink.compact *
+{ display: inline-block
+; width: 64px
+; padding: 0 2pt
+; text-align: center
+}
+
+ A.treelink
+{ text-decoration: none
+}
+
+  A.treelink:hover
+{ background-color: #ffdddd
+; text-decoration: none
+; color: red
+}
+
+  SPAN.tree-sel
+{ font-style: italic
+; font-weight: bold
+; color: white
+; background-color: red
+; padding: 0 5pt
+; border: thin solid white
 }
 
 /**********************/
