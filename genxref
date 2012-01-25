@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # -*- tab-width: 4 -*-"
-# $Id: genxref,v 1.54 2012/01/23 08:22:45 ajlittoz Exp $
+# $Id: genxref,v 1.55 2012/01/25 17:29:34 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ GetOptions	(\%option
 			, "url=s"
 			, "version=s"
 			, "allurls!"
-			, "allversions!"
+			, "allversions:s"
 			, "reindexall!"
 			, "checkonly!"
 			);
@@ -77,14 +77,6 @@ my $VTgreen = "${VTbold}${CSI}32m";
 
 my $failure = 0;	# Cumulative failure indicator
 
-printf "Checking Perl version ... %vd ", $^V;
-if ($^V gt v5.10.0) {
-	print "${VTgreen} OK ${VTnorm}\n";
-} else {
-	print "${VTred}FAIL${VTnorm}\n";
-	$failure = 1;
-}
-
 # TODO: implement --allurls
 die("Option --allurls not implemented.  Use --url instead.\n")
   if $option{'allurls'};
@@ -98,6 +90,23 @@ if ($option{'checkonly'} && !$option{'url'}) {
 
 if ($option{'url'}) {
 	$config = new LXR::Config($option{'url'});
+}
+
+
+#######################################
+###
+###               Part 1
+###
+###  Check environment
+###
+###
+
+printf "Checking Perl version ... %vd ", $^V;
+if ($^V gt v5.10.0) {
+	print "${VTgreen} OK ${VTnorm}\n";
+} else {
+	print "${VTred}FAIL${VTnorm}\n";
+	$failure = 1;
 }
 
 # Check tools version
@@ -312,18 +321,49 @@ if ($option{'checkonly'}) {
 	exit;
 }
 
+
+#######################################
+###
+###               Part 2
+###
+###  Index source tree(s)
+###
+###
+
 our $filetype = new File::MMagic(-f 'lib/magic.mime'? ('lib/magic.mime') : ());
 our %binaryfiles;
 
 my @versions;
 
-if ($option{'allversions'} || !$option{'version'}) {
-	@versions = $config->varrange('v');
-	die
-	  "${VTred}Option --allversions cannot be used because no versions found automatically.${VTnorm}  Use --version=VERSION or fix lxr.conf.\n"
-	  if scalar @versions <= 0;
+if (exists($option{'allversions'}) || !$option{'version'}) {
+	if	( exists($option{'allversions'})
+		&& $option{'allversions'} ne "noauto"
+		&& $files->isa("LXR::Files::CVS")
+		&& ref($config->{'variables'}{'v'}{'range'}) eq "CODE"
+		) {
+		print "Using automatic CVS version enumeration\n";
+	} else {
+		@versions = $config->varrange('v');
+		die
+		"${VTred}Option --allversions cannot be used because no versions found automatically.${VTnorm}  Use --version=VERSION or fix lxr.conf.\n"
+		if scalar @versions <= 0;
+	}
 } else {
 	@versions = $option{'version'};
+}
+
+	my %versionset;		# cumulative version set
+if ($files->isa("LXR::Files::CVS") && scalar(@versions)<=0) {
+	$index->purgeall;
+	$$LXR::Common::HTTP{'param'}{'_showattic'} = 1;
+	genindex('/', 'head');
+	genrefs('/', 'head');
+	$index->commit;
+	if ( exists($option{'allversions'})
+		&& $option{'allversions'} ne "noauto"
+		) {
+		dump_versionset("CVS", \%versionset);
+	}
 }
 
 foreach my $version (@versions) {
@@ -340,6 +380,15 @@ foreach my $version (@versions) {
 
 $index->DESTROY();
 
+
+#######################################
+###
+###               Annex
+###
+###  Support routines
+###
+###
+
 sub genindex {
 	my ($pathname, $releaseid) = @_;
 
@@ -347,9 +396,24 @@ sub genindex {
 
 	if ($pathname =~ m|/$|) {
 		map { genindex($pathname . $_, $releaseid) } $files->getdir($pathname, $releaseid);
-	} else {
-		&LXR::Tagger::processfile($pathname, $releaseid, $config, $files, $index)
-		  unless exists $binaryfiles{$pathname};
+	} elsif (!exists  $binaryfiles{$pathname}) {
+		if	( $files->isa("LXR::Files::CVS")
+			&& exists($option{'allversions'})
+			&& $option{'allversions'} ne "noauto"
+			) {
+		# Some 'Files' objects need this variable properly set to
+		# determine the possible versions for a file,
+		# in particular to return correct values for varrange sub.
+			$LXR::Common::pathname = $pathname;
+			my @versions = $config->varrange('v');
+			foreach my $releaseid (@versions) {
+				$versionset{$releaseid} = '';	# remember this version
+				&LXR::Tagger::processfile($pathname, $releaseid, $config, $files, $index);
+			}
+		} else {
+			&LXR::Tagger::processfile($pathname, $releaseid, $config, $files, $index);
+#			unless exists $binaryfiles{$pathname};
+		}
 		$index->commit;
 	}
 }
@@ -361,9 +425,23 @@ sub genrefs {
 
 	if ($pathname =~ m|/$|) {
 		map { genrefs($pathname . $_, $releaseid) } $files->getdir($pathname, $releaseid);
-	} else {
+	} elsif (!exists  $binaryfiles{$pathname}) {
+		if	( $files->isa("LXR::Files::CVS")
+			&& exists($option{'allversions'})
+			&& $option{'allversions'} ne "noauto"
+			) {
+		# Some 'Files' objects need this variable properly set to
+		# determine the possible versions for a file,
+		# in particular to return correct values for varrange sub.
+			$LXR::Common::pathname = $pathname;
+			my @versions = $config->varrange('v');
+			foreach my $releaseid (@versions) {
+				&LXR::Tagger::processfile($pathname, $releaseid, $config, $files, $index);
+			}
+		} else {
 		&LXR::Tagger::processrefs($pathname, $releaseid, $config, $files, $index)
-		  unless exists $binaryfiles{$pathname};
+#			unless exists $binaryfiles{$pathname};
+		}
 		$index->commit;
 	}
 }
@@ -444,4 +522,24 @@ sub gensearch {
 		$swish->close();
 		$filelist->close();
 	}
+}
+
+sub dump_versionset {
+	my ($prefix, $versionset) = @_;
+	my $vfh;
+
+	my $virtroot = $config->{'virtroot'};
+	$virtroot =~ s|([^-a-zA-Z0-9.\@_])|sprintf("%%%02X", ord($1))|ge;
+	my $versionfile = "lxrconf.d/$prefix$virtroot";
+	if (!open($vfh, ">", $versionfile)) {
+		print "${VTyellow}Can't open : version set not saved${VTnorm}\n";
+		return;
+	}
+	my $count = 0;
+	foreach my $version (sort keys %$versionset) {
+		$count++;
+		print $vfh $version, "\n";
+	}
+	close($vfh);
+	print "=== $count versions written to ${VTyellow}$versionfile${VTnorm}\n";
 }

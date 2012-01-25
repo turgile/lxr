@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.7 2012/01/17 17:52:26 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.8 2012/01/25 17:29:34 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -318,6 +318,11 @@
 /*************/
 /* file view */
 /*************/
+/* most recent addition to file */
+  .annot-cur
+{ background-color: #ffcc88
+}
+
 /* the line number */
   .fline
 { background-color: silver
