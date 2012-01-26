@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.31 2012/01/26 16:35:35 ajlittoz Exp $
+# $Id: Generic.pm,v 1.32 2012/01/26 17:22:58 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.31 2012/01/26 16:35:35 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.32 2012/01/26 17:22:58 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -147,9 +147,6 @@ sub flagged {
 }
 
 # Process an include directive
-# If no 'include' specification in generic.conf, proceed as in Lang.pm
-# TODO: is there a way to call the base method so that there is no
-#		maintenance issue? (parallel modifications in 2 locations)
 # 'include' pattern must provide exactly 5 capture buffers:
 #	$1	directive name
 #	$2	spacer
@@ -214,21 +211,33 @@ sub processinclude {
 				$path =~ s@$m@$s@;
 			}
 		}
-	}
-	else {
-	$source =~ s/^					# reminder: no initial space in the grammar
-				([\w\#]\s*[\w]*)	# reserved keyword for include construct
-				(\s+)				# space
-				(?|	(\")(.+?)(\")	# C syntax
-				|	(\0<)(.+?)(\0>)	# C alternate syntax
-				)
-				//sx ;
+	} else {
+# NOTE: 5.10 syntax block replaced by following lines
+# 		$source =~ s/^					# reminder: no initial space in the grammar
+# 					([\w\#]\s*[\w]*)	# reserved keyword for include construct
+# 					(\s+)				# space
+# 					(?|	(\")(.+?)(\")	# C syntax
+# 					|	(\0<)(.+?)(\0>)	# C alternate syntax
+# 					)
+# 					//sx ;
+		$source =~ s/^					# reminder: no initial space in the grammar
+					([\w\#]\s*[\w]*)	# reserved keyword for include construct
+					(\s+)				# space
+					(	(\")(.+?)(\")	# C syntax
+					|	(\0<)(.+?)(\0>)	# C alternate syntax
+					)
+					//sx ;
 		$dirname = $1;
 		$spacer  = $2;
-		$lsep    = $3;
-		$file    = $4;
-		$path    = $4;
-		$rsep    = $5;
+# Following block valid with 5.10 syntax above only
+# 		$lsep    = $3;
+# 		$file    = $4;
+# 		$path    = $4;
+# 		$rsep    = $5;
+		$lsep    = $4 . $7;
+		$file    = $5 . $8;
+		$path    = $file;
+		$rsep    = $6 . $9;
 	}
 	$link = &LXR::Common::incref($file, "include" ,$path ,$dir);
 	if (defined($link)) {
