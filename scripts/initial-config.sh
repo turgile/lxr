@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: initial-config.sh,v 1.3 2012/01/23 10:06:00 ajlittoz Exp $
+# $Id: initial-config.sh,v 1.4 2012/01/29 07:36:40 ajlittoz Exp $
 
 CSI=$'\x1b[';	# CSI = esc [
 VTbold="${CSI}1m";
@@ -8,7 +8,7 @@ VTred="${VTbold}${CSI}31m";
 VTyellow="${VTbold}${CSI}33m";
 VTgreen="${VTbold}${CSI}32m";
 
-echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.3 $) ${VTyellow}***${VTnorm}"
+echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.4 $) ${VTyellow}***${VTnorm}"
 echo
 
 while : ; do
@@ -46,16 +46,27 @@ confdir="lxrconf.d"
 # chmod -R a=r templates
 echo "templates directory now protected read-only"
 
-cp templates/Apache/htaccess-generic .htaccess
-echo "File ${VTbold}.htaccess${VTnorm} written in your LXR root directory"
-echo "--- List its content with 'more .htacess'"
+target=".htaccess"
+cp templates/Apache/htaccess-generic $target
+echo "File ${VTbold}$target${VTnorm} written in your LXR root directory"
+echo "--- List its content with 'more $target'"
 
-sed -e "s/%LXRroot%/$lxr_root/g" templates/Apache/apache2-require.pl > $confdir/apache2-require.pl
-echo "File ${VTbold}apache2-require.pl${VTnorm} written in $confdir directory"
+target="apache2-require.pl"
+sed -e "s/%LXRroot%/$lxr_root/g" templates/Apache/$target > $confdir/$target
+echo "File ${VTbold}$target${VTnorm} written in $confdir directory"
 
-sed -e "s/%LXRroot%/$lxr_root/g" templates/Apache/lxrserver.conf \
-	| sed -e "s/#=$cardinality=//" > $confdir/lxrserver.conf
-echo "File ${VTbold}lxrserver.conf${VTnorm} written in $confdir directory"
+target="apache-lxrserver.conf"
+sed -e "s/%LXRroot%/$lxr_root/g" templates/Apache/$target \
+	| sed -e "s/#=$cardinality=//" > $confdir/$target
+echo "File ${VTbold}$target${VTnorm} written in $confdir directory"
+
+target="lighttpd-lxrserver.conf"
+sed -e "s/%LXRroot%/$lxr_root/g" templates/lighttpd/$target \
+	> $confdir/lighttp-lxrserver.conf
+echo "File ${VTbold}$target${VTnorm} written in $confdir directory"
+if [[ "$cardinality" == "m" ]] ; then
+	echo "${VTyellow}You need to manually configure ${VTnorm}${VTbold}$target ${VTyellow}for multiple trees operation${VTnorm}"
+fi
 
 # lxr.conf pre-configuration
 

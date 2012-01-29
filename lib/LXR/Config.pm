@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.43 2012/01/22 13:52:23 ajlittoz Exp $
+# $Id: Config.pm,v 1.44 2012/01/29 07:36:40 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.43 2012/01/22 13:52:23 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.44 2012/01/29 07:36:40 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -110,8 +110,12 @@ sub _initialize {
 		%$self = (%$self, %{ $config[0] });
 	}
 
-	$url =~ m!(.*?://.*?)/!;	# host name and port used to access server
+	$url =~ m!(^.*?://.*?)/!;	# host name and port used to access server
 	my $host = $1;
+		# To allow simultaneous Apache and lighttpd operation
+		# on 2 different ports, remove port for identification
+	$host =~ s/(:\d+|)$//;
+	my $port = $1;
 	my $script_path;
 	if ($url) {
 		($script_path = $url) =~ s!^.*?://[^/]*!!; # remove host and port
@@ -135,15 +139,21 @@ sub _initialize {
 			foreach my $rt (@hostnames) {
 				$rt =~ s!/*$!!;		# remove trailing /
 				$rt =~ s!^//!http://!; # allow for a shortened form
+		# To allow simultaneous Apache and lighttpd operation
+		# on 2 different ports, remove port for identification
+				$rt =~ s/:\d+$//;
 				if	(	$host eq $rt
 					&&	$script_path eq $virtroot
 					) {
-					$config->{'baseurl'} = $rt . $script_path;
+					$config->{'baseurl'} = $rt . $port . $script_path;
 					%$self = (%$self, %$config);
 					last CANDIDATE;
 				}
 			}
 		} else { # elsif ($config->{'baseurl'}) {
+		# To allow simultaneous Apache and lighttpd operation
+		# on 2 different ports, remove port for identification
+			$url =~ s/:\d+$//;
 			my @aliases;
 			if ($config->{'baseurl_aliases'}) {
 				@aliases = @{ $config->{'baseurl_aliases'} };
@@ -152,8 +162,10 @@ sub _initialize {
 			push @aliases, $root;
 			foreach my $rt (@aliases) {
 				$rt .= '/' unless $rt =~ m#/$#;    # append / if necessary
+				$rt =~ s/:\d+$//;	# remove port (approximate match)
 				my $r = quotemeta($rt);
 				if ($url =~ /^$r/) {
+					$rt =~ s/^$r/$rt$port/;
 					$config->{'baseurl'} = $rt;
 					%$self = (%$self, %$config);
 					last CANDIDATE;

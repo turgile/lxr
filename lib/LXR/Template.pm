@@ -803,6 +803,8 @@ through C<expandtemplate> with a replacement rule for each attribute.
 
 The result is the concatenation of the repeated expansion.
 
+No attempt is made to use C<'baseurl'> or  C<'baseurl_aliases'>
+
 B<Potential problem:>
 
 =over
@@ -838,6 +840,9 @@ sub treelinks {
 	my $global = shift @confgroups;
 
 	$who =~ s/^sourcedir$/source/;
+	my ($accesshost, $accessport) =
+		$HTTP->{'script_path'} =~ m!(^.+?://[^/:]+)(:\d+)?!;
+	(my $scriptpath =$HTTP->{'script_path'}) =~ s!(^.+?://[^/:]+)(:\d+)?!$1!;
 
 	# Scan the configuration groups, skipping non-shareable trees
 	for my $group (@confgroups) {
@@ -845,17 +850,19 @@ sub treelinks {
 		my $shortcap =  $group->{'shortcaption'};
 		my $virtroot =  $group->{'virtroot'};
 		my @hosts = @{$group->{'host_names'} || $global->{'host_names'}};
-		my $hostname;
-
 		my $url;
+		my $port;
 		for my $hostname (@hosts) {
+			$hostname =~ s!/*$!!;		# remove trailing /
+			$hostname =~ s/(:\d+)$//;	# remove port
+			my $port = $1;
 	# Add http: if it was dropped in the hostname
 			if ($hostname !~ m!^.+?://!) {
 				$hostname = "http:" . $hostname;
 			}
 			$url = $hostname.$virtroot;
 	# Is this the presently used hostname?
-			last if $url eq $HTTP->{'script_path'};
+			last if $url eq $scriptpath;
 			$url = undef;
 		}
 		if (defined($url)) {
@@ -863,13 +870,18 @@ sub treelinks {
 			$treelink = "<span class=\"tree-sel\">$shortcap</span>";
 		} else {
 	# This is an alternate tree, try to see if the current hostname
-	# is on the list for this this tree
-			$HTTP->{'script_path'} =~ m!//([^/]+)(/|$)!;
-			my $the_host = $1;
-			$the_host = quotemeta($the_host);
+	# is on the list for this tree
+			my $the_host = quotemeta($accesshost);
 			$url = undef;
 			for my $hostname (@hosts) {
-				if ($hostname =~ m!//$the_host$!) {
+				$hostname =~ s!/*$!!;		# remove trailing /
+				$hostname =~ s/(:\d+)$//;	# remove port
+				$port = $1;
+	# Add http: if it was dropped in the hostname
+				if ($hostname !~ m!^.+?://!) {
+					$hostname = "http:" . $hostname;
+				}
+				if ($hostname eq $accesshost) {
 					$url = $hostname;
 					last;
 				}
@@ -879,7 +891,12 @@ sub treelinks {
 			if (!defined($url)) {
 				$url = $group->{'host_names'}->[0]
 					|| $global->{'host_names'}->[0];
+				$url =~ s/(:\d+)$//;
+				$port = $1;
 			}
+	# If a port is given on 'host_names', use it.
+	# Otherwise, use the incoming request port
+			$url .= $port || $accessport;
 			$url = "http:" . $url unless ($url =~ m!^.+?://!);
 			$treelink =
 				"<a class=\"treelink\" href=\"$url$virtroot/$who\">$shortcap</a>";
