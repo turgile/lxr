@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: initial-config.sh,v 1.4 2012/01/29 07:36:40 ajlittoz Exp $
+# $Id: initial-config.sh,v 1.5 2012/01/29 15:29:51 ajlittoz Exp $
 
 CSI=$'\x1b[';	# CSI = esc [
 VTbold="${CSI}1m";
@@ -8,7 +8,7 @@ VTred="${VTbold}${CSI}31m";
 VTyellow="${VTbold}${CSI}33m";
 VTgreen="${VTbold}${CSI}32m";
 
-echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.4 $) ${VTyellow}***${VTnorm}"
+echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.5 $) ${VTyellow}***${VTnorm}"
 echo
 
 while : ; do
@@ -43,7 +43,7 @@ lxr_root="${lxr_root//\//\\/}"
 
 confdir="lxrconf.d"
 
-# chmod -R a=r templates
+chmod -R a=r templates
 echo "templates directory now protected read-only"
 
 target=".htaccess"
