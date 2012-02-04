@@ -313,9 +313,9 @@ sub expandtemplate {
 }
 
 
-=head2 C<treeexpand ($templ, $who)>
+=head2 C<targetexpand ($templ, $who)>
 
-Function C<treeexpand> is a "$variable" substitution function.
+Function C<targetexpand> is a "$variable" substitution function.
 It returns a string representative of the displayed tree.
 The "name" of the tree is extracted from the URL (script-name
 component) with the help of the configuration parameter 'treeextract'.
@@ -350,24 +350,20 @@ B<Note:>
 
 =over 4
 
-Should this sub be renamed to avoid confusion with treesexpand?
-Its sole role is to find the possible root of a missing tree.
-Give it 'rootexpand' name?
-
-Anyway, this sub is not fool-proof. It implicitly relies on a
+This sub is not fool-proof. It implicitly relies on a
 personal convention for multiple trees by the maintainer.
 This convention can be defeated by anyone prefering something else.
 It is hoped that the C<'treeextract'> parameter mecanism is powerful
 enough to cope with any convention.
 
 Should also this parameter be renamed to have some similarity with
-this sub? C<'rootextract'> ?
+this sub? C<'targetextract'> ?
 
 =back
 
 =cut
 
-sub treeexpand {
+sub targetexpand {
 	my ($templ, $who) = @_;
 
 	# Try to extract meaningful information from the URL
@@ -695,9 +691,9 @@ sub dotdoturl {
 }
 
 
-=head2 C<treesexpand ($templ, $who)>
+=head2 C<forestexpand ($templ, $who)>
 
-Function C<treesexpand> is a "$function" substitution function.
+Function C<forestexpand> is a "$function" substitution function.
 It returns an HTML string which contains links to the shareable trees
 of the configuration file.
 
@@ -732,7 +728,7 @@ C<'treelinks'> attribute.
 
 =cut
 
-sub treesexpand {
+sub forestexpand {
 	my ($templ, $who) = @_;
 	my @configgroups = $config->readconfig();
 	my $trex;
@@ -749,7 +745,7 @@ sub treesexpand {
 	# Shareable trees exist, do the job
 	$trex .= expandtemplate
 				(	$templ
-				,	( 'treelinks' => sub { treelinks(@_, $who, @configgroups) }
+				,	( 'trees' => sub { treesexpand(@_, $who, @configgroups) }
 					)
 				);
 
@@ -757,9 +753,9 @@ sub treesexpand {
 }
 
 
-=head2 C<treelinks ($templ, $who, $var)>
+=head2 C<treesexpand ($templ, $who, $var)>
 
-Function C<varlinks> is a "$function" substitution function.
+Function C<treesexpand> is a "$function" substitution function.
 It returns an HTML string which is the concatenation of its
 expanded argument applied to all the shareable trees of the
 configuration file.
@@ -833,7 +829,7 @@ the unknown tree.
 
 =cut
 
-sub treelinks {
+sub treesexpand {
 	my ($templ, $who, @confgroups) = @_;
 	my $tlex;
 	my $treelink;
@@ -1634,10 +1630,10 @@ sub makeheader {
 			  # --modes buttons & links--
 			,	'modes'      => sub { modeexpand(@_, $who) }
 			  # --other trees--
-			,	'trees'      => sub { treesexpand(@_, $who) }
+			,	'forest'     => sub { forestexpand(@_, $who) }
 			  # --variables buttons & links--
 			,	'variables'  => sub { varexpand(@_, $who) }
-			,	'varbtnaction'	 => sub { varbtnaction(@_, $who) }
+			,	'varbtnaction' => sub { varbtnaction(@_, $who) }
 			,	'urlargs'    => sub { urlexpand(@_, $who) }
 			,	'incargs'    => sub { incexpand(@_, $who) }
 			  # --various URLs, useless probably--
@@ -1702,7 +1698,7 @@ sub makefooter {
 			,	'modes'      => sub { modeexpand(@_, $who) }
 			  # --variables buttons & links--
 			,	'variables'  => sub { varexpand(@_, $who) }
-			,	'varbtnaction'	 => sub { varbtnaction(@_, $who) }
+			,	'varbtnaction' => sub { varbtnaction(@_, $who) }
 			,	'urlargs'    => sub { urlexpand(@_, $who) }
 			,	'incargs'    => sub { incexpand(@_, $who) }
 			  # --various URLs, useless probably--
@@ -1762,7 +1758,7 @@ sub makeerrorpage {
 	print(
 		expandtemplate
 		(	$template
-		,	( 'tree'    =>  sub { treeexpand(@_, $who) }
+		,	( 'target' =>  sub { targetexpand(@_, $who) }
 			, 'stylesheet' => \&stylesheet
 			, 'LXRversion' => sub { $LXRversion::LXRversion }
 			)
