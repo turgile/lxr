@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.45 2012/02/04 12:49:26 ajlittoz Exp $
+# $Id: Config.pm,v 1.46 2012/02/04 16:31:56 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.45 2012/02/04 12:49:26 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.46 2012/02/04 16:31:56 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -255,7 +255,7 @@ sub vardefault {
 	}
 	if (ref($self->{variables}{$var}{range}) eq "CODE") {
 		my @vr = varrange($var);
-		return $vr[0] if scalar(@vr); return "head"
+		return $vr[0] if scalar(@vr)>0; return "head"
 	}
 	return	$self->{variables}{$var}{range}[0];
 }
