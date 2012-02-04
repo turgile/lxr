@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Config.pm,v 1.44 2012/01/29 07:36:40 ajlittoz Exp $
+# $Id: Config.pm,v 1.45 2012/02/04 12:49:26 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.44 2012/01/29 07:36:40 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.45 2012/02/04 12:49:26 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -174,8 +174,6 @@ sub _initialize {
 		}
 	}
 
-	$$self{'encoding'} = "iso-8859-1" unless (exists $self->{'encoding'});
-
 	if(!exists $self->{'baseurl'}) {
 		if("genxref" ne ($0 =~ /([^\/]*)$/)) {
 			return 0;
@@ -187,6 +185,33 @@ sub _initialize {
 			die "Can't find config for $url: " . 
 			 	"the --url parameter should be a URL (e.g. http://example.com/lxr) and must match a baseurl line in lxr.conf\n";
 		}
+	}
+
+	$$self{'encoding'} = "iso-8859-1" unless (exists $self->{'encoding'});
+
+	if (!exists $self->{'filetype'}) {
+		if (exists $self->{'filetypeconf'}) {
+			unless (open(FILETYPE, $self->{'filetypeconf'})) {
+				die("Couldn't open configuration file ".$self->{'filetypeconf'});
+			}
+			local ($/) = undef;
+			my $contents = <FILETYPE>;
+			$contents =~ /(.*)/s;
+			$contents = $1;    #untaint it
+			my $mapping = eval("\n#line 1 \"file mappings\"\n" . $contents);
+			die($@) if $@;
+			if (defined($mapping)) {
+				%$self = (%$self, %$mapping);
+			}
+		}
+ 	}
+	if (!exists $self->{'filetype'}) {
+		die "No file type mapping in $confpath.\n"
+			. "Please specify 'filetype' or 'filetypeconf' \n";
+	}
+	if (!exists $self->{'interpreters'}) {
+		die "No script interpreter mapping in $confpath.\n"
+			. "Please specify 'interpreters' or 'filetypeconf' \n";
 	}
 
 	# Set-up various directories as necessary
