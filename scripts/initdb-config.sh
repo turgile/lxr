@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: initdb-config.sh,v 1.3 2012/01/23 10:06:00 ajlittoz Exp $
+# $Id: initdb-config.sh,v 1.4 2012/02/04 13:39:56 ajlittoz Exp $
 
-echo "*** initdb script configurator for LXR (\$Revision: 1.3 $) ***"
+echo "*** initdb script configurator for LXR (\$Revision: 1.4 $) ***"
 echo ""
 echo "      In case you make a mistake, you can cancel the"
 echo "      whole process by typing ctl-C."
@@ -49,7 +49,7 @@ if [ ! "$dbprefix" ] ; then
 	dbprefix="lxr_"
 fi
 
-if [ "$dbengine" != "postgres" ] ; then
+if [ "$dbengine" != "oracle" ] ; then
 	read -p "Under which user name will you connect to the database? [lxr] " dbuser
 	if [ ! "$dbuser" ] ; then
 		dbuser="lxr"
@@ -67,7 +67,7 @@ if [ "$dbengine" != "oracle" ] ; then
 echo "     Your database is             $dbname"
 fi
 echo "     The tables are prefixed with $dbprefix"
-if [ "$dbengine" != "postgres" ] ; then
+if [ "$dbengine" != "oracle" ] ; then
 echo "     You connect as               $dbuser"
 fi
 echo "     Configuration script in      $outscript"
