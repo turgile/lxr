@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.40 2012/01/26 16:35:35 ajlittoz Exp $
+# $Id: Lang.pm,v 1.41 2012/02/10 20:54:30 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.40 2012/01/26 16:35:35 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.41 2012/02/10 20:54:30 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -85,6 +85,14 @@ sub processcomment {
 	$$frag = "<span class=\"comment\">$$frag</span>";
 	$$frag =~ s!\n!</span>\n<span class="comment">!g;
 	$$frag =~ s!<span class="comment"></span>$!! ; #remove excess marking
+}
+
+sub processstring {
+	my ($self, $frag) = @_;
+
+	$$frag = "<span class=\"string\">$$frag</span>";
+	$$frag =~ s!\n!</span>\n<span class="string">!g;
+	$$frag =~ s!<span class="string"></span>$!! ; #remove excess marking
 }
 
 #
