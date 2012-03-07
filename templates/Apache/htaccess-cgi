@@ -14,7 +14,7 @@ deny from all
 SetHandler default-handler
 </Files>
 
-<Files ~ (find|search|source|ident|diff|cgi-bin)$>
+<Files ~ (find|search|source|ident|diff|showconfig)$>
 SetHandler cgi-script
 ForceType text/html
 </Files>
