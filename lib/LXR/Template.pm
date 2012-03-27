@@ -419,7 +419,7 @@ sub captionexpand {
 	# a string by extracting a relevant part from the URL.
 		|| expandtemplate
 				(	"\$tree  by courtesy of the LXR Cross Referencer"
-				,	( 'tree'    => sub { treeexpand(@_, $who) }
+				,	( 'tree'    => sub { targetexpand(@_, $who) }
 					)
 				);
 	$ret =~ s/</&lt;/g;
