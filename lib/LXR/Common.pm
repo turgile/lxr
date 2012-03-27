@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.92 2012/03/06 19:42:51 ajlittoz Exp $
+# $Id: Common.pm,v 1.93 2012/03/27 08:59:30 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.92 2012/03/06 19:42:51 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.93 2012/03/27 08:59:30 ajlittoz Exp $ ';
 
 use strict;
 
@@ -143,7 +143,7 @@ sub urlargs {
 		push(@args, "$_=$args{$_}");
 	}
 
-	return ($#args < 0 ? '' : '?' . join(';', @args));
+	return ($#args < 0 ? '' : '?' . join('&', @args));
 }
 
 sub fileref {
