@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: diff,v 1.24 2012/03/27 16:48:06 ajlittoz Exp $
+# $Id: diff,v 1.25 2012/03/29 18:58:19 ajlittoz Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.24 2012/03/27 16:48:06 ajlittoz Exp $ ';
+$CVSID = '$Id: diff,v 1.25 2012/03/29 18:58:19 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -88,28 +88,32 @@ sub printdiff {
 		return;
 	}
 	my $origname = $pathname;
-	my $origtemp = $files->tmpfile($origname, $releaseid);
 
 	my $diffname = $config->mappath($config->unmappath($pathname, @dargs));
 	my ($diffv) = grep(m/v=/, @dargs);
 	$diffv =~ s/v=//;
-	my $difftemp = $files->tmpfile($diffname, $diffv);
 
-	unless (defined($origtemp)) {
-		unlink($difftemp);
+	unless ($files->isfile($origname, $releaseid)) {
 		print("*** $origname does not exist ***\n");
 		return;
 	}
-	unless (defined($difftemp)) {
-		unlink($origtemp);
+	unless ($files->isfile($diffname, $diffv)) {
 		print("*** $diffname does not exist ***\n");
 		return;
 	}
 
 	fflush;
+	# realfilename may create a temporary file
+	# which should be released when no longer needed
+	my $origtemp = $files->realfilename($origname, $releaseid);
+	my $difftemp = $files->realfilename($diffname, $diffv);
+# print STDERR "*** diff between $origtemp ($origname $releaseid) and $difftemp ($diffname $diffv)\n";
 	$ENV{'PATH'} = '/usr/local/bin:/usr/bin:/bin:/usr/sbin';
 	unless (open(DIFF, "-|")) {
 		open(STDERR, ">&STDOUT");
+	#	Untaint arguments to diff
+		$origtemp =~ m/(.*)/; $origtemp = $1;
+		$difftemp =~ m/(.*)/; $difftemp = $1;
 		exec('diff', '-U0', $origtemp, $difftemp);
 		print STDERR "*** Diff subprocess died unexpextedly: $!\n";
 		exit;
@@ -191,14 +195,15 @@ sub printdiff {
 	markupfile($origh, sub { $orig .= shift }, 1);
 	my $len = $. + $ofs;
 	$origh->close;
+	$files->releaserealfilename($origtemp);
 
 	$pathname = $diffname;
 
 	my $diffh = new FileHandle($difftemp);
 	my $new   = '';
-
 	markupfile($diffh, sub { $new .= shift });
 	$diffh->close;
+	$files->releaserealfilename($difftemp);
 
 	$pathname = $origname;
 
@@ -242,7 +247,6 @@ sub printdiff {
 	}
 	print("</pre>");
 
-	unlink($origtemp, $difftemp);
 }
 
 httpinit;

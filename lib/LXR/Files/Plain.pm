@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.26 2009/05/10 11:54:29 adrianissott Exp $
+# $Id: Plain.pm,v 1.27 2012/03/29 18:58:19 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.26 2009/05/10 11:54:29 adrianissott Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.27 2012/03/29 18:58:19 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -150,6 +150,16 @@ sub isfile {
 	my ($self, $pathname, $releaseid) = @_;
 
 	return -f $self->toreal($pathname, $releaseid);
+}
+
+sub realfilename {
+	my ($self, $pathname, $releaseid) = @_;
+
+	return $self->toreal($pathname, $releaseid);
+}
+
+#	Nothing was allocated by realfilename, just return
+sub releaserealfilename {
 }
 
 sub getindex {
