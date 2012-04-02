@@ -1,14 +1,57 @@
 #!/bin/bash
-# $Id: initial-config.sh,v 1.6 2012/03/15 08:08:08 ajlittoz Exp $
+# $Id: initial-config.sh,v 1.7 2012/04/02 19:01:35 ajlittoz Exp $
 
-CSI=$'\x1b[';	# CSI = esc [
-VTbold="${CSI}1m";
-VTnorm="${CSI}0m";
-VTred="${VTbold}${CSI}31m";
-VTyellow="${VTbold}${CSI}33m";
-VTgreen="${VTbold}${CSI}32m";
+shopt -s extglob
+. ${0%%+([^/])}ANSI-escape.sh
 
-echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.6 $) ${VTyellow}***${VTnorm}"
+#	Strip directory from command
+cmdname=${0##*/}
+
+confdir="lxrconf.d"
+
+#	Decode options and arguments
+lxt="lxr.conf"
+everything=1
+while [[ $# > 0 ]] ; do
+	case "$1" in
+		--help | -h )
+			echo "$cmdname [OPTION]... [lxr-conf-template]"
+			echo "Creates in ${confdir} files containing lists of Linux kernel architectures"
+			echo "and sub-architectures suitable for reading by readfile() in variables 'range'"
+			echo "attribute"
+			echo
+			echo "OPTION:"
+			echo "  -h, --help     print this reminder and stop"
+			echo "  -a, --add      only add new master configuration file"
+			echo "                 (omits all other files)"
+			echo
+			echo "lxr-conf-template  LXR master configuration template name in templates/"
+			echo "                   sub-directory (defaults to lxr.conf if not specified)"
+			exit 0
+		;;
+		--add | -a )
+			everything=0
+		;;
+		--[^-]* | -[^-]* )
+			echo "${VTyellow}${cmdname}:${VTnorm} unknown option $1"
+		;;
+		* )
+			lxt="$1"
+		;;
+	esac
+	shift
+done
+
+if [[ ! -d "${confdir}" ]] ; then
+	mkdir --mode=ug=rwx,o=rx "${confdir}"
+fi
+
+if [[ ! -f "templates/$lxt" ]] ; then
+	echo "${VTred}${cmdname}: template ${lxt} does not exist!${VTnorm}"
+	exit 1
+fi
+
+echo "${VTyellow}***${VTnorm} Initial phase configurator for LXR (\$Revision: 1.7 $) ${VTyellow}***${VTnorm}"
 echo
 
 while : ; do
