@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Plain.pm,v 1.27 2012/03/29 18:58:19 ajlittoz Exp $
+# $Id: Plain.pm,v 1.28 2012/04/02 19:20:39 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.27 2012/03/29 18:58:19 ajlittoz Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.28 2012/04/02 19:20:39 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -155,7 +155,8 @@ sub isfile {
 sub realfilename {
 	my ($self, $pathname, $releaseid) = @_;
 
-	return $self->toreal($pathname, $releaseid);
+	$self->toreal($pathname, $releaseid) =~ m/(.*)/;
+	return $1;	# Untainted name
 }
 
 #	Nothing was allocated by realfilename, just return

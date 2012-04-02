@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: diff,v 1.25 2012/03/29 18:58:19 ajlittoz Exp $
+# $Id: diff,v 1.26 2012/04/02 19:20:39 ajlittoz Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.25 2012/03/29 18:58:19 ajlittoz Exp $ ';
+$CVSID = '$Id: diff,v 1.26 2012/04/02 19:20:39 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -111,9 +111,6 @@ sub printdiff {
 	$ENV{'PATH'} = '/usr/local/bin:/usr/bin:/bin:/usr/sbin';
 	unless (open(DIFF, "-|")) {
 		open(STDERR, ">&STDOUT");
-	#	Untaint arguments to diff
-		$origtemp =~ m/(.*)/; $origtemp = $1;
-		$difftemp =~ m/(.*)/; $difftemp = $1;
 		exec('diff', '-U0', $origtemp, $difftemp);
 		print STDERR "*** Diff subprocess died unexpextedly: $!\n";
 		exit;
