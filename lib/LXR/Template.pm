@@ -1332,16 +1332,6 @@ sub varbtnaction {
 	my $action;
 
 	if ($who eq 'source' || $who eq 'sourcedir') {
-# TODO $varaction is used outside the "variables" template.
-#		We thus have no idea of the current values of the variables.
-#		To get them, we need to wait until the submit button is clicked.
-#		Then we could apply mappath. Unhappily, $pathname is not
-#		guaranteed to be an 'original' path; it may already have undergone
-#		a mappath transformation. It is then not safe to apply a second time.
-# 		$valaction = varlink2action(&fileref("$val", ""
-# 									, $config->mappath($pathname, "$var=$val")
-# 									, 0, "$var=$val")
-# 								  );
 		$action = &fileref("", "", $pathname);
 	} elsif ($who eq 'diff') {
 		$action = &diffref("", "", $pathname);
