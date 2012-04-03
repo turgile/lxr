@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: diff,v 1.26 2012/04/02 19:20:39 ajlittoz Exp $
+# $Id: diff,v 1.27 2012/04/03 15:56:18 ajlittoz Exp $
 
 # diff --	Display diff output with markup.
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.26 2012/04/02 19:20:39 ajlittoz Exp $ ';
+$CVSID = '$Id: diff,v 1.27 2012/04/03 15:56:18 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -151,7 +151,7 @@ sub printdiff {
 	close(DIFF);
 
 	print	( "<h1>Diff markup</h1>\n"
-			, "<h2>Differences between "
+			, "<h2>between "
 			, fileref	( "$origname"
 						, "diff-fref", $origname
 						)
@@ -242,7 +242,7 @@ sub printdiff {
 		#      ($chg{$i+1} || "  "), "</span> $n\n");
 		print "$o $diffmark $n\n";
 	}
-	print("</pre>");
+	print("</pre>\n");
 
 }
 
