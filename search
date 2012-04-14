@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.41 2012/04/03 08:25:26 ajlittoz Exp $
+# $Id: search,v 1.42 2012/04/14 07:57:20 ajlittoz Exp $
 
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: search,v 1.41 2012/04/03 08:25:26 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.42 2012/04/14 07:57:20 ajlittoz Exp $ ';
 
 use strict;
 use lib '.'; # for Local.pm
@@ -84,7 +84,7 @@ sub glimpsesearch {
 	open	( GLIMPSE
 			, $config->glimpsebin
 		# Don't scan files ending in ,v or ~
-				." -F '(\\,[^v\\~]\|[^\\,][^\\~])\$' "
+				." -F '-v (\\,v\|\\~)\$' "
 		# Should we match casesensitive ?
 				. ($casesensitive ? "" : "-i")
 		# Location of index datadbase
