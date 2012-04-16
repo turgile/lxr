@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.94 2012/03/27 16:48:06 ajlittoz Exp $
+# $Id: Common.pm,v 1.95 2012/04/16 17:06:14 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.94 2012/03/27 16:48:06 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.95 2012/04/16 17:06:14 ajlittoz Exp $ ';
 
 use strict;
 
@@ -395,9 +395,9 @@ sub httpinit {
 		delete $HTTP->{'param'}->{$_};
 	}
 
-	$pathname = fixpaths($HTTP->{'path_info'});
 	$releaseid  = clean_release($config->variable('v'));
 	$config->variable('v', $releaseid);  # put back into config obj
+	$pathname = fixpaths($HTTP->{'path_info'});
 
 	printhttp;
 }
