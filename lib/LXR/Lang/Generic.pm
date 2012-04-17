@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.33 2012/04/17 08:10:46 ajlittoz Exp $
+# $Id: Generic.pm,v 1.34 2012/04/17 10:58:00 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,13 +22,11 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.33 2012/04/17 08:10:46 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.34 2012/04/17 10:58:00 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
 use LXR::Lang;
-
-use vars qw($AUTOLOAD);
 
 my $generic_config;
 
@@ -47,7 +45,7 @@ sub new {
 
 	# Set langid
 	$$self{'langid'} = $self->langinfo('langid');
-	die "No langid for language $lang" if !defined $self->langid;
+	die "No langid for language $lang" if !defined $self->{'langid'};
 
 	# Make sure that at least a default identifier definition exists
 	#	default must also cover C and C++ reserved words and Perl -variables
@@ -87,15 +85,15 @@ sub indexfile {
 
 	my $typemap = $self->langinfo('typemap');
 
-	my $langforce = ${ $self->eclangnamemapping }{ $self->language };
+	my $langforce = ${ $self->{'eclangnamemapping'} }{ $self->language };
 	if (!defined $langforce) {
 		$langforce = $self->language;
 	}
 
-	if ($config->ectagsbin) {
+	if ($config->{'ectagsbin'}) {
 		open(CTAGS,
 			join(" ",
-				$config->ectagsbin, $self->ectagsopts, "--excmd=number",
+				$config->{'ectagsbin'}, @{$self->{'ectagsopts'}}, "--excmd=number",
 				"--language-force=$langforce", "-f", "-", $path, "|")
 		  )
 		  or die "Can't run ectags, $!";
@@ -120,7 +118,7 @@ sub indexfile {
 				$ext = undef;
 			}
 
-			$index->setsymdeclaration($sym, $fileid, $line, $self->langid, $type, $ext);
+			$index->setsymdeclaration($sym, $fileid, $line, $self->{'langid'}, $type, $ext);
 		}
 		close(CTAGS);
 
@@ -348,7 +346,10 @@ sub referencefile {
 	require LXR::SimpleParse;
 
 	# Use dummy tabwidth here since it doesn't matter for referencing
-	&LXR::SimpleParse::init(FileHandle($path)->new(), 1, $self->parsespec);
+	&LXR::SimpleParse::init	( FileHandle->new($path)
+							, 1
+							, $self->parsespec
+							);
 
 	my $linenum = 1;
 	my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
@@ -395,56 +396,6 @@ sub referencefile {
 	print("+++ $linenum\n");
 }
 
-# Autoload magic to allow access using $generic->variable syntax
-# blatently ripped from Config.pm - I still don't fully understand how
-# this works.
-
-sub variable {
-	my ($self, $var, $val) = @_;
-
-	$self->{variables}{$var}{value} = $val if defined($val);
-	return $self->{variables}{$var}{value}
-	  || $self->vardefault($var);
-}
-
-sub varexpand {
-	my ($self, $exp) = @_;
-	$exp =~ s/\$\{?(\w+)\}?/$self->variable($1)/ge;
-
-	return $exp;
-}
-
-sub value {
-	my ($self, $var) = @_;
-
-	if (exists($self->{$var})) {
-		my $val = $self->{$var};
-
-		if (ref($val) eq 'ARRAY') {
-			return map { $self->varexpand($_) } @$val;
-		} elsif (ref($val) eq 'CODE') {
-			return $val;
-		} else {
-			return $self->varexpand($val);
-		}
-	} else {
-		return undef;
-	}
-}
-
-sub AUTOLOAD {
-	my $self = shift;
-	(my $var = $AUTOLOAD) =~ s/.*:://;
-
-	my @val = $self->value($var);
-
-	if (ref($val[0]) eq 'CODE') {
-		return $val[0]->(@_);
-	} else {
-		return wantarray ? @val : $val[0];
-	}
-}
-
 sub language {
 	my ($self) = @_;
 	return $self->{'language'};
@@ -454,7 +405,7 @@ sub langinfo {
 	my ($self, $item) = @_;
 
 	my $val;
-	my $map = $self->langmap;
+	my $map = $self->{'langmap'};
 	die if !defined $map;
 	if (exists $$map{ $self->language }) {
 		$val = $$map{ $self->language };

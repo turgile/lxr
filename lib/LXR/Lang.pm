@@ -1,6 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*- ###############################################
 #
-# $Id: Lang.pm,v 1.43 2012/04/17 08:10:46 ajlittoz Exp $
+# $Id: Lang.pm,v 1.44 2012/04/17 10:57:59 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.43 2012/04/17 08:10:46 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.44 2012/04/17 10:57:59 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -31,7 +31,7 @@ sub new {
 		if ($pathname =~ /$$type[1]/) {
 			eval "require $$type[2]";
 			die "Unable to load $$type[2] Lang class, $@" if $@;
-			my $create = "$$type[2]->new" . '($pathname, $releaseid, $$type[0])';
+			my $create = $$type[2] . '->new($pathname, $releaseid, $$type[0])';
 			$lang = eval($create);
 			die "Unable to create $$type[2] Lang object, $@" unless defined $lang;
 			last;
