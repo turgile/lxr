@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.32 2012/01/26 17:22:58 ajlittoz Exp $
+# $Id: Generic.pm,v 1.33 2012/04/17 08:10:46 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.32 2012/01/26 17:22:58 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.33 2012/04/17 08:10:46 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -348,7 +348,7 @@ sub referencefile {
 	require LXR::SimpleParse;
 
 	# Use dummy tabwidth here since it doesn't matter for referencing
-	&LXR::SimpleParse::init(new FileHandle($path), 1, $self->parsespec);
+	&LXR::SimpleParse::init(FileHandle($path)->new(), 1, $self->parsespec);
 
 	my $linenum = 1;
 	my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
