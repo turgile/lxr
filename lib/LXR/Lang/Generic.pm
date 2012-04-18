@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Generic.pm,v 1.34 2012/04/17 10:58:00 ajlittoz Exp $
+# $Id: Generic.pm,v 1.35 2012/04/18 20:38:45 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -22,9 +22,10 @@
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.34 2012/04/17 10:58:00 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.35 2012/04/18 20:38:45 ajlittoz Exp $ ';
 
 use strict;
+use FileHandle;
 use LXR::Common;
 use LXR::Lang;
 

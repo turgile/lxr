@@ -1,6 +1,6 @@
 # -*- tab-width: 4 -*- ###############################################
 #
-# $Id: Tagger.pm,v 1.29 2012/04/17 08:10:46 ajlittoz Exp $
+# $Id: Tagger.pm,v 1.30 2012/04/18 20:38:45 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +18,9 @@
 
 package LXR::Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.29 2012/04/17 08:10:46 ajlittoz Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.30 2012/04/18 20:38:45 ajlittoz Exp $ ';
 
 use strict;
-use FileHandle;
 use LXR::Lang;
 
 sub processfile {
