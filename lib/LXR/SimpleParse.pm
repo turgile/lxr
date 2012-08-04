@@ -1,7 +1,8 @@
-# -*- tab-width: 4 -*- ###############################################
+# -*- tab-width: 4 -*- #
+##############################################
 #
-# $Id: SimpleParse.pm,v 1.19 2012/08/03 16:33:47 ajlittoz Exp $
-
+# $Id: SimpleParse.pm,v 1.20 2012/08/04 14:26:32 ajlittoz Exp $
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -28,7 +29,7 @@ source file into homogeneous regions (i.e. fragments defined by
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.19 2012/08/03 16:33:47 ajlittoz Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.20 2012/08/04 14:26:32 ajlittoz Exp $ ';
 
 use strict;
 use integer;
@@ -325,11 +326,20 @@ sub nextfrag {
 #	Remember that "stay" constructs have been processed above.
 			if (defined($btype)) {
 				if ($next =~ m/$term/) {		# A close delim in this fragment?
-					$next =~ m/^(.*?)($term)(.*)/s;
-					if ($3 ne '') {
-						unshift(@frags, $3);	# Requeue last part
+			# Next instruction group is 5.8 compatible but does
+			# not allow capture parenthesis in regexps
+			#		$next =~ m/^(.*?)($term)(.*)/s;
+			#		if ($3 ne '') {
+			#			unshift(@frags, $3);	# Requeue last part
+			#		}
+			#		$frag .= $1 . $2;
+			# This group contains 5.10 features and removes the
+			# above mentioned limitation
+					$next =~ m/^(?'HEAD'.*?$term)(?'TAIL'.*)/s;
+					if ($+{'TAIL'} ne '') {
+						unshift(@frags, $+{'TAIL'});	# Requeue last part
 					}
-					$frag .= $1 . $2;
+					$frag .= $+{'HEAD'};
 					last;						# We are done, terminator met
 				}
 #	An anonymous region is in the buffer (it defaults to "code").
@@ -341,12 +351,22 @@ sub nextfrag {
 					last;
 				}
 				if ($next =~ m/$split/) {		# An open delim in this fragment?
-					$next =~ m/^(.*?)($split)(.*)/s;
-					if ($3 ne '') {
-						unshift(@frags, $3);	# Requeue last part
+			# Next instruction group is 5.8 compatible but does
+			# not allow capture parenthesis in regexps
+			#		$next =~ m/^(.*?)($split)(.*)/s;
+			#		if ($3 ne '') {
+			#			unshift(@frags, $3);	# Requeue last part
+			#		}
+			#		unshift(@frags, $2);		# Requeue open delimiter
+			#		$next = $1
+			# This group contains 5.10 features and removes the
+			# above mentioned limitation
+					$next =~ m/^(?'HEAD'.*?)(?'OPEN'$split)(?'TAIL'.*)/s;
+					if ($+{'TAIL'} ne '') {
+						unshift(@frags, $+{'TAIL'});	# Requeue last part
 					}
-					unshift(@frags, $2);		# Requeue open delimiter
-					$next = $1
+					unshift(@frags, $+{'OPEN'});		# Requeue open delimiter
+					$next = $+{'HEAD'}
 				}
 			}
 			$frag .= $next;
@@ -356,15 +376,28 @@ sub nextfrag {
 #	input line if there is no delimiter in range.
 #			print "start of new fragment\n";
 			if ($next =~ m/$split/) {			# An open delim in this fragment?
-				$next =~ m/^(.*?)($split)(.*)/s;	# Split fragment at first
-				if ($3 ne '') {
-					unshift(@frags, $3);		# Requeue last part
+			# Next instruction group is 5.8 compatible but does
+			# not allow capture parenthesis in regexps
+			#	$next =~ m/^(.*?)($split)(.*)/s;	# Split fragment at first
+			#	if ($3 ne '') {
+			#		unshift(@frags, $3);		# Requeue last part
+			#	}
+			#	if ($1 ne '') {					# Choose which frag to process
+			#		unshift(@frags, $2);		# Queue delimiter
+			#		$frag = $1;
+			#	} else {
+			#		$frag = $2;
+			# This group contains 5.10 features and removes the
+			# above mentioned limitation
+				$next =~ m/^(?'HEAD'.*?)(?'OPEN'$split)(?'TAIL'.*)/s;	# Split fragment at first
+				if ($+{'TAIL'} ne '') {
+					unshift(@frags, $+{'TAIL'});	# Requeue last part
 				}
-				if ($1 ne '') {					# Choose which frag to process
-					unshift(@frags, $2);		# Queue delimiter
-					$frag = $1;
+				if ($+{'HEAD'} ne '') {			# Choose which frag to process
+					unshift(@frags, $+{'OPEN'});	# Queue delimiter
+					$frag = $+{'HEAD'};
 				} else {
-					$frag = $2;
+					$frag = $+{'OPEN'};
 				}
 			} else {								# Full fragment (no delim)
 				$frag = $next;
@@ -379,7 +412,7 @@ sub nextfrag {
 				my $i = 1;
 				$btype = grep { $i &&= !defined($_) } @_;
 				if (!defined($term[$btype])) {
-					print "fragment without terminator\n";
+#					print "fragment without terminator\n";
 					last;
 				} else {
 #	Set the category characteristics for further parsing
