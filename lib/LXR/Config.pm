@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.51 2012/08/03 16:33:47 ajlittoz Exp $
+# $Id: Config.pm,v 1.52 2012/08/18 15:44:58 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.51 2012/08/03 16:33:47 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.52 2012/08/18 15:44:58 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -293,8 +293,8 @@ CANDIDATE: foreach my $config (@config[1..$#config]) {
 		$0 =~ m/([^\/]*)$/;
 		if("genxref" ne $1) {
 			return 0;
-		} elsif($url =~ m!https?://.+\.!) {
-			die "Can't find config for $url: make sure there is a 'baseurl' line that matches in lxr.conf\n";
+		} elsif($url =~ m!(https?:)?//.+!) {
+			die "Can't find config for $url: make sure there is a 'host_names' + 'virtroot' combination or a 'baseurl' line that matches in lxr.conf\n";
 		} else {
 			# wasn't a url, so probably genxref with a bad --url parameter
 			die "Can't find config for $url: " . 
