@@ -1569,7 +1569,7 @@ sub makeheader {
 			,	'banner'     => sub { bannerexpand(@_, $who) }
 			,	'pathname'   => sub { $pathname }
 			,	'atticlink'  => \&atticlink
-			,	'LXRversion' => sub { $LXRversion::LXRversion }
+			,	'LXRversion' => sub { "%LXRRELEASENUMBER%" }
 			  # --modes buttons & links--
 			,	'modes'      => sub { modeexpand(@_, $who) }
 			  # --other trees--
@@ -1635,7 +1635,7 @@ sub makefooter {
 				'caption'    => sub { captionexpand(@_, $who) }
 			,	'banner'     => sub { bannerexpand(@_, $who) }
 			,	'pathname'   => sub { $pathname }
-			,	'LXRversion' => sub { $LXRversion::LXRversion }
+			,	'LXRversion' => sub { "%LXRRELEASENUMBER%" }
 			  # --modes buttons & links--
 			,	'modes'      => sub { modeexpand(@_, $who) }
 			  # --variables buttons & links--
@@ -1701,7 +1701,7 @@ sub makeerrorpage {
 		(	$template
 		,	( 'target' =>  sub { targetexpand(@_, $who) }
 			, 'stylesheet' => \&stylesheet
-			, 'LXRversion' => sub { $LXRversion::LXRversion }
+			, 'LXRversion' => sub { "%LXRRELEASENUMBER%" }
 			)
 		)
 	);

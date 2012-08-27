@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.98 2012/08/03 16:33:47 ajlittoz Exp $
+# $Id: Common.pm,v 1.99 2012/08/27 08:59:30 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.98 2012/08/03 16:33:47 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.99 2012/08/27 08:59:30 ajlittoz Exp $ ';
 
 use strict;
 
@@ -70,7 +70,6 @@ require LXR::Files;
 require LXR::Index;
 require LXR::Lang;
 require LXR::Template;
-require LXRversion;
 
 our $config;
 our $files;
