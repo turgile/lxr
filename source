@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.57 2012/04/19 09:34:09 ajlittoz Exp $
+# $Id: source,v 1.58 2012/09/08 08:52:23 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.57 2012/04/19 09:34:09 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.58 2012/09/08 08:52:23 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -192,13 +192,20 @@ sub direxpand {
 	my @nodes;
 	my $node;
 
-	@nodes = $files->getdir($dir, $releaseid);
+#	Since CVS does not manage directory version,
+#	ensure we always request 'head' for directories.
+	@nodes = $files->getdir
+		( $dir
+		, $files->isa('LXR::Files::CVS')
+			? 'head'
+			: $releaseid
+		);
 	unless (@nodes) {
 		print(  "<p class=\"error\">\n<i>The directory " . $dir
 			  . " does not exist.</i>\n</p>\n");
-		if ($files->isa("LXR::Files::CVS")
-			and !$HTTP->{'param'}->{'_showattic'})
-		{
+		if	(  $files->isa("LXR::Files::CVS")
+			&& !$HTTP->{'param'}{'_showattic'}
+			) {
 			print("<p class=\"error\">\n");
 			print("<i>This directory might exist in other versions,");
 			print	( " try 'Show attic files' or select a different",
@@ -370,9 +377,9 @@ sub printfile {
 			print(
 				"<p class=\"error\">\n<i>The file $pathname does not exist.</i>\n</p>\n"
 			);
-			if ($files->isa("LXR::Files::CVS")
-				and !$HTTP->{'param'}->{'_showattic'})
-			{
+			if	(  $files->isa("LXR::Files::CVS")
+				&& !$HTTP->{'param'}{'_showattic'}
+				) {
 				print("<p class=\"error\">\n");
 				print("<i>This directory might exist in other versions,");
 				print	( " try 'Show attic files' or select a different",
@@ -397,7 +404,7 @@ if ($config->filter && $pathname !~ $config->filter) {
 # Formerly, if the file was html, it was sent out as is.
 # Now, since we want to parse HTML files too, use URL parameter _raw
 # to interpret it through the browser, the same as for other files.
-if ($HTTP->{'param'}->{'_raw'}) {
+if ($HTTP->{'param'}{'_raw'}) {
 	printfile(1);
 } else {
 	my $type = ($pathname !~ m|/$| ? 'source' : 'sourcedir');
