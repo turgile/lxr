@@ -529,11 +529,11 @@ sub titleexpand {
 	if ($who eq 'source' || $who eq 'diff' || $who eq 'sourcedir') {
 		$ret = $config->sourcerootname . $pathname;
 	} elsif ($who eq 'ident') {
-		my $i = $HTTP->{'param'}->{'_i'};
+		my $i = $HTTP->{'param'}{'_i'};
 		$ret = $config->sourcerootname . ' identifier search'
 				. ($i ? ": $i" : '');
 	} elsif ($who eq 'search') {
-		my $s = $HTTP->{'param'}->{'_string'};
+		my $s = $HTTP->{'param'}{'_string'};
 		$ret = $config->sourcerootname . ' general search'
 				. ($s ? ": $s" : '');
 	}
@@ -885,8 +885,8 @@ sub treesexpand {
 	# The current hostname is not on the list for this tree.
 	# Take the first name but NOTE it is not reliable
 			if (!defined($url)) {
-				$url = $group->{'host_names'}->[0]
-					|| $global->{'host_names'}->[0];
+				$url = $group->{'host_names'}[0]
+					|| $global->{'host_names'}[0];
 				$url =~ s/(:\d+)$//;
 				$port = $1;
 			}
@@ -1236,7 +1236,7 @@ sub varlinks {
 			} elsif ($who eq 'search') {
 				$vallink =
 				    "<a class=\"varlink\" href=\"$config->{virtroot}/search"
-				  . &urlargs("$var=$val", "_string=" . $HTTP->{'param'}->{'_string'})
+				  . &urlargs("$var=$val", "_string=" . $HTTP->{'param'}{'_string'})
 				  . "\">$val</a>";
 			}
 		}
@@ -1270,6 +1270,12 @@ a I<string> containing the variable name
 
 =back
 
+To handle CVS case where directories are not managed version-wise,
+the value any variable has on entry is kept, even if this value
+is not listed in its C<'range'> attribute.
+Thus, the current I<version>, for instance, is not lost through
+a disrectory display.
+
 =cut
 
 sub varmenuexpand {
@@ -1284,6 +1290,7 @@ sub varmenuexpand {
 		if ($val eq $oldval) {
 			$class = "var-sel";
 			$sel = "selected";
+			$oldval = undef;	# Current value let
 		} else {
 			$class = "varlink";
 			$sel = "";
@@ -1294,6 +1301,17 @@ sub varmenuexpand {
 					,	( 'itemclass' => sub { $class }
 						, 'itemsel'   => sub { $sel }
 						, 'varvalue'  => sub { $val }
+						)
+					);
+	}
+	# Value on entry not listed in 'range', but keep it
+	# in case this is only transient.
+	if (defined($oldval)) {
+		$menuex .= expandtemplate
+					( $templ
+					,	( 'itemclass' => sub { "var-sel" }
+						, 'itemsel'   => sub { "selected" }
+						, 'varvalue'  => sub { $oldval }
 						)
 					);
 	}
