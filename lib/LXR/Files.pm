@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.15 2012/04/19 11:40:23 ajlittoz Exp $
+# $Id: Files.pm,v 1.16 2012/09/17 11:44:53 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.15 2012/04/19 11:40:23 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.16 2012/09/17 11:44:53 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -193,6 +193,11 @@ C<getauthor> returns the author of the designated revision.
 
 a I<string> containing the path relative to C<'sourceroot'>
 
+=item 1 C<$releaseid>
+
+the release (or version) in which C<$pathname> is expected to
+be found
+
 =item 1 C<$annotation>
 
 the I<annotation> (see sub C<getannotations>) whose author is
@@ -217,7 +222,7 @@ Next the annotation for the current line is used to get the author.
 =cut
 
 sub getauthor {
-	my ($self, $filename, $annotation) = @_;
+	my ($self, $filename, $releaseid, $annotation) = @_;
 	warn  __PACKAGE__."::getauthor not implemented. Parameters @_";
 	my $author;
 	return $author;

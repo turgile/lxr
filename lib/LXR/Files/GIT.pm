@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.5 2012/04/19 11:40:23 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.6 2012/09/17 11:44:53 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -147,15 +147,15 @@ sub getannotations {
 }
 
 sub getauthor {
-	my ($self, $pathname, $releaseid) = @_;
+	my ($self, $pathname, $releaseid, $rev) = @_;
 
 	#
-	# Note that $releaseid is a real commit this time
+	# Note that $rev is a real commit this time
 	# (returned by getannotations() above). This is
 	# _not_ a tag name!
-	# $releaseid may be empty if it comes from the initial commit.
+	# $rev may be empty if it comes from the initial commit.
 	#
-	return undef if ($releaseid eq "");
+	return undef if ($rev eq "");
 
 	if ($self->{'git_blame'}) {
 		my @authorlist = ();
@@ -164,7 +164,7 @@ sub getauthor {
 		# to be relative to 'rootpath'. Change LXR convention.
 		$pathname =~ s,^/+,,;
 
-		my $git = $self->_git_cmd ("cat-file", "commit", "$releaseid");
+		my $git = $self->_git_cmd ("cat-file", "commit", "$rev");
 		while (<$git>) {
 			if (m/^author (.*) </) {
 				close ($git);
