@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.58 2012/09/08 08:52:23 ajlittoz Exp $
+# $Id: source,v 1.59 2012/09/17 11:48:15 ajlittoz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 
 ######################################################################
 
-$CVSID = '$Id: source,v 1.58 2012/09/08 08:52:23 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.59 2012/09/17 11:48:15 ajlittoz Exp $ ';
 
 use strict;
 use lib '.';    # for Local.pm
@@ -325,7 +325,7 @@ sub printfile {
 						next;
 						}
 						$r = $rev;
-						my $auth = $files->getauthor($pathname, $rev);
+						my $auth = $files->getauthor($pathname, $releaseid, $rev);
 						my $la = length($auth);
 						my $lr = length($rev);
 						if ($lr+$la > 15) {	# sum of 2 fields too long
