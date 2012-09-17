@@ -938,7 +938,7 @@ it is here considered as the "mode"
 It makes use of sub C<urlargs> to retrieve the filtered list of
 variables values.
 If necessary, other URL arguments may be added depending on the mode
-(known from C<$who>.
+(known from C<$who>).
 
 The argument template is then expanded through C<expandtemplate>
 for each URL argument with a replacement rule for its name and value.
@@ -950,18 +950,23 @@ sub urlexpand {
 	my $urlex;
 	my $args;
 
+	if ($who eq 'diff') {
 	# diff needs special processing: the currently selected version
 	# of the file is transfered with a set of "mirror" arguments
 	# (their name is the same as a variable with a ~ prefix),
 	# so that the standard selection mechanism will give
 	# the version to compare to in the current value of the variables.
-	if ($who eq 'diff') {
 		my @args = ();
 		foreach ($config->allvariables) {
 			push(@args, "~$_=".$config->variable($_));
 		}
 		diffref ("", "", $pathname, @args) =~ m!^.*?(\?.*?)"!;
 		$args = $1;
+	} elsif ($who eq 'ident') {
+	# Be kind to the user of ident: propagate the searched for
+	# identifier if defined to avoid retyping it after a version
+	# change for instance.
+		$args = &urlargs($identifier ? "_i=$identifier" : '');
 	} else {
 		$args = &urlargs();
 	}
