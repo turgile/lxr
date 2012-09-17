@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.100 2012/09/08 08:52:23 ajlittoz Exp $
+# $Id: Common.pm,v 1.101 2012/09/17 12:01:34 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.100 2012/09/08 08:52:23 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.101 2012/09/17 12:01:34 ajlittoz Exp $ ';
 
 use strict;
 
@@ -836,6 +836,7 @@ sub httpinit {
 	$HTTP->{'path_info'} = http_wash($ENV{'PATH_INFO'});
 
 	$HTTP->{'path_info'} = clean_path($HTTP->{'path_info'});
+	$HTTP->{'path_info'} = '/' if $HTTP->{'path_info'} eq "";
 	$HTTP->{'this_url'} = 'http://' . $ENV{'SERVER_NAME'};
 	$HTTP->{'this_url'} .= ':' . $ENV{'SERVER_PORT'}
 	  if $ENV{'SERVER_PORT'} != 80;
@@ -1057,8 +1058,7 @@ To be called when all processing is done, but is it really necessary?
 sub httpclean {
 	$config = undef;
 	$files  = undef;
-
-	$index->DESTROY();
+	$index->final_cleanup();
 	$index  = undef;
 }
 
