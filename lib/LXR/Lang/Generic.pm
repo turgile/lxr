@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.36 2012/09/17 12:15:43 ajlittoz Exp $
+# $Id: Generic.pm,v 1.37 2012/09/17 16:11:33 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.36 2012/09/17 12:15:43 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.37 2012/09/17 16:11:33 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -187,6 +187,7 @@ sub indexfile {
 	my ($self, $name, $path, $fileid, $index, $config) = @_;
 
 	my $typemap = $self->langinfo('typemap');
+	my $insensitive = $self->flagged('case_insensitive');
 
 	my $langforce = ${ $self->{'eclangnamemapping'} }{ $self->language };
 	if (!defined $langforce) {
@@ -230,6 +231,7 @@ sub indexfile {
 				$ext = undef;
 			}
 
+			$sym = uc($sym) if $insensitive;
 			$index->setsymdeclaration($sym, $fileid, $line, $self->{'langid'}, $type, $ext);
 		}
 		close(CTAGS);
@@ -511,6 +513,7 @@ sub processcode {
 	my $source = $$code;
 	my $answer = '';
 	my $identdef = $self->langinfo('identdef');
+	my $insensitive = $self->flagged('case_insensitive');
 
 # Repeatedly remove what looks like an identifier from the head of
 # the source line and mark it if it is a reserved word or known 
@@ -524,10 +527,12 @@ sub processcode {
 
 	while ( $source =~ s/^(.*?)($identdef)//s)
 	{
+		my $dictsymbol = $2;
+		$dictsymbol = uc($dictsymbol) if $insensitive;
 		$answer .= "$1" .
 		( $self->isreserved($2)
 		? "<span class='reserved'>$2</span>"
-		:	( $index->issymbol($2, $$self{'releaseid'})
+		:	( $index->issymbol($dictsymbol, $$self{'releaseid'})
 			? join($2, @{$$self{'itag'}})
 			: $2
 			)
@@ -663,6 +668,7 @@ sub referencefile {
 	my @lines;
 	my $ls;
 	my $identdef = $self->langinfo('identdef');
+	my $insensitive = $self->flagged('case_insensitive');
 
 	while (defined($frag)) {
 		@lines = ($frag =~ m/(.*?\n)/g, $frag =~ m/([^\n]*)$/);
@@ -691,6 +697,7 @@ sub referencefile {
 					# DB dictionary (stated otherwise: it does not add
 					# new symbols to the existing dictionary.
 			#			print "adding $string to references\n";
+						$string = uc($string) if $insensitive;
 						$index->setsymreference($string, $fileid, $linenum);
 					}
 				}
