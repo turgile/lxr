@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.38 2012/09/21 16:48:56 ajlittoz Exp $
+# $Id: Generic.pm,v 1.39 2012/09/21 17:07:17 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.38 2012/09/21 16:48:56 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.39 2012/09/21 17:07:17 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -578,40 +578,6 @@ sub isreserved {
 		}
 	}
 	return 0;
-}
-
-
-=head2 C<processreserved ($frag)>
-
-Method C<processreserved> is supposed to be invoked to process a
-"reserved" fragment, but there is no definition for a "reserved" fragment.
-
-=over
-
-=item 1 C<$frag>
-
-a I<string> containing the source fragment
-
-=back
-
-CANDIDATE FOR REMOVAL
-
-Moreover, implementation is faulty.
-
-=cut
-
-sub processreserved {
-	my ($self, $frag) = @_;
-
-  # Replace reserved words
-  $$frag =~ 
-    s{
-       (^|[^\$\w\#])([-\w~\#][\w]*)\b 
-     }
-     {
-       $1.
-       ( $self->isreserved($2) ? "<span class='reserved'>$2</span>" : $2 );
-     }gex;
 }
 
 
