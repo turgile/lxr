@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.16 2012/09/17 11:44:53 ajlittoz Exp $
+# $Id: Files.pm,v 1.17 2012/09/21 17:17:08 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.16 2012/09/17 11:44:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.17 2012/09/21 17:17:08 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -68,6 +68,11 @@ sub new {
 		require LXR::Files::GIT;
 		$srcroot = $1;
 		$files   = LXR::Files::GIT->new($srcroot, $params);
+	}
+	elsif ( $srcroot =~ /^svn:(.*)/i ) {
+		require LXR::Files::Subversion;
+		$srcroot = $1;
+		$files   = LXR::Files::Subversion->new($srcroot, $params);
 	}
 	elsif ( $srcroot =~ /^bk:(.*)/i ) {
 		require LXR::Files::BK;
