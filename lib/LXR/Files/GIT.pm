@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.6 2012/09/17 11:44:53 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.7 2012/09/21 17:11:54 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -103,12 +103,16 @@ sub getdir {
 			$entryname =~ s!^.*/!!;
 
 			# Weed out things to ignore
-			foreach my $ignoredir ($config->{ignoredirs}) {
+			foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
 				next if $entryname eq $ignoredir;
 			}
 			# Skip current and parent directories
 			next if $entryname =~ /^\.$/;
 			next if $entryname =~ /^\.\.$/;
+			# Skip files starting with a dot (usually invisible),
+			# ending with a tilde (editor backup)
+			# or having "orig" extension
+			next if $node =~ m/^\.|~$|\.orig$/;
 
 			if ($entrytype eq "blob") {
 				push (@files, $entryname);
