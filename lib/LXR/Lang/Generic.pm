@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.37 2012/09/17 16:11:33 ajlittoz Exp $
+# $Id: Generic.pm,v 1.38 2012/09/21 16:48:56 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.37 2012/09/17 16:11:33 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.38 2012/09/21 16:48:56 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -227,6 +227,7 @@ sub indexfile {
 			if (defined($ext) && $ext =~ m/^(struct|union|class|enum):(.*)/) {
 				$ext = $2;
 				$ext =~ s/::<anonymous>//g;
+				$ext = uc($ext) if $insensitive;
 			} else {
 				$ext = undef;
 			}
