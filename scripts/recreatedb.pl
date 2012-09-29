@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: recreatedb.pl,v 1.3 2012/09/29 19:19:53 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.4 2012/09/29 20:30:46 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: recreatedb.pl,v 1.3 2012/09/29 19:19:53 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.4 2012/09/29 20:30:46 ajlittoz Exp $
 
 use strict;
 use lib 'lib', 'scripts';
@@ -28,7 +28,7 @@ use Fcntl;
 use Getopt::Long;
 use IO::Handle;
 use File::MMagic;
-use File::Path;
+use File::Path qw(make_path);
 
 use LXR::Files;
 use LXR::Index;
@@ -50,7 +50,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.3 $_";
+my $version ="\$Revision: 1.4 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 

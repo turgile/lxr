@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.2 2012/09/29 19:05:48 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.3 2012/09/29 20:30:46 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.2 2012/09/29 19:05:48 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.3 2012/09/29 20:30:46 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
-use File::Path;
+use File::Path qw(make_path);
 use lib do { $0 =~ m{(.*)/}; "$1" };
 use ExpandHash;
 use ExpandSlashStar;
@@ -43,7 +43,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.2 $_";
+my $version ="\$Revision: 1.3 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
