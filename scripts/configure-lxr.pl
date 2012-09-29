@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.3 2012/09/29 20:30:46 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.4 2012/09/29 20:36:35 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.3 2012/09/29 20:30:46 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.4 2012/09/29 20:36:35 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -43,7 +43,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.3 $_";
+my $version ="\$Revision: 1.4 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -576,16 +576,16 @@ my %option_trans =
 my %markers;
 my $sample;
 $markers{'%LXRroot%'} = $rootdir;
-$sample = `which glimpse 2>/dev/null`;
+$sample = `command -v glimpse 2>/dev/null`;
 chomp($sample);
 $markers{'%glimpse%'} = $sample if $sample;
-$sample = `which glimpseindex 2>/dev/null`;
+$sample = `command -v glimpseindex 2>/dev/null`;
 chomp($sample);
 $markers{'%glimpseindex%'} = $sample if $sample;
-$sample = `which swish-e 2>/dev/null`;
+$sample = `command -v swish-e 2>/dev/null`;
 chomp($sample);
 $markers{'%swish%'} = $sample if $sample;
-$sample = `which ctags 2>/dev/null`;
+$sample = `command -v ctags 2>/dev/null`;
 chomp($sample);
 $markers{'%ctags%'} = $sample if $sample;
 
@@ -671,6 +671,13 @@ if (!$addtree) {
 			) {
 			$markers{'%search_engine%'} = 'swish';
 		}
+	}
+	if	(  defined($markers{'%glimpse%'})
+		&& $markers{'%glimpse%'} ne '/bin/true'
+		&& defined($markers{'%swish%'})
+		) {
+		print "${VTred}REMINDER:${VTyellow} after this configuration step, open ${VTnorm}${VTbold}$confout${VTnorm}$[VTyellow}\n";
+		print "and comment out one of 'glimpsebin' or 'swishbin'.${VTnorm}\n";
 	}
 }
 
