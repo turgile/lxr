@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.1 2012/09/22 08:50:33 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.2 2012/09/29 19:05:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.1 2012/09/22 08:50:33 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.2 2012/09/29 19:05:48 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -43,8 +43,9 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.1 $_";
-$version =~ s/\$Revision: 1.1 $/$1/;
+my $version ="\$Revision: 1.2 $_";
+$version =~ s/Revision: (.*) $/$1/;
+$version =~ s/\$//;
 
 #	Who am I? Strip directory path.
 my $cmdname = $0;
