@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.61 2012/09/30 07:26:30 ajlittoz Exp $
+# $Id: genxref,v 1.62 2012/09/30 16:43:40 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -188,7 +188,7 @@ sub check_tool {
 	print $tl_name, ' 'x(($nmwidth-length($tl_name))/2);
 	print "version ... ";
 	$version = `$tool $tl_option`;
-	if ($version =~ m/.*$tl_name .*?((\d+\.)*\d+)/i) {;
+	if ($version =~ m/.*$tl_name .*?((\d+\.)*\d+)/i) {
 		$version = $1;
 	} else {
 		$version = undef;
