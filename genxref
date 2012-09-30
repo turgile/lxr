@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.60 2012/09/22 09:16:09 ajlittoz Exp $
+# $Id: genxref,v 1.61 2012/09/30 07:26:30 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -138,11 +138,17 @@ if ($^V ge v5.10.0) {
 }
 
 # Check tools version
+#	Return value:
+#	.	-1.	OK but conf parm set
+#	.	0	everything fine
+#	.	1	software tool not found
+#	.	2	version too low
 
 sub check_tool {
 	my ($tl_param, $tl_name, $tl_option, $tl_version) = @_;
 	my $tool;
 	my $toolloc;
+	my $toolforced;
 	my $version;
 
 	if ($config && $config->{$tl_param}) {
@@ -167,8 +173,9 @@ sub check_tool {
 	if ($config) {
 		if (!$config->{$tl_param}) {
 			$config->{$tl_param} = $toolloc;
+			$toolforced = -1;
 			$tool = $toolloc;
-			print "'$tl_param' found at ${VTyellow}$toolloc${VTnorm}\n";
+			print "$tl_name found at ${VTyellow}$toolloc${VTnorm}\n";
 			print "Manually update lxr.conf for permanent setting if needed\n";
 		}
 	} else {
@@ -200,44 +207,46 @@ sub check_tool {
 	} else {
 			print VTCUU(1), "${VTyellow}Checked:${VTnorm}\n";
 	}
-	return 0;
+	return $toolforced // 0;
 }
 
-my $tool;
-my $toolloc;
-my $version;
 my $foundglimpse = 0;
 my $foundswishe = 0;
 
-if (my $f = check_tool('ectagsbin', 'ctags', '--version', '5')) {
-	if ($f == 1) {
+my $ct = check_tool('ectagsbin', 'ctags', '--version', '5');
+if ($ct > 0) {
+	if ($ct == 1) {
 		print "genxref can't index source-tree without ctags\n";
 		print "Find its location or install it and fix 'ectagsbin'\n";
 	}
 	$failure = 1;
 }
-if (0 == check_tool('glimpsebin', 'glimpse', '-V', '0')) {
-	$foundglimpse = 1;
+$ct = check_tool('glimpsebin', 'glimpse', '-V', '0');
+if ($ct <= 0) {
+	$foundglimpse = 2 * $ct + 1;
 }
 check_tool('glimpseindex', 'glimpseindex', '-V', '0');
-if (0 == check_tool('swishbin', 'swish-e', '-V', '2.1')) {
-	$foundswishe = 1;
+$ct = check_tool('swishbin', 'swish-e', '-V', '2.1');
+if ($ct <= 0) {
+	$foundswishe =  2 * $ct + 1;
 }
 
-if ($config && $config->{'glimpsebin'} && $config->{'swishbin'}) {
+if	(	$foundglimpse == 1
+	&&	$foundswishe  == 1
+	) {
 	print "${VTred}Both 'glimpsebin' and 'swishbin' defined${VTnorm}\n";
 	print "Choose one of them by commenting the other in lxr.conf\n";
 	$failure = 1;
 }
 
-if ($config && !$config->{'glimpsebin'} && !$config->{'swishbin'}) {
+if	(	$foundglimpse == -1
+	&&	$foundswishe  == -1
+	) {
 	print "${VTyellow}Neither 'glimpsebin' nor 'swishbin' defined${VTnorm}\n";
 	if ($foundglimpse) {
-		$config->{'glimpsebin'} = $foundglimpse;
 		print "Using existing ${VTyellow}glimpse${VTnorm}\n";
 		print "If you prefer swish-e, configure lxr.conf\n";
 	} elsif ($foundswishe){
-		$config->{'swishbin'} = $foundglimpse;
 		print "Using existing ${VTyellow}swish-e${VTnorm}\n";
 		print "If you prefer glimpse, configure lxr.conf\n";
 	} else {
