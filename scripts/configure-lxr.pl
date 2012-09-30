@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.4 2012/09/29 20:36:35 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.5 2012/09/30 07:27:06 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.4 2012/09/29 20:36:35 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.5 2012/09/30 07:27:06 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -43,7 +43,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.4 $_";
+my $version ="\$Revision: 1.5 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -676,7 +676,7 @@ if (!$addtree) {
 		&& $markers{'%glimpse%'} ne '/bin/true'
 		&& defined($markers{'%swish%'})
 		) {
-		print "${VTred}REMINDER:${VTyellow} after this configuration step, open ${VTnorm}${VTbold}$confout${VTnorm}$[VTyellow}\n";
+		print "${VTred}REMINDER:${VTyellow} after this configuration step, open ${VTnorm}${VTbold}$confout${VTnorm}${VTyellow}\n";
 		print "and comment out one of 'glimpsebin' or 'swishbin'.${VTnorm}\n";
 	}
 }
