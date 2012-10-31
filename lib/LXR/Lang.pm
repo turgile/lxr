@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.45 2012/09/17 12:15:43 ajlittoz Exp $
+# $Id: Lang.pm,v 1.46 2012/10/31 18:28:41 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ categories editing.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.45 2012/09/17 12:15:43 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.46 2012/10/31 18:28:41 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -65,14 +65,15 @@ sub new {
 
 	# Try first to find a handler based on the file name
 	# (usually only its extension)
-	foreach $langkey (keys %{ $config->{'filetype'} }) {
-		$type = $config->{'filetype'}{$langkey};
+	foreach my $lk (keys %{ $config->{'filetype'} }) {
+		$type = $config->{'filetype'}{$lk};
 		if ($pathname =~ m/$$type[1]/) {
 			eval "require $$type[2]";
 			die "Unable to load $$type[2] Lang class, $@" if $@;
 			my $create = $$type[2] . '->new($pathname, $releaseid, $$type[0])';
 			$lang = eval($create);
 			die "Unable to create $$type[2] Lang object, $@" unless defined $lang;
+			$langkey = $lk;
 			last;
 		}
 	}
