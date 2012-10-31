@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.53 2012/09/21 08:18:02 ajlittoz Exp $
+# $Id: Config.pm,v 1.54 2012/10/31 18:14:36 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.53 2012/09/21 08:18:02 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.54 2012/10/31 18:14:36 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -216,7 +216,7 @@ sub _initialize {
 #	parameters (which needs to spplit $url); "compatibility"
 #	identification uses 'baseurl' and 'baseurl_aliases'.
 #	The target id ends up in 'baseurl' in both cases.
-	$url =~ m!(^.*?://.*?)/!;	# host name and port used to access server
+	$url =~ m!(^.*?://[^/]+)!;	# host name and port used to access server
 	my $host = $1;
 		# To allow simultaneous Apache and lighttpd operation
 		# on 2 different ports, remove port for identification
@@ -245,7 +245,7 @@ CANDIDATE: foreach my $config (@config[1..$#config]) {
 		};
 		my $virtroot = $config->{'virtroot'};
 		my $hits = $virtroot =~ s!/+$!!;	# ensure no ending /
-		$hits += $virtroot =~ s!^/+!/!;		# and a single starting /
+		$hits += $virtroot =~ s!^/*!/!;		# and a single starting /
 		if ($hits > 0) { $config->{'virtroot'} = $virtroot }
 		if (scalar(@hostnames)>0) {
 			foreach my $rt (@hostnames) {
