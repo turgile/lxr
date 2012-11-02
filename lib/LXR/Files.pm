@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.18 2012/11/02 09:11:22 ajlittoz Exp $
+# $Id: Files.pm,v 1.19 2012/11/02 18:22:34 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.18 2012/11/02 09:11:22 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.19 2012/11/02 18:22:34 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -565,6 +565,7 @@ to the source display script.>>
 sub _ignoredirs {
 	my ($self, $path, $node) = @_;
 
+	return 1 if $node =~ m/^\./;	# ignore "dot" dirs
 	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
 		return 1 if $node eq $ignoredir;
 	}
