@@ -1,8 +1,8 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.43 2012/09/21 17:11:54 ajlittoz Exp $
-
+# $Id: CVS.pm,v 1.44 2012/11/02 09:11:22 ajlittoz Exp $
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
+#
 ###############################################
 
 =head1 CVS module
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.43 2012/09/21 17:11:54 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.44 2012/11/02 09:11:22 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -49,7 +49,7 @@ sub new {
 	$self = bless({}, $self);
 	$self->{'rootpath'} = $rootpath;
 	$self->{'rootpath'} =~ s@/*$@/@;
-	$self->{'path'} = $config->cvspath;
+	$self->{'path'} = $config->{'cvspath'};
 	
 	unless (defined $gnu_diff) {
 
@@ -85,9 +85,7 @@ sub getdir {
 
 		# Check directories to ignore
 		if (-d $real . $node) {
-			foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
-				next FILE if $node eq $ignoredir;
-			}
+			next FILE if $self->_ignoredirs($pathname, $node);
 			# The "Attic" directory is where CVS stores removed files
 			# Add them just in case.
 			if ($node eq 'Attic') {
@@ -371,10 +369,10 @@ sub toreal {
 	my ($self, $pathname, $releaseid) = @_;
 	my $real = $self->{'rootpath'} . $pathname;
 
-# nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
-	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
-		return undef if $real =~ m!/$ignoredir(/|$)!;
-	}
+# # nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
+# 	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
+# 		return undef if $real =~ m!/$ignoredir(/|$)!;
+# 	}
 
 	# If directory, nothing more to do
 	return $real if -d $real;

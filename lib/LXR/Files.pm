@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.17 2012/09/21 17:17:08 ajlittoz Exp $
+# $Id: Files.pm,v 1.18 2012/11/02 09:11:22 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.17 2012/09/21 17:17:08 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.18 2012/11/02 09:11:22 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -519,6 +519,56 @@ sub releaserealfilename {
 	if ($filename =~ m!^$td/lxrtmp\.\d+\.\d+\.\d+$!) {
 		unlink($filename);
 	}
+}
+
+=head2 C<_ignoredirs ($path, $node)>
+
+C<_ignoredirs> is an internal (as indicated by _ prefix) filter utility
+to exclude directories containing any partial path defined in configuration
+parameter C<'ignoredirs'>.
+
+The filter is to be called from C<getdir()>.
+
+=over
+
+=item 1 C<$path>
+
+a I<string> containing the LXR full path for the parent directory
+
+=item 1 C<$node>
+
+a I<string> containing the last directory element
+
+=back
+
+Only the last part is tested since the parent is supposed to have been
+scanned by a previous step of the recursive directory tree traversal.
+If a higher element matched one of the C<'ignoredirs'> strings,
+that path part was filtered out and no further part is presented to this
+function.
+
+B<Note:>
+
+=over
+
+The filter is to be called from C<getdir()>.
+
+I<<This usage choice leaves the possibility to override the filter through
+manually entering the path in the URL. Since it does not go through
+C<getdir()>, the "forbidden" path subdirectory is transmitted unaltered
+to the source display script.>>
+
+=back
+
+=cut
+
+sub _ignoredirs {
+	my ($self, $path, $node) = @_;
+
+	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
+		return 1 if $node eq $ignoredir;
+	}
+	return 0;
 }
 
 1;

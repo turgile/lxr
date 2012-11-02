@@ -3,7 +3,7 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.9 2012/11/02 09:00:15 ajlittoz Exp $
+# $Id: GIT.pm,v 1.10 2012/11/02 09:11:22 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.9 2012/11/02 09:00:15 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.10 2012/11/02 09:11:22 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -79,7 +79,7 @@ sub new {
 
 sub getdir {
 	my ($self, $pathname, $releaseid) = @_;
-	my ($dir, $node, @dirs, @files);
+	my ($dir, @dirs, @files);
 
 	# Paths on the git command lines must not start with a slash
 	# to be relative to 'rootpath'. Change LXR convention.
@@ -102,10 +102,7 @@ sub getdir {
 			$entryname =~ s!^.*/!!;
 
 			# Weed out things to ignore
-			foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
-				next if $entryname eq $ignoredir;
-			}
-			# Skip current and parent directories
+			next if $self->_ignoredirs($pathname, $entryname);
 			next if $entryname =~ /^\.$/;
 			next if $entryname =~ /^\.\.$/;
 			# Skip files starting with a dot (usually invisible),

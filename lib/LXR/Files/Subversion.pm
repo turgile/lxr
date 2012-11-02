@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.1 2012/09/21 17:17:08 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.2 2012/11/02 09:11:22 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.1 2012/09/21 17:17:08 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.2 2012/11/02 09:11:22 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -83,9 +83,7 @@ FILE:
 
 		# Check directories to ignore
 		if ($node =~ m!/$!) {
-			foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
-				next FILE if $node eq $ignoredir . '/';
-			}
+			next FILE if $self->_ignoredirs($pathname, substr($node,0,-1));
 			push(@dirs, $node);
 		} else {
 			push(@files, $node);
