@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.44 2012/11/02 09:11:22 ajlittoz Exp $
+# $Id: CVS.pm,v 1.45 2012/11/14 10:44:20 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.44 2012/11/02 09:11:22 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.45 2012/11/14 10:44:20 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -73,31 +73,26 @@ sub getdir {
 
 	# Directories are real directories in CVS
 	opendir($DIRH, $real) || return ();
-  FILE: while (defined($node = readdir($DIRH))) {
-		# Skip files starting with a dot (usually invisible),
-		# ending with a tilde (editor backup)
-		# or having "orig" extension
-		next if $node =~ m/^\.|~$|\.orig$/;
-		# Skip also CVS
-		next if $node eq 'CVS';
-		# More may be added if necessary
-	# NOTE: this filter is the same as dirempty's
-
-		# Check directories to ignore
+	while (defined($node = readdir($DIRH))) {
 		if (-d $real . $node) {
-			next FILE if $self->_ignoredirs($pathname, $node);
+			next if $self->_ignoredirs($pathname, $node);
+			$node = $node . '/';
 			# The "Attic" directory is where CVS stores removed files
 			# Add them just in case.
-			if ($node eq 'Attic') {
-				push(@files, $self->getdir($pathname . $node . '/', $releaseid));
+			if ($node eq 'Attic/') {
+				push(@files, $self->getdir($pathname . $node, $releaseid));
 			} else {
 			# Directory to keep (unless empty): suffix name with a slash
-				push(@dirs, $node . '/')
+				push(@dirs, $node)
 				  unless defined($releaseid)
-				  && $self->dirempty($pathname . $node . '/', $releaseid);
+				  && $self->dirempty($pathname . $node, $releaseid);
 			}
 		# Consider only files managed by CVS (ending with ,v)
-		} elsif ($node =~ m/(.*),v$/) {
+		} elsif	($node =~ m/(.*),v$/) {
+			# Special care is needed to use standard _ignorefiles() filter.
+			# CVS file names are created from original files by suffixing
+			# with ',v'. Removing this suffix, we can proceed as usual.
+				next if $self->_ignorefiles($pathname, $1);
 
 			# For normal display (i.e. some revisions reachable from 'head'),
 			# check if requested version is alive. Looking for the file
@@ -490,6 +485,12 @@ A valid revision is sufficient to decide non-empty directory.
 
 If the algorithm reaches the end of content, directory is empty.
 
+Contained subdirectories or files are not excluded by C<'ignoredirs'>
+or C<'ignorefiles'> filters to give a visual feedback of directory
+existence.
+These subdirectories or files will be effectively excluded when
+displaying the directory.
+
 =cut
 
 sub dirempty {
@@ -500,15 +501,6 @@ sub dirempty {
 
 	opendir($DIRH, $real) || return 1;
 	while (defined($node = readdir($DIRH))) {
-		# Skip files starting with a dot (usually invisible),
-		# ending with a tilde (editor backup)
-		# or having "orig" extension
-		next if $node =~ m/^\.|~$|\.orig$/;
-		# Skip also CVS
-		next if $node eq 'CVS';
-		# More may be added if necessary
-	# NOTE: this filter is the same as getdir's
-
 		# Build two lists: one with the subdirectories,
 		# the other with CVS difference files.
 		if (-d $real . $node) {
@@ -720,7 +712,10 @@ sub parsecvs {
 
 	my $file = '';
 	open(CVS, $self->toreal($filename, undef));
-	close CVS and return if -d CVS;    # we can't parse a directory
+	if (-d CVS) {
+		close(CVS);
+		return;		# we can't parse a directory
+	}
 	while (<CVS>) {
 		if (m/^text\s*$/) {
 			# stop reading when we hit the text.

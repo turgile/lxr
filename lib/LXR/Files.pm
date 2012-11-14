@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.19 2012/11/02 18:22:34 ajlittoz Exp $
+# $Id: Files.pm,v 1.20 2012/11/14 10:44:19 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.19 2012/11/02 18:22:34 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.20 2012/11/14 10:44:19 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -568,6 +568,63 @@ sub _ignoredirs {
 	return 1 if $node =~ m/^\./;	# ignore "dot" dirs
 	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
 		return 1 if $node eq $ignoredir;
+	}
+	foreach my $ignoredir (@{$config->{'filterdirs'}}) {
+		return 1 if ($path.$node) =~ $ignoredir;
+	}
+	return 0;
+}
+
+=head2 C<_ignorefiles ($path, $node)>
+
+C<_ignorefiles> is an internal (as indicated by _ prefix) filter utility
+to exclude files containing patterns defined in configuration
+parameter C<'ignorefiles'>.
+
+The filter is to be called from C<getdir()>.
+
+=over
+
+=item 1 C<$path>
+
+a I<string> containing the LXR full path for the parent directory
+
+=item 1 C<$node>
+
+a I<string> containing the file name
+
+=back
+
+Presently, only filename filtering is done, i.e. the same filter is
+applied in every directory.
+Usually, it screens off "dot" files, editor backups, binaries, ...
+A more specific filtering could be implemented taking into account
+both the parent directory and the filename.
+But this extended feature will be added only on user request due to
+its time-cost on huge trees such as Linux kernel.
+
+B<Note:>
+
+=over
+
+The filter is to be called from C<getdir()>.
+
+I<<This usage choice leaves the possibility to override the filter through
+manually entering the path in the URL. Since it does not go through
+C<getdir()>, the "forbidden" filename is transmitted unaltered
+to the source display script.>>
+
+=back
+
+=cut
+
+sub _ignorefiles {
+	my ($self, $path, $node) = @_;
+
+	my $ignorepat = $config->{'ignorefiles'};
+	return 1 if $node =~ m/$ignorepat/;
+	foreach my $filterfile (@{$config->{'filterfiles'}}) {
+		return 1 if ($path.$node) =~ $filterfile;
 	}
 	return 0;
 }

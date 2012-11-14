@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Plain.pm,v 1.31 2012/11/02 09:11:22 ajlittoz Exp $
+# $Id: Plain.pm,v 1.32 2012/11/14 10:44:20 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.31 2012/11/02 09:11:22 ajlittoz Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.32 2012/11/14 10:44:20 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -62,22 +62,13 @@ sub getdir {
 		
 	$dir = $self->toreal($pathname, $releaseid);
 	opendir(DIR, $dir) || return ();
-  FILE: while (defined($node = readdir(DIR))) {
-		# Skip files starting with a dot (usually invisible),
-		# ending with a tilde (editor backup)
-		# or having "orig" extension
-		next if $node =~ m/^\.|~$|\.orig$/;
-		# Skip also CVS
-		next if $node eq 'CVS';
-		# More may be added if necessary
-
-		# Check directories to ignore
+	while (defined($node = readdir(DIR))) {
 		if (-d $dir . $node) {
-			next FILE if $self->_ignoredirs($pathname, $node);
+			next if $self->_ignoredirs($pathname, $node);
 			# Keep this directory: suffix name with a slash
 			push(@dirs, $node . '/');
-		} else {
-			# File: don't change the name
+		} elsif (!$self->_ignorefiles($pathname, $node)) {
+			# Keep this file: don't change the name
 			push(@files, $node);
 		}
 	}

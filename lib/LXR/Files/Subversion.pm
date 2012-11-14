@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.2 2012/11/02 09:11:22 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.3 2012/11/14 10:44:20 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.2 2012/11/02 09:11:22 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.3 2012/11/14 10:44:20 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -72,20 +72,12 @@ sub getdir {
 	open(DIR, "svn list $path |")
 	|| die("svn subprocess died unexpextedly: $!");
 
-FILE:
 	while($node = <DIR>) { 
 		chomp($node);	# Remove trailing newline
-		# Skip files starting with a dot (usually invisible),
-		# ending with a tilde (editor backup)
-		# or having "orig" extension
-		next if $node =~ m/^\.|~$|\.orig$/;
-		# More may be added if necessary
-
-		# Check directories to ignore
 		if ($node =~ m!/$!) {
-			next FILE if $self->_ignoredirs($pathname, substr($node,0,-1));
+			next if $self->_ignoredirs($pathname, substr($node,0,-1));
 			push(@dirs, $node);
-		} else {
+		} elsif (!$self->_ignorefiles($pathname, $node)) {
 			push(@files, $node);
 		}
 	}

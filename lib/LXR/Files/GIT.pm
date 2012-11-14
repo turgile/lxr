@@ -3,7 +3,7 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.10 2012/11/02 09:11:22 ajlittoz Exp $
+# $Id: GIT.pm,v 1.11 2012/11/14 10:44:20 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.10 2012/11/02 09:11:22 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.11 2012/11/14 10:44:20 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -101,19 +101,13 @@ sub getdir {
 			# Only keep the filename part of the full path
 			$entryname =~ s!^.*/!!;
 
-			# Weed out things to ignore
-			next if $self->_ignoredirs($pathname, $entryname);
-			next if $entryname =~ /^\.$/;
-			next if $entryname =~ /^\.\.$/;
-			# Skip files starting with a dot (usually invisible),
-			# ending with a tilde (editor backup)
-			# or having "orig" extension
-			next if $entryname =~ m/^\.|~$|\.orig$/;
-
-			if ($entrytype eq "blob") {
+			if ($entrytype eq "tree") {
+				next if $self->_ignoredirs($pathname, $entryname);
+				push (@dirs, $entryname . '/');
+			} elsif	(	$entrytype eq "blob"
+					&&	!$self->_ignorefiles($pathname, $entryname)
+					) {
 				push (@files, $entryname);
-			} elsif ($entrytype eq "tree") {
-				push (@dirs, "$entryname/");
 			}
 		}
 	}
