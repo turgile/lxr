@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.62 2012/09/30 16:43:40 ajlittoz Exp $
+# $Id: genxref,v 1.63 2012/11/14 15:22:56 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -542,7 +542,7 @@ sub gensearch {
 	my ($releaseid) = @_;
 	my $string;
 
-	if ($config->glimpsedir and $config->glimpseindex) {
+	if ($config->{'glimpsedir'} && $config->{'glimpseindex'}) {
 
 		$string = $config->glimpsedir . "/" . $releaseid;
 		mkdir $string;
@@ -564,7 +564,7 @@ sub gensearch {
 		system("chmod 644 $string");
 	}
 
-	if ($config->swishdir and $config->swishbin) {
+	if ($config->{'swishdir'} && $config->{'swishbin'}) {
 		my $swish = IO::Handle->new();
 		die ${VTred} . $config->swishdir . " does not exist${VTnorm}"
 			unless -d $config->swishdir;

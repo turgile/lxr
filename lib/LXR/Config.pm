@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.54 2012/10/31 18:14:36 ajlittoz Exp $
+# $Id: Config.pm,v 1.55 2012/11/14 15:22:57 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.54 2012/10/31 18:14:36 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.55 2012/11/14 15:22:57 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -334,7 +334,7 @@ CANDIDATE: foreach my $config (@config[1..$#config]) {
 	_ensuredirexists($self->{'tmpdir'});
 
 #	See if there is ambiguity on the free-text search engine
-	if (exists $self->{'glimpsebin'} and exists $self->{'swishbin'}) {
+	if (exists $self->{'glimpsebin'} && exists $self->{'swishbin'}) {
 		die "Both Glimpse and Swish have been specified in $confpath.\n"
 			."Please choose one of them by commenting out either glimpsebin or swishbin.\n";
 		

@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.101 2012/09/17 12:01:34 ajlittoz Exp $
+# $Id: Common.pm,v 1.102 2012/11/14 15:22:57 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.101 2012/09/17 12:01:34 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.102 2012/11/14 15:22:57 ajlittoz Exp $ ';
 
 use strict;
 
@@ -741,7 +741,7 @@ sub printhttp {
 
 	my $time = $files->getfiletime($pathname, $releaseid);
 	my $time2 = (stat($config->confpath))[9];
-	$time = $time2 if !defined $time or $time2 > $time;
+	$time = $time2 if !defined $time || $time2 > $time;
 
 	# Remove this to see if we get a speed increase by not stating all
 	# the modules.  Since for most sites the modules change rarely,
