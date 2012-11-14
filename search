@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.46 2012/11/14 11:28:12 ajlittoz Exp $
+# $Id: search,v 1.47 2012/11/14 17:24:51 ajlittoz Exp $
 #
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: search,v 1.46 2012/11/14 11:28:12 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.47 2012/11/14 17:24:51 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
@@ -175,19 +175,19 @@ The remaining hits are returned in an array.
 
 sub glimpsesearch {
 	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
-	my $sourceroot = $config->sourceroot . '/' . $releaseid . '/';
+	my $sourceroot = $config->{'sourceroot'} . '/' . $releaseid . '/';
 
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 	$! = '';
 	open	( GLIMPSE
-			, $config->glimpsebin
+			, $config->{'glimpsebin'}
 		# Don't scan files ending in ,v or ~
 				." -F '-v (\\,v\|\\~)\$' "
 		# Should we match casesensitive ?
 				. ($casesensitive ? "" : "-i")
 		# Location of index datadbase
 				. " -H "
-				.$config->glimpsedir."/".$releaseid
+				.$config->{'glimpsedir'}."/".$releaseid
 		# The pattern to search for
 				." -y -n '$searchtext' 2>&1 |"
 			)
@@ -242,7 +242,7 @@ sub glimpsesearch {
 # Sort the results ascending per file name
 		return sort {$$a[0] cmp $$b[0]} @ret;
 	} elsif ($retval == 1) {
-		my $glimpsebin = $config->glimpsebin;
+		my $glimpsebin = $config->{'glimpsebin'};
 		my $glimpseresponse = join("<br>", @glimpselines);
 		my $glimpseresponse =~ s/$glimpsebin/Reason/;
 		my $glimpseresponse =~ s/glimpse: error in searching index//;
@@ -294,7 +294,7 @@ The remaining hits are returned in an array.
 sub swishsearch {
 	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
 
-  my $swishIndex = $config->swishdir . "/" . $releaseid . ".index";
+  my $swishIndex = $config->{'swishdir'} . "/" . $releaseid . ".index";
 	if (!-e $swishIndex) {
 		print "<p class='error'>";
 		print "Version '$releaseid' has not been indexed and is unavailable for searching.";
@@ -303,7 +303,7 @@ sub swishsearch {
 	}
 	
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
-  my $swishCommand =  join(' ', $config->swishbin, "-f", $swishIndex, "-w", "'(" . $searchtext . ")'");
+  my $swishCommand =  join(' ', $config->{'swishbin'}, "-f", $swishIndex, "-w", "'(" . $searchtext . ")'");
   my $ret = `$swishCommand`;
   my @result = grep { not /^[\#\.]/ } split(/\n/, $ret);
 
@@ -348,12 +348,16 @@ a I<string> containing the filename to check
 
 =back
 
+Since the search engines return OS-relative path, the filename
+must be prefixed with a / to observe LXR file designation rule.
+
 =cut
 
 sub checkvalidref {
 	my ($file) = @_;
+	$file = '/' . $file;
 
-	if (	!$index->filetimestamp
+	if	(	!$index->filetimestamp
 				( $file
 				, $files->filerev($file, $releaseid)
 				)
@@ -433,15 +437,15 @@ sub printresults {
 			$ret .= expandtemplate
 				( $templ
 				,	( 'text'    => sub { return "<pre class='searchtext'>$text</pre>" }
-					, 'file'    => sub { fileref("$file", "searchfile", "/$file") }
+					, 'file'    => sub { fileref($fil", "searchfile", "/$file") }
 					, 'fileonce'=> sub { if ($fileonce) {
-											return fileref("$fileonce", "searchfile", "/$file")
+											return fileref($fileonce, "searchfile", "/$file")
 										} else {
 											return "&nbsp;"
 										}
 									}
-					, 'line'    => sub { fileref("$line", "searchline", "/$file", "$line") }
-					, 'fileref' => sub { fileref("$file, line $line", "searchfile", "/$file", "$line") }
+					, 'line'    => sub { fileref($line, "searchline", "/$file", $line) }
+					, 'fileref' => sub { fileref("$file, line $line", "searchfile", "/$file", $line) }
 					, 'tdfile'  => sub { if ($fileonce) {
 											return "searchfile"
 										} else {
@@ -459,15 +463,15 @@ sub printresults {
 			$ret .= expandtemplate
 				( $templ
 				,	( 'text'    => sub { return $score }
-					, 'file'    => sub { fileref("$file", "searchfile", "/$file") }
+					, 'file'    => sub { fileref($file, "searchfile", "/$file") }
 					, 'fileonce'=> sub { if ($fileonce) {
-											return fileref("$fileonce", "searchfile", "/$file")
+											return fileref($fileonce, "searchfile", "/$file")
 										} else {
 											return "&nbsp;"
 										}
 									}
 					, 'line'    => sub { return '' }
-					, 'fileref' => sub { fileref("$file", "searchfile", "/$file") }
+					, 'fileref' => sub { fileref($file, "searchfile", "/$file") }
 					, 'tdfile'  => sub { if ($fileonce) {
 											return "searchfile"
 										} else {
@@ -524,7 +528,7 @@ sub search {
 
 	my @results;
 	if ($searchtext ne "") {
-		if ($config->glimpsebin) {
+		if ($config->{'glimpsebin'}) {
 			@results = glimpsesearch($searchtext, $filetext, $advanced, $casesensitive);
 		} elsif ($config->{'swishbin'} && $config->{'swishdir'}) {
 			@results = swishsearch($searchtext, $filetext, $advanced, $casesensitive);
@@ -534,20 +538,20 @@ sub search {
 	} elsif ($filetext ne "") {
 		my $FILELISTING;
 		if ($config->{'swishdir'} && $config->{'swishbin'}) {
-			unless ($FILELISTING = IO::File->new($config->swishdir . "/$releaseid.filenames")) {
+			unless ($FILELISTING = IO::File->new($config->{'swishdir'} . "/$releaseid.filenames")) {
 				&warning(
 					"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
-					  . $config->swishdir
+					  . $config->{'swishdir'}
 					  . "/$releaseid.filenames.");
 				return;
 			}
 		} elsif ($config->{'glimpsedir'} && $config->{'glimpsebin'}) {
 			unless ($FILELISTING =
-				IO::File->new($config->glimpsedir . "/" . $releaseid . "/.glimpse_filenames"))
+				IO::File->new($config->{'glimpsedir'} . "/" . $releaseid . "/.glimpse_filenames"))
 			{
 				&warning(
 					"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
-					  . $config->glimpsedir
+					  . $config->{'glimpsedir'}
 					  . "/$releaseid/.glimpse_filenames.");
 				return;
 			}
@@ -557,7 +561,7 @@ sub search {
 			);
 			return;
 		}
-		my $sourceroot = $config->sourceroot . '/' . $releaseid . '/';
+		my $sourceroot = $config->{'sourceroot'} . '/' . $releaseid . '/';
 		while (<$FILELISTING>) {
 			chomp;
 			s/^$sourceroot//;
