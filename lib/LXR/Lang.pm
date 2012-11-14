@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.47 2012/11/14 11:27:30 ajlittoz Exp $
+# $Id: Lang.pm,v 1.48 2012/11/14 18:39:27 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ categories editing.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.47 2012/11/14 11:27:30 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.48 2012/11/14 18:39:27 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -115,6 +115,25 @@ sub new {
 	return $lang;
 }
 
+
+=head2 C<parseable ($pathname)>
+
+Function C<parseable> return 1 if the designated file can be parsed
+some way or other.
+
+=over
+
+=item 1 C<$pathname>
+
+a I<string> containing the name of the file to parse
+
+=back
+
+This a streamlined version of method C<new> where the filename argument
+is checked against the patterns from I<filetype.conf>
+or the first line of the file against the I<interpreters> list.
+
+=cut
 
 sub parseable {
 	my ($pathname) = @_;
