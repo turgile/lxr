@@ -1,4 +1,4 @@
-<!--$Id: html-dir.html,v 1.1 2012/01/22 14:22:47 ajlittoz Exp $ -->
+<!--$Id: html-dir.html,v 1.2 2012/11/14 11:28:13 ajlittoz Exp $ -->
 
 <!--				html-dir.html
 		A template for displaying a directory content -->
@@ -45,14 +45,12 @@ $description{$desctext}
 		</tr>
 	</tfoot>
 	<tbody>
- $files{
-		<tr class="$dirclass">
+$files{		<tr class="$dirclass">
 			<td class="diricon">$iconlink</td>
 			<td class="dirname">$namelink</td>
 			<td class="dirsize">$filesize{$bytes bytes}</td>
 			<td class="dirtime">$modtime </td>
 			<td class="dirdesc">$description{$desctext}</td>
 		</tr>
-}
-	</tbody>
+}	</tbody>
 </table>

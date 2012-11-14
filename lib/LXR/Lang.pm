@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.46 2012/10/31 18:28:41 ajlittoz Exp $
+# $Id: Lang.pm,v 1.47 2012/11/14 11:27:30 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ categories editing.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.46 2012/10/31 18:28:41 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.47 2012/11/14 11:27:30 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -113,6 +113,40 @@ sub new {
 	$$lang{'ltype'} = $langkey;
 
 	return $lang;
+}
+
+
+sub parseable {
+	my ($pathname) = @_;
+	my ($lang, $langkey, $type);
+
+	# Try first to find a handler based on the file name
+	# (usually only its extension)
+	foreach my $lk (keys %{ $config->{'filetype'} }) {
+		$type = $config->{'filetype'}{$lk};
+		if ($pathname =~ m/$$type[1]/) {
+			return 1;
+		}
+	}
+
+	# If it did not succeed, read the first line and try for an interpreter
+	# Try to see if it's a #! script or an emacs mode-tagged file
+	my $fh = $files->getfilehandle($pathname, $releaseid);
+	return undef if !defined $fh;
+	my $line = $fh->getline;
+	($line =~ m/^\#!\s*(\S+)/s)
+	|| ($line =~ m/^.*-[*]-.*?[ \t;]mode:[ \t]*(\w+).*-[*]-/);
+
+	my $shebang  = $1;
+	my %inter    = %{ $config->{'interpreters'} };
+	foreach my $patt (keys %inter) {
+		if ($shebang =~ m/${patt}$/) {
+			return 1;
+		}
+	}
+
+	# No match for this file
+	return undef;
 }
 
 

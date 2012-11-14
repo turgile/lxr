@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.3 2012/11/14 10:44:20 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.4 2012/11/14 11:27:31 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,10 +31,11 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.3 2012/11/14 10:44:20 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.4 2012/11/14 11:27:31 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
+use Time::Local;
 use LXR::Common;
 
 @LXR::Files::Subversion::ISA = ('LXR::Files');
@@ -179,16 +180,28 @@ sub getfilesize {
 
 sub getfiletime {
 	my ($self, $filename, $releaseid) = @_;
-	my $res;
+	my ($line, $res);
 
 	return undef if $filename =~ m!\.\.!;
 	my $path = $self->revpath($filename,$releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
-	$res = `LANGUAGE=en svn info $path|grep 'Last Changed Date'`;
-	$res =~ m/(\d[\d-+ :]+)/;
-	$res = $1;
-	$res =~ s/\s*$//;
+	$line = `LANGUAGE=en svn info $path|grep 'Last Changed Date'`;
+	$line =~ m/(\d[\d-+ :]+)/;
+	$line = $1;
+	# Extract local time
+	my ($y, $m, $d, $hh, $mm, $ss) = $line =~ m/(....).(..).(..)\s+(..).(..).(..)/;
+	# Convert as if an UTC value
+	$res = timegm($ss, $mm, $hh, $d, --$m, $y);
+	# Get difference between local and UTC time
+	($d, $hh, $mm) = $line =~ m/\s+([+-])(..)(..)\s*$/;
+	my $delta = ($hh*60 + $mm) * 60;
+	# Adjust taking care to invert sign of difference
+	if ($d eq '+') {
+		$res -= $delta;
+	} else {
+		$res += $delta;
+	}
 	return $res;
 }
 

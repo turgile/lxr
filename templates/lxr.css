@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.12 2012/09/22 10:17:09 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.13 2012/11/14 11:28:12 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -320,6 +320,8 @@
 , .dirname
 , .dirsize
 , .dirtime
+, .dirindex
+, .dirindexinvalid
 { width: 1%
 ; white-space: nowrap
 }
@@ -339,8 +341,15 @@
 }
 
   TD.dirtime
+, TD.dirindex
+, TD.dirindexinvalid
 { text-align: right
 ; padding: 0 1pt 0 5pt
+}
+
+  TD.dirindexinvalid
+{ background-color: #ffccdd
+; text-align: center
 }
 
   TD.dirdesc
@@ -496,6 +505,16 @@
   TR.identline
 , TR.searchline
 { text-align: left
+}
+
+  TD.identinvalid
+, TD.searchinvalid
+{ background-color: #ffccdd
+}
+
+/* Improve readability on colored background */
+  TD[class~=searchfile][class~=searchinvalid] A
+{ color: black
 }
 
 /*  PRE.searchtext

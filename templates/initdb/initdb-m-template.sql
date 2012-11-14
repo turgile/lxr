@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating MySQL tables
  *	(C) 2012 A. Littoz
- *	$Id: initdb-m-template.sql,v 1.1 2012/09/22 12:56:27 ajlittoz Exp $
+ *	$Id: initdb-m-template.sql,v 1.2 2012/11/14 11:28:13 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -154,9 +154,10 @@ create table %DB_tbl_prefix%files
 	engine = MyISAM;
 
 /* Status of files in the DB */
-/*	fileid:	refers to base version
- *	relcount: number of releases associated with base version
- *	status:	set of bits with the following meaning
+/*	fileid:		refers to base version
+ *	relcount:	number of releases associated with base version
+ *	indextime:	time when file was parsed for references
+ *	status:		set of bits with the following meaning
  *		1	declaration have been parsed
  *		2	references have been processed
  *	Though this table could be merged with 'files',
@@ -168,6 +169,7 @@ create table %DB_tbl_prefix%files
 create table %DB_tbl_prefix%status
 	( fileid    int     not null primary key
 	, relcount  int
+	, indextime int
 	, status    tinyint not null
 	, constraint %DB_tbl_prefix%fk_sts_file
 		foreign key (fileid)
