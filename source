@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.61 2012/11/14 11:28:12 ajlittoz Exp $
+# $Id: source,v 1.62 2012/11/14 18:37:46 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.61 2012/11/14 11:28:12 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.62 2012/11/14 18:37:46 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };  # if LXR modules are in ./lib
@@ -483,7 +483,7 @@ sub direxpand {
 		);
 	unless (@nodes) {
 		print(  "<p class=\"error\">\n<i>The directory " . $dir
-			  . " does not exist or is empty.</i>\n</p>\n");
+			  . " does not exist, is empty or is hidden by an exclusion rule.</i>\n</p>\n");
 		if	(  $files->isa("LXR::Files::CVS")
 			&& !$HTTP->{'param'}{'_showattic'}
 			) {
