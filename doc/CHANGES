@@ -1,6 +1,34 @@
 This file draws your attention on changes made for
 
         ======================
+        LXR 1.0  -->  LXR 1.1
+        ======================
+
+User'Manual
+-----------
+Updated to reflect new 1.1 features; separately downloadable on SourceFourge.
+Please, read it; a lot of time has been invested in its writing.
+
+Installation
+------------
+No change, instructions for 1.0 still valid
+
+Directory and file view, identifier cross-references
+----------------------------------------------------
+Visual feedback if file is newer than cross-reference database (useful
+to developers to warn about erroneous line number references in changed
+files); cross-references may be fixed by running again genxref
+												=> needs to rebuild database
+Note: to avoid the pain of manually reconfiguring LXR, read the tip
+====| about "rebuilding LXR databases" on http://lxr.sourceforge.net
+
+Extended exclusion rules
+------------------------
+'ignorefiles' added to hide files. Like 'ignoredirs', operates only
+on the final segment of file path.
+'filterdirs' and 'filterfiles' added to operate on the complete path.
+
+        ======================
         LXR 0.11  -->  LXR 1.0
         ======================
 
