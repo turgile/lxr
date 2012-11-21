@@ -1,5 +1,5 @@
 /*
- *	$Id: classic.css,v 1.2 2012/11/14 11:28:12 ajlittoz Exp $
+ *	$Id: classic.css,v 1.3 2012/11/21 17:01:16 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -499,6 +499,15 @@
 ; font-size: 10pt
 }
 
+  .identapprox:before
+{ color: red
+; content: "⁕"	/**/	/* for Unicode (UTF-8) */
+						/* incorrect display under 8-bit character sets */
+/*; content: "±" /**/	/* for ISO-8859-1 */
+/*; content: "÷" /**/	/* other suggestion for ISO-8859-1 */
+
+}
+
   TR.identline
 , TR.searchline
 { text-align: left
@@ -611,5 +620,10 @@
   TD.conf_val
 { overflow: auto
 ; padding: 0pt 5pt
+}
+
+  .conf_force
+{ color: red
+; background-color: silver
 }
 

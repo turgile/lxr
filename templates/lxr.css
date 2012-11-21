@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.13 2012/11/14 11:28:12 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.14 2012/11/21 17:01:16 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -500,6 +500,15 @@
 ; display: inline-block
 ; border: none
 ; font-size: 10pt
+}
+
+  .identapprox:before
+{ color: red
+; content: "⁕"	/**/	/* for Unicode (UTF-8) */
+						/* incorrect display under 8-bit character sets */
+/*; content: "±" /**/	/* for ISO-8859-1 */
+/*; content: "÷" /**/	/* other suggestion for ISO-8859-1 */
+
 }
 
   TR.identline
