@@ -28,6 +28,14 @@ Extended exclusion rules
 on the final segment of file path.
 'filterdirs' and 'filterfiles' added to operate on the complete path.
 
+Identifier search
+-----------------
+Query extended to show approximate matches differing in case
+
+Language parsers
+----------------
+Ant, asm, Fortran, Java, JavaScript, Make, Pascal, PHP, SQL enabled
+
         ======================
         LXR 0.11  -->  LXR 1.0
         ======================
