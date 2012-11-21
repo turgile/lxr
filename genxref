@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.63 2012/11/14 15:22:56 ajlittoz Exp $
+# $Id: genxref,v 1.64 2012/11/21 13:33:45 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -513,28 +513,29 @@ sub directorytreetraversal {
 sub feedswish {
 	my ($pathname, $releaseid, $swish, $filelist) = @_;
 
-	print(STDERR "&&& $pathname $releaseid \n");
-
 	if ($pathname =~ m|/$|) {
+		print(STDERR "&&& $pathname $releaseid \n");
 		map { feedswish($pathname . $_, $releaseid, $swish, $filelist) }
 		  $files->getdir($pathname, $releaseid);
 	} else {
-		print $filelist "$pathname\n";
-		my $fh = $files->getfilehandle($pathname, $releaseid);
-		if ($files->getfilesize($pathname, $releaseid) > 0
-			&& $filetype->checktype_filehandle($fh) =~ m%(text|message)/%)
-		{
-			my $contents = $files->getfile($pathname, $releaseid);
-			$swish->print(
-				"Path-Name: $pathname\n",
-				"Content-Length: " . length($contents) . "\n",
-				"Document-Type: TXT\n",
-				"\n", $contents
-			);
-		} else {
-			$binaryfiles{$pathname} = 1;
+		if (my $fh = $files->getfilehandle($pathname, $releaseid)) {
+			if ($files->getfilesize($pathname, $releaseid) > 0
+				&& $filetype->checktype_filehandle($fh) =~ m%(text|message)/%)
+			{
+				print(STDERR "&&> $pathname $releaseid \n");
+				print $filelist "$pathname\n";
+				my $contents = $files->getfile($pathname, $releaseid);
+				$swish->print(
+					"Path-Name: $pathname\n",
+					"Content-Length: " . length($contents) . "\n",
+					"Document-Type: TXT\n",
+					"\n", $contents
+				);
+			} else {
+				$binaryfiles{$pathname} = 1;
+			}
+			close($fh);
 		}
-		close($fh);
 	}
 }
 
