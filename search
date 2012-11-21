@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.47 2012/11/14 17:24:51 ajlittoz Exp $
+# $Id: search,v 1.48 2012/11/21 13:30:16 ajlittoz Exp $
 #
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: search,v 1.47 2012/11/14 17:24:51 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.48 2012/11/21 13:30:16 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
@@ -437,7 +437,7 @@ sub printresults {
 			$ret .= expandtemplate
 				( $templ
 				,	( 'text'    => sub { return "<pre class='searchtext'>$text</pre>" }
-					, 'file'    => sub { fileref($fil", "searchfile", "/$file") }
+					, 'file'    => sub { fileref($file, "searchfile", "/$file") }
 					, 'fileonce'=> sub { if ($fileonce) {
 											return fileref($fileonce, "searchfile", "/$file")
 										} else {
