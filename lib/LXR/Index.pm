@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Index.pm,v 1.22 2012/11/14 11:27:30 ajlittoz Exp $
+# $Id: Index.pm,v 1.23 2012/12/01 15:03:19 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ If needed, the methods are overridden in the specific modules.
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.22 2012/11/14 11:27:30 ajlittoz Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.23 2012/12/01 15:03:19 ajlittoz Exp $ ';
 
 use LXR::Common;
 use strict;
@@ -921,8 +921,8 @@ sub setsymdeclaration {
 			$cntcache{$relsym} += 1;
 		}
 	}
-die "Symbol cache not initialised for $symname\n" if (!defined($symcache{$symname}));
-die "Symbol cache not initialised for $relsym\n"
+die "Symbol cache not initialised for sym $symname\n" if (!defined($symcache{$symname}));
+die "Symbol cache not initialised for rel $relsym\n"
 	if (defined($relsym) && !defined($symcache{$relsym}));
 }
 
