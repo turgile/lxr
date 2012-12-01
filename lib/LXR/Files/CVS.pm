@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.45 2012/11/14 10:44:20 ajlittoz Exp $
+# $Id: CVS.pm,v 1.46 2012/12/01 14:47:14 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.45 2012/11/14 10:44:20 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.46 2012/12/01 14:47:14 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -48,7 +48,7 @@ sub new {
 
 	$self = bless({}, $self);
 	$self->{'rootpath'} = $rootpath;
-	$self->{'rootpath'} =~ s@/*$@/@;
+	$self->{'rootpath'} =~ s@/*$@@;
 	$self->{'path'} = $config->{'cvspath'};
 	
 	unless (defined $gnu_diff) {
