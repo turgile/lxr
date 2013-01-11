@@ -2,7 +2,7 @@
 /*
  *	SQL template for creating MySQL tables
  *	(C) 2012 A. Littoz
- *	$Id: initdb-s-template.sql,v 1.2 2012/11/14 11:28:13 ajlittoz Exp $
+ *	$Id: initdb-s-template.sql,v 1.3 2013/01/11 12:08:48 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -28,8 +28,8 @@
 -*/
 /*--*/
 /*--*/
-/*@X echo "*** SQLite -  Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
-/*@X sqlite3 %DB_name% <<END_OF_TABLES*/
+/*@XQT echo "*** SQLite -  Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
+/*@XQT sqlite3 %DB_name% <<END_OF_TABLES*/
 drop table if exists %DB_tbl_prefix%filenum;
 drop table if exists %DB_tbl_prefix%symnum;
 drop table if exists %DB_tbl_prefix%typenum;
@@ -257,5 +257,5 @@ create trigger %DB_tbl_prefix%remove_usage
 			where symid = old.symid
 			and symcount > 0;
 	end;
-/*@X END_OF_TABLES*/
+/*@XQT END_OF_TABLES*/
 

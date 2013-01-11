@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating Oracle tables
  *	(C) 2012 A. Littoz
- *	$Id: initdb-o-template.sql,v 1.2 2012/11/14 11:28:13 ajlittoz Exp $
+ *	$Id: initdb-o-template.sql,v 1.3 2013/01/11 12:08:48 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -27,8 +27,8 @@
  * **************************************************************
 -*/
 
-/*@X echo "*** Oracle - Database creation (!!! untested !!!) ***" */
-/*@sqlplus <<END_OF_TABLES*/
+/*@XQT echo "*** Oracle - Database creation (!!! untested !!!) ***" */
+/*@XQT sqlplus <<END_OF_TABLES*/
 -- ***
 -- *** CAUTION -CAUTION - CAUTION ***
 -- ***
@@ -338,4 +338,4 @@ grant select, insert, update, delete on %DB_tbl_prefix%langtypes   to %DB_user%;
 commit;
 
 quit
-/*@END_OF_TABLES*/
+/*@XQT END_OF_TABLES*/

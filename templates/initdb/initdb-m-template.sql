@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating MySQL tables
  *	(C) 2012 A. Littoz
- *	$Id: initdb-m-template.sql,v 1.2 2012/11/14 11:28:13 ajlittoz Exp $
+ *	$Id: initdb-m-template.sql,v 1.3 2013/01/11 12:08:48 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -32,108 +32,98 @@
 	of a single mysql invocation. -*/
 /*--*/
 /*--*/
-/*@begin_O	createglobals==1*/
-/*@X echo "*** MySQL - Creating global user %DB_user%"*/
-/*@X mysql -u root -p <<END_OF_USER*/
+/*@IF	%_createglobals% */
+/*@XQT echo "*** MySQL - Creating global user %DB_user%"*/
+/*@XQT mysql -u root -p <<END_OF_USER*/
 drop user '%DB_user%'@'localhost';
-/*@X END_OF_USER*/
-/*@X mysql -u root -p <<END_OF_USER*/
+/*@XQT END_OF_USER*/
+/*@XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_user%'@'localhost' identified by '%DB_password%';
 grant all on *.* to '%DB_user%'@'localhost';
-/*@X END_OF_USER*/
-/*@end_O	createglobals==1*/
-/*@begin_O	dbuseroverride==1*/
-/*@X echo "*** MySQL - Creating tree user %DB_tree_user%"*/
-/*@X mysql -u root -p <<END_OF_USER*/
+/*@XQT END_OF_USER*/
+/*@ENDIF	%_createglobals% */
+/*@IF	%_dbuseroverride% */
+/*@XQT echo "*** MySQL - Creating tree user %DB_tree_user%"*/
+/*@XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_tree_user%'@'localhost';
-/*@X END_OF_USER*/
-/*@X mysql -u root -p <<END_OF_USER*/
+/*@XQT END_OF_USER*/
+/*@XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_tree_user%'@'localhost' identified by '%DB_tree_password%';
 grant all on *.* to '%DB_tree_user%'@'localhost';
-/*@X END_OF_USER*/
-/*@end_O	dbuseroverride==1*/
+/*@XQT END_OF_USER*/
+/*@ENDIF	%_dbuseroverride% */
 /*--*/
 /*--*/
 
 /*-		Create databases under LXR user
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
-/*@begin_O	createglobals==1*/
-/*@begin_O		dbpolicy==g*/
-/*@X echo "*** MySQL - Creating global database %DB_name%"*/
-/*@X mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
+/*@IF	%_createglobals% && %_globaldb% */
+/*@XQT echo "*** MySQL - Creating global database %DB_name%"*/
+/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@X END_OF_CREATE*/
-/*@end_O		dbpolicy==g*/
-/*@end_O	createglobals==1*/
-/*@begin_O	dbpolicy==t*/
-/*@X echo "*** MySQL - Creating tree database %DB_name%"*/
-/*@begin_O		dbuseroverride==1*/
-/*@X mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_CREATE*/
-/*@end_O		dbuseroverride==1*/
-/*@begin_O		dbuseroverride==0*/
-/*@X mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
-/*@end_O		dbuseroverride==0*/
+/*@XQT END_OF_CREATE*/
+/*@ENDIF*/
+/*@IF	!%_globaldb% */
+/*@XQT echo "*** MySQL - Creating tree database %DB_name%"*/
+/*@IF		%_dbuseroverride% */
+/*@XQT mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_CREATE*/
+/*@ELSE*/
+/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
+/*@ENDIF*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@X END_OF_CREATE*/
-/*@end_O	dbpolicy==t*/
+/*@XQT END_OF_CREATE*/
+/*@ENDIF	!%_globaldb% */
 /*- end of disable/enable comment -*/
 /*--*/
 /*--*/
 /*-		Create databases under master user,
 		may be restricted by site rules
 -*//*- to activate place "- * /" at end of line (without spaces)
-/*@begin_O	createglobals==1*/
-/*@begin_O		dbpolicy==g*/
-/*@X echo "*** MySQL - Creating global database %DB_name%"*/
-/*@X mysql -u root -p <<END_OF_CREATE*/
+/*@IF	%_createglobals% && %_globaldb% */
+/*@XQT echo "*** MySQL - Creating global database %DB_name%"*/
+/*@XQT mysql -u root -p <<END_OF_CREATE*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@X END_OF_CREATE*/
-/*@end_O		dbpolicy==g*/
-/*@end_O	createglobals==1*/
-/*@begin_O	dbpolicy==t*/
-/*@X echo "*** MySQL - Creating tree database %DB_name%"*/
-/*@X mysql -u root -p <<END_OF_CREATE*/
+/*@XQT END_OF_CREATE*/
+/*@ENDIF*/
+/*@IF	!%_globaldb% */
+/*@XQT echo "*** MySQL - Creating tree database %DB_name%"*/
+/*@XQT mysql -u root -p <<END_OF_CREATE*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@X END_OF_CREATE*/
-/*@end_O	dbpolicy==t*/
+/*@XQT END_OF_CREATE*/
+/*@ENDIF	!%_globaldb% */
 /*- end of disable/enable comment -*/
 /*--*/
 /*--*/
 
-/*@X echo "*** MySQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
+/*@XQT echo "*** MySQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
 /*-		Create tables under LXR user
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
-/*@begin_O	createglobals==1*/
-/*@begin_O		dbpolicy==g*/
-/*@X mysql -u %DB_user% -p%DB_password% <<END_OF_TEMPLATE*/
-/*@end_O		dbpolicy==g*/
-/*@end_O	createglobals==1*/
-/*@begin_O	dbpolicy==t*/
-/*@begin_O		dbuseroverride==1*/
-/*@X mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_TEMPLATE*/
-/*@end_O		dbuseroverride==1*/
-/*@begin_O		dbuseroverride==0*/
-/*@X mysql -u %DB_user% -p%DB_password% <<END_OF_TEMPLATE*/
-/*@end_O		dbuseroverride==0*/
-/*@end_O	dbpolicy==t*/
+/*@IF	%_createglobals% && %_globaldb% */
+/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_TEMPLATE*/
+/*@ENDIF*/
+/*@IF	!%_globaldb% */
+/*@IF		%_dbuseroverride% */
+/*@XQT mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_TEMPLATE*/
+/*@ELSE*/
+/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_TEMPLATE*/
+/*@ENDIF*/
+/*@ENDIF	!%_globaldb% */
 /*- end of disable/enable comment -*/
 /*--*/
 /*--*/
 /*-		Create tables under master user,
 		may be restricted by site rules
 -*//*- to activate place "- * /" at end of line (without spaces)
-/*@begin_O	createglobals==1*/
-/*@begin_O		dbpolicy==g*/
-/*@X mysql -u root -p <<END_OF_TEMPLATE*/
-/*@end_O		dbpolicy==g*/
-/*@end_O	createglobals==1*/
-/*@begin_O	dbpolicy==t*/
-/*@X mysql -u root -p <<END_OF_TEMPLATE*/
-/*@end_O	dbpolicy==t*/
+/*@IF	%_createglobals% && %_globaldb% */
+/*@XQT mysql -u root -p <<END_OF_TEMPLATE*/
+/*@ENDIF*/
+/*@IF	!%_globaldb% */
+/*@XQT mysql -u root -p <<END_OF_TEMPLATE*/
+/*@ENDIF	!%_globaldb% */
 /*- end of disable/enable comment -*/
 /*--*/
 /*--*/
@@ -349,5 +339,5 @@ begin
 	set session foreign_key_checks = @old_check;
 end//
 delimiter ;
-/*@X END_OF_TEMPLATE*/
+/*@XQT END_OF_TEMPLATE*/
 
