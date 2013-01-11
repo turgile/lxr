@@ -1628,7 +1628,7 @@ sub makeerrorpage {
 					, "<html><body><hr>\n"
  					,  "<hr>\n"
 						. "<h1 style='text-align:center'>Unrecoverable Error</h1>\n"
-						. "<p>Source-tree \$tree unknown</p>\n"
+						. "<p>Source-tree &gt;&gt; \$target &lt;&lt; unknown</p>\n"
 						. "</body></html>\n"
 					);
 
