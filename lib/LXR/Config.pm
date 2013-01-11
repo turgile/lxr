@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.55 2012/11/14 15:22:57 ajlittoz Exp $
+# $Id: Config.pm,v 1.56 2013/01/11 17:35:51 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.55 2012/11/14 15:22:57 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.56 2013/01/11 17:35:51 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -67,6 +67,25 @@ sub new {
 	} else {
 		return undef;
 	}
+}
+
+
+=head2 C<emergency ()>
+
+Method C<emergency> returns whatever can be retrieved from
+the configuration file.
+
+It is intended to allow editing user-friendly error message when
+a catastrophic event occurred during initialisation.
+
+=cut
+
+sub emergency {
+	my ($class, @parms) = @_;
+	my $self = {};
+	bless($self);
+	$self->_initialize(@parms);
+	return ($self);
 }
 
 
