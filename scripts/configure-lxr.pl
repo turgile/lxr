@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.6 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.7 2013/01/17 09:32:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.6 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.7 2013/01/17 09:32:48 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -44,7 +44,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.6 $_";
+my $version ="\$Revision: 1.7 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -515,7 +515,7 @@ if (!$addtree) {
 									, "${confdir}/${target}"
 									);
 		if ($verbose) {
-			print "${VTbold}Mercurial{VTnorm} support files written into configuration directory\n"
+			print "${VTbold}Mercurial${VTnorm} support files written into configuration directory\n"
 		}
 	}
 }
