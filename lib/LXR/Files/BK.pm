@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: BK.pm,v 1.9 2012/11/14 10:44:20 ajlittoz Exp $
+# $Id: BK.pm,v 1.10 2013/01/17 09:30:00 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ Andre J. Littoz - April 2012
 
 package LXR::Files::BK;
 
-$CVSID = '$Id: BK.pm,v 1.9 2012/11/14 10:44:20 ajlittoz Exp $ ';
+$CVSID = '$Id: BK.pm,v 1.10 2013/01/17 09:30:00 ajlittoz Exp $ ';
 
 use strict;
 use File::Spec;
@@ -101,6 +101,10 @@ sub getdir {
 sub getannotations {
 	# No idea what this function should return - Plain.pm returns (), so do that
 	return ();
+}
+sub getnextannotation {
+	# No idea what this function should return - Plain.pm returns undef, so do that
+	return undef;
 }
 
 sub getauthor {

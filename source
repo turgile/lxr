@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.62 2012/11/14 18:37:46 ajlittoz Exp $
+# $Id: source,v 1.63 2013/01/17 09:30:00 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.62 2012/11/14 18:37:46 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.63 2013/01/17 09:30:00 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };  # if LXR modules are in ./lib
@@ -619,6 +619,74 @@ and placed in the resulting HTML page.
 
 =cut
 
+sub next_annot {
+	my ($currev, $r, $bg) = @_;
+
+	# Get annotations from the storage engine and prepare their
+	# layout in order to prefix every source line with its
+	# associated annotation.
+	my $rev = $files->getnextannotation($pathname, $releaseid);
+	return if !defined($rev);
+	my $auth = $files->getauthor($pathname, $releaseid, $rev);
+
+	if ($rev eq $$r) {
+		$rev = ' ' x 16;
+		if ($$r eq $currev) {
+			$rev = "<span class='annot-cur'>$rev</span>";
+		} else {
+			$rev = "<span class='annot$$bg'>$rev</span>";
+		}
+	return $rev;
+	}
+
+	$$r = $rev;
+	my $la = length($auth);
+	my $lr = length($rev);
+	# After this call to length, $rev may be edited to contain
+	# HTML element and $lr will be different from length($rev).
+	# $lr reflects the number of character positions necessary
+	# to display $rev on screen, not its content.
+	if ($la > 0) {
+		if ($lr+$la > 15) {	# sum of 2 fields too long
+			if	( $la > 4
+				&& $la > 14-$lr
+				) {	# truncate first author
+				$la = 14 - $lr;
+				$la = 4 if $la < 4;
+				$auth = substr($auth, 0, $la++)
+						. '<span class="error">*</span>';
+			}
+			if ($lr+$la >15) { # now truncate revision
+				$lr = 14 - $la;
+				$lr = $files->truncateannotation(\$rev, $lr);
+			}
+		}
+		if ($lr+$la < 15) {	# some space to distribute
+			if ($la >= 8) {
+				$rev  .= ' ' x (15-$lr-$la);
+			} elsif ($lr >= 7) {
+				$auth .= ' ' x (15-$lr-$la);
+			} else {
+				$rev  .= ' ' x (7-$lr);
+				$auth .= ' ' x (8-$la);
+			}
+		}
+		$rev .= ' ' . $auth;
+	} else {
+		if ($lr > 16) {
+			$lr = $files->truncateannotation(\$rev, 15);
+		} else {
+			$rev .= ' ' x (16 - $lr);
+		}
+	}
+	if ($$r eq $currev) {
+		$rev = "<span class='annot-cur'>$rev</span>";
+	} else {
+		$$bg = 1 - $$bg;
+		$rev = "<span class='annot$$bg'>$rev</span>";
+	}
+}
+
 sub printfile {
 	my $raw = shift;
 
@@ -626,7 +694,8 @@ sub printfile {
 		printdir($pathname);
 	} else {
 
-		my $fileh = $files->getfilehandle($pathname, $releaseid);
+		# Request annotated content (through defined third argument)
+		my $fileh = $files->getfilehandle($pathname, $releaseid, !$raw);
 
 		if ($fileh) {
 			if ($raw) {
@@ -661,73 +730,20 @@ sub printfile {
 					  . "'>View CVS Log</a>";
 				}
 
-				# Get annotations from the storage engine and prepare their
-				# layout in order to prefix every source line with its
-				# associated annotation.
-				my @ann = $files->getannotations($pathname, $releaseid);
-				if (@ann) {
-					my $currev = $files->filerev($pathname, $releaseid);
-					my ($rev, $r);
-					my $bg = 1;
-					foreach $rev (@ann) {
-						if ($rev eq $r) {
-							$rev = ' ' x 16;
-							if ($r eq $currev) {
-								$rev = "<span class='annot-cur'>$rev</span>";
-							} else {
-								$rev = "<span class='annot$bg'>$rev</span>";
-							}
-						next;
-						}
-						$r = $rev;
-						my $auth = $files->getauthor($pathname, $releaseid, $rev);
-						my $la = length($auth);
-						my $lr = length($rev);
-						if ($lr+$la > 15) {	# sum of 2 fields too long
-							if	( $la > 4
-								&& $la > 14-$lr
-								) {	# truncate first author
-								$la = 14 - $lr;
-								$la = 4 if $la < 4;
-								$auth = substr($auth, 0, $la++) . "*";
-							}
-							if ($lr+$la >15) { # now truncate revision
-								$lr = 13 - $la;
-								$rev = "&lt;" . substr($rev, -$lr++);
-							}
-						}
-						if ($lr+$la < 15) {	# some space to distribute
-							if ($la >= 8) {
-								$rev  .= ' ' x (15-$lr-$la);
-							} elsif ($lr >= 7) {
-								$auth .= ' ' x (15-$lr-$la);
-							} else {
-								$rev  .= ' ' x (7-$lr);
-								$auth .= ' ' x (8-$la);
-							}
-						}
-						$rev .= " " . $auth;
-						if ($r eq $currev) {
-							$rev = "<span class='annot-cur'>$rev</span>";
-						} else {
-							$bg = 1 - $bg;
-							$rev = "<span class='annot$bg'>$rev</span>";
-						}
-					}
-				}
-
 				# Markup and output the source file
-				my $l;
+				my $currev = $files->filerev($pathname, $releaseid);
+				my $bg = 1;
+				my $oldrev;
 				my $outfun = sub {
+					my $l;
 					$l = shift;
-					$l =~ s/(\n)/$1.shift(@ann)/ge;
+					$l =~ s/(\n)/$1.next_annot($currev, \$oldrev, \$bg)/ge;
 					print $l;
 				};
 				&$outfun("<pre class=\"filecontent\">\n");
 				markupfile($fileh, $outfun);
 				&$outfun("</pre>\n");
 			}
-
 		}
 		else {
 			print(

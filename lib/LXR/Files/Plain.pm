@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Plain.pm,v 1.32 2012/11/14 10:44:20 ajlittoz Exp $
+# $Id: Plain.pm,v 1.33 2013/01/17 09:30:01 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.32 2012/11/14 10:44:20 ajlittoz Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.33 2013/01/17 09:30:01 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -81,6 +81,9 @@ sub getdir {
 #	just return the empty list
 sub getannotations {
 	return ();
+}
+sub getnextannotation {
+	return undef;
 }
 
 #	No annotations also means no author

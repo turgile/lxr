@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.46 2012/12/01 14:47:14 ajlittoz Exp $
+# $Id: CVS.pm,v 1.47 2013/01/17 09:30:01 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.46 2012/12/01 14:47:14 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.47 2013/01/17 09:30:01 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -42,6 +42,7 @@ use LXR::Common;
 our %cvs;
 our $cache_filename = '';
 our $gnu_diff;
+our @anno;
 
 sub new {
 	my ($self, $rootpath) = @_;
@@ -104,7 +105,7 @@ sub getdir {
 			if (!$$LXR::Common::HTTP{'param'}{'_showattic'}) {
 				$self->parsecvs($pathname . $1);
 				my $rev = $cvs{'header'}{'symbols'}{$releaseid};
-				if ($cvs{'branch'}{$rev}{'state'} eq "dead") {
+				if ($cvs{'branch'}{$rev}{'state'} eq 'dead') {
 					next;
 				}
 			}
@@ -175,7 +176,7 @@ sub getannotations {
 				map { $anno[$_] = $lrev if $_ ne ''; } splice(@head, $1 - $off - 1, $2);
 				$off += $2;					# Increase adjustment
 			} else {
-				warn("Oops! Out of sync!");
+				warn('Oops! Out of sync!');
 			}
 		}
 	}
@@ -216,7 +217,7 @@ sub getannotations {
 					splice(@anno, $1 + $off - 1, $2);
 					$off -= $2;
 				} else {
-					warn("Oops! Out of sync!");
+					warn('Oops! Out of sync!');
 				}
 			}
 			last if $arev eq $hrev;	# Are we done on this branch?
@@ -226,6 +227,12 @@ sub getannotations {
 	}
 
 	return @anno;
+}
+
+sub getnextannotation {
+	my ($self, $filename, $releaseid) = @_;
+
+	return shift @anno;
 }
 
 sub getauthor {
@@ -263,7 +270,7 @@ sub filerev {
 #	getfilehandle returns a handle to a pipe through which the
 #	checked out content can be read.
 sub getfilehandle {
-	my ($self, $filename, $releaseid) = @_;
+	my ($self, $filename, $releaseid, $withannot) = @_;
 	my ($fileh);
 
 	$self->parsecvs($filename);
@@ -272,6 +279,10 @@ sub getfilehandle {
 
 	return undef unless defined($self->toreal($filename, $releaseid));
 
+	if ($withannot) {
+		@anno = $self->getannotations($filename, $releaseid);
+	}
+
 	$rev =~ m/([\d\.]*)/;
 	$rev = $1;    # untaint
 	my $clean_filename = $self->cleanstring($self->toreal($filename, $releaseid));
@@ -279,10 +290,9 @@ sub getfilehandle {
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
 	$ENV{'PATH'} = $self->{'path'};
-	my $rtn;
 	# Option -q: quiet, no diagnostics printed
-	$rtn = open($fileh, "-|", "co -q -p$rev $clean_filename");
-	die("Error executing \"co\"; rcs not installed?") unless $rtn;
+	open($fileh, '-|', "co -q -p$rev $clean_filename 2>/dev/null")
+	|| die('Error executing "co"; rcs not installed?');
 
 	return $fileh;
 }
@@ -382,7 +392,7 @@ sub toreal {
 	if (!$$LXR::Common::HTTP{'param'}{'_showattic'}) {
 		$self->parsecvs($pathname);
 		my $rev = $cvs{'header'}{'symbols'}{$releaseid};
-		if ($cvs{'branch'}{$rev}{'state'} eq "dead") {
+		if ($cvs{'branch'}{$rev}{'state'} eq 'dead') {
 			return undef;
 		}
 	}
@@ -456,8 +466,8 @@ sub getdiff {
 	# Option -q: quiet, no diagnostics printed
 	# Option -a: all files considered text files (diff option)
 	# Option -n: RCS format for differences (diff option)
-	open($fileh, "-|", "rcsdiff -q -a -n -r$rev1 -r$rev2 $clean_filename");
-	die("Error executing \"rcsdiff\"; rcs not installed?") unless $fileh;
+	open($fileh, '-|', "rcsdiff -q -a -n -r$rev1 -r$rev2 $clean_filename");
+	die('Error executing "rcsdiff"; rcs not installed?') unless $fileh;
 	return $fileh->getlines;
 }
 

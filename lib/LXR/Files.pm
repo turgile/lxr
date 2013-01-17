@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.20 2012/11/14 10:44:19 ajlittoz Exp $
+# $Id: Files.pm,v 1.21 2013/01/17 09:30:00 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.20 2012/11/14 10:44:19 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.21 2013/01/17 09:30:00 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -119,7 +119,7 @@ sub getdir {
 	return @dircontents;
 }
 
-=head2 C<getfile ($pathname, $releaseid)>
+=head2 C<getfile ($pathname, $releaseid, $withannot)>
 
 C<getfile> returns a file content in a string.
 
@@ -133,6 +133,10 @@ a I<string> containing the path relative to C<'sourceroot'>
 
 the release (or version) in which C<$pathname> is expected to
 be found
+
+=item 1 C<$withannot>
+
+optional, if defined request an annotated file
 
 =back
 
@@ -179,13 +183,93 @@ number the line was entered in CVS. It is the release-id in GIT.
 Function result is an empty list if there is no annotation or
 annotation retrieval is barred by lxr.conf.
 
+B<IMPORTANT NOTICE:>
+
+=over
+
+Starting with release 1.1, this method should only be used for
+internal needs of the derived classes because annotation editing
+has been drastically changed in script I<source>.
+
+The externally visible method is C<getnextannotation>.
+
+=back
+
 =cut
 
 sub getannotations {
 	my ($self, $filename, $releaseid) = @_;
-	warn  __PACKAGE__."::getannotations not implemented. Parameters @_";
+	die  __PACKAGE__."::getannotations deprecated. Parameters @_";
+}
+
+=head2 C<getnextannotation ($pathname, $releaseid)>
+
+C<getnextannotation> returns the annotation for the next line
+in the designated file.
+
+=over
+
+=item 1 C<$pathname>
+
+a I<string> containing the path relative to C<'sourceroot'>
+
+=item 1 C<$releaseid>
+
+the release (or version) in which C<$pathname> is expected to
+be found
+
+=back
+
+An I<annotation> is whatever auxiliary line information kept in
+the repository. There is none in plain files. It is the revision
+number the line was entered in CVS. It is the release-id in GIT.
+
+Function result is undefined if there is no more annotation or
+annotation retrieval is barred by lxr.conf.
+
+=cut
+
+sub getnextannotation {
+	my ($self, $filename, $releaseid) = @_;
+	warn  __PACKAGE__."::getnextannotation not implemented. Parameters @_";
 	my @annotations;
 	return @annotations;
+}
+
+=head2 C<truncateannotation ($string, $len)>
+
+C<truncateannotation> truncate the annotation and returns the
+new length.
+
+=over
+
+=item 1 C<$string>
+
+a I<reference> to a I<string> containing the annotation
+
+=item 1 C<$len>
+
+an I<integer> containing the desired length
+
+=back
+
+The caller must leave room in his layout for an extra character
+to be inserted where truncation takes place.
+The returned string contains C<$len> + 1 "characters" .
+Here, I<character> means a display position on the screen but
+may need several bytes to be defined.
+
+This default implementation truncates on left.
+It can be overriden in specific classes to truncate on right
+or use a different flag character or style.
+
+=cut
+
+sub truncateannotation {
+	my ($self, $string, $len) = @_;
+	$$string = '<span class="error">&hellip;</span>'
+			.	substr($$string, -$len);
+	return ++$len;
 }
 
 =head2 C<getauthor ($pathname, $annotation)>
