@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.7 2013/01/17 09:32:48 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.8 2013/01/19 09:10:47 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.7 2013/01/17 09:32:48 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.8 2013/01/19 09:10:47 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -44,7 +44,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.7 $_";
+my $version ="\$Revision: 1.8 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -509,7 +509,7 @@ if (!$addtree) {
 
 	#	Mercurial: extension and configuration file
 	if (-d "${tmpldir}/Mercurial") {
-		`cp ${tmpldir}/Mercurial/lxr-hg-ls.py ${confdir}/`;
+		`cp ${tmpldir}/Mercurial/hg-lxr-ext.py ${confdir}/`;
 		$target = 'hg.rc';
 		copy_and_configure_template	( "${tmpldir}/Mercurial/$target"
 									, "${confdir}/${target}"
