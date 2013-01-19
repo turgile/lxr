@@ -1,7 +1,7 @@
 #
 #	Web server configuration for LXR root directory
 #
-#	$Id: htaccess-generic,v 1.4 2012/11/11 14:00:40 ajlittoz Exp $
+#	$Id: htaccess-generic,v 1.5 2013/01/19 13:54:22 ajlittoz Exp $
 #
 #	Content of this file is independent of the location of
 #	the LXR root directory.
@@ -14,7 +14,10 @@
 # Enable CGI script execution and use of symlinks
 Options ExecCGI FollowSymlinks
 
+		# up to Apache 2.2
 Order deny,allow
+		# from Apache 2.4
+#	No directive needed
 
 
 # =================================================
@@ -29,16 +32,25 @@ Options -Indexes
 
 # Forbid direct access to any file in LXR root and its subdirectories
 <FilesMatch ".">
+		# up to Apache 2.2
 	Deny from all
+		# from Apache 2.4
+	Require all denied
 </FilesMatch>
 
 # But allow access to style sheets
 <FilesMatch "\.css$">
+		# up to Apache 2.2
 	Allow from all
+		# from Apache 2.4
+	Require all granted
 </FilesMatch>
 # and graphic files (for icons)
 <FilesMatch "\.(bmp|gif|icon?|jpe?g|png|svg|tiff?)$">
+		# up to Apache 2.2
 	Allow from all
+		# from Apache 2.4
+	Require all granted
 </FilesMatch>
 
 
