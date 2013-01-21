@@ -2,7 +2,7 @@
 #- LXR master configuration file
 #-	Global configuration section
 #-
-#-	$Id: global.conf.part,v 1.1 2013/01/11 12:04:27 ajlittoz Exp $
+#-	$Id: global.conf.part,v 1.2 2013/01/21 10:49:36 ajlittoz Exp $
 #-
 #-
 #-	This file fragment is meant to be "included" to form the
@@ -45,8 +45,10 @@
 		# Computer DNS names subsection #
 		#================================
 #@LOG Configuring host name or IP (as http://...)
-#@ASK --- Host name?; -2
-	, 'host_names' =>	[ '%A%'
+#-#@ASK --- Host name?; -2
+#-	, 'host_names' =>	[ '%A%'
+#@LOG Host name previously defined as %scheme%%hostname%
+	,	'host_names' =>	[ '%scheme%%hostname%'
 #@KEEPON --- Alias name ? (hit return to stop)
 						, '%A%'
 #@ENDK
@@ -66,7 +68,7 @@
 #@MSG 'Buttons-and-menus' interface is recommended for the kernel
 #@MSG to avoid screen cluttering.
 #@ASK --- Use 'buttons-and-menus' instead of 'link' interface?; 1;yes, no; Y, N
-#@IF	%A% eq "Y"
+#@IF	"%A%" eq 'Y'
 	, 'htmlhead'		=> 'templates/html/html-head-btn.html'
 #@ELSE
 	, 'htmlhead'		=> 'templates/html/html-head.html'
@@ -170,7 +172,14 @@
 
 		# Pattern for extracting tree name from URL, since all
 		# trees are usually served from the same physical server.
+#@IF	%_singlecontext%
+		# Meaningful only in multiple trees context. Example for
+		# built-in method where tree id is last before script name
+#	, 'treeextract' => '([^/]*)/[^/]*$'
+#@ELSE
+		# Built-in method where tree id is last before script name
 	, 'treeextract' => '([^/]*)/[^/]*$'
+#@ENDIF
 
 #@IF	!%_dbuser%
 		# User name and password for DB access can be the same,

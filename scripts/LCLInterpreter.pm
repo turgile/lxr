@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: LCLInterpreter.pm,v 1.1 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: LCLInterpreter.pm,v 1.2 2013/01/21 10:49:36 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #
 ###############################################
 
-# $Id: LCLInterpreter.pm,v 1.1 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: LCLInterpreter.pm,v 1.2 2013/01/21 10:49:36 ajlittoz Exp $
 
 package LCLInterpreter;
 
@@ -172,7 +172,7 @@ use VTescape;
 #	configurator is launched. It might be better to use OS-absolute paths.
 
 # == Delayed interpretation ==
-# @PASS2 <label>
+# @PASS2[,R] <label>
 # @ENDP2
 # Mark a block for later interpretation (mainly used to add tree
 # specific sections into the output stream).
@@ -182,7 +182,9 @@ use VTescape;
 # During pass 2 and following, template is read sequentially for @PASS2.
 # When one is found, output stream is advanced up to the corresponding
 # label which is replaced by the interpreted content of block and <label>
-# is written again. Other @PASS2 blocks are looked for until EOF.
+# is written again, unless option R (= remove after use) is specified
+# (thus allowing single shot expansions).
+# Other @PASS2 blocks are looked for until EOF.
 # NOTE:	Due to the scanning difference between pass 1 and 2, statements
 #		@PASS2 and @ENDP2 must not be coded inside @ADD'ed files or
 #		nested in @IF, @CASE or @KEEPON blocks.
@@ -197,8 +199,12 @@ use VTescape;
 #
 ##############################################################
 
+my $addnestingmax = 5;
+my $addnesting;		# To prevent infinite @ADD
+
 sub expand_hash {
 	my @args = @_;
+	$addnesting = 0;
 	expand	( @args
 			, '#', ''
 			, '~~~TO~EOF~~~'	# Hope this is never used as a label!
@@ -207,6 +213,7 @@ sub expand_hash {
 
 sub expand_slash_star {
 	my @args = @_;
+	$addnesting = 0;
 	expand	( @args
 			, qr(/\*), qr(\*/)
 			, '~~~TO~EOF~~~'	# Hope this is never used as a label!
@@ -282,15 +289,19 @@ SCAN:
 
 										# Messages
 			} elsif ($command eq 'ERROR') {
+				substitute_markers (\$args, $markers, $comstart, $comend);
 				print "${VTred}ERROR:${VTnorm} $args\n";
 				next;
 			} elsif ($command eq 'REMIND') {
+				substitute_markers (\$args, $markers, $comstart, $comend);
 				print "${VTyellow}Reminder:${VTnorm} $args\n";
 				next;
 			} elsif ($command eq 'LOG') {
+				substitute_markers (\$args, $markers, $comstart, $comend);
 				print "${VTyellow}***${VTnorm} $args\n" if $verbose;
 				next;
 			} elsif ($command eq 'MSG') {
+				substitute_markers (\$args, $markers, $comstart, $comend);
 				print "${VTyellow}***${VTnorm} $args\n" if $verbose > 1;
 				next;
 
@@ -491,9 +502,14 @@ SCAN:
 					print "${VTred}ERROR:${VTnorm} no file target on ADD!\n";
 					next;
 				}
+				if ($addnesting >= $addnestingmax) {
+					print "${VTred}ERROR:${VTnorm} too many nested ADD files with \"${args}\"\n";
+					next;
+				}
 				my ($string) = ($args =~ m/^["']?(.+)["']?$/);
 				$string = evaluate_expr("\"$string\"", $markers);
 				if (open(ADD, '<', $string)) {
+					++$addnesting;
 					expand	( sub { <ADD> }
 							, $dest
 							, $markers
@@ -501,6 +517,7 @@ SCAN:
 							, $comstart, $comend
 							, '~~~TO~EOF~~~'
 							);
+					--$addnesting;
 				} else {
 					print "${VTred}ERROR:${VTnorm} couldn't open ADD'ed file \"${string}\"\n";
 				}
@@ -510,11 +527,17 @@ SCAN:
 										# Block for pass 2
 			} elsif ($command eq 'PASS2') {
 				if (!defined($args)) {
-					print "${VTred}ERROR:${VTnorm} PASS2 must define a label replacement for the block!\n";
+					if ('R' eq $var) {
+						print "${VTred}ERROR:${VTnorm} PASS2 must define a label replacement for the block!\n";
+					}
 					$args = 'courtesy_label';
 				}
-				# Replace the block with a label
-				$line =~ s/^(${comstart}\@).+(${comend})\s*\n/$1${args}:$3\n/;
+				# Replace block with a label unlessoption R and adding trees
+				if	(	'R' ne $var
+					||	0 == $$markers{'%_add%'}
+					) {
+					$line =~ s/^(${comstart}\@).+(${comend})\s*\n/$1${args}:$3\n/;
+				}
 				skip_until	( $source
 							, qr/ENDP2\b/i
 							, '~~~TO~EOF~~~', '~~~TO~EOF~~~'
@@ -575,12 +598,15 @@ sub pass2 {
 		die("${VTred}ERROR:${VTnorm} couldn't open temporary file \"$dest\"\n");
 	}
 
+	$addnesting = 0;
 	while ($line = <$source>) {
 		if ($line =~ m/^${comstart}\@\s*PASS2\b/) {
 			my ($args, $var, $command, @labels)
 				= parse_statement($line, $comstart, $comend);
 			if (!defined($args)) {
-				print "${VTred}Warning:${VTnorm} using a courtesy label for missing PASS2 label!\n";
+				if ('R' eq $var) {
+					print "${VTred}Warning:${VTnorm} using a courtesy label for missing PASS2 label!\n";
+				}
 				$args = 'courtesy_label';
 			}
 			my $mark_label = $line;
@@ -603,7 +629,7 @@ sub pass2 {
 					, qr/s*ENDP2\b/i
 					);
 			# Rewrite lable for eventual other passes
-			print DESTOUT $mark_label;
+			print DESTOUT $mark_label if 'R' ne $var;
 		}
 	}
 

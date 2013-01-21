@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: ContextMgr.pm,v 1.1 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: ContextMgr.pm,v 1.2 2013/01/21 10:49:36 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,16 +37,32 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our @EXPORT = qw(
-	$cardinality $dbengine $dbenginechanged
+	$cardinality
+	$servertype  $scheme   $hostname
+	$port        $virtrootbase
+	$virtrootpolicy
+	$dbengine    $dbenginechanged
 	$dbpolicy    $dbname   $dbuser
 	$dbpass      $dbprefix $nodbuser
 	$nodbprefix
 	&contextReload
 	&contextSave
+	&contextTrees
 	&contextDB
 );
 
+	# Single/multiple operation
 our $cardinality;
+
+	# Web server
+our $servertype;
+our $scheme;
+our $hostname;
+our $port;
+our $virtrootbase;
+our $virtrootpolicy;
+
+	# Database
 our $dbengine;
 our $dbenginechanged = 0;
 our $dbpolicy;
@@ -59,7 +75,7 @@ our $nodbprefix;
 
 # WARNING:	remember to increment this number when changing the
 #			set of state variables and/or their meaning.
-my $context_version = 1;
+my $context_version = 2;
 
 
 ##############################################################
@@ -81,7 +97,7 @@ sub contextReload {
 		my $context = <SOURCE>;
 		$/ = $oldsep;
 		close(SOURCE);
-		my ($confout) =~ m/\n# Context .* with (.*?)\n/g;
+		my ($confout) = $context =~ m/\n# Context .* with (.*?)\n/g;
 		my $context_created;
 		eval($context);
 		if (!defined($context_created)) {
@@ -183,6 +199,7 @@ sub contextSave {
 		print DEST "# Strictly internal, do not play with content\n";
 		print DEST "\$context_created = $context_version;\n";
 		print DEST "\n";
+	# Initial set in version 1
 		print DEST "\$cardinality = '$cardinality';\n";
 		print DEST "\$dbpolicy = '$dbpolicy';\n";
 		print DEST "\$dbengine = '$dbengine';\n";
@@ -200,10 +217,46 @@ sub contextSave {
 		} else {
 			print DEST "\$dbprefix = '$dbprefix'\n";
 		}
+	# Set added in version 2
+		print DEST "\$servertype = '$servertype';\n";
+		print DEST "\$scheme = '$scheme';\n";
+		print DEST "\$hostname = '$hostname';\n";
+		print DEST "\$port = '$port';\n";
+		print DEST "\$virtrootbase = '$virtrootbase';\n";
+		print DEST "\$virtrootpolicy = '$virtrootpolicy';\n";
 		close(DEST)
 		or print "${VTyellow}WARNING:${VTnorm} error $! when closing context file ${VTbold}$confout${VTnorm}!\n";
 	} else {
 		print "${VTyellow}WARNING:${VTnorm} could not create context file ${VTbold}$confout${VTnorm}, autoreload disabled!\n";
+	}
+}
+
+
+##############################################################
+#
+#				Describe general context
+#
+##############################################################
+#	Are we configuring for single tree or multiple trees?
+sub contextTrees {
+	$cardinality = get_user_choice
+			( 'Configure for single/multiple trees?'
+			, 1
+			, [ 's', 'm' ]
+			, [ 's', 'm' ]
+			);
+	if ($cardinality eq 's') { 
+		if ('y' eq get_user_choice
+				( 'Do you intend to add other trees later?'
+				, 2
+				, [ 'yes', 'no' ]
+				, [ 'y', 'n']
+				)
+			) {
+			$cardinality = 'm';
+			print "${VTyellow}NOTE:${VTnorm} installation switched to ${VTbold}multiple${VTnorm} mode\n";
+			print "      but describe just a single tree.\n";
+		}
 	}
 }
 
@@ -224,30 +277,10 @@ sub contextDB {
 			, [ 'm', 'o', 'p', 's' ]
 			);
 
-	#	Are we configuring for single tree or multiple trees?
-	$cardinality = get_user_choice
-			( 'Configure for single/multiple trees?'
-			, 1
-			, [ 's', 'm' ]
-			, [ 's', 'm' ]
-			);
-
 	if ($cardinality eq 's') { 
-		if ('y' eq get_user_choice
-				( 'Do you intend to add other trees later?'
-				, 2
-				, [ 'yes', 'no' ]
-				, [ 'y', 'n']
-				)
-			) {
-			$cardinality = 'm';
-			print "${VTyellow}NOTE:${VTnorm} installation switched to ${VTbold}multiple${VTnorm} mode\n";
-			print "      but describe just a single tree.\n";
-		} else {
-			$dbpolicy   = 't';
-			$nodbuser   = 1;
-			$nodbprefix = 1;
-		}
+		$dbpolicy   = 't';
+		$nodbuser   = 1;
+		$nodbprefix = 1;
 	}
 
 	if ($cardinality eq 'm') {

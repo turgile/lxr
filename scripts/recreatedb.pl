@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: recreatedb.pl,v 1.5 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.6 2013/01/21 10:49:36 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: recreatedb.pl,v 1.5 2013/01/11 11:53:13 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.6 2013/01/21 10:49:36 ajlittoz Exp $
 
 use strict;
 use lib 'lib', 'scripts';
@@ -51,7 +51,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.5 $_";
+my $version ="\$Revision: 1.6 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -226,7 +226,7 @@ exit $error if $error;
 
 ##############################################################
 #
-#				Start recontruction
+#				Start reconstruction
 #
 ##############################################################
 
@@ -280,6 +280,7 @@ if ($manualreload) {
 		print "trees. Answer with the choices you made previously,\n";
 		print "otherwise your DB will not be what LXR expects.\n";
 	}
+	contextTrees ($verbose);
 	contextDB ($verbose);
 	if ($dbuser) {
 		$users{$dbuser} = $dbpass;	# Record global user/password
