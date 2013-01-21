@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.9 2013/01/21 10:49:36 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.10 2013/01/21 16:35:03 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.9 2013/01/21 10:49:36 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.10 2013/01/21 16:35:03 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -44,7 +44,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.9 $_";
+my $version ="\$Revision: 1.10 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -273,7 +273,7 @@ if ($addtree != 1) {
 		print "The form is scheme://host_name:port\n";
 	}
 	if ($verbose > 1) {
-		print " where:\n";
+		print "where:\n";
 		print "  - scheme is either http or https (http: can be omitted),\n";
 		print "  - host_name can be given as an IP address such as 123.45.67.89\n";
 		print "              or a domain name like localhost or lxr.url.example,\n";
@@ -408,6 +408,11 @@ if ($addtree) {
 }
 
 if ($addtree != 1) {
+	if ($verbose) {
+		print "\n";
+		print "${VTyellow}***${VTnorm} ${VTred}L${VTblue}X${VTgreen}R${VTnorm} database configuration ${VTyellow}***${VTnorm}\n";
+		print "\n";
+	}
 	if ($verbose > 1) {
 		print "\n";
 		print "The choice of the database engine can make a difference in indexing performance,\n";
@@ -612,7 +617,7 @@ sub copy_and_configure_template {
 	if ($target && $verbose) {
 		print "file ${VTbold}$target${VTnorm} written into ";
 		if ($fout eq $target) {
-			print "root";
+			print "LXR root";
 		} else {
 			print "configuration";
 		}

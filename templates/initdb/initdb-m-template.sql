@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating MySQL tables
  *	(C) 2012 A. Littoz
- *	$Id: initdb-m-template.sql,v 1.3 2013/01/11 12:08:48 ajlittoz Exp $
+ *	$Id: initdb-m-template.sql,v 1.4 2013/01/21 16:35:04 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -44,9 +44,6 @@ grant all on *.* to '%DB_user%'@'localhost';
 /*@ENDIF	%_createglobals% */
 /*@IF	%_dbuseroverride% */
 /*@XQT echo "*** MySQL - Creating tree user %DB_tree_user%"*/
-/*@XQT mysql -u root -p <<END_OF_USER*/
-create user '%DB_tree_user%'@'localhost';
-/*@XQT END_OF_USER*/
 /*@XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_tree_user%'@'localhost' identified by '%DB_tree_password%';
 grant all on *.* to '%DB_tree_user%'@'localhost';
