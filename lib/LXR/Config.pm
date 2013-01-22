@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.56 2013/01/11 17:35:51 ajlittoz Exp $
+# $Id: Config.pm,v 1.57 2013/01/22 09:39:28 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.56 2013/01/11 17:35:51 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.57 2013/01/22 09:39:28 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -265,7 +265,12 @@ CANDIDATE: foreach my $config (@config[1..$#config]) {
 		my $virtroot = $config->{'virtroot'};
 		my $hits = $virtroot =~ s!/+$!!;	# ensure no ending /
 		$hits += $virtroot =~ s!^/*!/!;		# and a single starting /
-		if ($hits > 0) { $config->{'virtroot'} = $virtroot }
+		if ($hits > 0) {
+			$config->{'virtroot'} = $virtroot
+		}
+		if ('/' eq $virtroot) {				# special case: LXR at root
+			$config->{'virtroot'} = '';		# make sure no trouble on relative links
+		}
 		if (scalar(@hostnames)>0) {
 			foreach my $rt (@hostnames) {
 				$rt =~ s!/*$!!;		# remove trailing /
