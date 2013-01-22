@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: ContextMgr.pm,v 1.2 2013/01/21 10:49:36 ajlittoz Exp $
+# $Id: ContextMgr.pm,v 1.3 2013/01/22 16:59:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ our @EXPORT = qw(
 	&contextSave
 	&contextTrees
 	&contextDB
+	&contextServer
 );
 
 	# Single/multiple operation
@@ -106,24 +107,80 @@ sub contextReload {
 			print "Delete or rename file $ctxtfile to remove lock.\n";
 			exit 1;
 		}
-		if ($context_created != $context_version) {
-			print "${VTred}ERROR:${VTnorm} saved context file probably too old!\n";
+		if ($context_created > $context_version) {
+			print "${VTyellow}WARNING:${VTnorm} saved context file created with newer version!\n";
 			print "Recorded state version = $context_created while expecting version = $context_version\n";
-			print "It is wise to 'quit' now and add manually the new tree or reconfigure from scratch.\n";
-			print "You can however try to restore the initial context at your own risk.\n";
-			print "\n";
-			print "${VTyellow}WARNING:${VTnorm} inconsistent answers can lead to LXR malfunction.\n";
+			if ($context_version != $context_created - 1) {
+				print "${VTred}ERROR:${VTnorm}Contexts are too different to continue.\n";
+				exit 1;
+			}
+			print "Context are maintained compatible as much as possible.\n";
+			print "You may try to continue at your own risk.\n";
 			print "\n";
 			if ('q' eq get_user_choice
-				( 'Do you want to quit or manually restore context?'
+				( 'Do you want to quit or tentatively continue?'
 				, 1
-				, [ 'quit', 'restore' ]
-				, [ 'q', 'r' ]
+				, [ 'quit', 'continue' ]
+				, [ 'q', 'c' ]
 				) ) {
 				exit 1;
 			}
-			$reloadstatus = 1;
-		};
+		}
+		if ($context_created < $context_version) {
+			print "${VTred}ERROR:${VTnorm} saved context file too old!\n";
+			print "Recorded state version = $context_created while expecting version = $context_version\n";
+			if ($context_version == $context_created + 1) {
+				print "It is possible to upgrade the context (without saving it),\n";
+				print "but without any guarantee.\n";
+				print "Note also that templates may have changed and\n";
+				print "no longer be compatible with your configuration files.\n";
+				print "\n";
+				print "${VTyellow}WARNING:${VTnorm} inconsistent answers can lead to LXR malfunction.\n";
+				print "\n";
+				if ('q' eq get_user_choice
+					( 'Do you want to quit or try to upgrade context?'
+					, 1
+					, [ 'quit', 'upgrade' ]
+					, [ 'q', 'u' ]
+					) ) {
+					exit 1;
+					}
+				print "\n";
+				print "Previous configuration was made for:\n";
+				print "- ";
+				if ('m' eq $cardinality) {
+					print "multiple trees";
+				} else {
+					print "single tree";
+				}
+				print "\n";
+				print "- ";
+				if ('t' eq $dbpolicy) {
+					print "per tree";
+				} else {
+					print "global";
+				}
+				print " database\n";
+				print "\n";
+				contextServer (2);
+				print "\n";
+			} else {
+				print "It is wise to 'quit' now and add manually the new tree or reconfigure from scratch.\n";
+				print "You can however try to restore the initial context at your own risk.\n";
+				print "\n";
+				print "${VTyellow}WARNING:${VTnorm} inconsistent answers can lead to LXR malfunction.\n";
+				print "\n";
+				if ('q' eq get_user_choice
+					( 'Do you want to quit or manually restore context?'
+					, 1
+					, [ 'quit', 'restore' ]
+					, [ 'q', 'r' ]
+					) ) {
+					exit 1;
+				}
+				$reloadstatus = 1;
+			}
+		}
 
 		if ($dbpolicy eq 't') {
 			print "Your DB engine was: ${VTbold}";
@@ -215,7 +272,7 @@ sub contextSave {
 		if ($nodbprefix) {
 			print DEST "\$nodbprefix = 1;\n";
 		} else {
-			print DEST "\$dbprefix = '$dbprefix'\n";
+			print DEST "\$dbprefix = '$dbprefix';\n";
 		}
 	# Set added in version 2
 		print DEST "\$servertype = '$servertype';\n";
@@ -383,6 +440,122 @@ sub contextDB {
 					);
 		}else {
 			$nodbprefix = 1;
+		}
+	}
+}
+
+
+##############################################################
+#
+#				Describe web server context
+#
+##############################################################
+
+sub contextServer {
+	my ($verbose) = @_;
+
+	if ($verbose > 1) {
+		print "LXR can be configured as the default server (the only service in your computer),\n";
+		print "a section of this default server or an independent server (with its own\n";
+		print "host name).\n";
+		print "Refer to the ${VTbold}User's Manual${VTnorm} for a description of the differences.\n";
+	}
+
+	$servertype = get_user_choice
+			( 'Web server type?'
+			, 1
+			,	[ "1.default\n"
+				, "2.section in default\n"
+				, "3.indepedent\n"
+				, "4.section in indepedent\n"
+				]
+			, [ 'D', 'DS', 'I', 'IS' ]
+			);
+	if ($verbose) {
+		print "The computer hosting the server is described by an URL.\n";
+		print "The form is scheme://host_name:port\n";
+	}
+	if ($verbose > 1) {
+		print "where:\n";
+		print "  - scheme is either http or https (http: can be omitted),\n";
+		print "  - host_name can be given as an IP address such as 123.45.67.89\n";
+		print "              or a domain name like localhost or lxr.url.example,\n";
+		print "  - port may be omitted if standard for the scheme.\n";
+		print "The following question asks for a primary URL. Later, you'll have\n";
+		print "the opportunity to give aliases to this primary URL.\n";
+	}
+	my $primaryhost;
+	while (!defined($primaryhost)) {
+		$primaryhost = get_user_choice
+			( '--- Host name or IP?'
+			, ('D' eq substr($servertype, 0, 1)) ? -1 : -2
+			, [ ]
+			, ('D' eq substr($servertype, 0, 1))
+				? [ '//localhost' ]
+				: [ ]
+			);
+		$primaryhost =~ m!^(https?:)?(//[^:]+)(?::(\d+))?!;
+		$scheme = $1;
+		$hostname = $2;
+		$port = $3;
+		$scheme = undef if 'http:' eq $scheme;
+		$port = 80  if !defined($1) && !defined($3);
+		$port = 443 if 'https:' eq $1 && !defined($3);
+		if (!defined($hostname)) {
+			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
+			$primaryhost = undef;
+			next;
+		}
+		if	(	'I' eq substr($servertype, 0, 1)
+			&&	(	'//localhost' eq $hostname
+				||	'//127.0.0.1' eq $hostname
+				)
+			) {
+			print "You are configuring for an independent web server and you named it ${hostname},\n";
+			print "which is the common name for the default server\n";
+			if	( 'y' eq get_user_choice
+						( 'Do you want to change its name?'
+						, 1
+						, [ 'yes', 'no' ]
+						, [ 'y', 'n' ]
+						)
+				) {
+				$primaryhost = undef;
+			}
+		}
+	}
+
+
+	$virtrootbase = '';
+	if (1 < length($servertype)) {
+		$virtrootbase = get_user_choice
+				( 'URL section name for LXR in your server?'
+				, -1
+				, [ ]
+				, [ '/lxr' ]
+				);
+	}
+
+	if ('m' eq $cardinality) {
+		if (1 < $verbose) {
+			print "The built-in method to manage several trees with a single instance of LXR is to include\n";
+			print "a designation of the tree in the URL at the end of the section name.\n";
+			print "This sequence after host name is called \"virtual root\".\n";
+			print "Supposing one of your trees is to be referred as \"my-tree\", an URL to list the content\n";
+			print "of the default version directory would presently be:\n";
+			print "     ${VTyellow}${primaryhost}${virtrootbase}/${VTnorm}${VTbold}my-tree${VTyellow}/source${VTnorm}\n";
+			print "with virtual root equal to ${VTyellow}${virtrootbase}/my-tree${VTnorm}\n";
+			print "\n";
+		}
+		$virtrootpolicy = 'b';	# 'b' for built-in
+		if	('n' eq get_user_choice
+						( 'Use built-in multiple trees management with tree designation at end of virtual root?'
+						, 1
+						, [ 'yes', 'no' ]
+						, [ 'y', 'n' ]
+						)
+			) {
+			$virtrootpolicy = 'c';	# 'c' for custom
 		}
 	}
 }

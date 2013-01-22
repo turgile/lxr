@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: recreatedb.pl,v 1.6 2013/01/21 10:49:36 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.7 2013/01/22 16:59:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,10 @@
 #
 ###############################################
 
-# $Id: recreatedb.pl,v 1.6 2013/01/21 10:49:36 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.7 2013/01/22 16:59:52 ajlittoz Exp $
 
 use strict;
-use lib 'lib', 'scripts';
+use lib 'lib', do { $0 =~ m{(.*)/}; "$1" };
 use Fcntl;
 use Getopt::Long;
 use IO::Handle;
@@ -51,7 +51,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.6 $_";
+my $version ="\$Revision: 1.7 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -75,6 +75,7 @@ my %option;
 my $confdir = 'custom.d';
 my $rootdir = `pwd`;
 chomp($rootdir);
+my ($scriptdir) = $0 =~ m!([^/]+)/[^/]+$!;
 my $tmpldir = 'templates';
 my $verbose;
 my $scriptout = 'initdb.sh';
@@ -161,7 +162,7 @@ if (! -d $rootdir) {
 		. " ${VTred}$rootdir${VTnorm} does not exist!\n";
 	$error = 1;
 }
-if (! -d $rootdir.'/scripts') {
+if (! -d "$rootdir/$scriptdir") {
 	print "${VTred}ERROR:${VTnorm} ${VTred}$rootdir${VTnorm} does not look "
 		. "like an LXR root directory (scripts directory not found)!\n";
 	$error = 1;

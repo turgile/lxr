@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.11 2013/01/22 11:20:25 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.12 2013/01/22 16:59:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.11 2013/01/22 11:20:25 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.12 2013/01/22 16:59:52 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -44,7 +44,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.11 $_";
+my $version ="\$Revision: 1.12 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -69,6 +69,7 @@ my $addtree = 0;
 my $confdir = 'custom.d';
 my $rootdir = `pwd`;
 chomp($rootdir);
+my ($scriptdir) = $0 =~ m!([^/]+)/[^/]+$!;
 my $tmpldir = 'templates';
 my $verbose;
 my $confout;
@@ -153,7 +154,7 @@ if (! -d $rootdir) {
 		. " ${VTred}$rootdir${VTnorm} does not exist!\n";
 	$error = 1;
 }
-if (! -d $rootdir.'/scripts') {
+if (! -d $rootdir.'/'.$scriptdir) {
 	print "${VTred}ERROR:${VTnorm} ${VTred}$rootdir${VTnorm} does not look "
 		. "like an LXR root directory (scripts directory not found)!\n";
 	$error = 1;
@@ -251,122 +252,21 @@ if ($addtree != 1) {
 		print "${VTyellow}***${VTnorm} ${VTred}L${VTblue}X${VTgreen}R${VTnorm} web server configuration ${VTyellow}***${VTnorm}\n";
 		print "\n";
 	}
-	if ($verbose > 1) {
-		print "LXR can be configured as the default server (the only service in your computer),\n";
-		print "a section of this default server or an independent server (with its own\n";
-		print "host name).\n";
-		print "Refer to the ${VTbold}User's Manual${VTnorm} for a description of the differences.\n";
-	}
-
-	$servertype = get_user_choice
-			( 'Web server type?'
-			, 1
-			,	[ "1.default\n"
-				, "2.section in default\n"
-				, "3.indepedent\n"
-				, "4.section in indepedent\n"
-				]
-			, [ 'D', 'DS', 'I', 'IS' ]
-			);
-	if ($verbose) {
-		print "The computer hosting the server is described by an URL.\n";
-		print "The form is scheme://host_name:port\n";
-	}
-	if ($verbose > 1) {
-		print "where:\n";
-		print "  - scheme is either http or https (http: can be omitted),\n";
-		print "  - host_name can be given as an IP address such as 123.45.67.89\n";
-		print "              or a domain name like localhost or lxr.url.example,\n";
-		print "  - port may be omitted if standard for the scheme.\n";
-		print "The following question asks for a primary URL. Later, you'll have\n";
-		print "the opportunity to give aliases to this primary URL.\n";
-	}
-	my $primaryhost;
-	while (!defined($primaryhost)) {
-		$primaryhost = get_user_choice
-			( '--- Host name or IP?'
-			, ('D' eq substr($servertype, 0, 1)) ? -1 : -2
-			, [ ]
-			, ('D' eq substr($servertype, 0, 1))
-				? [ '//localhost' ]
-				: [ ]
-			);
-		$primaryhost =~ m!^(https?:)?(//[^:]+)(?::(\d+))?!;
-		$scheme = $1;
-		$hostname = $2;
-		$port = $3;
-		$scheme = undef if 'http:' eq $scheme;
-		$port = 80  if !defined($1) && !defined($3);
-		$port = 443 if 'https:' eq $1 && !defined($3);
-		if (!defined($hostname)) {
-			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
-			$primaryhost = undef;
-			next;
-		}
-		if	(	'I' eq substr($servertype, 0, 1)
-			&&	(	'//localhost' eq $hostname
-				||	'//127.0.0.1' eq $hostname
-				)
-			) {
-			print "You are configuring for an independent web server and you named it ${hostname},\n";
-			print "which is the common name for the default server\n";
-			if	( 'y' eq get_user_choice
-						( 'Do you want to change its name?'
+	contextServer ($verbose);
+	if ('c' == $virtrootpolicy) {
+		print "${VTyellow}Reminder:${VTnorm} do not forget to implement your management in the following files:\n";
+		print "- ${confdir}/${VTbold}apache-lxrserver.conf${VTnorm} if using Apache,\n";
+		print "- ${confdir}/${VTbold}lighttpd-lxrserver.conf${VTnorm} if using lighttpd,\n";
+		print "- ${confdir}/${VTbold}${confout}${VTnorm} for parameter 'treeextract'.\n";
+		print "It is wise to thoroughly read the Web server chapter in the User's Manual.\n";
+		if	('s' eq get_user_choice
+						( 'Continue or stop?'
 						, 1
-						, [ 'yes', 'no' ]
-						, [ 'y', 'n' ]
-						)
-				) {
-				$primaryhost = undef;
-			}
-		}
-	}
-
-
-	$virtrootbase = '';
-	if (1 < length($servertype)) {
-		$virtrootbase = get_user_choice
-				( 'URL section name for LXR in your server?'
-				, -1
-				, [ ]
-				, [ '/lxr' ]
-				);
-	}
-
-	if ('m' eq $cardinality) {
-		if (1 < $verbose) {
-			print "The built-in method to manage several trees with a single instance of LXR is to include\n";
-			print "a designation of the tree in the URL at the end of the section name.\n";
-			print "This sequence after host name is called \"virtual root\".\n";
-			print "Supposing one of your trees is to be referred as \"my-tree\", an URL to list the content\n";
-			print "of the default version directory would presently be:\n";
-			print "     ${VTyellow}${primaryhost}${virtrootbase}/${VTnorm}${VTbold}my-tree${VTyellow}/source${VTnorm}\n";
-			print "with virtual root equal to ${VTyellow}${virtrootbase}/my-tree${VTnorm}\n";
-			print "\n";
-		}
-		$virtrootpolicy = 'b';	# 'b' for built-in
-		if	('n' eq get_user_choice
-						( 'Use built-in multiple trees management with tree designation at end of virtual root?'
-						, 1
-						, [ 'yes', 'no' ]
-						, [ 'y', 'n' ]
+						, [ 'continue', 'stop' ]
+						, [ 'c', 's' ]
 						)
 			) {
-			print "${VTyellow}Reminder:${VTnorm} do not forget to implement your management in the following files:\n";
-			print "- custom.d/${VTbold}apache-lxrserver.conf${VTnorm} if using Apache,\n";
-			print "- custom.d/${VTbold}lighttpd-lxrserver.conf${VTnorm} if using lighttpd,\n";
-			print "- custom.d/${VTbold}${confout}${VTnorm} for parameter 'treeextract'.\n";
-			print "It is wise to thoroughly read the Web server chapter in the User's Manual.\n";
-			if	('s' eq get_user_choice
-							( 'Continue or stop?'
-							, 1
-							, [ 'continue', 'stop' ]
-							, [ 'c', 's' ]
-							)
-				) {
-				exit 0;
-			}
-			$virtrootpolicy = 'c';	# 'c' for custom
+			exit 0;
 		}
 	}
 }
@@ -828,9 +728,10 @@ chmod 0775, "${confdir}/${scriptout}";	# Make sure script has x permission
 #	We suppose configure-lxr.pl has correct permissions, otherwise we
 #	can't bootstrap.
 chmod 0775, 'diff', 'genxref', 'ident', 'search', 'showconfig', 'source';
-chmod 0775, 'scripts/kernel-vars-grab.sh';
-chmod 0775, 'scripts/set-lxr-version.sh';
-chmod 0775, 'scripts/lighttps-init';
+chmod 0775, "${scriptdir}/kernel-vars-grab.sh";
+chmod 0775, "${scriptdir}/set-lxr-version.sh";
+chmod 0775, "${scriptdir}/recreatedb.pl";
+chmod 0775, "${scriptdir}/lighttpd-init";
 
 if ($verbose) {
 		print "configuration saved in ${VTbold}$confdir/$confout${VTnorm}\n";
