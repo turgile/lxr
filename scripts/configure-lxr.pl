@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.10 2013/01/21 16:35:03 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.11 2013/01/22 11:20:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.10 2013/01/21 16:35:03 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.11 2013/01/22 11:20:25 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -44,7 +44,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.10 $_";
+my $version ="\$Revision: 1.11 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -556,7 +556,7 @@ if (!$addtree) {
 		} else {
 			print "${VTyellow}Sorry:${VTnorm} free-text search disabled\n";
 			$markers{'%glimpse%'} = '/bin/true';	# disable free-text search
-			$markers{'%glimpsedirbase'} = '/tmp';	# only to silence config check
+			$markers{'%glimpsedirbase%'} = '/tmp';	# only to silence config check
 		}
 	}
 
