@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.12 2013/01/22 16:59:52 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.13 2013/01/23 16:48:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.12 2013/01/22 16:59:52 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.13 2013/01/23 16:48:48 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -44,7 +44,7 @@ use VTescape;
 #	variable (sigils may be separated from the variable name
 #	by spaces! Not documented of course!)
 $_ = '';	# Calm down Perl ardour
-my $version ="\$Revision: 1.12 $_";
+my $version ="\$Revision: 1.13 $_";
 $version =~ s/Revision: (.*) $/$1/;
 $version =~ s/\$//;
 
@@ -253,7 +253,7 @@ if ($addtree != 1) {
 		print "\n";
 	}
 	contextServer ($verbose);
-	if ('c' == $virtrootpolicy) {
+	if ('c' eq $virtrootpolicy) {
 		print "${VTyellow}Reminder:${VTnorm} do not forget to implement your management in the following files:\n";
 		print "- ${confdir}/${VTbold}apache-lxrserver.conf${VTnorm} if using Apache,\n";
 		print "- ${confdir}/${VTbold}lighttpd-lxrserver.conf${VTnorm} if using lighttpd,\n";
