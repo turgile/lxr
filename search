@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: search,v 1.49 2013/01/23 16:29:05 ajlittoz Exp $
+# $Id: search,v 1.50 2013/01/24 15:09:52 ajlittoz Exp $
 #
 # search --	Freetext search
 #
@@ -23,7 +23,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: search,v 1.49 2013/01/23 16:29:05 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.50 2013/01/24 15:09:52 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
@@ -594,11 +594,11 @@ httpinit;
 makeheader('search');
 if ($files->isa("LXR::Files::Plain")) {
 	if	(	$config->{'glimpsebin'}
-			&& $config->{'glimpsebin'} =~ m!$(.*/)?true$!
+			&& $config->{'glimpsebin'} =~ m!^(.*/)?true$!
 		||	$config->{'swishbin'}
-			&& $config->{'swishbin'} =~ m!$(.*/)?true$!
+			&& $config->{'swishbin'} =~ m!^(.*/)?true$!
 		) {
-		print "<h2 class='error'>Free-text search disabled in configuration!</h2>\n";
+		print "<h2 class='error'>Free-text search disabled by configuration file!</h2>\n";
 	} else {
 		&search;
 	}

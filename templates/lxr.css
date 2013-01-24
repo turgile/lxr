@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.14 2012/11/21 17:01:16 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.15 2013/01/24 15:09:53 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -192,6 +192,7 @@
   .modes
 , .varlink
 , SPAN.modes-sel
+, SPAN.modes-dis
 , SPAN.var-sel
 { font-size: 10pt
 }
@@ -234,11 +235,27 @@
 ; background-color: #cceeff
 }
 
+/* disabled mode */
+  SPAN.modes-dis
+{ font-style: italic
+; text-decoration: line-through
+; color: #cccccc
+}
+
   FORM.modes
 , FORM.modes-sel
+, FORM.modes-dis
 , FORM.vars
 { margin: 1px
 ; padding: 1px
+}
+  .modes-dis BUTTON
+{ font-style: italic
+; text-decoration: line-through
+; border-style: dotted
+; color: #aaaaaa
+; border-color: #aaaaaa
+; background-color: #eeeeee
 }
   .modes-sel BUTTON
 { font-style: italic

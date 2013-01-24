@@ -1,5 +1,5 @@
 /*
- *	$Id: classic.css,v 1.3 2012/11/21 17:01:16 ajlittoz Exp $
+ *	$Id: classic.css,v 1.4 2013/01/24 15:09:53 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -192,6 +192,7 @@
   .modes
 , .varlink
 , SPAN.modes-sel
+, SPAN.modes-dis
 , SPAN.var-sel
 { font-size: 10pt
 }
@@ -228,6 +229,7 @@
 
 /* currently selected mode/variable */
   SPAN.modes-sel
+, SPAN.modes-dis
 , SPAN.var-sel
 { font-style: italic
 ; font-weight: bold
@@ -236,11 +238,13 @@
 
   FORM.modes
 , FORM.modes-sel
+, FORM.modes-dis
 , FORM.vars
 { margin: 1px
 ; padding: 1px
 }
   .modes-sel BUTTON
+, .modes-dis BUTTON
 { font-style: italic
 /* ; font-size: 9pt */
 /*; font-weight: bold*/

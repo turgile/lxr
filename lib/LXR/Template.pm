@@ -1017,9 +1017,20 @@ sub modeexpand {
 		);
 
 	$modename = "General search";
-	if ($who eq 'search')
-	{	$modelink = "<span class='modes-sel'>$modename</span>";
+	if ($who eq 'search') {
+		$modelink = "<span class='modes-sel'>$modename</span>";
 		$modecss  = "modes-sel";
+		$modeaction= "";
+		$modeoff  = "disabled";
+	} elsif
+		(	!$files->isa("LXR::Files::Plain")
+		||	$config->{'glimpsebin'}
+			&& $config->{'glimpsebin'} =~ m!^(.*/)?true$!
+		||	$config->{'swishbin'}
+			&& $config->{'swishbin'} =~ m!^(.*/)?true$!
+		) {
+		$modelink = "<span class='modes-dis'>$modename</span>";
+		$modecss  = "modes-dis";
 		$modeaction= "";
 		$modeoff  = "disabled";
 	} else {
