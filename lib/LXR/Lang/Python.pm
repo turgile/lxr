@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Python.pm,v 1.7 2012/11/21 15:08:48 ajlittoz Exp $
+# $Id: Python.pm,v 1.8 2013/03/11 16:11:43 ajlittoz Exp $
 #
 # Enhances the support for the Python language over that provided by
 # Generic.pm
@@ -24,7 +24,7 @@
 
 =head1 Perl language module
 
-This module is the Perl language highlighting engine.
+This module is the Python language highlighting engine.
 
 It shares most of its methods with I<Generic.pm>.
 It only overrides C<processinclude> for efficiency.
@@ -33,7 +33,7 @@ It only overrides C<processinclude> for efficiency.
 
 package LXR::Lang::Python;
 
-$CVSID = '$Id: Python.pm,v 1.7 2012/11/21 15:08:48 ajlittoz Exp $ ';
+$CVSID = '$Id: Python.pm,v 1.8 2013/03/11 16:11:43 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -73,6 +73,7 @@ sub processinclude {
 	my $file;		# language include file
 	my $path;		# OS include file
 	my $link;		# link to include file
+	my $tail;		# lower-lever links after current $link
 
 	# Faster surrogate for 'directive'
 	if ($source !~ s/^		# reminder: no initial space in the grammar
@@ -114,23 +115,32 @@ sub processinclude {
 		# Erase last path separator from <a> link to enable
 		# following partial path processing.
 		# NOTE: this creates a dependency of link structure from incref!
-		if (substr($link, 0, 3) eq '<a ') {
+		if (substr($link, 0, 1) eq '<') {
 			$link =~ s!/">!">!;
-		} else {
-			$link = undef;
 		}
 	}
-	if (defined($link)) {
+	while	(	$file =~ m!\.!
+			&&	substr($link, 0, 1) ne '<'
+			) {
+		$file =~ s!(\.[^.]*)$!!;
+		$tail = $1 . $tail;
+		$path =~ s!/[^/]+$!!;
+		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+	}
+	if (substr($link, 0, 1) eq '<') {
 		while ($file =~ m!\.!) {
 			$link =~ s!^([^>]+>)([^.]*\.)+?([^.<]+<)!$1$3!;
+			$tail = '.' . $link . $tail;
 			$file =~ s!\.[^.]*$!!;
 			$path =~ s!/[^/]+$!!;
-			$link = &LXR::Common::incdirref($file, "include", $path, $dir)
-					. "."
-					. $link ;
+			$link = &LXR::Common::incdirref	( $file, "include", $path, $dir)
 		}
 	} else {
-		$link = join('.', map {$self->processcode(\$_)} split(/\./, $file));
+		$link = join	( '.'
+						, map {$self->processcode(\$_)}
+							split(/\./, $link.$tail)
+						);
+		$tail = '';
 	}
 
 	# As a goodie, rescan the tail of import/from for Python code
@@ -138,10 +148,8 @@ sub processinclude {
 
 	# Assemble the highlighted bits
 	$$frag =	"<span class='reserved'>$dirname</span>"
-			.	( defined($link)
-				? $link
-				: $file
-				);
+			.	$link
+			.	$tail;
 }
 
 1;

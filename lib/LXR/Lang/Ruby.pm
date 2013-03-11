@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Ruby.pm,v 1.2 2012/09/17 12:15:43 ajlittoz Exp $
+# $Id: Ruby.pm,v 1.3 2013/03/11 16:11:43 ajlittoz Exp $
 #
 # Enhances the support for the Ruby language over that provided by
 # Generic.pm
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Ruby;
 
-$CVSID = '$Id: Ruby.pm,v 1.2 2012/09/17 12:15:43 ajlittoz Exp $ ';
+$CVSID = '$Id: Ruby.pm,v 1.3 2013/03/11 16:11:43 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -43,6 +43,7 @@ sub processinclude {
 	my $lsep;		# left separator
 	my $rsep;		# right separator
 	my $link;		# link to include file
+	my $tail;		# lower-lever links after current $link
 	my $identdef = $self->langinfo('identdef');
 
 	if ($source =~ s/^				# Parse instruction
@@ -69,24 +70,47 @@ sub processinclude {
 
 	$path =~ s@(?<!\.rb)$@.rb@;
 	$link = &LXR::Common::incref($file, "include" ,$path ,$dir);
-	if (defined($link)) {
-		while ($file =~ m!/!) {
-			$link =~ s!^([^>]+>)([^/]*/)+!$1!g;
+	if (!defined($link)) {
+		$tail = $file if $path !~ m!/!;
+	}
+	while	(	$file =~ m!/!
+			&&	substr($link, 0, 1) ne '<'
+			) {
+		$file =~ s!(/[^/]*)$!!;
+		$tail = $1 . $tail;
+		$path =~ s!/[^/]+$!!;
+		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+	}
+	if (substr($link, 0, 1) eq '<') {
+		while ($path =~ m!/!) {
+			$link =~ s!^([^>]+>)([^/]*/)+?!$1!;
+			$tail = '/' . $link . $tail;
 			$file =~ s!/[^/]*$!!;
 			$path =~ s!/[^/]+$!!;
-			$link = &LXR::Common::incdirref($file, "include", $path, $dir)
-					. "/"
-					. $link ;
+			$link = &LXR::Common::incdirref($file, "include", $path, $dir);
 		}
-	} else {
-		$link = $file;
 	}
+# 	if (defined($link)) {
+# 		while ($file =~ m!/!) {
+# 			$link =~ s!^([^>]+>)([^/]*/)+!$1!g;
+# 			$file =~ s!/[^/]*$!!;
+# 			$path =~ s!/[^/]+$!!;
+# 			$link = &LXR::Common::incdirref($file, "include", $path, $dir)
+# 					. "/"
+# 					. $link ;
+# 		}
+# 	} else {
+# 		$link = $file;
+# 	}
+	# Rescan the unused part of the source line
+	&LXR::SimpleParse::requeuefrag($source);
+
 	$$frag =	"<span class='reserved'>$dirname</span>"
 			.	$spacer
 			.	$lsep
 			.	$link
-			.	$rsep
-			. $source;
+			.	$tail
+			.	$rsep;
 }
 
 1;

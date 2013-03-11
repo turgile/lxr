@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.39 2012/09/21 17:07:17 ajlittoz Exp $
+# $Id: Generic.pm,v 1.40 2013/03/11 16:11:42 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.39 2012/09/21 17:07:17 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.40 2013/03/11 16:11:42 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -372,6 +372,7 @@ sub processinclude {
 	my $m;			# matching pattern
 	my $s;			# substitution string
 	my $link;		# link to include file
+	my $tail;		# lower-lever links after current $link
 	my $identdef = $self->langinfo('identdef');
 
 	my $incspec = $self->langinfo('include');
@@ -461,18 +462,31 @@ sub processinclude {
 		$path    = $file;
 		$rsep    = $6 . $9;
 	}
-	$link = &LXR::Common::incref($file, "include" ,$path ,$dir);
-	if (defined($link)) {
-		while ($file =~ m!/!) {
-			$link =~ s!^([^>]+>)([^/]*/)+?([^/<]+<)!$1$3!;
-			$file =~ s!/[^/]*$!!;
+	$link = &LXR::Common::incref($file, "include", $path, $dir);
+	if (!defined($link)) {
+		$tail = $file if $path !~ m!/!;
+	}
+	# incref above did not return a link to the file.
+	# Explore however the path to see if directories are
+	# known along the way.
+	while	(	$path =~ m!/!
+			&&	substr($link, 0, 1) ne '<'
+			) {
+		$file =~ s!(/[^/]*)$!!; # BUG: incorrect if sparator not /
+		$tail = $1 . $tail;
+		$path =~ s!/[^/]+$!!;
+		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+	}
+	# A known directory (at least) has been found.
+	# Build links to higher path elements
+	if (substr($link, 0, 1) eq '<') {
+		while ($path =~ m!/!) {
+			$link =~ s!^([^>]+>)([^/]*/)+?([^/<]+<)!$1$3!; # BUG: incorrect if sparator not /
+			$tail = '/' . $link . $tail;
+			$file =~ s!/[^/]*$!!; # BUG: incorrect if sparator not /
 			$path =~ s!/[^/]+$!!;
-			$link = &LXR::Common::incdirref($file, "include", $path, $dir)
-					. "/"
-					. $link ;
+			$link = &LXR::Common::incdirref($file, "include", $path, $dir);
 		}
-	} else {
-		$link = $file;
 	}
 
 	# Rescan the tail for more "code" constructs
@@ -485,6 +499,7 @@ sub processinclude {
 				)
 			.	$spacer . $lsep
 			.	$link
+			.	$tail
 			.	$rsep
 }
 

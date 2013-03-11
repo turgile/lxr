@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Java.pm,v 1.9 2012/11/21 15:08:48 ajlittoz Exp $
+# $Id: Java.pm,v 1.10 2013/03/11 16:11:42 ajlittoz Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -23,7 +23,7 @@
 
 package LXR::Lang::Java;
 
-my $CVSID = '$Id: Java.pm,v 1.9 2012/11/21 15:08:48 ajlittoz Exp $ ';
+my $CVSID = '$Id: Java.pm,v 1.10 2013/03/11 16:11:42 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -66,7 +66,7 @@ sub processinclude {
 	# "import java.awt.classname" by providing links to the
 	# package and the class
 	elsif ($source =~ s/^
-				(import\s+)
+				(import\s+(?:static\s+)?)
 				([\w.]+)	# package 'path'
 				\.(\*|\w+)	# class or *
 				//sx) {
@@ -88,10 +88,7 @@ sub processinclude {
 
 		# Assemble the highlighted bits
 		$$frag =	"<span class='reserved'>$dirname</span>"
-				.	( defined($link)
-					? $link
-					: $file
-					);
+				.	$link;
 }
 
 sub _packagelinks {
@@ -99,18 +96,34 @@ sub _packagelinks {
 
 	my $link = &LXR::Common::incdirref
 				($file, "include", $path, $dir);
-	if (defined($link)) {
+		# Now iteratively pop the last part of the path to
+		# build direct links to the corresponding sub-directory.
+	my $tail;
+
+		# Part 1: there is not yet a link in the path,
+		#		  try to find a known directory.
+	while	(	$file =~ m!\.!
+			&&	substr($link, 0, 1) ne '<'
+			) {
+		$file =~ s!(\.[^.]*)$!!;
+		$tail = $1 . $tail;
+		$path =~ s!/[^/]+$!!;
+		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+	}
+
+		# Part 2: the path leads to a known file/directory,
+		#		  build now links to higher path elements.
+	if (substr($link, 0, 1) eq '<') {
 		while ($file=~m!\.!) {
 			$link =~ s!^([^>]+>)([^.]*\.)+?([^.<]+<)!$1$3!;
+			$tail = '.' . $link . $tail;
 			$file =~ s!\.[^.]*$!!;
 			$path =~ s!/[^/]+$!!;
 			$link = &LXR::Common::incdirref($file, "include", $path, $dir)
-					. "."
-					. $link ;
 		}
-	} else {
-		$link = $file;
 	}
+
+	$link .= $tail;
 	return $link;
 }
 
