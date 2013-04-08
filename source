@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T
-# $Id: source,v 1.64 2013/03/18 13:20:57 ajlittoz Exp $
+# $Id: source,v 1.65 2013/04/08 16:11:29 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -24,7 +24,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.64 2013/03/18 13:20:57 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.65 2013/04/08 16:11:29 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" };  # if LXR modules are in ./lib
@@ -774,7 +774,7 @@ httpinit;
 
 if ($config->filter && $pathname !~ $config->filter) {
 	makeheader('source');
-	print("<p class=\"error\">\n<i>The file $pathname does not exist.</i>\n</p>\n");
+	print("<p class=\"error\">\n<i>Filename $pathname is discarded by the present <code>'filter'</code> rule.</i>\n</p>\n");
 	makefooter('source');
 	exit;
 }
@@ -785,7 +785,7 @@ if ($config->filter && $pathname !~ $config->filter) {
 if ($HTTP->{'param'}{'_raw'}) {
 	printfile(1);
 } else {
-	my $type = ((substr($pathname, -1) eq '/') ? 'source' : 'sourcedir');
+	my $type = ((substr($pathname, -1) ne '/') ? 'source' : 'sourcedir');
 
 	makeheader($type);
 	printfile(0);
