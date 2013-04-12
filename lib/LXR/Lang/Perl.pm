@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Perl.pm,v 1.12 2013/03/11 16:11:43 ajlittoz Exp $
+# $Id: Perl.pm,v 1.13 2013/04/12 15:01:09 ajlittoz Exp $
 #
 # Enhances the support for the Perl language over that provided by
 # Generic.pm
@@ -33,7 +33,7 @@ It only overrides C<processinclude> for efficiency.
 
 package LXR::Lang::Perl;
 
-$CVSID = '$Id: Perl.pm,v 1.12 2013/03/11 16:11:43 ajlittoz Exp $ ';
+$CVSID = '$Id: Perl.pm,v 1.13 2013/04/12 15:01:09 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -73,7 +73,6 @@ sub processinclude {
 	my $file;		# language include file
 	my $path;		# OS include file
 	my $link;		# link to include file
-	my $tail;		# lower-lever links after current $link
 
 	# Faster surrogate for 'directive'
 	if ($source =~ s/^		# reminder: no initial space in the grammar
@@ -92,31 +91,14 @@ sub processinclude {
 		$path =~ s@$@.pm@;		# Add file extension
 
 		# Create the hyperlinks
-		$link = &LXR::Common::incref($file, "include", $path, $dir);
-		if (!defined($link)) {
-			$tail = $file if $path !~ m!/!;
-		}
-		# incref above did not return a link to the file.
-		# Explore however the path to see if directories are
-		# known along the way.
-		while	(	$file =~ m!::!
-				&&	substr($link, 0, 1) ne '<'
-				) {
-			$file =~ s!(::[^:]*)$!!;
-			$tail = $1 . $tail;
-			$path =~ s!/[^/]+$!!;
-			$link = &LXR::Common::incdirref($file, "include", $path, $dir);
-		}
-		if (substr($link, 0, 1) eq '<') {
-			while ($file =~ m!::!) {
-				$link =~ s!^([^>]+>)([^:]*::)+!$1!;
-				$tail = '::' . $link . $tail;
-				$file =~ s!::[^:]*$!!;
-				$path =~ s!/[^/]+$!!;
-				$link = &LXR::Common::incdirref($file, "include" ,$path ,$dir);
-			}
-		}
-		$link .= $tail;
+		$link = $self->_linkincludedirs
+					( &LXR::Common::incref
+						($file, "include", $path, $dir)
+					, $file
+					, '::'
+					, $path
+					, $dir
+					);
 	} elsif ($source =~ s/^	# reminder: no initial space in the grammar
 					([\w]+	# reserved keyword for include construct
 					\s+)	#   and space in same capture
@@ -133,36 +115,22 @@ sub processinclude {
 		$path    = $file;
 
 		# Create the hyperlinks
-		$link = &LXR::Common::incref($file, "include", $path, $dir);
-		if (!defined($link)) {
-			$tail = $file if $path !~ m!/!;
-		}
-		while	(	$file =~ m!/!
-				&&	substr($link, 0, 1) ne '<'
-				) {
-			$file =~ s!(/[^/]*)$!!;
-			$tail = $1 . $tail;
-			$path =~ s!/[^/]+$!!;
-			$link = &LXR::Common::incdirref($file, "include", $path, $dir);
-		}
-		if (substr($link, 0, 1) eq '<') {
-			while ($file =~ m!/!) {
-				$link =~ s!^([^>]+>)([^/]*/)+!$1!;
-				$tail = '/' . $link . $tail;
-				$file =~ s!/[^/]*$!!;
-				$path =~ s!/[^/]+$!!;
-				$link = &LXR::Common::incdirref($file, "include" ,$path ,$dir);
-			}
-		}
-		$link = $delim . $link . $tail . $delim;
+# 		$link = &LXR::Common::incref($file, "include", $path, $dir);
+		$link = $self->_linkincludedirs
+					( &LXR::Common::incref
+						($file, "include", $path, $dir)
+					, $file
+					, '/'
+					, $path
+					, $dir
+					);
+		$link = $delim . $link . $delim;
 	} else {
 		# Guard against syntax error or variant
 		# Advance past keyword, so that parsing may continue without loop.
 		$source =~ s/^([\w]+)//;	# Erase keyword
 		$dirname = $1;
-		$$frag =	"<span class='reserved'>$dirname</span>";
-		&LXR::SimpleParse::requeuefrag($source);
-		return;
+		$link = '';
 	}
 
 	# As a goodie, rescan the tail of use/require for Perl code

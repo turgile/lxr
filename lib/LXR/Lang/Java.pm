@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Java.pm,v 1.10 2013/03/11 16:11:42 ajlittoz Exp $
+# $Id: Java.pm,v 1.11 2013/04/12 15:01:09 ajlittoz Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -23,7 +23,7 @@
 
 package LXR::Lang::Java;
 
-my $CVSID = '$Id: Java.pm,v 1.10 2013/03/11 16:11:42 ajlittoz Exp $ ';
+my $CVSID = '$Id: Java.pm,v 1.11 2013/04/12 15:01:09 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -56,7 +56,14 @@ sub processinclude {
 		$file    = $2;
 		$path    = $file;
 		$path =~ s@\.@/@g;		# Replace Java delimiters
-		$link = _packagelinks ($file, $path, $dir);
+		$link = $self->_linkincludedirs
+					( &LXR::Common::incdirref
+							($file, "include", $path, $dir)
+					, $file
+					, '.'
+					, $path
+					, $dir
+					);
 	}
 
 	# Deal with import declaration of the form
@@ -75,56 +82,33 @@ sub processinclude {
 		$path    = $file;
 		$class   = $3;
 		$path =~ s@\.@/@g;		# Replace Java delimiters
-		$link = _packagelinks ($file, $path, $dir)
+		$link = $self->_linkincludedirs
+					( &LXR::Common::incdirref
+							($file, "include", $path, $dir)
+					, $file
+					, '.'
+					, $path
+					, $dir
+					)
 			.	'.'
 			.	( $index->issymbol($class, $releaseid)
 				? join($class, @{$$self{'itag'}})
 				: $class
 				);
+	} else {
+		# Guard against syntax error or variant
+		# Advance past keyword, so that parsing may continue without loop.
+		$source =~ s/^([\w]+)//;	# Erase keyword
+		$dirname = $1;
+		$link = '';
 	}
 
-		# As a goodie, rescan the tail of use/require for Perl code
-		&LXR::SimpleParse::requeuefrag($source);
+	# As a goodie, rescan the tail of package/import for Java code
+	&LXR::SimpleParse::requeuefrag($source);
 
-		# Assemble the highlighted bits
-		$$frag =	"<span class='reserved'>$dirname</span>"
-				.	$link;
-}
-
-sub _packagelinks {
-	my ($file, $path, $dir) = @_;
-
-	my $link = &LXR::Common::incdirref
-				($file, "include", $path, $dir);
-		# Now iteratively pop the last part of the path to
-		# build direct links to the corresponding sub-directory.
-	my $tail;
-
-		# Part 1: there is not yet a link in the path,
-		#		  try to find a known directory.
-	while	(	$file =~ m!\.!
-			&&	substr($link, 0, 1) ne '<'
-			) {
-		$file =~ s!(\.[^.]*)$!!;
-		$tail = $1 . $tail;
-		$path =~ s!/[^/]+$!!;
-		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
-	}
-
-		# Part 2: the path leads to a known file/directory,
-		#		  build now links to higher path elements.
-	if (substr($link, 0, 1) eq '<') {
-		while ($file=~m!\.!) {
-			$link =~ s!^([^>]+>)([^.]*\.)+?([^.<]+<)!$1$3!;
-			$tail = '.' . $link . $tail;
-			$file =~ s!\.[^.]*$!!;
-			$path =~ s!/[^/]+$!!;
-			$link = &LXR::Common::incdirref($file, "include", $path, $dir)
-		}
-	}
-
-	$link .= $tail;
-	return $link;
+	# Assemble the highlighted bits
+	$$frag =	"<span class='reserved'>$dirname</span>"
+			.	$link;
 }
 
 1;

@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.48 2012/11/14 18:39:27 ajlittoz Exp $
+# $Id: Lang.pm,v 1.49 2013/04/12 15:01:08 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ categories editing.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.48 2012/11/14 18:39:27 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.49 2013/04/12 15:01:08 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -275,6 +275,85 @@ sub processinclude {
 	my ($self, $frag, $dir) = @_;
 	warn  __PACKAGE__."::processinclude not implemented. Parameters @_";
 	return;
+}
+
+
+=head2 C<_linkincludedirs ($link, $file, $path, $dir)>
+
+Internal function C<_linkincludedirs> builds links for partial paths in C<$link>.
+
+=over
+
+=item 1 C<$link>
+
+a I<string> containing an already processed link,
+i.e. the result of an invocation of C<incref> or C<incdirref>.
+
+=item 1 C<$file>
+
+a I<string> containing the target file name in the language-specific
+dialect (without language-specific separator replacement),
+
+=item 1 C<$sep>
+
+a I<string> containing the language-specific path separator,
+
+=item 1 C<$path>
+
+a I<string> containing the target file name as an OS file name
+(path separator is /),
+
+=item 1 C<$dir>
+
+a I<string> containing the last directory argument for C<incdirref>.
+
+=back
+
+This function is a utility function reserved for the language parsers.
+
+=cut
+
+sub _linkincludedirs {
+	my ($self, $link, $file, $sep, $path, $dir) = @_;
+	my ($sp, $l, $r);	# various separator positions
+	my $tail;
+
+	if (!defined($link)) {
+		$tail = $file if $path !~ m!/!;
+	}
+	# If incref or incdiref did not return a link to the file,
+	# explore however the path to see if directories are
+	# known along the way.
+	while	(	$path =~ m!/!
+			&&	substr($link, 0, 1) ne '<'
+			) {
+		# NOTE: the following rindex never returns -1, because
+		#		we test for the presence of a separator before
+		#		iterating the loop.
+		$sp = rindex ($file, $sep);
+		$tail = substr($file, $sp) . $tail;
+		$file = substr($file, 0, $sp);
+		$path =~ s!/[^/]+$!!;
+		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+	}
+	# A known directory (at least) has been found.
+	# Build links to higher path elements
+	if (substr($link, 0, 1) eq '<') {
+		while ($path =~ m!/!) {
+			# NOTE: see note above about rindex
+			$l = index  ($link, '>');
+			$r = rindex ($link, '<');
+			$sp = rindex (substr($link, 1+$l, $r-$l-1), $sep);
+			substr($link, 1+$l, $sp+length($sep)) = '';
+# 			$link =~ s!^([^>]+>)([^/]*/)+?([^/<]+<)!$1$3!;
+			$tail = $sep . $link . $tail;
+			$sp = rindex ($file, $sep);
+			$file = substr($file, 0, $sp);
+			$path =~ s!/[^/]+$!!;
+			$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+		}
+	}
+	return $link . $tail;
 }
 
 
