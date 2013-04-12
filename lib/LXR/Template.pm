@@ -981,7 +981,7 @@ sub modeexpand {
 						, 'off'  => $modeoff
 						}
 			);
-	} elsif ($who eq 'source' && $pathname !~ m|/$|) {
+	} elsif ($who eq 'source' && substr($pathname, -1) ne '/') {
 		$modelink = diffref($modename, "modes", $pathname);
 		$modecss  = "modes";
 		$modelink =~ m!href="(.*?)(\?|">)!;	# extract href target as action
