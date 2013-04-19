@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.49 2013/04/12 15:01:08 ajlittoz Exp $
+# $Id: Lang.pm,v 1.50 2013/04/19 12:42:14 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ categories editing.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.49 2013/04/12 15:01:08 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.50 2013/04/19 12:42:14 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -319,7 +319,16 @@ sub _linkincludedirs {
 	my $tail;
 
 	if (!defined($link)) {
-		$tail = $file if $path !~ m!/!;
+		if ($path !~ m!/!) {
+			$tail = $file;
+		} elsif (substr($path, -1) eq '/') {
+		# Path ends with /: it may be a directory or an HTTP request.
+		# Remove trailing / and do an initial processing.
+			chop($path);
+			$tail = $sep;
+			$file = substr($file, 0, rindex($file, $sep));
+			$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+		}
 	}
 	# If incref or incdiref did not return a link to the file,
 	# explore however the path to see if directories are
