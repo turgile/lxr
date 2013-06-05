@@ -527,13 +527,13 @@ sub titleexpand {
 	my $ret;
 
 	if ($who eq 'source' || $who eq 'diff' || $who eq 'sourcedir') {
-		$ret = $config->{'sourcerootname'} . $pathname;
+		$ret = $config->sourcerootname . $pathname;
 	} elsif ($who eq 'ident') {
-		$ret = $config->{'sourcerootname'} . ' identifier search'
+		$ret = $config->sourcerootname . ' identifier search'
 				. ($identifier ? ": $identifier" : '');
 	} elsif ($who eq 'search') {
 		my $s = $HTTP->{'param'}{'_string'};
-		$ret = $config->{'sourcerootname'} . ' general search'
+		$ret = $config->sourcerootname . ' general search'
 				. ($s ? ": $s" : '');
 	}
 	$ret =~ s/&/&amp;/g;
