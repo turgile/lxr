@@ -2,7 +2,7 @@
 #- LXR master configuration file
 #-	Global configuration section
 #-
-#-	$Id: global.conf.part,v 1.3 2013/03/18 13:20:57 ajlittoz Exp $
+#-	$Id: global.conf.part,v 1.4 2013/08/31 19:30:32 ajlittoz Exp $
 #-
 #-
 #-	This file fragment is meant to be "included" to form the
@@ -69,31 +69,31 @@
 #@MSG to avoid screen cluttering.
 #@ASK --- Use 'buttons-and-menus' instead of 'link' interface?; 1;yes, no; Y, N
 #@IF	"%A%" eq 'Y'
-	, 'htmlhead'		=> 'templates/html/html-head-btn.html'
+	, 'htmlhead'		=> '%LXRroot%/templates/html/html-head-btn.html'
 #@ELSE
-	, 'htmlhead'		=> 'templates/html/html-head.html'
+	, 'htmlhead'		=> '%LXRroot%/templates/html/html-head.html'
 #@ENDIF
-	, 'htmltail'		=> 'templates/html/html-tail.html'
-	, 'htmldir'			=> 'templates/html/html-dir-indexing.html'
+	, 'htmltail'		=> '%LXRroot%/templates/html/html-tail.html'
+	, 'htmldir'			=> '%LXRroot%/templates/html/html-dir-indexing.html'
 		# If you do not need the "last indexed" column in directory
 		# display (e.g. for a stable unchanging tree), erase the
 		# '-indexing' suffix above.
-	, 'htmlident'		=> 'templates/html/html-ident.html'
-	, 'htmlsearch'		=> 'templates/html/html-search-%search_engine%.html'
-	, 'htmlconfig'		=> 'templates/html/html-config.html'
+	, 'htmlident'		=> '%LXRroot%/templates/html/html-ident.html'
+	, 'htmlsearch'		=> '%LXRroot%/templates/html/html-search-%search_engine%.html'
+	, 'htmlconfig'		=> '%LXRroot%/templates/html/html-config.html'
 
 		# htmlhead and htmltail can be customised for the various
 		# LXR operations. Just replace html by source (listing file),
 		# sourcedir (displaying directory), diff (difference markup),
 		# ident (identifier search), search (free-text search)
 		# as below (which changes nothing):
-#	, 'sourcehead'		=> 'templates/html/html-head.html'
-#	, 'sourcedirhead'	=> 'templates/html/html-head.html'
+#	, 'sourcehead'		=> '%LXRroot%/templates/html/html-head.html'
+#	, 'sourcedirhead'	=> '%LXRroot%/templates/html/html-head.html'
 
 		# showconfig script is a bit special since "version" has
 		# no meaning for it. Better to wipe out the 'variables' selection
 		# links with an adequate header:
-	, 'showconfighead'		=> 'templates/html/config-head-btn-smaller.html'
+	, 'showconfighead'		=> '%LXRroot%/templates/html/config-head-btn-smaller.html'
 
 		# Default character width of left version (for diff)
 	, 'diffleftwidth'	=> 50
