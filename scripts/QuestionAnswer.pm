@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: QuestionAnswer.pm,v 1.2 2012/12/04 17:42:27 ajlittoz Exp $
+# $Id: QuestionAnswer.pm,v 1.3 2013/09/02 17:06:03 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #
 ###############################################
 
-# $Id: QuestionAnswer.pm,v 1.2 2012/12/04 17:42:27 ajlittoz Exp $
+# $Id: QuestionAnswer.pm,v 1.3 2013/09/02 17:06:03 ajlittoz Exp $
 
 package QuestionAnswer;
 
@@ -43,7 +43,7 @@ sub find_unique_prefix {
 	my ($list) = @_;
 	my @pats;
 
-	my $flat = "#" . join("#", @$list);
+	my $flat = '#' . join('#', @$list);
 PAT:
 	foreach my $pat (@$list) {
 		my $pfix = "#";
@@ -52,8 +52,8 @@ PAT:
 			$pfix .= $c;
 			if (1 == (@_ = $flat =~ m/$pfix/ig)) {
 				my $sl = @chars;	#suffix length
-				$pfix .= "("x($sl>0) . join("(", @chars) . ")?"x$sl;
-				push(@pats, "^" . substr($pfix, 1));
+				$pfix .= '('x($sl>0) . join('(', @chars) . ')?'x$sl;
+				push(@pats, '^' . substr($pfix, 1));
 				next PAT;
 			}
 		}
@@ -87,7 +87,7 @@ sub get_user_choice {
 			|| !defined($answers)
 			|| @$choices != @$answers
 			) {
-		print "${VTred}FATAL:${VTnorm} incorrect choices and/or answers for $question!\n";
+		print "${VTred}FATAL:${VTnorm} incorrect choices and/or answers for \"$question\"!\n";
 		exit 2;
 		}
 		if ($default >= @$choices) {
@@ -122,13 +122,13 @@ sub get_user_choice {
 		chomp($userentry);
 		#	See if user just hit "return"; if this is valid, give
 		#	default answer, otherwise ask again.
-		if ($userentry eq "") {
+		if ($userentry eq '') {
 			if ($default >= 0) {
 				return $$answers[$default];
 			} elsif ($default == -2) {
 				return $$answers[0];
 			} elsif ($default == -4) {
-				return "";
+				return '';
 			}
 			print "No default choice, try again...\n";
 			next;
