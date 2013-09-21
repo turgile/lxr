@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.22 2013/01/18 17:48:50 ajlittoz Exp $
+# $Id: Files.pm,v 1.23 2013/09/21 12:54:52 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.22 2013/01/18 17:48:50 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.23 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -48,7 +48,7 @@ and its location in the file system
 
 =item 1 C<$params>
 
-an optional I<hash> from lxr.conf used to pass extra information
+an optional I<hash> reference from lxr.conf used to pass extra information
 to the real constructor
 
 =back
@@ -124,7 +124,7 @@ sub getdir {
 	return @dircontents;
 }
 
-=head2 C<getfile ($pathname, $releaseid, $withannot)>
+=head2 C<getfile ($pathname, $releaseid)>
 
 C<getfile> returns a file content in a string.
 
@@ -138,10 +138,6 @@ a I<string> containing the path relative to C<'sourceroot'>
 
 the release (or version) in which C<$pathname> is expected to
 be found
-
-=item 1 C<$withannot>
-
-optional, if defined request an annotated file
 
 =back
 
@@ -191,6 +187,8 @@ annotation retrieval is barred by lxr.conf.
 B<IMPORTANT NOTICE:>
 
 =over
+
+=item
 
 Starting with release 1.1, this method should only be used for
 internal needs of the derived classes because annotation editing
@@ -277,7 +275,7 @@ sub truncateannotation {
 	return ++$len;
 }
 
-=head2 C<getauthor ($pathname, $annotation)>
+=head2 C<getauthor ($pathname, $releaseid, $annotation)>
 
 C<getauthor> returns the author of the designated revision.
 
@@ -461,7 +459,7 @@ directories always end with C</>. Test will done only once,
 eventually adding C</> suffix.
 Afterwards, all is needed is test for the trailing slash.
 
-This sub is used when the existence must be confirmed, such as
+This method is used when the existence must be confirmed, such as
 when processing an include link since it is independent from
 the currently displayed file.
 
@@ -492,7 +490,7 @@ be found
 
 =back
 
-This sub is used when the existence must be confirmed, such as
+This method is used when the existence must be confirmed, such as
 when processing an include link since it is independent from
 the currently displayed file.
 
@@ -502,7 +500,7 @@ B<Note:>
 
 =item
 
-I<< When the file is subsequently accessed, it is much simpler and
+I<When the file is subsequently accessed, it is much simpler and
 efficient to use C<getfilehandle>, since a handle will be
 required anyway.>
 
@@ -535,7 +533,7 @@ be found
 
 =back
 
-Extract content of the path from repository and stuf it into a
+Extract content of the path from repository and stuff it into a
 temporary file whose name is returned.
 
 B<Note:>
@@ -558,7 +556,7 @@ sub realfilename {
 	$fileh = $self->getfilehandle ($filename, $releaseid);
 	return undef unless defined($fileh);
 
-	$tmp = $config->tmpdir
+	$tmp = $config->{'tmpdir'}
 			. '/lxrtmp.'
 			. time
 			. '.' . $$
@@ -614,9 +612,7 @@ sub releaserealfilename {
 
 C<_ignoredirs> is an internal (as indicated by _ prefix) filter utility
 to exclude directories containing any partial path defined in configuration
-parameter C<'ignoredirs'>.
-
-The filter is to be called from C<getdir()>.
+parameters C<'ignoredirs'> and C<'filterdirs'>.
 
 =over
 
@@ -630,22 +626,28 @@ a I<string> containing the last directory element
 
 =back
 
-Only the last part is tested since the parent is supposed to have been
-scanned by a previous step of the recursive directory tree traversal.
+Only the last part is tested for C<'ignoredirs'> since the parent
+is supposed to have been scanned by a previous step of the recursive
+directory tree traversal.
 If a higher element matched one of the C<'ignoredirs'> strings,
 that path part was filtered out and no further part is presented to this
 function.
+
+C<'filterdirs'> operates on the full path,
+I<i.e.> C<$path> concatenated with C<$node>.
 
 B<Note:>
 
 =over
 
+=item
+
 The filter is to be called from C<getdir()>.
 
-I<<This usage choice leaves the possibility to override the filter through
+I<This usage choice leaves the possibility to override the filter through
 manually entering the path in the URL. Since it does not go through
 C<getdir()>, the "forbidden" path subdirectory is transmitted unaltered
-to the source display script.>>
+to the source display script.>
 
 =back
 
@@ -654,7 +656,7 @@ to the source display script.>>
 sub _ignoredirs {
 	my ($self, $path, $node) = @_;
 
-	return 1 if $node =~ m/^\./;	# ignore "dot" dirs
+	return 1 if substr($node, 0, 1) eq '.';	# ignore "dot" dirs
 	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
 		return 1 if $node eq $ignoredir;
 	}
@@ -668,9 +670,7 @@ sub _ignoredirs {
 
 C<_ignorefiles> is an internal (as indicated by _ prefix) filter utility
 to exclude files containing patterns defined in configuration
-parameter C<'ignorefiles'>.
-
-The filter is to be called from C<getdir()>.
+parameters C<'ignorefiles'> and C<'filterfiles'>.
 
 =over
 
@@ -684,24 +684,26 @@ a I<string> containing the file name
 
 =back
 
-Presently, only filename filtering is done, i.e. the same filter is
-applied in every directory.
+Only filename filtering is done for C<'ignorefiles'>,
+i.e. the same filter is applied in every directory.
 Usually, it screens off "dot" files, editor backups, binaries, ...
-A more specific filtering could be implemented taking into account
-both the parent directory and the filename.
-But this extended feature will be added only on user request due to
-its time-cost on huge trees such as Linux kernel.
+
+C<'filterfiles'> operates on the full path,
+I<i.e.> concatenation of the parent directory C<$path>
+and the filename C<$node>.
 
 B<Note:>
 
 =over
 
+=item
+
 The filter is to be called from C<getdir()>.
 
-I<<This usage choice leaves the possibility to override the filter through
+I<This usage choice leaves the possibility to override the filter through
 manually entering the path in the URL. Since it does not go through
 C<getdir()>, the "forbidden" filename is transmitted unaltered
-to the source display script.>>
+to the source display script.>
 
 =back
 

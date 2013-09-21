@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.47 2013/01/17 09:30:01 ajlittoz Exp $
+# $Id: CVS.pm,v 1.48 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.47 2013/01/17 09:30:01 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.48 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -56,7 +56,7 @@ sub new {
 
 		# the rcsdiff command (used in getdiff) uses parameters only supported by GNU diff
 		$ENV{'PATH'} = $self->{'path'};
-		if (`diff --version 2>/dev/null` =~ m/GNU/) {
+		if (index (`diff --version 2>/dev/null`, 'GNU') >= 0) {
 			$gnu_diff = 1;
 		} else {
 			$gnu_diff = 0;
@@ -173,7 +173,8 @@ sub getannotations {
 			#	d pos nbr = remove "nbr" lines at "pos" position
 			} elsif ($dir =~ m/^d(\d+)\s+(\d+)/) {
 				#	Record in @anno the revision the lines were entered
-				map { $anno[$_] = $lrev if $_ ne ''; } splice(@head, $1 - $off - 1, $2);
+				map	{ $anno[$_] = $lrev if $_ ne '' }
+					splice(@head, $1 - $off - 1, $2);
 				$off += $2;					# Increase adjustment
 			} else {
 				warn('Oops! Out of sync!');
@@ -285,13 +286,20 @@ sub getfilehandle {
 
 	$rev =~ m/([\d\.]*)/;
 	$rev = $1;    # untaint
-	my $clean_filename = $self->cleanstring($self->toreal($filename, $releaseid));
+# 	my $clean_filename = $self->cleanstring($self->toreal($filename, $releaseid));
+	my $clean_filename = $self->toreal($filename, $releaseid);
 	$clean_filename =~ m/(.*)/;
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
 	$ENV{'PATH'} = $self->{'path'};
 	# Option -q: quiet, no diagnostics printed
-	open($fileh, '-|', "co -q -p$rev $clean_filename 2>/dev/null")
+	open	( $fileh
+			, '-|'
+			, 'co', '-q'
+			, '-p'.$rev
+			, $clean_filename
+# 			, '2>/dev/null'
+			)
 	|| die('Error executing "co"; rcs not installed?');
 
 	return $fileh;
@@ -458,7 +466,8 @@ sub getdiff {
 	$rev1 = $1;    # untaint
 	$rev2 =~ m/([\d\.]*)/;
 	$rev2 = $1;    # untaint
-	my $clean_filename = $self->cleanstring($self->toreal($filename, $release1));
+# 	my $clean_filename = $self->cleanstring($self->toreal($filename, $releaseid));
+	my $clean_filename = $self->toreal($filename, $release1);
 	$clean_filename =~ m/(.*)/;
 	$clean_filename = $1;    # technically untaint here (cleanstring did the real untainting)
 
@@ -466,7 +475,14 @@ sub getdiff {
 	# Option -q: quiet, no diagnostics printed
 	# Option -a: all files considered text files (diff option)
 	# Option -n: RCS format for differences (diff option)
-	open($fileh, '-|', "rcsdiff -q -a -n -r$rev1 -r$rev2 $clean_filename");
+	open	( $fileh
+			, '-|'
+			, 'rcsdiff'
+			, '-q', '-a', '-n'
+			, '-r'.$rev1
+			, '-r'.$rev2
+			, $clean_filename
+			);
 	die('Error executing "rcsdiff"; rcs not installed?') unless $fileh;
 	return $fileh->getlines;
 }
@@ -752,7 +768,7 @@ sub parsecvs {
 	# builds a hash pair keyword/value.
 	$cvs{'header'} = {
 		map {	s/@@/@/gs;
-				m/^@/s && substr($_, 1, -1) || $_
+				substr($_, 0, 1) eq '@' && substr($_, 1, -1) || $_
 			# The previous two lines "unquote" the @-strings.
 			} shift(@cvs) =~ m/(\w+)\s*((?:[^;@]+|@[^@]*@)*);/gs
 #			                   +---+   12        2       2 1
@@ -775,7 +791,7 @@ sub parsecvs {
 		#	Check if it is a branch tag (contributed by Blade)
 		#	Branch numbers have a 0 in the second rightmost position
 		#	(from CVS manual).
-		if ($rev =~ m/\.0\./) {		# simplified test
+		if (index($rev, '.0.') >= 0) {		# simplified test
 			(my $branchprefix = $rev) =~ s/\.0//;
 			#	Search the rcs file for all versions on the branch
 			my @revlist = ($file =~ m/\n($branchprefix\.\d+)\n/gs);
@@ -821,7 +837,7 @@ sub parsecvs {
 	# Every paragraph is composed of a revision number (on its own line,
 	# but it is not relevant here) followed by an undefined number of
 	# attributes.
-	while (@cvs && $cvs[0] !~ m/\s*desc/s) {
+	while (@cvs && $cvs[0] !~ m/\s*desc\b/s) {
 		my ($r, $v) = shift(@cvs) =~ m/\s*(\S+)\s*(.*)/s;
 #		                                  1rev1   2--2
 #		                                       attributes

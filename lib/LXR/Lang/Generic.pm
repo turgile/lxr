@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.41 2013/04/12 15:01:09 ajlittoz Exp $
+# $Id: Generic.pm,v 1.42 2013/09/21 12:54:53 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.41 2013/04/12 15:01:09 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.42 2013/09/21 12:54:53 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -92,7 +92,7 @@ sub new {
 	if	(  $index->deccount() <= 0	# Necessary for --allurls processing
 		|| !defined($generic_config)
 		) {
-	read_config();
+		read_config();
 	}
 	%$self = (%$self, %$generic_config);
 
@@ -123,7 +123,7 @@ replaced by the index of the table in the DB.
 =cut
 
 sub read_config {
-	open(CONF, $config->genericconf) || die "Can't open " . $config->genericconf . ", $!";
+	open(CONF, $config->{'genericconf'}) || die 'Can\'t open ' . $config->{'genericconf'} . ", $!";
 
 	local ($/) = undef;
 
@@ -142,7 +142,6 @@ sub read_config {
 			$typemap->{$type} = $index->decid($langmap->{$lang}{'langid'}, $typemap->{$type});
 		}
 	}
-	$index->commit();
 }
 
 
@@ -171,7 +170,7 @@ an I<integer> containing the internal DB id for the file/revision
 
 a I<reference> to the index (DB) object
 
-=itm 1 C<$config>
+=item 1 C<$config>
 
 a I<reference> to the configuration objet
 
@@ -197,15 +196,15 @@ sub indexfile {
 	# Launch ctags
 	if ($config->{'ectagsbin'}) {
 		open(CTAGS,
-			join	( " "
+			join	( ' '
 					, $config->{'ectagsbin'}
 					, @{$self->{'ectagsopts'}}
-					, "--excmd=number"
-					, "--language-force=$langforce"
-					, "-f"
-					, "-"
+					, '--excmd=number'
+					, '--language-force='.$langforce
+					, '-f'
+					, '-'
 					, $path
-					, "|"
+					, '|'
 					)
 		  )
 		  or die "Can't run ectags, $!";
@@ -219,7 +218,7 @@ sub indexfile {
 			$ext  =~ m/language:(\w+)/;
 			$type = $typemap->{$type};
 			if (!defined $type) {
-				print "Warning: Unknown type ", (split(/\t/, $_))[3], "\n";
+				print 'Warning: Unknown type ', (split(/\t/, $_))[3], "\n";
 				next;
 			}
 
@@ -307,13 +306,15 @@ Algorithm:
 
 =over
 
+=item
+
 Since it is generic, the process is driven by language-specific
 parameters taken in I<hash> C<'include'> from the configuration
 file.
 
-B<CAUTION!> I<<Remember that the include fragment has already been
+B<CAUTION!> I<Remember that the include fragment has already been
 isolated by the parser through subhash C<'include'> of C<'spec'>.
-This C<'include'> is a different hash, not a sub-hash.>>
+This C<'include'> is a different hash, not a sub-hash.>
 
 We first make use of C<'directive'> which is a regular expression
 allowing to split the include instruction or directive into 5 components:
@@ -333,17 +334,18 @@ allowing to split the include instruction or directive into 5 components:
 =back
 
 To have something useful with LXR, the included object designation
-has to be transformed into a file name. This is done by C<'first'>,
-C<'global'> and C<'last'> optional rewrite rules. They are respectively
-applied once at the beginning, repetitively as much as possible and
-once at the end.
+has to be transformed into a file name. This is done by C<'pre'>,
+C<'global'>, C<'separator'> and C<'post'> optional rewrite rules.
+They are respectively applied once at the beginning, repetitively
+as much as possible (on the name or only the language-specific
+separator) and once at the end.
 
 I<Do not be too smart with these rewrite rules. They only aim at
 transforming language syntax into file designation. Elaborate
 path processing is available with> C<'incprefix'>I<,> C<'ignoredirs'>
 I< and >C<'maps'> I<processed by the link builder.>
 
-When done, C<<E<lt>AE<gt> >> links to the file and all intermediate
+When done, C<E<lt>AE<gt>> links to the file and all intermediate
 directories are build.
 
 =back
@@ -351,6 +353,8 @@ directories are build.
 B<Note:>
 
 =over
+
+=item
 
 If no C<'include'> I<hash> is defined for this language, an internal
 C<'directive'> matching C/C++ and Perl syntax is used.
@@ -458,7 +462,7 @@ sub processinclude {
 		$rsep    = '';
 		$psep    = '/';
 	}
-# 	$link = &LXR::Common::incref($file, "include", $path, $dir);
+
 	$link = $self->_linkincludedirs
 				( &LXR::Common::incref
 					($file, "include", $path, $dir)
@@ -523,14 +527,14 @@ sub processcode {
 	{
 		my $dictsymbol = $2;
 		$dictsymbol = uc($dictsymbol) if $insensitive;
-		$answer .= "$1" .
-		( $self->isreserved($2)
-		? "<span class='reserved'>$2</span>"
-		:	( $index->issymbol($dictsymbol, $$self{'releaseid'})
-			? join($2, @{$$self{'itag'}})
-			: $2
-			)
-		);
+		$answer .= $1
+				.	( $self->isreserved($2)
+					? "<span class='reserved'>$2</span>"
+					:	( $index->issymbol($dictsymbol, $$self{'releaseid'})
+						? join($2, @{$$self{'itag'}})
+						: $2
+						)
+					);
 	}
 	# don't forget the last chunk of the line containing no target
 	$$code = $answer . $source;
@@ -599,7 +603,7 @@ an I<integer> containing the internal DB id for the file/revision
 
 a I<reference> to the index (DB) object
 
-=itm 1 C<$config>
+=item 1 C<$config>
 
 a I<reference> to the configuration objet
 
@@ -674,7 +678,7 @@ sub referencefile {
 =head2 C<language ()>
 
 Method C<language> is a shorthand notation for
-C<<$lang-E<gt>{'language'}>>.
+C<$lang-E<gt>{'language'}>.
 
 =cut
 
@@ -694,6 +698,8 @@ from language description C<{'langmap'}{'language'}>.
 =item 1 C<$item>
 
 a I<string> containing the name of the looked for sub-hash
+
+=back
 
 =cut
 

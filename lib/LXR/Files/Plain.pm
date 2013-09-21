@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Plain.pm,v 1.33 2013/01/17 09:30:01 ajlittoz Exp $
+# $Id: Plain.pm,v 1.34 2013/09/21 12:54:52 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.33 2013/01/17 09:30:01 ajlittoz Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.34 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -56,7 +56,7 @@ sub getdir {
 	my ($dir, $node, @dirs, @files);
 
 	# Make sure directory name ends with a slash
-	if($pathname !~ m!/$!) {
+	if (substr($pathname, -1) ne '/') {
 		$pathname = $pathname . '/';
 	}
 		
@@ -98,7 +98,10 @@ sub filerev {
 
 	#	return $releaseid;
 	return
-	  join("-", $self->getfiletime($filename, $releaseid), $self->getfilesize($filename, $releaseid));
+	  join	( '-'
+			, $self->getfiletime($filename, $releaseid)
+			, $self->getfilesize($filename, $releaseid)
+			);
 }
 
 #	getfilehandle returns a handle to the original real file.
@@ -235,11 +238,6 @@ This function should not be used outside this module.
 
 sub toreal {
 	my ($self, $pathname, $releaseid) = @_;
-
-# # nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
-# 	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
-# 		return undef if $pathname =~ m!/$ignoredir(/|$)!;
-# 	}
 
 	return ($self->{'rootpath'} . $releaseid . $pathname);
 }

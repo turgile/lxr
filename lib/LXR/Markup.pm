@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Markup.pm,v 1.8 2012/11/21 13:39:28 ajlittoz Exp $
+# $Id: Markup.pm,v 1.9 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 # =encoding utf8	Not recognised??
 
-=head1 Template module
+=head1 Markup module
 
 This module is the markup engine in charge of highlighting the
 syntactic components or otherwise interesting elements of a block.
@@ -30,7 +30,7 @@ syntactic components or otherwise interesting elements of a block.
 
 package LXR::Markup;
 
-$CVSID = '$Id: Markup.pm,v 1.8 2012/11/21 13:39:28 ajlittoz Exp $';
+$CVSID = '$Id: Markup.pm,v 1.9 2013/09/21 12:54:52 ajlittoz Exp $';
 
 use strict;
 
@@ -85,8 +85,8 @@ sub markupstring {
 
 	# Look for identifiers and create links with identifier search query.
 	# TODO: Is there a performance problem with this?
-	$string =~ s#(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b#
-		$1.(is_linkworthy($2) ? &idref($2, "", $2) : $2)#ge;
+	$string =~ s/(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b/
+		$1.(is_linkworthy($2) ? &idref($2, '', $2) : $2)/ge;
 
 	# HTMLify the special characters we marked earlier,
 	# but not the ones in the recently added xref html links.
@@ -95,8 +95,8 @@ sub markupstring {
 	$string =~ s/\0>/&gt;/g;
 
 	# HTMLify email addresses and urls.
-	$string =~
-	  s#((ftp|http|nntp|snews|news)://(\w|\w\.\w|\~|\-|\/|\#)+(?!\.\b))#<a href=\"$1\">$1</a>#g;
+	$string =~ s{((ftp|http|nntp|snews|news)://(\w|\w\.\w|\~|\-|\/|\#)+(?!\.\b))}
+				{<a href=\"$1\">$1</a>}g;
 
 	# htmlify certain addresses which aren't surrounded by <>
 	$string =~ s/([\w\-\_]*\@netscape.com)(?!&gt;)/<a class='offshore' href=\"mailto:$1\">$1<\/a>/g;
@@ -108,8 +108,8 @@ sub markupstring {
 	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a class='offshore' href=\"mailto:$2\">$2<\/a>$3/g;
 
 	# HTMLify file names, assuming file is in the directory defined by $virtp.
-	$string =~
-	  s#\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b#{fileref($1, '', $virtp . $1);}#ge;
+	$string =~ s{\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b}
+				{fileref($1, '', $virtp . $1);}ge;
 
 	return ($string);
 }
@@ -142,25 +142,27 @@ B<TO DO:>
 
 =over
 
-Presently, the DB check is not implemented.
-It could be through C<index->symreferences($string, $releaseid)>
-or C<$index->symdeclarations($string, $releaseid)>
+=item
+
+DB check is not implemented.
+It could be through C<index-E<gt>symreferences($string, $releaseid)>
+or C<$index-E<gt>symdeclarations($string, $releaseid)>
 if we want to consider only declared identifiers.
+
+=back
 
 =cut
 
 sub is_linkworthy {
 	my ($string) = @_;
 
-	if ($string =~ m/....../
-		&& ($string =~ m/_/ || $string =~ m/.[A-Z]/)
-		&& $string !~ m/README/
-#		&& defined($xref{$string}) FIXME
-	   ) {
-		return (1);
-	} else {
-		return (0);
-	}
+	return	(	5 < length($string)
+			&&	(	0 <= index($string, '_')
+				||	$string =~ m/.[A-Z]/
+				)
+			&&	0 > index($string, 'README')
+	#		&&	defined($xref{$string}) FIXME
+			);
 }
 
 
@@ -177,7 +179,7 @@ a I<string> to tag
 
 =back
 
-This sub is called before editing (highlighting) its content
+This sub is called before editing (highlighting) the string argument
 so that we can later distinguish between original litteral HTML special
 characters and those added as part of HTML tags.
 
@@ -219,9 +221,9 @@ sub htmlquote {
 }
 
 
-=head2 C<htmlquote ($string)>
+=head2 C<freetextmarkup ($string)>
 
-Function C<htmlquote> creates links in its argument for URLs and e-mail addresses.
+Function C<freetextmarkup> creates links in its argument for URLs and e-mail addresses.
 
 =over
 
@@ -249,18 +251,18 @@ Function C<markupfile> is the edition driver.
 
 =over
 
-=item 1 C<$sfileh>
+=item 1 C<$fileh>
 
 a I<filehandle> for the source file
 
-=item 1 C<$sfileh>
+=item 1 C<$outfun>
 
 a reference to a I<sub> which outputs the HTML stream
 
 =back
 
 This sub calls the parser to split the source file into homogeneous
-fragments which are highlited by various specialized support routines.
+fragments which are highlighted by various specialized support routines.
 
 Sub C<&outfun> is called to output the HTML stream.
 Use of a subroutine allows to do the highlighting with C<markupfile> in
@@ -284,20 +286,20 @@ sub markupfile {
 	#	2: '</a>'
 	#	Later, it only needs to insert line numbers betwwen 0-1 and 1-2 to
 	#	have the correct anchor.
-	&fileref(1, "fline", $pathname, 1) =~ m/^(<a.*?)href.*\#(\d+)(\">)\d+(<\/a>)$/;
+	&fileref(1, 'fline', $pathname, 1) =~ m/^(<a.*?)href.*\#(\d+)(\">)\d+(<\/a>)$/;
 	my @ltag;
 	$ltag[0] = $1 . 'name="';
 	my $line = $2;
 	$ltag[1] = $3;
-	$ltag[2] = $4 . " ";
+	$ltag[2] = $4 . ' ';
 
 	# As an optimisation, the skeleton of the <A> link marking for an
 	# identifier will be cached in the $lang object.
 	# To guard against any modification of the <A> link structure by
 	# sub idref, a very specific (and improbable) identifier is used.
 	# This allows to make no assumption on idref result.
-	my $itagtarget = "!!!";
-	my @itag = &idref("$itagtarget", "fid", $itagtarget) =~ m/^(.*)$itagtarget(.*)$itagtarget(.*)$/;
+	my $itagtarget = '---';
+	my @itag = &idref($itagtarget, 'fid', $itagtarget) =~ m/^(.*)$itagtarget(.*)$itagtarget(.*)$/;
 	my $lang = LXR::Lang->new($pathname, $releaseid, @itag);
 
 	if ($lang) {
@@ -343,13 +345,13 @@ sub markupfile {
 
 	} elsif ($pathname =~ m/\.($graphic)$/) {
 	# Graphic files are detected by their extension
-		&$outfun("<b>Image: </b>");
-		&$outfun("<img src=\""
-			  . $config->{'sourceaccess'}
-			  . "/" . $config->variable('v')
-			  . $pathname
-			  . "\" border=\"0\""
-			  . " alt=\"No access to $pathname or browser cannot display this format\">");
+		&$outfun('<b>Image: </b>');
+		&$outfun('<img src="'
+				. $config->{'sourceaccess'}
+				. '/' . $config->variable('v')
+				. $pathname
+				. '" border="0"'
+				. " alt=\"No access to $pathname or browser cannot display this format\">");
 	} elsif ($pathname =~ m|/CREDITS$|) {
 	# Special case
 		while (defined($_ = $fileh->getline)) {
@@ -366,19 +368,27 @@ sub markupfile {
 
 		# If it's not a script or something with an Emacs spec header and
 		# the first line is very long or containts control characters...
-		if	(	m/^#!/
-			&&	m/-\*-.*-\*-/i
-			&&	(length($_) > 132 || m/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]/)
+		if	(	substr($_, 0, 2) ne '#!'
+			&&	! m/-\*-.*-\*-/
+			&&	(	length($_) > 132
+				||	m/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]/
+				)
 			) {
 			# We postulate that it's a binary file.
-			&$outfun("<ul><b>Binary File: ");
+			&$outfun('<ul><b>Binary File: ');
 			# jwz: URL-quote any special characters.
 			my $uname = $pathname;
 			$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 
-			&$outfun("<a href=\"$config->{virtroot}/source" . $uname . &urlargs("_raw=1") . "\">");
+			&$outfun	( '<a href="'
+						. $config->{'virtroot'}
+						. 'source'
+						. $uname
+						. &urlargs('_raw=1')
+						. '">'
+						);
 			&$outfun("$pathname</a></b>");
-			&$outfun("</ul>");
+			&$outfun('</ul>');
 
 		} else {
 		# Unqualified text file, do minimal work

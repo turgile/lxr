@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: C.pm,v 1.12 2013/04/12 15:01:08 ajlittoz Exp $
+# $Id: C.pm,v 1.13 2013/09/21 12:54:53 ajlittoz Exp $
 #
 # Enhances the support for the C language over that provided by
 # Generic.pm
@@ -22,7 +22,7 @@
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.12 2013/04/12 15:01:08 ajlittoz Exp $ ';
+$CVSID = '$Id: C.pm,v 1.13 2013/09/21 12:54:53 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -69,7 +69,7 @@ sub processinclude {
 
 	$link = $self->_linkincludedirs
 				( &LXR::Common::incref
-					($file, "include", $path, $dir)
+					($file, 'include', $path, $dir)
 				, $file
 				, '/'
 				, $path

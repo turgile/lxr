@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: SQLite.pm,v 1.3 2012/11/14 11:27:31 ajlittoz Exp $
+# $Id: SQLite.pm,v 1.4 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
 
 package LXR::Index::SQLite;
 
-$CVSID = '$Id: SQLite.pm,v 1.3 2012/11/14 11:27:31 ajlittoz Exp $ ';
+$CVSID = '$Id: SQLite.pm,v 1.4 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use DBI;
 use LXR::Common;
 
-our @ISA = ("LXR::Index");
+our @ISA = ('LXR::Index');
 
 our ($filenum, $symnum, $typenum);
 our ($fileini, $symini, $typeini);
@@ -52,7 +52,7 @@ sub new {
 
 	$self = bless({}, $self);
 	$self->{dbh} = DBI->connect($dbname)
-	or fatal "Can't open connection to database: $DBI::errstr\n";
+	or die "Can't open connection to database: $DBI::errstr\n";
 #	SQLite is forced into explicit commit mode as the medium-sized
 #	test cases have shown a 40-times (!) performance improvement
 #	over auto commit.
@@ -64,15 +64,15 @@ sub new {
 	$self->{'symbols_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}symbols"
-			. " (symname, symid, symcount) values"
-			. " (?, ?, 0)"
+			. ' (symname, symid, symcount) values'
+			. ' (?, ?, 0)'
 			);
 
 	$self->{'langtypes_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}langtypes"
-			. " (typeid, langid, declaration)"
-			. " values (?, ?, ?)"
+			. ' (typeid, langid, declaration)'
+			. ' values (?, ?, ?)'
 			);
 
 	$self->{'purge_all'} = undef;	# Prevent parsing the common one
@@ -121,21 +121,21 @@ sub new {
 	$self->{'filenum_newval'} =
 		$self->{dbh}->prepare
 			( "update ${prefix}filenum"
-			. " set fid = ?"
-			. " where rcd = 0"
+			. ' set fid = ?'
+			. ' where rcd = 0'
 			);
 
 	$self->{'symnum_newval'} =
 		$self->{dbh}->prepare
 			( "update ${prefix}symnum"
-			. " set sid = ?"
-			. " where rcd = 0"
+			. ' set sid = ?'
+			. ' where rcd = 0'
 		);
 	$self->{'typenum_newval'} =
 		$self->{dbh}->prepare
 			( "update ${prefix}typenum"
-			. " set tid = ?"
-			. " where rcd = 0"
+			. ' set tid = ?'
+			. ' where rcd = 0'
 			);
 
 	return $self;

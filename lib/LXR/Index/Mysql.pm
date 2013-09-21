@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Mysql.pm,v 1.35 2012/09/10 17:22:21 ajlittoz Exp $
+# $Id: Mysql.pm,v 1.36 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.35 2012/09/10 17:22:21 ajlittoz Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.36 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use DBI;
 use LXR::Common;
 
-our @ISA = ("LXR::Index");
+our @ISA = ('LXR::Index');
 
 sub new {
 	my ($self, $dbname, $prefix) = @_;
@@ -42,27 +42,27 @@ sub new {
 #	a tiny improvement may show up with explicit commit (the
 #	difference on the medium-sized test cases is difficult to
 #	appreciate since it is within the measurement error).
-		or fatal "Can't open connection to database: $DBI::errstr\n";
+		or die "Can't open connection to database: $DBI::errstr\n";
 
 	$self->{'files_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}files"
-			. " (filename, revision, fileid)"
-			. " values (?, ?, NULL)"
+			. ' (filename, revision, fileid)'
+			. ' values (?, ?, NULL)'
 			);
 
 	$self->{'symbols_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}symbols"
-			. " (symname, symid, symcount)"
-			. " values ( ?, NULL, 0)"
+			. ' (symname, symid, symcount)'
+			. ' values ( ?, NULL, 0)'
 			);
 
 	$self->{'langtypes_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}langtypes"
-			. " (typeid, langid, declaration)"
-			. " values (NULL, ?, ?)"
+			. ' (typeid, langid, declaration)'
+			. ' values (NULL, ?, ?)'
 			);
 
 	$self->{'purge_all'} = $self->{dbh}->prepare

@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Make.pm,v 1.2 2013/04/12 15:01:09 ajlittoz Exp $
+# $Id: Make.pm,v 1.3 2013/09/21 12:54:53 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -32,7 +32,7 @@ It is driven by specifications read from file I<generic.conf>.
 
 package LXR::Lang::Make;
 
-$CVSID = '$Id: Make.pm,v 1.2 2013/04/12 15:01:09 ajlittoz Exp $ ';
+$CVSID = '$Id: Make.pm,v 1.3 2013/09/21 12:54:53 ajlittoz Exp $ ';
 
 use strict;
 require LXR::Lang::Generic;
@@ -57,7 +57,7 @@ an optional I<string> containing a preferred directory for the include'd file
 
 =back
 
-Make C<uses> may request several files.
+Make C<include> may request several files.
 It is thus necessary to iterate on the list.
 
 =cut
@@ -75,13 +75,15 @@ sub processinclude {
 	while (1) {
 		if ($source !~ s/^		# reminder: no initial space in the grammar
 						(${target})	# reserved keyword for include construct
-						([\S]+)	# file name
+						(\S+)	# file name
 						//sx) {
 			# Guard against syntax error or variant
 			# Advance past keyword, so that parsing may continue without loop.
-			$source =~ s/^([\w]+)//;	# Erase keyword
+			$source =~ s/^(\S+)//;	# Erase keyword
 			$dirname = $1;
-			$$frag =	"<span class='reserved'>$dirname</span>";
+			if (length($dirname) > 0) {
+				$$frag .= "<span class='reserved'>$dirname</span>";
+			}
 			&LXR::SimpleParse::requeuefrag($source);
 			return;
 		}
@@ -97,7 +99,7 @@ sub processinclude {
 		$$frag .= 	( $self->isreserved($dirname)
 					? "<span class='reserved'>$dirname</span>"
 					: $dirname
-					);	
+					);
 
 		# Check start of comment
 		if ('#' eq substr($file, 0, 1)) {
@@ -108,7 +110,7 @@ sub processinclude {
 		# Create the hyperlink
 		$$frag .= $self->_linkincludedirs
 					( &LXR::Common::incref
-						($file, "include", $path, $dir)
+						($file, 'include', $path, $dir)
 					, $file
 					, '/'
 					, $path

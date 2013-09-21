@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*- #
 ##############################################
 #
-# $Id: SimpleParse.pm,v 1.21 2012/08/18 15:47:21 ajlittoz Exp $
+# $Id: SimpleParse.pm,v 1.22 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ source file into homogeneous regions (i.e. fragments defined by
 
 package LXR::SimpleParse;
 
-$CVSID = '$Id: SimpleParse.pm,v 1.21 2012/08/18 15:47:21 ajlittoz Exp $ ';
+$CVSID = '$Id: SimpleParse.pm,v 1.22 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use integer;
@@ -88,26 +88,25 @@ categories for this languages (see C<generic.conf>)
 sub init {
 	my @blksep;
 
-	$fileh    = "";
 	@frags    = ();
 	@bodyid   = ();
 	@open     = ();
 	@term     = ();
 	@stay     = ();
-	$split    = "";
-	$open     = "";
-	$continue = "";
+	$split    = '';
+	$open     = '';
+	$continue = '';
 	$tabwidth = 8;
 	my $tabhint;
 
 	($fileh, $tabhint, @blksep) = @_;
-	$tabwidth = $tabhint || $tabwidth;
+	$tabwidth = $tabhint // $tabwidth;
 
 # Consider every specification in the order given
 	foreach my $s (@blksep) {
 		#	$k is category name (e.g; comment, string, ...)
 		my $k = (keys(%$s))[0];
-		if ($k eq "atom") {		# special case for uncategorised fragments
+		if ($k eq 'atom') {		# special case for uncategorised fragments
 			$continue = $$s{$k};
 		}
 		else {
@@ -129,7 +128,7 @@ sub init {
 	}
 
 	# Replace the anchors with a Start_of_Line marker
-	# The markers are removed by sub C<markupfile before
+	# The markers are removed by sub markupfile before
 	# emiting HTML code
 	foreach (@open) {
 		$_ =~ s/^\^/\xFF/;
@@ -172,7 +171,7 @@ Returns the line after replacement.
 
 Note that this sub is presently only used by sub C<markupfile>
 when no specific parser definition could be found.
-No attempt is made to interpret an Emacs-style tab specification.
+No attempt is made to interpret an emacs-style tab specification.
 Consequently, tab width can be erroneous.
 
 =cut
@@ -216,12 +215,16 @@ automaton (FSA).
 
 =over
 
+=item
+
 I<Speed is acceptable when displaying a file (since time here is
 dominated by HTML editing).>
 
-I<<Raw speed can be seen during C<genxref> where the full tree is
+=item
+
+I<Raw speed can be seen during C<genxref> where the full tree is
 parsed. It could be worth to replace the parser by a compiled
-deterministic FSA version.>>
+deterministic FSA version.>
 
 =back
 
@@ -233,7 +236,7 @@ sub nextfrag {
 	my $term  = undef;	# closing delim pattern
 	my $stay  = $continue;	# lock pattern
 	my $line  = '';		# line buffer
-	# These initial values sets the state for the "anonymous"
+	# These initial values set the state for the "anonymous"
 	# default category (i.e. code). It is switched to another
 	# state if $next (the following characters to process)
 	# begins with a starting delimiter.
@@ -302,7 +305,7 @@ sub nextfrag {
 				}
 				my $opos = undef;
 			# Look for "term" or any "open delim" if not defined
-				my $change = $term || $split;
+				my $change = $term // $split;
 				if ($next =~ m/$change/) {
 			# Compute the position of the "end" delimiter
 					$next =~ m/^(.*?)($change)/s;
@@ -324,7 +327,7 @@ sub nextfrag {
 #	Is it a named category?
 #	Add to output buffer till we find a closing delimiter.
 #	Remember that "stay" constructs have been processed above.
-			if (defined($btype)) {
+			if (defined($btype) && defined($term)) {
 				if ($next =~ m/$term/) {		# A close delim in this fragment?
 			# Next instruction group is 5.8 compatible but does
 			# not allow capture parenthesis in regexps
@@ -452,9 +455,11 @@ B<Caveat:>
 
 =over
 
+=item
+
 When using this sub, pay special attention to the order of
 requests so that you do not create permutations of source
-sequences: it is a LIFO!
+sequences: it is a stack (LIFO)!
 
 =back
 

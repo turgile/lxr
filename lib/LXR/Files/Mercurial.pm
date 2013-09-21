@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Mercurial.pm,v 1.1 2013/01/18 16:18:26 ajlittoz Exp $
+# $Id: Mercurial.pm,v 1.2 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Mercurial;
 
-$CVSID = '$Id: Mercurial.pm,v 1.1 2013/01/18 16:18:26 ajlittoz Exp $ ';
+$CVSID = '$Id: Mercurial.pm,v 1.2 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -203,6 +203,7 @@ sub loadline {
 	return if !exists $self->{'fileh'};
 	my $hgline = $self->{'fileh'}->getline();
 	if (!defined($hgline)) {
+		close($self->{'fileh'});
 		delete $self->{'nextline'};
 		delete $self->{'fileh'};
 	}

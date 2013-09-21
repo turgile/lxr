@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Ruby.pm,v 1.4 2013/04/12 15:01:09 ajlittoz Exp $
+# $Id: Ruby.pm,v 1.5 2013/09/21 12:54:53 ajlittoz Exp $
 #
 # Enhances the support for the Ruby language over that provided by
 # Generic.pm
@@ -22,7 +22,7 @@
 
 package LXR::Lang::Ruby;
 
-$CVSID = '$Id: Ruby.pm,v 1.4 2013/04/12 15:01:09 ajlittoz Exp $ ';
+$CVSID = '$Id: Ruby.pm,v 1.5 2013/09/21 12:54:53 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -70,7 +70,7 @@ sub processinclude {
 	$path =~ s@(?<!\.rb)$@.rb@;
 	$link = $self->_linkincludedirs
 				( &LXR::Common::incref
-					($file, "include", $path, $dir)
+					($file, 'include', $path, $dir)
 				, $file
 				, '/'
 				, $path

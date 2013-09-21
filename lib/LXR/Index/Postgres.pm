@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Postgres.pm,v 1.37 2012/11/14 11:27:31 ajlittoz Exp $
+# $Id: Postgres.pm,v 1.38 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.37 2012/11/14 11:27:31 ajlittoz Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.38 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use DBI;
 use LXR::Common;
 
-our @ISA = ("LXR::Index");
+our @ISA = ('LXR::Index');
 
 sub new {
 	my ($self, $dbname, $prefix) = @_;
@@ -46,7 +46,7 @@ sub new {
 #	eventually comment out begin_work() call.
 								, {'AutoCommit' => 0}
 								)
-	or fatal "Can't open connection to database: $DBI::errstr\n";
+	or die "Can't open connection to database: $DBI::errstr\n";
 
 #	Without the following instruction (theoretically meaningless
 #	in auto commit mode), indexing time is multiplied by 10
@@ -58,8 +58,8 @@ sub new {
 	$self->{'files_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}files"
-			. " (filename, revision, fileid)"
-			. " values (?, ?, ?)"
+			. ' (filename, revision, fileid)'
+			. ' values (?, ?, ?)'
 			);
 
 	$self->{'symnum_nextval'} = 
@@ -67,8 +67,8 @@ sub new {
 	$self->{'symbols_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}symbols"
-			. " (symname, symid, symcount)"
-			. " values (?, ?, 0)"
+			. ' (symname, symid, symcount)'
+			. ' values (?, ?, 0)'
 			);
 
 	$self->{'typeid_nextval'} = 
@@ -77,27 +77,27 @@ sub new {
 	$self->{'langtypes_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}langtypes"
-			. " (typeid, langid, declaration)"
-			. " values (?, ?, ?)"
+			. ' (typeid, langid, declaration)'
+			. ' values (?, ?, ?)'
 			);
 
 	$self->{'delete_definitions'} =
 		$self->{dbh}->prepare
 			( "delete from ${prefix}definitions as d"
 			. " using ${prefix}status t, ${prefix}releases r"
-			. " where r.releaseid = ?"
-			. "  and  t.fileid = r.fileid"
-			. "  and  t.relcount = 1"
-			. "  and  d.fileid = r.fileid"
+			. ' where r.releaseid = ?'
+			. '  and  t.fileid = r.fileid'
+			. '  and  t.relcount = 1'
+			. '  and  d.fileid = r.fileid'
 			);
 	$self->{'delete_usages'} =
 		$self->{dbh}->prepare
 			( "delete from ${prefix}usages as u"
 			. " using ${prefix}status t, ${prefix}releases r"
-			. " where r.releaseid = ?"
-			. " and t.fileid = r.fileid"
-			. " and t.relcount = 1"
-			. " and u.fileid = r.fileid"
+			. ' where r.releaseid = ?'
+			. ' and t.fileid = r.fileid'
+			. ' and t.relcount = 1'
+			. ' and u.fileid = r.fileid'
 			);
 
 	$self->{'reset_filenum'} = $self->{dbh}->prepare

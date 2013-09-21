@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Pascal.pm,v 1.3 2013/05/26 15:03:34 ajlittoz Exp $
+# $Id: Pascal.pm,v 1.4 2013/09/21 12:54:53 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -32,7 +32,7 @@ It is driven by specifications read from file I<generic.conf>.
 
 package LXR::Lang::Pascal;
 
-$CVSID = '$Id: Pascal.pm,v 1.3 2013/05/26 15:03:34 ajlittoz Exp $ ';
+$CVSID = '$Id: Pascal.pm,v 1.4 2013/09/21 12:54:53 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Lang;
@@ -120,13 +120,13 @@ sub processinclude {
 	while (1) {
 		if ($source !~ s/^		# reminder: no initial space in the grammar
 						(${target})	# reserved keyword for include construct
-						([\w]+)	# Pascal module
+						(\w+)	# Pascal module
 						//sx) {
 			# Guard against syntax error or variant
 			# Advance past keyword, so that parsing may continue without loop.
-			$source =~ s/^(\w+)//;	# Erase keyword
+			$source =~ s/^(\s*\S+)//;	# Erase keyword
 			$dirname = $1;
-			$$frag =	"<span class='reserved'>$dirname</span>";
+			$$frag = "<span class='reserved'>$dirname</span>";
 			&LXR::SimpleParse::requeuefrag($source);
 			return;
 		}
@@ -146,11 +146,15 @@ sub processinclude {
 		$path =~ s@$@.${extens}@;		# Add file extension
 
 		# Create the hyperlink
-		$link = &LXR::Common::incref($file, "include", $path, $dir);
+		$link = &LXR::Common::incref($file, 'include', $path, $dir);
 		if (!defined($link)) {
 			$link = $file;
 		}
 		$$frag .= $link;
+		if ($source =~ m/^\s*;$/) {	# End of directive?
+			$$frag .= $source;
+			return;
+		}
 	}
 }
 

@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: HTML.pm,v 1.1 2013/04/19 12:39:55 ajlittoz Exp $
+# $Id: HTML.pm,v 1.2 2013/09/21 12:54:53 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -32,7 +32,7 @@ It is driven by specifications read from file I<generic.conf>.
 
 package LXR::Lang::HTML;
 
-$CVSID = '$Id: HTML.pm,v 1.1 2013/04/19 12:39:55 ajlittoz Exp $ ';
+$CVSID = '$Id: HTML.pm,v 1.2 2013/09/21 12:54:53 ajlittoz Exp $ ';
 
 use strict;
 require LXR::Lang::Generic;
@@ -44,7 +44,7 @@ our @ISA = ('LXR::Lang::Generic');
 =head2 C<processinclude ($frag, $dir)>
 
 Method C<processinclude> is invoked to process an HTML I<include> directive
-(aka target of an C<<E<lt>AE<gt> >> link or C<<E<lt>IMGE<gt> >> designation.
+(aka target of an C<E<lt>AE<gt>> link or C<E<lt>IMGE<gt>> designation.
 
 =over
 
@@ -124,7 +124,7 @@ sub processinclude {
 	$$frag .= $delim
 			. $self->_linkincludedirs
 				( &LXR::Common::incref
-					($file, "include", $path, $dir)
+					($file, 'include', $path, $dir)
 				, $file
 				, '/'
 				, $path

@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.5 2013/01/17 09:30:01 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.6 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.5 2013/01/17 09:30:01 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.6 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -59,7 +59,7 @@ sub getdir {
 	my ($self, $pathname, $releaseid) = @_;
 	my ($node, @dirs, @files, $path);
 
-	if($pathname !~ m!/$!) {
+	if (substr($pathname, -1) ne '/') {
 		$pathname = $pathname . '/';
 	}
 
@@ -251,7 +251,7 @@ sub isdir {
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
 	my $res = `LANGUAGE=en svn info $path 2>/dev/null|grep 'Node Kind'`;
-	return $res =~ m!directory!;
+	return index($res, 'directory') >= 0;
 }
 
 sub isfile {
@@ -261,7 +261,7 @@ sub isfile {
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
 	my $res = `LANGUAGE=en svn info $path 2>/dev/null|grep 'Node Kind'`;
-	return $res =~ m!file!;
+	return index($res, 'file') >= 0;
 }
 
 #	This is the bridge between Subversion's revision concept
@@ -297,7 +297,7 @@ sub allreleases {
 	my ($self, $filename) = @_;
 	my ($uri, %rel);
 
-	$uri = $self->{'rootpath'} . "/trunk$filename";
+	$uri = $self->{'rootpath'} . '/trunk' . $filename;
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
 	open(LOG,"svn log $uri |")
@@ -329,7 +329,7 @@ sub allbranches {
 	return undef unless @brch;
 
 	foreach my $br (@brch) {
-		$uri = $self->{'rootpath'} . "/$br$filename";
+		$uri = $self->{'rootpath'} . '/' . $br . $filename;
 		$uri =~ m/(.*)/;
 		$uri = $1;	# Untaint path
 		open(LOG,"svn log $uri |")
@@ -362,7 +362,7 @@ sub alltags {
 	return undef unless @tags;
 
 	foreach my $tag (@tags) {
-		$uri = $self->{'rootpath'} . "/$tag$filename";
+		$uri = $self->{'rootpath'} . '/' . $tag . $filename;
 		$uri =~ m/(.*)/;
 		$uri = $1;	# Untaint path
 		open(LOG,"svn log $uri |")

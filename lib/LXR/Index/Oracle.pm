@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Oracle.pm,v 1.25 2012/09/10 17:22:21 ajlittoz Exp $
+# $Id: Oracle.pm,v 1.26 2013/09/21 12:54:52 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.25 2012/09/10 17:22:21 ajlittoz Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.26 2013/09/21 12:54:52 ajlittoz Exp $ ';
 
 # ***
 # *** CAUTION -CAUTION - CAUTION ***
@@ -39,7 +39,7 @@ use strict;
 use DBI;
 use LXR::Common;
 
-our @ISA = ("LXR::Index");
+our @ISA = ('LXR::Index');
 
 sub new {
 	my ($self, $dbname, $prefix) = @_;
@@ -47,28 +47,28 @@ sub new {
 	$self = bless({}, $self);
 
 	$self->{dbh} =
-		DBI->connect($dbname, $config->{dbuser}, $config->{dbpass},
+		DBI->connect($dbname, $config->{'dbuser'}, $config->{'dbpass'},
 			{ RaiseError => 1, AutoCommit => 1 })
-		or fatal "Can't open connection to database: $DBI::errstr\n";
+		or die "Can't open connection to database: $DBI::errstr\n";
 
 	$self->{'files_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}files"
-			. " (filename, revision, fileid)"
+			. ' (filename, revision, fileid)'
 			. " values (?, ?, ${prefix}filenum.nextval)"
 			);
 
 	$self->{'symbols_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}symbols"
-			. " (symname, symid) values"
+			. ' (symname, symid) values'
 			. " ( ?, ${prefix}symnum.nextval)"
 			);
 
 	$self->{'langtypes_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}langtypes"
-			. " (typeid, langid, declaration)"
+			. ' (typeid, langid, declaration)'
 			. " values (${prefix}typenum.nextval, ?, ?)"
 			);
 
@@ -77,9 +77,5 @@ sub new {
 
 	return $self;
 }
-
-#
-# LXR::Index API Implementation
-#
 
 1;
