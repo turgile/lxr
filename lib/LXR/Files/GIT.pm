@@ -3,7 +3,7 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.13 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: GIT.pm,v 1.14 2013/09/23 15:20:27 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.13 2013/09/21 12:54:52 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.14 2013/09/23 15:20:27 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -89,7 +89,7 @@ sub getdir {
 	if ($pathname eq '') {
 		$git = $self->_git_cmd ('ls-tree', $releaseid);
 	} else {
-		$git = $self->_git_cmd ('ls-tree', $releaseid, $pathname);
+		$git = $self->_git_cmd ('ls-tree', $releaseid, '--', $pathname);
 	}
 	while (<$git>) {
 		if (m/(\d+) (\w+) ([[:xdigit:]]+)\t(.*)/) {
@@ -156,7 +156,7 @@ sub filerev {
 	# to be relative to 'rootpath'. Changes LXR convention.
 	$filename =~ s,^/+,,;
 
-	my $sha1hashline = $self->_git_oneline ('ls-tree', $releaseid, $filename);
+	my $sha1hashline = $self->_git_oneline ('ls-tree', $releaseid, '--', $filename);
 	if ($sha1hashline =~ m/\d+ blob ([[:xdigit:]]+)\t.*/) {
 		return substr	($self->_git_oneline
 							('rev-list'
@@ -198,7 +198,7 @@ sub getfilehandle {
 		$self->{'authors'}     = [];
 		return $self;
 	} else {
-		my $sha1hashline = $self->_git_oneline ('ls-tree', $releaseid,  $filename);
+		my $sha1hashline = $self->_git_oneline ('ls-tree', $releaseid, '--', $filename);
 		if ($sha1hashline =~ m/^\d+ blob ([[:xdigit:]]+)\t.*/) {
 			my $fh = $self->_git_cmd ('cat-file', 'blob', $1);
 			die('Error executing "git cat-file"') unless $fh;
@@ -308,7 +308,7 @@ sub isdir {
 	if ($pathname eq '') {
 		return 1 == 1;
 	} else {
-		my $line = $self->_git_oneline ('ls-tree', $releaseid, $pathname);
+		my $line = $self->_git_oneline ('ls-tree', $releaseid, '--', $pathname);
 		return $line =~ m/^\d+ tree .*$/;
 	}
 }
@@ -322,7 +322,7 @@ sub isfile {
 	if ($pathname eq '') {
 		return 1 == 0;
 	} else {
-		my $line = $self->_git_oneline ('ls-tree', $releaseid, $pathname);
+		my $line = $self->_git_oneline ('ls-tree', $releaseid, '--', $pathname);
 		return $line =~ m/^\d+ blob .*$/;
 	}
 }
