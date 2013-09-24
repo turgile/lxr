@@ -1,6 +1,8 @@
 #!/usr/bin/perl -T
-# $Id: diff,v 1.31 2013/01/11 14:43:47 ajlittoz Exp $
-
+######################################################################
+#
+# $Id: diff,v 1.32 2013/09/24 08:14:36 ajlittoz Exp $
+#
 # diff --	Display diff output with markup.
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -20,13 +22,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
+#
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.31 2013/01/11 14:43:47 ajlittoz Exp $ ';
+$CVSID = '$Id: diff,v 1.32 2013/09/24 08:14:36 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
+
+=head1 diff script
+
+This script manages display of code differences between
+two versions of a source file.
+
+=cut
 
 use LXR::Common;
 use LXR::Markup;
@@ -34,33 +43,153 @@ use LXR::Template;
 use Local;
 use FileHandle;
 
-sub htmlsub {
-	my ($s, $l) = @_;
-	my @s = split(/(<[^>]*>|&[\#\w\d]+;?)/, $s);
+
+=head2 C<fflush ()>
+
+Function C<fflush> sets STDOUT in autoflush mode.
+
+B<Note:>
+
+=over
+
+=item
+
+The reason for using this function is not clear.
+It has been commented out without adverse effect.
+
+Being very short, it could be inlined (only one usage!)
+if it needs to be reenabled.
+
+=back
+
+=cut
+
+# sub fflush {
+# 	$| = 1;
+# 	print('');
+# }
+
+
+=head2 C<htmljust ($s, $l)>
+
+Function C<htmljust> returns an HTML string justified to exactly
+a fixed number of screen positions.
+
+=over
+
+=item 1 C<$s>
+
+a I<string> containing an HTML sequence
+
+=item 1 C<$w>
+
+an I<integer> defining the justification width
+
+=back
+
+The string argument is truncated or expanded to show exactly
+C<$w> "characters" on screen.
+
+Atomic units must not be split, otherwise HTML integrity is broken.
+HTML tags and entity references are copied without truncation.
+
+When checking overflow, HTML tags are considered as zero-width "characters"
+and HTML entity references as one screen position glyphs
+(which is not always the case: combining diacritic marks,
+zero-width spacers, ...).
+
+When the desired width is met, opening tags may not have been matched
+by their closing tags. To return a synctactically correct HTML
+sequence, HTML tags are still copied but without their content.
+This results in a sequence longer than necessary, but it is safe.
+
+=cut
+
+sub htmljust {
+	my ($s, $w) = @_;
+	my @s = split(/(<.*?>|&[\#\w\d]+;)/, $s);
 	$s = '';
 
-	while (@s) {
-		my $f = substr(shift(@s), 0, $l);
-		$l -= length($f);
-		$s .= $f;
-		$f = shift(@s);
-		if ($f =~ /^&/) {
-			if ($l > 0) {
+	while (@s){
+		my $f = shift(@s);
+		next if $f eq '';
+		if ('<' eq substr($f, 0, 1)) {
+		# HTML tag element: no screen position, copy it
+			$s .= $f
+		} elsif ('&' eq substr($f, 0, 1)) {
+		# HTML entity reference: one screen position usually
+		# Copy it space permitting
+			if ($w > 0) {
 				$s .= $f;
-				$l--;
+				$w--;
 			}
 		} else {
+		# Ordinary text, check for truncation
+			$f = substr($f, 0, $w);
+			$w -= length($f);
 			$s .= $f;
 		}
 	}
-	$s .= ' ' x $l;
+	# Add spaces up to the requested width
+	$s .= ' ' x $w;
 	return $s;
 }
+
+
+=head2 C<printdiff (@dargs)>
+
+Procedure C<printdiff> is the main driver for difference display
+(two passes).
+
+=over
+
+=item 1 C<@dargs>
+
+an I<array> containing the C<'variables'> values for the reference version
+
+=back
+
+When entered for the first time, query arguments only offer current
+C<'variables'> values.
+This is detected by the absence of any C<~>I<var_name>C<=>... argument.
+Current values are then transfered into these so-called I<remembered>
+values and user is requested to choose another version.
+
+On second entry, both current values (I<var_name>C<=>...) and
+remembered values (C<~>I<var_name>C<=>...) are present in the
+query arguments.
+The latter values designate the reference version (in the left pane);
+the former values the "new" version (in the right pane).
+With these two file descriptions, processing can be done.
+
+The file name in C<$pathname> has been nominally transformed by the
+C<'maps'> rules.
+But to get the other name, we must first reverse the effects of these
+rules (in the remembered environment) et re-apply them (in the current
+environment).
+Once this is done, both file names correctly point to the desired
+versions.
+
+Next, physical (real) files are obtained so that I<rcs B<diff>> can
+build the patch directives..
+
+Both files are highlighted by C<markupfile>.
+The resulting HTML streams are kept in memory.
+I<This could cause a serious strain on memory and degrade performance
+(because of swapping for instance).>
+
+Then it is relatively simple to merge both streams line by line
+under control of the patch directives.
+
+
+=cut
 
 sub printdiff {
 	my (@dargs) = @_;
 
 	unless (defined @dargs) {
+	# First pass through the script
+	# Request second version
 		my @vars;
 		foreach ($config->allvariables) {
 			if	(!exists($config->{'variables'}{$_}{'when'})
@@ -70,24 +199,26 @@ sub printdiff {
 			}
 		}
 
-		$vars[ $#vars - 1 ] .= " or " . pop(@vars) if $#vars > 0;
+		$vars[ $#vars - 1 ] .= ' or ' . pop(@vars) if $#vars > 0;
 
-		print(
-			"<p align=\"center\">\n",
-			"Please indicate the version of the file you wish to\n",
-			"compare to by clicking on the appropriate\n",
-			join(", ", @vars),
-			" button.\n", "</p>\n"
-		);
+		print	( "<p align=\"center\">\n"
+				, "Please indicate the version of the file you wish to\n"
+				, "compare to by clicking on the appropriate\n"
+				, join(', ', @vars)
+				, " button.\n"
+				, "</p>\n"
+				);
 		return;
 	}
 
-	if ($pathname =~ m|/$|) {
+	# Second pass - both versions are known
+	if ('/' eq substr($pathname, -1)) {
 		print("<h3 align=\"center\">Diff not yet supported for directories.</h3>\n");
 		return;
 	}
 	my $origname = $pathname;
-
+	# Tentatively reverse the effect of mappath on $pathname to get an "early bird"
+	# skeleton path on which to apply the mapping rules in the current environment.
 	my $diffname = $config->mappath($config->unmappath($pathname, @dargs));
 	my ($diffv) = grep(m/v=/, @dargs);
 	$diffv =~ s/v=//;
@@ -101,14 +232,14 @@ sub printdiff {
 		return;
 	}
 
-	fflush;
+# 	fflush;
 	# realfilename may create a temporary file
 	# which should be released when no longer needed
 	my $origtemp = $files->realfilename($origname, $releaseid);
 	my $difftemp = $files->realfilename($diffname, $diffv);
 	$ENV{'PATH'} = '/usr/local/bin:/usr/bin:/bin:/usr/sbin';
-	unless (open(DIFF, "-|")) {
-		open(STDERR, ">&STDOUT");
+	unless (open(DIFF, '-|')) {
+		open(STDERR, '>&STDOUT');
 		exec('diff', '-U0', $origtemp, $difftemp);
 		print STDERR "*** Diff subprocess died unexpextedly: $!\n";
 		exit;
@@ -148,46 +279,65 @@ sub printdiff {
 	}
 	close(DIFF);
 
+	#	Print a descriptive title and tell exactly what versions
+	#	are compared (dump the variable value sets)
 	print	( "<h1>Diff markup</h1>\n"
-			, "<h2>between "
-			, fileref	( "$origname"
-						, "diff-fref", $origname
+			, '<h2>between '
+			, fileref	( $origname
+						, 'diff-fref'
+						, $origname
 						)
-			, " ("
+			, ' <small>('
 			);
 	my @fctx;
-	for ($config->allvariables) {
-		next if	exists($config->{'variables'}{$_}{'when'})
-				&& !eval($config->varexpand($config->{'variables'}{$_}{'when'}));
-		push (@fctx, $config->vardescription($_).": ".$config->variable($_));
-	}
-	print	( join(", ", @fctx)
-			, ")<br>"
-			, " and "
-			);
-	my @linkargs = grep {m/(.*?)=(.*)/; $config->variable($1) ne "$2";} @dargs;
-	map (s/(.*?)=/!$1=/, @linkargs);
-	print	( fileref	( "$diffname",
-						, "diff-fref", $diffname, undef
-						, @linkargs
-						)
-			, " ("
-			);
-	@fctx = ();
 	for my $var ($config->allvariables) {
 		next if	exists($config->{'variables'}{$var}{'when'})
 				&& !eval($config->varexpand($config->{'variables'}{$var}{'when'}));
 		my ($varval) = grep(m/$var=/, @dargs);
 		$varval =~ s/$var=//;
-		push (@fctx, $config->vardescription($var).": $varval");
+		push (@fctx, $config->vardescription($var).': '.$varval);
 	}
-	print	( join(", ", @fctx)
-			, ")</h2><hr>\n"
+	print	( join(', ', @fctx)
+			, ')</small><br>'
+			, ' and '
+			);
+	my @linkargs = grep {m/(.*?)=(.*)/; $config->variable($1) ne $2;} @dargs;
+	map (s/(.*?)=/!$1=/, @linkargs);
+	print	( fileref	( $diffname
+						, 'diff-fref'
+						, $diffname
+						, undef
+						, @linkargs
+						)
+			, ' <small>('
+			);
+	@fctx = ();
+	for my $var ($config->allvariables) {
+		next if	exists($config->{'variables'}{$var}{'when'})
+				&& !eval($config->varexpand($config->{'variables'}{$var}{'when'}));
+		push (@fctx, $config->vardescription($var).': '.$config->variable($var));
+	}
+	print	( join(', ', @fctx)
+			, ")</small></h2><hr>\n"
 			);
 
+	#	Highlight both files
 	my $origh = FileHandle->new($origtemp);
+	#	Save current environment before switching to @dargs environment
+	my %oldvars;
+	foreach my $arg (@dargs) {
+		if ($arg =~ m/(.*?)=(.*)/) {
+			$oldvars{$1} = $config->variable($1);
+			$config->variable($1, $2);
+		}
+	}
 	my $orig  = '';
 	markupfile($origh, sub { $orig .= shift });
+	#	Restore original environment
+	while ((my $var, my $val) = each %oldvars) {
+		$config->variable($var, $val);
+	}
+	%oldvars = {};
 	my $len = $. + $ofs;
 	$origh->close;
 	$files->releaserealfilename($origtemp);
@@ -202,6 +352,7 @@ sub printdiff {
 
 	$pathname = $origname;
 
+	#	Output both versions side by side
 	my $i;
 	$i = 1;
 	$orig =~ s/^/"\n" x ($orig{$i++})/mge;
@@ -216,24 +367,24 @@ sub printdiff {
 					|| 50;
 	print("<pre class=\"filecontent\">\n");
 	foreach $i (0 .. $len) {
-		my $o = htmlsub($orig[$i], $leftwidth);
+		my $o = htmljust($orig[$i], $leftwidth);
 		my $n = $new[$i];
 
-		my $diffmark = "  ";
+		my $diffmark = '  ';
 		if ($chg{ $i + 1 }) {
-			$diffmark = "<span class=\"diff-mark\">" . $chg{ $i + 1 } . "</span>";
-			if ("&lt;&lt;" eq $chg{ $i + 1 }) {
-				$o =~ s|</a> |</a> <span class=\"diff-left\">|;
+			$diffmark = '<span class="diff-mark">' . $chg{ $i + 1 } . "</span>";
+			if ('&lt;&lt;' eq $chg{ $i + 1 }) {
+				$o =~ s|</a> |</a> <span class="diff-left">|;
 			}
-			if ("&gt;&gt;" eq $chg{ $i + 1 }) {
-				$n =~ s|</a> |</a> <span class=\"diff-right\">|;
+			if ('&gt;&gt;' eq $chg{ $i + 1 }) {
+				$n =~ s|</a> |</a> <span class="diff-right">|;
 			}
-			if ("!!" eq $chg{ $i + 1 }) {
-				$o =~ s|</a> |</a> <span class=\"diff-both\">|;
-				$n =~ s|</a> |</a> <span class=\"diff-both\">|;
+			if ('!!' eq $chg{ $i + 1 }) {
+				$o =~ s|</a> |</a> <span class="diff-both">|;
+				$n =~ s|</a> |</a> <span class="diff-both">|;
 			}
-			$o .= "</span>";
-			$n .= "</span>";
+			$o .= '</span>';
+			$n .= '</span>';
 		}
 
 		#print("$o <span class=\"diff-mark\">",
@@ -244,6 +395,14 @@ sub printdiff {
 
 }
 
+
+=head2 Script entry point
+
+Builds the header and footer and launches C<printdiff>
+for the real job.
+
+=cut
+
 httpinit;
 
 makeheader('diff');
@@ -251,8 +410,8 @@ my @dargs;
 foreach my $param (keys %{$HTTP->{'param'}}) {
 	my $var = $param;
 	next unless $var =~ s/^~//;
-	if (exists($config->{'variables'}->{$var})) {
-			push @dargs, "$var=" . $HTTP->{'param'}->{$param};
+	if (exists($config->{'variables'}{$var})) {
+			push @dargs, "$var=" . $HTTP->{'param'}{$param};
 	}
 }
 printdiff(@dargs);
