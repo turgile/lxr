@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.15 2013/01/24 15:09:53 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.16 2013/09/24 09:05:52 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -24,6 +24,7 @@
 , .dirrow2
 , .modes		/* mode switches */
 , .modes-sel
+, .modes-dis
 , BUTTON
 , .varlink		/* 'variables' switches */
 , .var-sel
