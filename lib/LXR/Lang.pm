@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.51 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Lang.pm,v 1.52 2013/09/24 07:36:09 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ to capture missing specific implementations.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.51 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.52 2013/09/24 07:36:09 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -394,6 +394,117 @@ sub _linkincludedirs {
 		}
 	}
 	return $link . $tail;
+}
+
+
+=head2 C<_incfindfile ($filewanted, $file, @paths)>
+
+Function C<_incfindfile> returns the "full" path corresponding to argument
+C<$file>.
+
+=over
+
+=item 1 C<$filewanted>
+
+a I<flag> indicating if a directory (0) or file (1) is desired
+
+=item 1 C<$file>
+
+a I<string> containing a file name to resolve
+
+=item 1 C<@paths>
+
+an I<array> containing a list of directories to search
+
+=back
+
+The list of directories from configuration parameter C<'incprefix'> is
+appended to C<@paths>. Every directory from this array is then preprended
+to the file name . The resulting string is transformed by the mapping
+rules of configuration parameter C<'maps'> (See I<Config.pm> sub C<mappath>).
+
+If there is a match in the file database (file or directory according
+to the first argument), the "physical" path is returned.
+Otherwise, an C<undef> is returned to signal an unknown file.
+
+I<This is a "private" or "internal" C<sub> for include path resolution only.>
+
+=cut
+
+sub _incfindfile {
+	my ($filewanted, $file, @paths) = @_;
+	my $path;
+
+	# The following line could be faster interpreted as
+	# 	push(@paths, @{$config->{'incprefix'}});
+	# but this would forbid variable expansion.
+	# Is this feature really needed for include path?
+	push(@paths, $config->incprefix);
+
+	foreach my $dir (@paths) {
+		$dir =~ s!/+$!!;	# Remove trailing slashes
+		$path = $config->mappath($dir . '/' . $file);
+		if ($filewanted){
+			return $path if $files->isfile($path, $releaseid);
+		} else {
+			return $path if $files->isdir($path, $releaseid);
+		}
+	}
+
+	return undef;
+}
+
+
+=head2 C<incdirref ($name, $css, $file, @paths)>
+
+Function C<incdirref> returns an C<E<lt>AE<gt>> link to a directory
+of an C<include>d file or the directory name if it is unknown.
+
+=over
+
+=item 1 C<$name>
+
+a I<string> for the user-visible part of the link,
+usually the directory name
+
+=item 1 C<$css>
+
+a I<string> containing the CSS class for the link
+
+=item 1 C<$file>
+
+a I<string> containing the HTML path to the directory
+
+=item 1 C<@paths>
+
+an I<array> containing a list of base directories to search
+
+=back
+
+I<This function is supposed to be called AFTER sub C<incref> on every
+subpath of the include'd file, removing successively the tail directory.
+It thus allows to compose a path where each directory is separately
+clickable.>
+
+If the include'd directory does not exist (as determined by sub C<incfindfile>),
+the function returns the directory name. This acts as a "no-op" in the
+HTML sequence representing the full path of the include'd file.
+
+If the directory exists, the function returns the C<E<lt>AE<gt>> link
+as computed by sub C<fileref> for the directory.
+
+=cut
+
+sub incdirref {
+	my ($name, $css, $file, @paths) = @_;
+	my $path;
+
+	$path = _incfindfile(0, $file, @paths);
+	return $name unless $path;
+	return &fileref	( $name
+					, $css
+					, $path.'/'
+					);
 }
 
 
