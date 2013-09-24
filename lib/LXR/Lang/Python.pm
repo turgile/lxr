@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Python.pm,v 1.10 2013/09/21 12:54:53 ajlittoz Exp $
+# $Id: Python.pm,v 1.11 2013/09/24 07:59:19 ajlittoz Exp $
 #
 # Enhances the support for the Python language over that provided by
 # Generic.pm
@@ -33,7 +33,7 @@ It only overrides C<processinclude> for efficiency.
 
 package LXR::Lang::Python;
 
-$CVSID = '$Id: Python.pm,v 1.10 2013/09/21 12:54:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Python.pm,v 1.11 2013/09/24 07:59:19 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -110,7 +110,7 @@ sub processinclude {
 		#		this would suppress the possibility to click-link to
 		#		the directory itself.
 		$path =~ s@\.py$@@;	# Remove file extension
-		$link = &LXR::Common::incdirref($file, "include", $path, $dir);
+		$link = &LXR::Lang::incdirref($file, 'include', $path, $dir);
 		# Erase last path separator from <a> link to enable
 		# following partial path processing.
 		# NOTE: this creates a dependency of link structure from incref!
