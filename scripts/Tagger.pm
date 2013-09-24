@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Tagger.pm,v 1.1 2012/09/22 07:49:17 ajlittoz Exp $
+# $Id: Tagger.pm,v 1.2 2013/09/24 15:35:38 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 package Tagger;
 
-$CVSID = '$Id: Tagger.pm,v 1.1 2012/09/22 07:49:17 ajlittoz Exp $ ';
+$CVSID = '$Id: Tagger.pm,v 1.2 2013/09/24 15:35:38 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Lang;
@@ -85,7 +85,18 @@ sub processrefs {
 			print(STDERR " ${VTgreen}$fileid${VTnorm} ");
 
 			my $path = $files->realfilename($pathname, $releaseid);
-			$lang->referencefile($pathname, $path, $fileid, $index, $config);
+			
+			print	( STDERR
+					  '+++ '
+					, $lang->referencefile
+						(	$pathname
+						, $path
+						, $fileid
+						, $index
+						, $config
+						)
+					, "\n"
+					);
 			$index->setfilereferenced($fileid);
 			$index->flushcache();
 			$index->commit;

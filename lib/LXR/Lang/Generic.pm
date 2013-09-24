@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.42 2013/09/21 12:54:53 ajlittoz Exp $
+# $Id: Generic.pm,v 1.43 2013/09/24 15:35:38 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.42 2013/09/21 12:54:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.43 2013/09/24 15:35:38 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -671,7 +671,7 @@ sub referencefile {
 		}
 		($btype, $frag) = &LXR::SimpleParse::nextfrag;
 	}
-	print(STDERR "+++ $linenum\n");
+	return $linenum;
 }
 
 
