@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.48 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: CVS.pm,v 1.49 2013/09/27 09:53:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.48 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.49 2013/09/27 09:53:25 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -56,7 +56,7 @@ sub new {
 
 		# the rcsdiff command (used in getdiff) uses parameters only supported by GNU diff
 		$ENV{'PATH'} = $self->{'path'};
-		if (index (`diff --version 2>/dev/null`, 'GNU') >= 0) {
+		if (index (`rcsdiff --version 2>/dev/null`, 'GNU') >= 0) {
 			$gnu_diff = 1;
 		} else {
 			$gnu_diff = 0;
