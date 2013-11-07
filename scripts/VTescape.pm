@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: VTescape.pm,v 1.2 2013/09/24 15:24:07 ajlittoz Exp $
+# $Id: VTescape.pm,v 1.3 2013/11/07 16:32:40 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #
 ###############################################
 
-# $Id: VTescape.pm,v 1.2 2013/09/24 15:24:07 ajlittoz Exp $
+# $Id: VTescape.pm,v 1.3 2013/11/07 16:32:40 ajlittoz Exp $
 
 package VTescape;
 
@@ -35,8 +35,9 @@ our @EXPORT = qw(
 	$VTred  $VTyellow $VTgreen $VTcyan $VTblue $VTmagenta
 	$VTblack          $VTwhite
 	VTCUU VTCUD VTCUF VTCUB VTCNL VTCPL VTCHA VTCUP
-	VTDL  VTDSR VTED  VTEL  VTHVP VTICH VTIL  VTRCP
-	VTSCP VTSD  VTSSR VTSU
+	VTDCH VTDL  VTDSR VTECH VTED  VTEL  VTHVP VTICH
+	VTIL  VTRCP VTRM  VTSCP VTSD  VTSM  VTSSR VTSU
+	VTprRM  VTprRSM VTprSM  VTprSVM
 );
 
 # Some ANSI escape sequences to highlight error messages in output
@@ -140,7 +141,7 @@ sub VTEL {
 	my $n = shift;
 	$n = 0 if $n > 2;
 	return $CSI
-		. ($n>0 ? $n : '')
+		. ($n ? $n : '')
 		. 'K';
 }
 
@@ -160,6 +161,14 @@ sub VTDL {
 		. 'M';
 }
 
+# DCH = Delete CHaracters
+sub VTDCH {
+	my $n = shift;
+	return $CSI
+		. ($n>1 ? $n : '')
+		. 'P';
+}
+
 # SU = Scroll Up
 sub VTSU {
 	my $n = shift;
@@ -176,10 +185,42 @@ sub VTSD {
 		. 'T';
 }
 
+# ECH = Erase CHaracters
+sub VTECH {
+	my $n = shift;
+	return $CSI
+		. ($n>1 ? $n : '')
+		. 'X';
+}
+
 # HVP = Horizontal and Vertical Position (= CUP)
 sub VTHVP {
 	my ($row, $col) = @_;
 	return $CSI . $row . ';' . $col . 'f';
+}
+
+# SM = Set Mode
+sub VTSM {
+	return '' if 0 >= scalar(@_);
+	return $CSI . join(';', @_) . 'h';
+}
+
+# prSM = private Set Mode
+sub VTprSM {
+	return '' if 0 >= scalar(@_);
+	return $CSI . '?' . join(';', @_) . 'h';
+}
+
+# SM = Reset Mode
+sub VTRM {
+	return '' if 0 >= scalar(@_);
+	return $CSI . join(';', @_) . 'l';
+}
+
+# prRM = private Reset Mode
+sub VTprRM {
+	return '' if 0 >= scalar(@_);
+	return $CSI . '?' . join(';', @_) . 'l';
 }
 
 # DSR = Device Status Report
@@ -218,6 +259,18 @@ sub VTSSR {
 # SCP = Save Cursor Position
 sub VTSCP {
 	return $CSI . 's';
+}
+
+# prRSM = private ReStore Mode
+sub VTprRSM {
+	return '' if 0 >= scalar(@_);
+	return $CSI . '?' . join(';', @_) . 'r';
+}
+
+# prSVM = private SaVe Mode
+sub VTprSVM {
+	return '' if 0 >= scalar(@_);
+	return $CSI . '?' . join(';', @_) . 's';
 }
 
 # RCP = Restore Cursor Position
