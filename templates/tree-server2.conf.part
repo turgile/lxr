@@ -3,7 +3,7 @@
 #-	Tree configuration section
 #-		Server configuration subsection part 2
 #-
-#-	$Id: tree-server2.conf.part,v 1.1 2013/09/03 08:45:12 ajlittoz Exp $
+#-	$Id: tree-server2.conf.part,v 1.2 2013/11/07 17:45:41 ajlittoz Exp $
 #-
 #-
 #-	This file fragment is meant to be "included" to form the
@@ -24,17 +24,24 @@
 		# trees are managed by LXR
 #	, 'shortcaption' => 'Tree'
 #@ELSE
-#@	ASK Do you want a speed switch button for this tree ?; 1; yes, no; Y, N
+#@	ASK Do you want a speed switch button for this tree ?\
+	#@		; 1; yes, no; Y, N
 #@	IF	"%A%" eq 'Y'
 #@		IF	%treeid%
-#@			ASK --- Short title for button? (e.g. XYZZY); -1; ; %treeid%
+#@			ASK --- Short title for button? (e.g. XYZZY); -1\
+			#@		; ^[^']+$,quotes not allowed\
+			#@		; %treeid%
 #@		ELSE
-#@			ASK --- Short title for button? (e.g. XYZZY); -2
+#@			ASK --- Short title for button? (e.g. XYZZY); -2\
+			#@		; ^[^']+$,quotes not allowed
+#-	Prevent possible XSS attacks
+#@			CANONR <,&lt;,>,&gt 
 #@		ENDIF
 	, 'shortcaption' => '%A%'
 #@	ENDIF
 #@	IF	'A' eq "%_routing%"
-#@		ASK,treeid --- Tree identification in URL? (e.g. the-tree); -2
+#@		ASK,treeid --- Tree identification in URL? (e.g. the-tree)\
+		#@			; -2; ^[\w-]+(?:\.[\w-]+)*$,invalid characters in name
 
 	, 'treename'     => '%treeid%'
 #@	ENDIF
@@ -43,7 +50,8 @@
 #@ASK Do you need a specific encoding for this tree ?; 2; yes, no; Y, N
 #@IF	"%A%" eq 'Y'
 
-#@	ASK --- Encoding name? (e.g. iso-8859-1); -2
+#@	ASK --- Encoding name? (e.g. iso-8859-1)\
+	#@		; -2; ^[\w-]+$,invalid characters in name
 		# Character encoding (overrides default)
 	, 'encoding'	=> '%A%'
 #@ENDIF
