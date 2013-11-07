@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: ContextMgr.pm,v 1.4 2013/09/02 16:37:36 ajlittoz Exp $
+# $Id: ContextMgr.pm,v 1.5 2013/11/07 17:38:36 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -409,14 +409,14 @@ sub contextDB {
 					$dbname = get_user_choice
 						( 'Name of global SQLite database file? (e.g. /home/myself/SQL-databases/lxr'
 						, -2
-						, []
+						, [ '^/', 'absolute file path required' ]
 						, []
 						);
 				} else {
 					$dbname = get_user_choice
 						( 'Name of global database?'
 						, -1
-						, []
+						, [ '^\w+$', 'invalid characters in name' ]
 						, [ 'lxr' ]
 						);
 				}
@@ -461,7 +461,7 @@ sub contextDB {
 			$dbuser = get_user_choice
 				( '--- DB user name?'
 				, -1
-				, []
+				, [ '^\w+$', 'invalid characters in name' ]
 				, [ 'lxr' ]
 				);
 			$dbpass = get_user_choice
@@ -486,7 +486,7 @@ sub contextDB {
 			$dbprefix = get_user_choice
 					( '--- Common table prefix?'
 					, -1
-					, []
+					, [ '^\w+$', 'invalid characters in prefix' ]
 					, [ 'lxr_' ]
 					);
 		}else {
@@ -600,23 +600,25 @@ sub contextServer {
 		$primaryhost = get_user_choice
 			( '--- Host name or IP?'
 			, ('H' ne $treematch) ? -1 : -2
-			, [ ]
+			,	[ '^(?i:https?:)?//', 'not an HTTP URL'
+				, '//[\w-]+(?:\.[\w-]+)*(?::\d+)?/?$', 'invalid characters in URL'
+				]
 			, ('H' ne $treematch)
 				? [ '//localhost' ]
 				: [ ]
 			);
-		$primaryhost =~ m!^(https?:)?//([^:]+)(?::(\d+))?!;
+		$primaryhost =~ m!^([^/]+)?//([^:]+?)(?::(\d+))?/?!;
 		$scheme   = $1;
 		$hostname = $2;
 		$port     = $3;
 		$scheme = 'http:' if !defined($1);
 		$port   = 80  if 'http:' eq $scheme && !defined($3);
 		$port   = 443 if 'https:' eq $1 && !defined($3);
-		if (!defined($hostname)) {
-			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
-			$primaryhost = undef;
-			next;
-		}
+# 		if (!defined($hostname)) {
+# 			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
+# 			$primaryhost = undef;
+# 			next;
+# 		}
 	}
 	my $aliashost;
 	@schemealiases = ();
@@ -625,19 +627,21 @@ sub contextServer {
 	while	('' ne	($aliashost = get_user_choice
 									( '--- Alias name or IP?'
 									, -3
-									, [ ]
+									, [ '^(?i:https?:)?//', 'not an HTTP URL'
+									, '//[\w-]+(?:\.[\w-]+)*(?::\d+)?/?$'
+											, 'invalid characters in URL' ]
 									, [ ]
 									)
 					)
 			) {;
-		$aliashost =~ m!^(https?:)?//([^:]+)(?::(\d+))?!;
+		$aliashost =~ m!^([^/]+)?//([^:]+?)(?::(\d+))?/?!;
 		my $aliasscheme = $1;
 		my $aliasname   = $2;
 		my $aliasport   = $3;
-		if (!defined($aliasname)) {
-			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
-			next;
-		}
+# 		if (!defined($aliasname)) {
+# 			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
+# 			next;
+# 		}
 		$aliasscheme = 'http:' if !defined($1);
 		$aliasport   = 80  if 'http:' eq $aliasscheme && !defined($3);
 		$aliasport   = 443 if 'https:' eq $1 && !defined($3);
@@ -662,9 +666,10 @@ END_HOST:
 		$virtrootbase = get_user_choice
 				( 'URL section name for LXR in your server?'
 				, -1
-				, [ ]
+				, [ '^[^\']+$', 'quotes not allowed' ]
 				, [ '/lxr' ]
 				);
+		$virtrootbase =~ s:/+$::;	# Ensure no ending slash
 		$virtrootbase =~ s:^/*:/:;	# Ensure a starting slash
 		if	(	'E' ne $treematch
 			&&	'N' ne $treematch

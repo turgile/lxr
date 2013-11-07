@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.14 2013/09/02 16:29:03 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.15 2013/11/07 17:38:36 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: configure-lxr.pl,v 1.14 2013/09/02 16:29:03 ajlittoz Exp $
+# $Id: configure-lxr.pl,v 1.15 2013/11/07 17:38:36 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -39,7 +39,7 @@ use VTescape;
 #
 ##############################################################
 
-my $version = '$Revision: 1.14 $';
+my $version = '$Revision: 1.15 $';
 $version =~ s/Revision: (.*) /$1/;
 $version =~ s/\$//g;
 
@@ -460,22 +460,22 @@ if (!$addtree) {
 					);
 			if ($search eq '%glimpse%') {
 				$markers{'%glimpse%'} = get_user_choice
-					( "--- Location? (e.g. /usr/share/glimpse-dir/glimpse)"
+					( '--- Location? (e.g. /usr/share/glimpse-dir/glimpse)'
 					, -2
-					, []
+					, [ '^/', 'absolute file path required' ]
 					, []
 					);
 				$markers{'%glimpseindex%'} = get_user_choice
 					( '--- Location of indexer? (e.g. /usr/share/glimpse-dir/glimpseindex)'
 					, -2
-					, []
+					, [ '^/', 'absolute file path required' ]
 					, []
 					);
 			} else {
 				$markers{'%swish%'} = get_user_choice
-					( "--- Location? (e.g. /usr/share/swish-dir/swish-e)"
+					( '--- Location? (e.g. /usr/share/swish-dir/swish-e)'
 					, -2
-					, []
+					, [ '^/', 'absolute file path required' ]
 					, []
 					);
 			}
@@ -492,7 +492,7 @@ if (!$addtree) {
 		$markers{'%glimpsedirbase%'} = get_user_choice
 					( '--- Directory for glimpse databases?'
 					, -2
-					, []
+					, [ '^/', 'absolute file path required' ]
 					, []
 					);
 	}
@@ -500,7 +500,7 @@ if (!$addtree) {
 		$markers{'%swishdirbase%'} = get_user_choice
 					( '--- Directory for swish-e databases?'
 					, -2
-					, []
+					, [ '^/', 'absolute file path required' ]
 					, []
 					);
 		if	(  !defined($markers{'%glimpse%'})
