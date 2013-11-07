@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.23 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Files.pm,v 1.24 2013/11/07 17:58:48 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,66 +28,69 @@ source-tree, independent of the repository format.
 
 package LXR::Files;
 
-$CVSID = '$Id: Files.pm,v 1.23 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Files.pm,v 1.24 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
 
 
-=head2 C<new ($srcroot, $params)>
+=head2 C<new ($config)>
 
 C<new> is Files object constructor.
 It dispatches to the specific constructor based on its first argument.
 
 =over
 
-=item 1 C<$srcroot>
+=item 1 C<$config>
 
-a I<string> containing the repository type (as optional prefix:)
-and its location in the file system
+a I<reference> to the I<hash> containing configuration parameters for this
+tree
 
-=item 1 C<$params>
+=over
 
-an optional I<hash> reference from lxr.conf used to pass extra information
-to the real constructor
+B<Note:>
+
+=item Perl threads are rather restrictive on the kind of data in
+shared variables; it is thus better not to rely on "global" variables
+and store a pointer to "global" data inside the object.
+
+=back
 
 =back
 
 =cut
 
 sub new {
-	my ( $self, $srcroot, $params ) = @_;
+	my ( $self, $config ) = @_;
 	my $files;
 
-	if ( $srcroot =~ /^CVS:(.*)/i ) {
+	$config->{'sourceroot'} =~ m/^(\w+):/;
+	my $container = uc($1);
+	if ('CVS' eq $container) {
 		require LXR::Files::CVS;
-		$srcroot = $1;
-		$files   = LXR::Files::CVS->new($srcroot);
+		$files   = LXR::Files::CVS->new($config);
 	}
-	elsif ( $srcroot =~ /^git:(.*)/i ) {
+	elsif ('GIT' eq $container) {
 		require LXR::Files::GIT;
-		$srcroot = $1;
-		$files   = LXR::Files::GIT->new($srcroot, $params);
+		$files   = LXR::Files::GIT->new($config);
 	}
-	elsif ( $srcroot =~ /^svn:(.*)/i ) {
+	elsif ('SVN' eq $container) {
 		require LXR::Files::Subversion;
-		$srcroot = $1;
-		$files   = LXR::Files::Subversion->new($srcroot, $params);
+		$files   = LXR::Files::Subversion->new($config);
 	}
-	elsif ( $srcroot =~ /^hg:(.*)/i ) {
+	elsif ('HG' eq $container) {
 		require LXR::Files::Mercurial;
-		$srcroot = $1;
-		$files   = LXR::Files::Mercurial->new($srcroot, $params);
+		$files   = LXR::Files::Mercurial->new($config);
 	}
-	elsif ( $srcroot =~ /^bk:(.*)/i ) {
+	elsif ('BK' eq $container) {
 		require LXR::Files::BK;
-		$srcroot = $1;
-		$files   = LXR::Files::BK->new($srcroot, $params);
+		$files   = LXR::Files::BK->new($config);
 	}
 	else {
 		require LXR::Files::Plain;
-		$files = LXR::Files::Plain->new($srcroot);
+		$files = LXR::Files::Plain->new($config);
 	}
+	$files->{'config'} = $config;
 	return $files;
 }
 
@@ -556,7 +559,7 @@ sub realfilename {
 	$fileh = $self->getfilehandle ($filename, $releaseid);
 	return undef unless defined($fileh);
 
-	$tmp = $config->{'tmpdir'}
+	$tmp = $self->{'config'}{'tmpdir'}
 			. '/lxrtmp.'
 			. time
 			. '.' . $$
@@ -602,7 +605,7 @@ you risk destroying a valid source-tree file.
 sub releaserealfilename {
 	my ($self, $filename) = @_;
 
-	my $td = $config->{'tmpdir'};
+	my $td = $self->{'config'}{'tmpdir'};
 	if ($filename =~ m!^$td/lxrtmp\.\d+\.\d+\.\d+$!) {
 		unlink($filename);
 	}
@@ -657,10 +660,10 @@ sub _ignoredirs {
 	my ($self, $path, $node) = @_;
 
 	return 1 if substr($node, 0, 1) eq '.';	# ignore "dot" dirs
-	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
+	foreach my $ignoredir (@{$self->{'config'}{'ignoredirs'}}) {
 		return 1 if $node eq $ignoredir;
 	}
-	foreach my $ignoredir (@{$config->{'filterdirs'}}) {
+	foreach my $ignoredir (@{$self->{'config'}{'filterdirs'}}) {
 		return 1 if ($path.$node) =~ $ignoredir;
 	}
 	return 0;
@@ -712,9 +715,9 @@ to the source display script.>
 sub _ignorefiles {
 	my ($self, $path, $node) = @_;
 
-	my $ignorepat = $config->{'ignorefiles'};
+	my $ignorepat = $self->{'config'}{'ignorefiles'};
 	return 1 if $node =~ m/$ignorepat/;
-	foreach my $filterfile (@{$config->{'filterfiles'}}) {
+	foreach my $filterfile (@{$self->{'config'}{'filterfiles'}}) {
 		return 1 if ($path.$node) =~ $filterfile;
 	}
 	return 0;

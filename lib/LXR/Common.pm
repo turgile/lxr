@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.104 2013/09/24 07:36:09 ajlittoz Exp $
+# $Id: Common.pm,v 1.105 2013/11/07 17:58:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.104 2013/09/24 07:36:09 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.105 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 
@@ -846,9 +846,7 @@ sub httpinit {
 		delete $HTTP->{'param'}{$param};
 	}
 
-	$files = LXR::Files->new( $config->{'sourceroot'}
-							, $config->{'sourceparams'}
-							);
+	$files = LXR::Files->new($config);
 	die 'Can\'t create Files for ' . $config->{'sourceroot'}
 		if !defined($files);
 	$index = LXR::Index->new( $config->{'dbname'}

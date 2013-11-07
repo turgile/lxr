@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.49 2013/09/27 09:53:25 ajlittoz Exp $
+# $Id: CVS.pm,v 1.50 2013/11/07 17:58:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.49 2013/09/27 09:53:25 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.50 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -45,10 +45,10 @@ our $gnu_diff;
 our @anno;
 
 sub new {
-	my ($self, $rootpath) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$self->{'rootpath'} = $rootpath;
+	$self->{'rootpath'} = substr($config->{'sourceroot'}, 4);
 	$self->{'rootpath'} =~ s@/*$@@;
 	$self->{'path'} = $config->{'cvspath'};
 	
@@ -622,7 +622,7 @@ sub allreleases {
 	# no header symbols for a directory, so we use the default and the current release
 		my @releases;
 		push @releases, $$LXR::Common::HTTP{'param'}{'v'} if $$LXR::Common::HTTP{'param'}{'v'};
-		push @releases, $config->vardefault('v');
+		push @releases, $self->{'config'}->vardefault('v');
 		return @releases;
 	}
 }
@@ -822,7 +822,7 @@ sub parsecvs {
 
 		#	Next try an user-configurable transformation on symbol
 		#	(will be undef if parameter does not exist)
-		$nrel = $config->cvsversion($orel);
+		$nrel = $self->{'config'}->cvsversion($orel);
 		next unless defined($nrel);
 		if ($nrel ne $orel) {
 			delete($cvs{'header'}{'symbols'}{$orel});

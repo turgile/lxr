@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: BK.pm,v 1.11 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: BK.pm,v 1.12 2013/11/07 17:58:48 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ Andre J. Littoz - April 2012
 
 package LXR::Files::BK;
 
-$CVSID = '$Id: BK.pm,v 1.11 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: BK.pm,v 1.12 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use File::Spec;
@@ -63,13 +63,13 @@ our $memcachecount = 0;
 our $diskcachecount = 0;
 
 sub new {
-	my ($self, $rootpath, $params) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$self->{'rootpath'} = $rootpath;
+	$self->{'rootpath'} = substr($config->{'sourceroot'}, 3);
 	$self->{'rootpath'} =~ s!/*$!!;
 	die 'Must specify a cache directory when using BitKeeper' if !(ref($params) eq 'HASH');
-	$self->{'cache'} = $$params{'cachepath'};
+	$self->{'cache'} = $config->{'sourceparams'}{'cachepath'};
 	return $self;
 }
 

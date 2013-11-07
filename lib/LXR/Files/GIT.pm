@@ -3,7 +3,7 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.14 2013/09/23 15:20:27 ajlittoz Exp $
+# $Id: GIT.pm,v 1.15 2013/11/07 17:58:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.14 2013/09/23 15:20:27 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.15 2013/11/07 17:58:48 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -62,13 +62,13 @@ use LXR::Common;
 @LXR::Files::GIT::ISA = ('LXR::Files');
 
 sub new {
-	my ($self, $rootpath, $params) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$self->{'rootpath'} = $rootpath;
-	$self->{'git_blame'} = $$params{'git_blame'};
-	$self->{'git_annotations'} = $$params{'git_annotations'}
-			|| $$params{'git_blame'};
+	$self->{'rootpath'} = substr($config->{'sourceroot'}, 4);
+	$self->{'git_blame'} = $config->{'sourceparams'}{'git_blame'};
+	$self->{'git_annotations'} = $config->{'sourceparams'}{'git_annotations'}
+			|| $config->{'sourceparams'}{'git_blame'};
 		# Blame support will only work when commit IDs are available,
 		# called annotations here...
 	return $self;

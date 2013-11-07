@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Mercurial.pm,v 1.2 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Mercurial.pm,v 1.3 2013/11/07 17:58:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Mercurial;
 
-$CVSID = '$Id: Mercurial.pm,v 1.2 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Mercurial.pm,v 1.3 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -43,17 +43,18 @@ our %hg;
 our $cache_filename = '';
 
 sub new {
-	my ($self, $rootpath, $params) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
+	my $rootpath = substr($config->{'sourceroot'}, 3);
+	$rootpath =~ s@/*$@@;
 	$self->{'rootpath'} = $rootpath;
-#	$self->{'rootpath'} =~ s@/*$@@;
-	$self->{'hg_blame'} = $$params{'hg_blame'};
-	$self->{'hg_annotations'} = $$params{'hg_annotations'}
+	$self->{'hg_blame'} = $config->{'sourceparams'}{'hg_blame'};
+	$self->{'hg_annotations'} = $config->{'sourceparams'}{'hg_annotations'}
 	# Though Mercurial can provide changeset author independently
 	# from annotations, source script design won't work without
 	# annotations.
-			|| $$params{'hg_blame'};
+		or $config->{'sourceparams'}{'hg_blame'};
 	$self->{'path'} = $config->{'hgpath'};
 	my $cmd = 'cd ' . $rootpath
 		. ';HGRCPATH=' . $rootpath . '/hg.rc hg ';

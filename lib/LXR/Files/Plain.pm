@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Plain.pm,v 1.34 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Plain.pm,v 1.35 2013/11/07 17:58:48 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Plain;
 
-$CVSID = '$Id: Plain.pm,v 1.34 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Plain.pm,v 1.35 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -41,10 +41,10 @@ use LXR::Common;
 @LXR::Files::Plain::ISA = ('LXR::Files');
 
 sub new {
-	my ($self, $rootpath) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$self->{'rootpath'} = $rootpath;
+	$self->{'rootpath'} = $config->{'sourceroot'};
 	# Make sure root directory name ends with a slash
 	$self->{'rootpath'} =~ s@/*$@/@;
 

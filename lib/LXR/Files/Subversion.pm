@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.6 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.7 2013/11/07 17:58:48 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.6 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.7 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -43,15 +43,15 @@ use LXR::Common;
 our $debug = 0;
 
 sub new {
-	my ($self, $rootpath, $params) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$rootpath=~ s{/+$}{};
-	$self->{'rootpath'} = 'file://' . $rootpath;
-	$self->{'svn_blame'} = $$params{'svn_blame'};
-	$self->{'svn_annotations'} = $$params{'svn_annotations'}
+	$self->{'rootpath'} = 'file://' . substr($config->{'sourceroot'}, 4);
+	$self->{'rootpath'} =~ s{/+$}{};
+	$self->{'svn_blame'} = $config->{'sourceparams'}{'svn_blame'};
+	$self->{'svn_annotations'} = $config->{'sourceparams'}{'svn_annotations'}
 		# Blame support will only work when annotations are available,
-			|| $$params{'svn_blame'};
+		or $config->{'sourceparams'}{'svn_blame'};
 	return $self;
 }
 
