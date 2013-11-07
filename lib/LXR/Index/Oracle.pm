@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Oracle.pm,v 1.26 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Oracle.pm,v 1.27 2013/11/07 19:39:22 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 package LXR::Index::Oracle;
 
-$CVSID = '$Id: Oracle.pm,v 1.26 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Oracle.pm,v 1.27 2013/11/07 19:39:22 ajlittoz Exp $ ';
 
 # ***
 # *** CAUTION -CAUTION - CAUTION ***
@@ -42,14 +42,20 @@ use LXR::Common;
 our @ISA = ('LXR::Index');
 
 sub new {
-	my ($self, $dbname, $prefix) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
 
-	$self->{dbh} =
-		DBI->connect($dbname, $config->{'dbuser'}, $config->{'dbpass'},
-			{ RaiseError => 1, AutoCommit => 1 })
+	$self->{dbh} = DBI->connect	( $config->{'dbname'}
+								, $config->{'dbuser'}
+								, $config->{'dbpass'}
+								, { RaiseError => 1
+								  , AutoCommit => 1
+								  }
+								)
 		or die "Can't open connection to database: $DBI::errstr\n";
+
+	my $prefix = $config->{'dbprefix'};
 
 	$self->{'files_insert'} =
 		$self->{dbh}->prepare

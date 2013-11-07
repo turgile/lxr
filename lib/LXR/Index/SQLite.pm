@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: SQLite.pm,v 1.4 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: SQLite.pm,v 1.5 2013/11/07 19:39:22 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 package LXR::Index::SQLite;
 
-$CVSID = '$Id: SQLite.pm,v 1.4 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: SQLite.pm,v 1.5 2013/11/07 19:39:22 ajlittoz Exp $ ';
 
 use strict;
 use DBI;
@@ -32,7 +32,7 @@ our @ISA = ('LXR::Index');
 our ($filenum, $symnum, $typenum);
 our ($fileini, $symini, $typeini);
 
-# NOTE;
+# NOTE:
 #	Some Perl statements below are commented out as '# opt'.
 #	This is meant to decrease the number of calls to DBI methods,
 #	in this case finish() since we know the previous fetch_array()
@@ -48,11 +48,12 @@ our ($fileini, $symini, $typeini);
 #	only once and do not contribute to the running time behaviour.
 
 sub new {
-	my ($self, $dbname, $prefix) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$self->{dbh} = DBI->connect($dbname)
+	$self->{dbh} = DBI->connect($config->{'dbname'})
 	or die "Can't open connection to database: $DBI::errstr\n";
+	my $prefix = $config->{'dbprefix'};
 #	SQLite is forced into explicit commit mode as the medium-sized
 #	test cases have shown a 40-times (!) performance improvement
 #	over auto commit.
@@ -146,15 +147,16 @@ sub new {
 #
 
 sub fileid {
-	my ($self, $filename, $revision) = @_;
+# 	my ($self, $filename, $revision) = @_;
+	my $self = shift @_;
 	my ($fileid);
-	$fileid = $self->fileidifexists($filename, $revision);
+	$fileid = $self->fileidifexists(@_);
 	unless ($fileid) {
 		$fileid = ++$filenum;
-		$self->{'files_insert'}->execute($filename, $revision, $fileid);
+		$self->{'files_insert'}->execute(@_, $fileid);
 		$self->{'status_insert'}->execute($fileid, 0);
 # 			$self->commit;
-		$LXR::Index::files{"$filename\t$revision"} = $fileid;
+# 		$LXR::Index::files{"$filename\t$revision"} = $fileid;
 	}
 	return $fileid;
 }
@@ -180,15 +182,16 @@ sub symid {
 }
 
 sub decid {
-	my ($self, $lang, $string) = @_;
+# 	my ($self, $lang, $string) = @_;
+	my $self = shift @_;
 	my $declid;
 
-	$self->{'langtypes_select'}->execute($lang, $string);
+	$self->{'langtypes_select'}->execute(@_);
 	($declid) = $self->{'langtypes_select'}->fetchrow_array();
 # opt	$self->{'langtypes_select'}->finish();
 	unless (defined($declid)) {
 		$declid = ++$typenum;
-		$self->{'langtypes_insert'}->execute($declid, $lang, $string);
+		$self->{'langtypes_insert'}->execute($declid, @_);
 	}
 
 	return $declid;

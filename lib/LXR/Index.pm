@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Index.pm,v 1.24 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Index.pm,v 1.25 2013/11/07 19:39:22 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ If needed, the methods are overridden in the specific modules.
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.24 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.25 2013/11/07 19:39:22 ajlittoz Exp $ ';
 
 use strict;
 
@@ -74,7 +74,7 @@ method descriptions.
 
 =cut
 
-# NOTE;
+# NOTE:
 #	Some Perl statements below are commented out as '# opt'.
 #	This is meant to decrease the number of calls to DBI methods,
 #	in this case finish() since we know the previous fetch_array()
@@ -90,41 +90,44 @@ method descriptions.
 #	only once and do not contribute to the running time behaviour.
 
 sub new {
-	my ($self, $dbname, $prefix) = @_;
+	my ($self, $config) = @_;
 	my $index;
     
 	%files    = ();
 	%symcache = ();    
 	%cntcache = ();
 
-	if (!defined($prefix)) {
-		$prefix = 'lxr_';
+	if (!defined($config->{'dbprefix'})) {
+		$config->{'dbprefix'} = 'lxr_';
 	}
 
-	if ($dbname =~ m/^DBI:/i) {
-		if ($dbname =~ m/^dbi:mysql:/i) {
+	if ($config->{'dbname'} =~ m/^DBI:(\w+):/i) {
+		my $dbname = uc($1);
+		if ('MYSQL' eq $dbname) {
 			require  LXR::Index::Mysql;
-			$index = LXR::Index::Mysql->new($dbname, $prefix);
-		} elsif ($dbname =~ m/^dbi:Pg:/i) {
+			$index = LXR::Index::Mysql->new($config);
+		} elsif ('PG' eq $dbname) {
 			require  LXR::Index::Postgres;
-			$index = LXR::Index::Postgres->new($dbname, $prefix);
-		} elsif ($dbname =~ m/^dbi:SQLite:/i) {
+			$index = LXR::Index::Postgres->new($config);
+		} elsif ('SQLITE' eq $dbname) {
 			require  LXR::Index::SQLite;
-			$index = LXR::Index::SQLite->new($dbname, $prefix);
-		} elsif ($dbname =~ m/^dbi:oracle:/i) {
+			$index = LXR::Index::SQLite->new($config);
+		} elsif ('ORACLE' eq $dbname) {
 			require  LXR::Index::Oracle;
-			$index = LXR::Index::Oracle->new($dbname, $prefix);
+			$index = LXR::Index::Oracle->new($config);
 		} else {
-			die "Can't find database, $dbname";
+			die 'Can\'t find database ' . $config->{'dbname'};
 		}
 	} else {
-		die "Can't find database, $dbname";
+		die 'Can\'t find database ' . $config->{'dbname'};
 	}
+	$index->{'config'} = $config;
 
 	# Common syntax transactions
 	# Care is taken not to replace specific syntax transactions which
 	# are usually related to auto-increment numbering where syntax
 	# differs from one DB engine to another.
+	my $prefix = $config->{'dbprefix'};
 
 	# 'files_insert' mandatory but involves auto-increment
 	if (!exists($index->{'files_select'})) {
@@ -435,11 +438,12 @@ B<I<(>C<fileid> I<only)>>
 =cut
 
 sub fileidifexists {
-	my ($self, $filename, $revision) = @_;
+# Reminder:	my ($self, $filename, $revision) = @_;
+	my $self = shift @_;
 	my $fileid;
 
 # 	unless (defined($fileid = $files{"$filename\t$revision"})) {
-		$self->{'files_select'}->execute($filename, $revision);
+		$self->{'files_select'}->execute(@_);
 		($fileid) = $self->{'files_select'}->fetchrow_array();
 # opt		$self->{'files_select'}->finish();
 # 		$files{"$filename\t$revision"} = $fileid;
@@ -448,13 +452,14 @@ sub fileidifexists {
 }
 
 sub fileid {
-	my ($self, $filename, $revision) = @_;
+# Reminder:	my ($self, $filename, $revision) = @_;
+	my $self = shift @_;
 	my $fileid;
 
-	$fileid = $self->fileidifexists($filename, $revision);
+	$fileid = $self->fileidifexists(@_);
 	unless ($fileid) {
-		$self->{'files_insert'}->execute($filename, $revision);
-		$self->{'files_select'}->execute($filename, $revision);
+		$self->{'files_insert'}->execute(@_);
+		$self->{'files_select'}->execute(@_);
 		($fileid) = $self->{'files_select'}->fetchrow_array();
 		$self->{'status_insert'}->execute($fileid, 0);
 # opt	$self->{'files_select'}->finish();
@@ -513,7 +518,7 @@ B<Requires:>
 =cut
 
 sub nextfile {
-	my ($self) = @_;
+	my $self = shift @_;
 
 	return $self->{'allfiles_select'}->fetchrow_array();
 # opt		$self->{'files_select'}->finish();
@@ -561,13 +566,14 @@ still be referenced by any tag.
 =cut
 
 sub setfilerelease {
-	my ($self, $fileid, $releaseid) = @_;
+# 	my ($self, $fileid, $releaseid) = @_;
+	my $self = shift @_;
 
-	$self->{'releases_select'}->execute($fileid + 0, $releaseid);
+	$self->{'releases_select'}->execute(@_);
     my ($fid) = $self->{'releases_select'}->fetchrow_array();
 # opt	$self->{'releases_select'}->finish();
 	unless ($fid) {
-		$self->{'releases_insert'}->execute($fileid + 0, $releaseid);
+		$self->{'releases_insert'}->execute(@_);
 	}
 }
 
@@ -599,9 +605,10 @@ B<Requires:>
 =cut
 
 sub removerelease {
-	my ($self, $fid, $releaseid) = @_;
+# 	my ($self, $fid, $releaseid) = @_;
+	my $self = shift @_;
 
-	$self->{'delete_one_release'}->execute($fid, $releaseid);
+	$self->{'delete_one_release'}->execute(@_);
 }
 
 =head2 C<fileindexed ($fileid)>
@@ -801,10 +808,11 @@ B<Requires:>
 =cut
 
 sub filetimestamp {
-	my ($self, $filename, $revision) = @_;
+# 	my ($self, $filename, $revision) = @_;
+	my $self = shift @_;
 	my ($fileid, $timestamp);
     
-	$fileid = $self->fileidifexists($filename, $revision);
+	$fileid = $self->fileidifexists(@_);
 	if (defined($fileid)) {
 		$self->{'status_timestamp'}->execute($fileid);
 		$timestamp = $self->{'status_timestamp'}->fetchrow_array();
@@ -841,10 +849,11 @@ B<Requires:>
 =cut
 
 sub symdeclarations {
-	my ($self, $symname, $releaseid) = @_;
+# 	my ($self, $symname, $releaseid) = @_;
+	my $self = shift @_;
 	my (@ret, @row);
 
-	$self->{'definitions_select'}->execute($symname, $releaseid);
+	$self->{'definitions_select'}->execute(@_);
 	while (@row = $self->{'definitions_select'}->fetchrow_array) {
 		$row[3] &&= $self->symname($row[3]); # convert the relsym symid
 		push(@ret, [@row]);
@@ -916,9 +925,9 @@ sub setsymdeclaration {
 			$cntcache{$relsym} += 1;
 		}
 	}
-die "Symbol cache not initialised for sym $symname\n" if (!defined($symcache{$symname}));
-die "Symbol cache not initialised for rel $relsym\n"
-	if (defined($relsym) && !defined($symcache{$relsym}));
+# die "Symbol cache not initialised for sym $symname\n" if (!defined($symcache{$symname}));
+# die "Symbol cache not initialised for rel $relsym\n"
+# 	if (defined($relsym) && !defined($symcache{$relsym}));
 }
 
 =head2 C<symreferences ($symname, $releaseid)>
@@ -949,10 +958,11 @@ B<Requires:>
 =cut
 
 sub symreferences {
-	my ($self, $symname, $releaseid) = @_;
+# 	my ($self, $symname, $releaseid) = @_;
+	my $self = shift @_;
 	my (@ret, @row);
 
-	$self->{'usages_select'}->execute($symname, $releaseid);
+	$self->{'usages_select'}->execute(@_);
 	while (@row = $self->{'usages_select'}->fetchrow_array) {
 		push(@ret, [@row]);
 	}
@@ -1028,14 +1038,14 @@ sub setsymreference {
 	} else {
 		$cntcache{$symname} += 1;
 	}
-die "Symbol cache not initialised for $symname\n" if (!defined($symcache{$symname}));
+# die "Symbol cache not initialised for $symname\n" if (!defined($symcache{$symname}));
 }
 
 =head2 C<issymbol ($symname, $releaseid)>
 
 C<issymbol> returns I<true> (1) for an existing symbol in a given release
 according to the DB,
-0 otherwise.
+I<false> (0) otherwise.
 
 =over
 
@@ -1172,10 +1182,11 @@ B<Requires:>
 =cut
 
 sub symname {
-	my ($self, $symid) = @_;
+# 	my ($self, $symid) = @_;
+	my $self = shift @_;
 	my $symname;
 
-	$self->{'symbols_byid'}->execute($symid + 0);
+	$self->{'symbols_byid'}->execute(@_);
 	($symname) = $self->{'symbols_byid'}->fetchrow_array();
 
 	return $symname;
@@ -1229,14 +1240,15 @@ is missing (e.g. PostgreSQL and SQLite).>
 =cut
 
 sub decid {
-	my ($self, $lang, $string) = @_;
+# 	my ($self, $lang, $string) = @_;
+	my $self = shift @_;
 	my $id;
 
-	$self->{'langtypes_select'}->execute($lang, $string);
+	$self->{'langtypes_select'}->execute(@_);
 	($id) = $self->{'langtypes_select'}->fetchrow_array();
 	unless (defined($id)) {
-		$self->{'langtypes_insert'}->execute($lang, $string);
-		$self->{'langtypes_select'}->execute($lang, $string);
+		$self->{'langtypes_insert'}->execute(@_);
+		$self->{'langtypes_select'}->execute(@_);
 		($id) = $self->{'langtypes_select'}->fetchrow_array();
 	}
 # opt	$self->{'langtypes_select'}->finish();
@@ -1263,7 +1275,7 @@ B<Requires:>
 =cut
 
 sub deccount {
-	my ($self) = @_;
+	my $self = shift @_;
 	my $dcount;
 
 	$self->{'langtypes_count'}->execute();
@@ -1281,7 +1293,7 @@ If transactions are not supported, it's OK for this to be a no-op.
 =cut
 
 sub commit {
-	my ($self) = @_;
+	my $self = shift @_;
 	$self->{dbh}->commit;
 }
 
@@ -1294,7 +1306,7 @@ This method should not be overridden in specific drivers.
 =cut
 
 sub forcecommit {
-	my ($self) = @_;
+	my $self = shift @_;
 
 	my $oldcommitmode = $self->{dbh}{'AutoCommit'};
 	$self->{dbh}{'AutoCommit'} = 0;
@@ -1443,25 +1455,25 @@ sub purgefile {
 	$self->{dbh}{'AutoCommit'} = 0;
 	$self->{dbh}->commit;
 
-	$self->{'related_symbols_select'}->execute($fid);
-	while (($symid, $symcount, $symname)
-			= $self->{'related_symbols_select'}->fetchrow_array()
-		) {
-		if (!exists($symcache{$symname})) {
-			$symcache{$symname} = $symid;
-			$cntcache{$symname} = $symcount;
-		} else {
-			if ($cntcache{$symname} < 0) {
-				$cntcache{$symname} = -$cntcache{$symname};
-die "Inconsistent symbol reference count for $symname"
-	if $symcount != $cntcache{$symname};
-			}
-		}
-		$cntcache{$symname} = $symcount - 1
-			if $cntcache{$symname} > 0;
-	}
-# opt	$self->{'related_symbols_select'}->finish();
-	$self->flushcache(1);
+# 	$self->{'related_symbols_select'}->execute($fid);
+# 	while (($symid, $symcount, $symname)
+# 			= $self->{'related_symbols_select'}->fetchrow_array()
+# 		) {
+# 		if (!exists($symcache{$symname})) {
+# 			$symcache{$symname} = $symid;
+# 			$cntcache{$symname} = $symcount;
+# 		} else {
+# 			if ($cntcache{$symname} < 0) {
+# 				$cntcache{$symname} = -$cntcache{$symname};
+# die "Inconsistent symbol reference count for $symname"
+# 	if $symcount != $cntcache{$symname};
+# 			}
+# 		}
+# 		$cntcache{$symname} = $symcount - 1
+# 			if $cntcache{$symname} > 0;
+# 	}
+# # opt	$self->{'related_symbols_select'}->finish();
+# 	$self->flushcache(1);
 	$self->{'delete_file_definitions'}->execute($fid);
 	$self->{'delete_file_usages'}->execute($fid);
 	$self->{dbh}->commit;

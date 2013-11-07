@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Postgres.pm,v 1.38 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Postgres.pm,v 1.39 2013/11/07 19:39:22 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 package LXR::Index::Postgres;
 
-$CVSID = '$Id: Postgres.pm,v 1.38 2013/09/21 12:54:52 ajlittoz Exp $ ';
+$CVSID = '$Id: Postgres.pm,v 1.39 2013/11/07 19:39:22 ajlittoz Exp $ ';
 
 use strict;
 use DBI;
@@ -29,11 +29,14 @@ use LXR::Common;
 
 our @ISA = ('LXR::Index');
 
+our ($filenum, $symnum, $typenum);
+our ($fileini, $symini, $typeini);
+
 sub new {
-	my ($self, $dbname, $prefix) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
-	$self->{dbh} = DBI->connect	( $dbname
+	$self->{dbh} = DBI->connect	( $config->{'dbname'}
 								, $config->{'dbuser'}
 								, $config->{'dbpass'}
 #	From the measurement on the medium sized test cases used to 
@@ -48,13 +51,15 @@ sub new {
 								)
 	or die "Can't open connection to database: $DBI::errstr\n";
 
+	my $prefix = $config->{'dbprefix'};
+
 #	Without the following instruction (theoretically meaningless
 #	in auto commit mode), indexing time is multiplied by 10
 #	on the test case!
 #	$self->{dbh}->begin_work() or die "begin_work failed: $DBI::errstr";
 
-	$self->{'filenum_nextval'} = 
-		$self->{dbh}->prepare("select nextval('${prefix}filenum')");
+# 	$self->{'filenum_nextval'} = 
+# 		$self->{dbh}->prepare("select nextval('${prefix}filenum')");
 	$self->{'files_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}files"
@@ -62,8 +67,8 @@ sub new {
 			. ' values (?, ?, ?)'
 			);
 
-	$self->{'symnum_nextval'} = 
-		$self->{dbh}->prepare("select nextval('${prefix}symnum')");
+# 	$self->{'symnum_nextval'} = 
+# 		$self->{dbh}->prepare("select nextval('${prefix}symnum')");
 	$self->{'symbols_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}symbols"
@@ -71,9 +76,8 @@ sub new {
 			. ' values (?, ?, 0)'
 			);
 
-	$self->{'typeid_nextval'} = 
-		$self->{dbh}->prepare("select nextval('${prefix}typenum')");
-
+# 	$self->{'typeid_nextval'} = 
+# 		$self->{dbh}->prepare("select nextval('${prefix}typenum')");
 	$self->{'langtypes_insert'} =
 		$self->{dbh}->prepare
 			( "insert into ${prefix}langtypes"
@@ -90,6 +94,7 @@ sub new {
 			. '  and  t.relcount = 1'
 			. '  and  d.fileid = r.fileid'
 			);
+
 	$self->{'delete_usages'} =
 		$self->{dbh}->prepare
 			( "delete from ${prefix}usages as u"
@@ -100,12 +105,54 @@ sub new {
 			. ' and u.fileid = r.fileid'
 			);
 
-	$self->{'reset_filenum'} = $self->{dbh}->prepare
-		("select setval('${prefix}filenum', 1, false)");
-	$self->{'reset_symnum'} = $self->{dbh}->prepare
-		("select setval('${prefix}symnum',  1, false)");
-	$self->{'reset_typenum'} = $self->{dbh}->prepare
-		("select setval('${prefix}typenum', 1, false)");
+# 	$self->{'reset_filenum'} = $self->{dbh}->prepare
+# 		("select setval('${prefix}filenum', 1, false)");
+# 	$self->{'reset_symnum'} = $self->{dbh}->prepare
+# 		("select setval('${prefix}symnum',  1, false)");
+# 	$self->{'reset_typenum'} = $self->{dbh}->prepare
+# 		("select setval('${prefix}typenum', 1, false)");
+
+	$self->{'filenum_lastval'} = 
+		$self->{dbh}->prepare("select fid from ${prefix}filenum");
+	$self->{'filenum_lastval'}->execute();
+	$filenum = $self->{'filenum_lastval'}->fetchrow_array();
+	$self->{'filenum_lastval'} = undef;
+
+	$self->{'symnum_lastval'} = 
+		$self->{dbh}->prepare("select sid from ${prefix}symnum");
+	$self->{'symnum_lastval'}->execute();
+	$symnum = $self->{'symnum_lastval'}->fetchrow_array();
+	$self->{'symnum_lastval'}  = undef;
+
+	$self->{'typenum_lastval'} = 
+		$self->{dbh}->prepare("select tid from ${prefix}typenum");
+	$self->{'typenum_lastval'}->execute();
+	$typenum = $self->{'typenum_lastval'}->fetchrow_array();
+	$self->{'typenum_lastval'} = undef;
+
+	$fileini = $filenum;
+	$symini  = $symnum;
+	$typeini = $typenum;
+
+	$self->{'filenum_newval'} =
+		$self->{dbh}->prepare
+			( "update ${prefix}filenum"
+			. ' set fid = ?'
+			. ' where rcd = 0'
+			);
+
+	$self->{'symnum_newval'} =
+		$self->{dbh}->prepare
+			( "update ${prefix}symnum"
+			. ' set sid = ?'
+			. ' where rcd = 0'
+		);
+	$self->{'typenum_newval'} =
+		$self->{dbh}->prepare
+			( "update ${prefix}typenum"
+			. ' set tid = ?'
+			. ' where rcd = 0'
+			);
 
 	return $self;
 }
@@ -115,16 +162,17 @@ sub new {
 #
 
 sub fileid {
-	my ($self, $filename, $revision) = @_;
+# 	my ($self, $filename, $revision) = @_;
+	my $self = shift @_;
 	my $fileid;
-
-	$fileid = $self->fileidifexists($filename, $revision);
+	$fileid = $self->fileidifexists(@_);
 	unless ($fileid) {
-		$self->{'filenum_nextval'}->execute();
-		($fileid) = $self->{'filenum_nextval'}->fetchrow_array();
-		$self->{'files_insert'}->execute($filename, $revision, $fileid);
+# 		$self->{'filenum_nextval'}->execute();
+# 		($fileid) = $self->{'filenum_nextval'}->fetchrow_array();
+		$fileid = ++$filenum;
+		$self->{'files_insert'}->execute(@_, $fileid);
 		$self->{'status_insert'}->execute($fileid, 0);
-		$LXR::Index::files{"$filename\t$revision"} = $fileid;
+# 		$LXR::Index::files{"$filename\t$revision"} = $fileid;
 	}
 	return $fileid;
 }
@@ -138,8 +186,9 @@ sub symid {
 		$self->{'symbols_byname'}->execute($symname);
 		($symid, $symcount) = $self->{'symbols_byname'}->fetchrow_array();
 		unless ($symid) {
-			$self->{'symnum_nextval'}->execute();
-			($symid) = $self->{'symnum_nextval'}->fetchrow_array();
+# 			$self->{'symnum_nextval'}->execute();
+# 			($symid) = $self->{'symnum_nextval'}->fetchrow_array();
+			$symid = ++$symnum;
 			$self->{'symbols_insert'}->execute($symname, $symid);
 			$symcount = 0;
 		}
@@ -151,46 +200,66 @@ sub symid {
 }
 
 sub decid {
-	my ($self, $lang, $string) = @_;
-	my $id;
+# 	my ($self, $lang, $string) = @_;
+	my $self = shift @_;
+	my $declid;
 
-	$self->{'langtypes_select'}->execute($lang, $string);
-	($id) = $self->{'langtypes_select'}->fetchrow_array();
-	unless (defined($id)) {
-		$self->{'typeid_nextval'}->execute();
-		($id) = $self->{'typeid_nextval'}->fetchrow_array();
-		$self->{'langtypes_insert'}->execute($id, $lang, $string);
+	$self->{'langtypes_select'}->execute(@_);
+	($declid) = $self->{'langtypes_select'}->fetchrow_array();
+	unless (defined($declid)) {
+# 		$self->{'typeid_nextval'}->execute();
+# 		($declid) = $self->{'typeid_nextval'}->fetchrow_array();
+		$declid = ++$typenum;
+		$self->{'langtypes_insert'}->execute($declid, @_);
 	}
 	
-	return $id;
+	return $declid;
 }
 
 sub purgeall {
 	my ($self) = @_;
 
 # Not really necessary, but nicer for debugging
-	$self->{'reset_filenum'}->execute;
-	$self->{'reset_symnum'}->execute;
-	$self->{'reset_typenum'}->execute;
+# 	$self->{'reset_filenum'}->execute;
+# 	$self->{'reset_symnum'}->execute;
+# 	$self->{'reset_typenum'}->execute;
+	$self->{'filenum_newval'}->execute(0);
+	$self->{'symnum_newval'}->execute(0);
+	$self->{'typenum_newval'}->execute(0);
+	$filenum = 0;
+	$symnum = 0;
+	$typenum = 0;
+	$fileini = $filenum;
+	$symini  = $symnum;
+	$typeini = $typenum;
 
 	$self->{'purge_all'}->execute;
 }
 
 #	PostgreSQL is in auto commit mode; disable calls to
 #	commit to suppress warning messages.
-sub commit{}
+# sub commit{}
 
 sub final_cleanup {
 	my ($self) = @_;
 
 	$self->{dbh}{'AutoCommit'} = 0;
+	if ($filenum != $fileini) {
+		$self->{'filenum_newval'}->execute($filenum);
+	}
+	if ($symnum != $symini) {
+		$self->{'symnum_newval'}->execute($symnum);
+	}
+	if ($typenum != $typeini) {
+		$self->{'typenum_newval'}->execute($typenum);
+	}
 	$self->{dbh}->commit();		# Force a real commit
-	$self->{'filenum_nextval'} = undef;
-	$self->{'symnum_nextval'} = undef;
-	$self->{'typeid_nextval'} = undef;
-	$self->{'reset_filenum'} = undef;
-	$self->{'reset_symnum'} = undef;
-	$self->{'reset_typenum'} = undef;
+# 	$self->{'filenum_nextval'} = undef;
+# 	$self->{'symnum_nextval'} = undef;
+# 	$self->{'typeid_nextval'} = undef;
+# 	$self->{'reset_filenum'} = undef;
+# 	$self->{'reset_symnum'} = undef;
+# 	$self->{'reset_typenum'} = undef;
 	$self->{'files_select'} = undef;
 # 	$self->{'allfiles_select'} = undef;
 	$self->{'releases_select'} = undef;
