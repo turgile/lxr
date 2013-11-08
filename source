@@ -1,7 +1,7 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: source,v 1.66 2013/09/24 08:54:19 ajlittoz Exp $
+# $Id: source,v 1.67 2013/11/08 12:32:37 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -26,7 +26,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.66 2013/09/24 08:54:19 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.67 2013/11/08 12:32:37 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -860,14 +860,13 @@ sub printfile {
 		if ($fileh) {
 			if ($raw) {
 				print($fileh->getlines );
-			}
 
-			#	    elsif ($node =~ /README$/) {
+			#	} elsif ($node =~ /README$/) {
 			#		print("<pre>",
 			#		      markupstring($fileh, $node, $index), # FIXME
 			#		      "</pre>");
-			#	    }
-			else {
+			#	}
+			} else {
 				# Check for a discrepancy between file and database states
 				if	(!$index->filetimestamp
 								( $pathname
@@ -904,8 +903,7 @@ sub printfile {
 				markupfile($fileh, $outfun);
 				&$outfun("</pre>\n");
 			}
-		}
-		else {
+		} else {
 			print(
 				"<p class=\"error\">\n<i>The file $pathname does not exist.</i>\n</p>\n"
 			);
