@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Markup.pm,v 1.9 2013/09/21 12:54:52 ajlittoz Exp $
+# $Id: Markup.pm,v 1.10 2013/11/08 08:38:19 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ syntactic components or otherwise interesting elements of a block.
 
 package LXR::Markup;
 
-$CVSID = '$Id: Markup.pm,v 1.9 2013/09/21 12:54:52 ajlittoz Exp $';
+$CVSID = '$Id: Markup.pm,v 1.10 2013/11/08 08:38:19 ajlittoz Exp $';
 
 use strict;
 
@@ -86,7 +86,10 @@ sub markupstring {
 	# Look for identifiers and create links with identifier search query.
 	# TODO: Is there a performance problem with this?
 	$string =~ s/(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b/
-		$1.(is_linkworthy($2) ? &idref($2, '', $2) : $2)/ge;
+		$1.	( is_linkworthy($2) && $index->issymbol($2, $releaseid)
+			? &idref($2, '', $2)
+			: $2
+			)/ge;
 
 	# HTMLify the special characters we marked earlier,
 	# but not the ones in the recently added xref html links.
@@ -108,7 +111,7 @@ sub markupstring {
 	$string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a class='offshore' href=\"mailto:$2\">$2<\/a>$3/g;
 
 	# HTMLify file names, assuming file is in the directory defined by $virtp.
-	$string =~ s{\b(([\w\-_\/]+\.(c|h|cc|cp|hpp|cpp|java))|README)\b}
+	$string =~ s{\b([\w\-_\/]+\.\w{1,5}|README)\b}
 				{fileref($1, '', $virtp . $1);}ge;
 
 	return ($string);
@@ -158,7 +161,7 @@ sub is_linkworthy {
 
 	return	(	5 < length($string)
 			&&	(	0 <= index($string, '_')
-				||	$string =~ m/.[A-Z]/
+				||	$string =~ m/^.[a-zA-Z]/
 				)
 			&&	0 > index($string, 'README')
 	#		&&	defined($xref{$string}) FIXME
@@ -217,7 +220,6 @@ sub htmlquote {
 	$_[0] =~ s/\0&/&amp;/g;
 	$_[0] =~ s/\0</&lt;/g;
 	$_[0] =~ s/\0>/&gt;/g;
-	$_[0] =~ s/\xFF//g;		# Remove start of line markers
 }
 
 
@@ -302,37 +304,49 @@ sub markupfile {
 	my @itag = &idref($itagtarget, 'fid', $itagtarget) =~ m/^(.*)$itagtarget(.*)$itagtarget(.*)$/;
 	my $lang = LXR::Lang->new($pathname, $releaseid, @itag);
 
+	my ($btype, $frag, $ofrag);
 	if ($lang) {
 	# Source code file if $lang is defined, meaning a parser has been found
 		my $language = $lang->{'ltype'};	# To get back to the key to lookup the tabwidth.
 		&LXR::SimpleParse::init($fileh, ${$config->{'filetype'}{$language}}[3], $lang->parsespec);
 
-		my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
+		($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
 		&$outfun(join($line++, @ltag)) if defined($frag);
 
 		#	Loop until nextfrag returns no more fragments
 		while (defined($frag)) {
+			$frag =~ s/^(\n*)//;	# remove initial empty lines
+			$ofrag = $1;
 			&markspecials($frag);	# guard against HTML special characters
 
 			#	Process every fragment according to its category
-			if ($btype eq 'comment') {
-				# Comment
-				&freetextmarkup($frag);	# Convert mail adresses to mailto:
-				$lang->processcomment(\$frag);
-			} elsif ($btype eq 'string') {
-				# String
-				$lang->processstring(\$frag);
-			} elsif ($btype eq 'include') {
-				# Include directive
-				$lang->processinclude(\$frag, $dir);
+			if ($btype) {
+				if (		'comment'	eq substr($btype, 0, 7)) {
+					# Comment
+					&freetextmarkup($frag);	# Convert mail adresses to mailto:
+					$lang->processcomment(\$frag, $btype);
+				} elsif (	'string'	eq substr($btype, 0, 6)) {
+					# String
+					$lang->processstring(\$frag, $btype);
+				} elsif (	'include'	eq $btype) {
+					# Include directive
+					$lang->processinclude(\$frag, $dir);
+				} elsif (	'extra'		eq substr($btype, 0, 5)) {
+					# Language specific
+					$lang->processextra(\$frag, $btype);
+				} else {
+					# Unknown category
+					# TODO: create a processunknown method
+					$lang->processcode(\$frag);
+				}
 			} else {
 				# Code
 				$lang->processcode(\$frag);
 			}
 
 			&htmlquote($frag);
-			my $ofrag = $frag;
+			$ofrag .= $frag;
 
 			($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
