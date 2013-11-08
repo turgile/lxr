@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Make.pm,v 1.3 2013/09/21 12:54:53 ajlittoz Exp $
+# $Id: Make.pm,v 1.4 2013/11/08 09:06:26 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -32,7 +32,7 @@ It is driven by specifications read from file I<generic.conf>.
 
 package LXR::Lang::Make;
 
-$CVSID = '$Id: Make.pm,v 1.3 2013/09/21 12:54:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Make.pm,v 1.4 2013/11/08 09:06:26 ajlittoz Exp $ ';
 
 use strict;
 require LXR::Lang::Generic;
@@ -66,7 +66,6 @@ sub processinclude {
 	my ($self, $frag, $dir) = @_;
 
 	my $source = $$frag;
-	my $dirname;	# uses directive name and spacing
 	my $file;		# language include file
 	my $path;		# OS include file
 	my $target = '[s-]?include\s+';	# directive pattern
@@ -80,9 +79,8 @@ sub processinclude {
 			# Guard against syntax error or variant
 			# Advance past keyword, so that parsing may continue without loop.
 			$source =~ s/^(\S+)//;	# Erase keyword
-			$dirname = $1;
-			if (length($dirname) > 0) {
-				$$frag .= "<span class='reserved'>$dirname</span>";
+			if (length($1) > 0) {
+				$$frag .= "<span class='reserved'>$1</span>";
 			}
 			&LXR::SimpleParse::requeuefrag($source);
 			return;
@@ -92,14 +90,9 @@ sub processinclude {
 		# Following are only for whitespace separators.
 		$target = '\s+';
 
-		$dirname = $1;
 		$file    = $2;
-
 		$path    = $file;
-		$$frag .= 	( $self->isreserved($dirname)
-					? "<span class='reserved'>$dirname</span>"
-					: $dirname
-					);
+		$$frag .= 	"<span class='reserved'>$1</span>";
 
 		# Check start of comment
 		if ('#' eq substr($file, 0, 1)) {
