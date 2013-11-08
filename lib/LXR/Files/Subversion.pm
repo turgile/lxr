@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.7 2013/11/07 17:58:48 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.8 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.7 2013/11/07 17:58:48 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.8 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -67,7 +67,7 @@ sub getdir {
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
 	open(DIR, "svn list $path |")
-	|| die("svn subprocess died unexpextedly: $!");
+	or die("svn subprocess died unexpextedly: $!");
 
 	while($node = <DIR>) { 
 		chomp($node);	# Remove trailing newline
@@ -93,7 +93,7 @@ sub getannotations {
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
 	open(ANNO,"svn blame $uri |")
-	|| die("svn subprocess died unexpextedly: $!");
+	or die("svn subprocess died unexpextedly: $!");
 	while( <ANNO> ) { 
 		m/\s*(\d+)/;
 		push(@revlist, $1);
@@ -154,7 +154,7 @@ sub getfilehandle {
 		&&	$self->{'svn_annotations'}
 		) {
 		open ($fileh, "svn blame $path 2>/dev/null |")
-		|| die("svn subprocess died unexpextedly: $!");
+		or die("svn subprocess died unexpextedly: $!");
 		return undef if eof($fileh);
 		$self->{'fileh'}       = $fileh;
 		$self->{'nextline'}    = undef;
@@ -167,7 +167,7 @@ sub getfilehandle {
 		# exist" messages).
 		# When debugging, it is wise to remove 2>/dev/null.
 		open ($fileh, "svn cat $path 2>/dev/null |")
-		|| die("svn subprocess died unexpextedly: $!");
+		or die("svn subprocess died unexpextedly: $!");
 		return undef if eof($fileh);
 		return $fileh;
 	}
@@ -301,7 +301,7 @@ sub allreleases {
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
 	open(LOG,"svn log $uri |")
-	|| die("svn subprocess died unexpextedly: $!");
+	or die("svn subprocess died unexpextedly: $!");
 	while(<LOG>){
 		if (m/^(r[\d]+)/) {
 			$rel{"trunk==$1"} = 1;
@@ -320,7 +320,7 @@ sub allbranches {
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
 	open(BRCH,"svn list $uri |")
-	|| die("svn subprocess died unexpextedly: $!");
+	or die("svn subprocess died unexpextedly: $!");
 	while(<BRCH>){
 		s!/\n*!!;
 		push(@brch, "branches/$_");
@@ -333,7 +333,7 @@ sub allbranches {
 		$uri =~ m/(.*)/;
 		$uri = $1;	# Untaint path
 		open(LOG,"svn log $uri |")
-		|| die("svn subprocess died unexpextedly: $!");
+		or die("svn subprocess died unexpextedly: $!");
 		while(<LOG>){
 			if (m/^(r[\d]+)/) {
 				$rel{"$br==$1"} = 1;
@@ -353,7 +353,7 @@ sub alltags {
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
 	open(TAGS,"svn list $uri |")
-	|| die("svn subprocess died unexpextedly: $!");
+	or die("svn subprocess died unexpextedly: $!");
 	while(<TAGS>){
 		s!/\n*!!;
 		push(@tags, "tags/$_");
@@ -366,7 +366,7 @@ sub alltags {
 		$uri =~ m/(.*)/;
 		$uri = $1;	# Untaint path
 		open(LOG,"svn log $uri |")
-		|| die("svn subprocess died unexpextedly: $!");
+		or die("svn subprocess died unexpextedly: $!");
 		while(<LOG>){
 			if (m/^(r[\d]+)/) {
 				$rel{"$tag==$1"} = 1;

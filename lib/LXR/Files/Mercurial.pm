@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Mercurial.pm,v 1.3 2013/11/07 17:58:48 ajlittoz Exp $
+# $Id: Mercurial.pm,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Mercurial;
 
-$CVSID = '$Id: Mercurial.pm,v 1.3 2013/11/07 17:58:48 ajlittoz Exp $ ';
+$CVSID = '$Id: Mercurial.pm,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -75,7 +75,7 @@ sub getdir {
 	$hgpath =~ s,^/+,,;
 	open(DIR, $$self{'hg-cmd'}
 				. "ls-onelevel -r \"$releaseid\" \"$hgpath\" |")
-	|| die ("hg subprocess died unexpectedly: $!");
+	or die ("hg subprocess died unexpectedly: $!");
 
 	while($node = <DIR>) {
 		chomp($node);
@@ -184,7 +184,7 @@ sub getfilehandle {
 		$opt .= 'u' if $self->{'hg_blame'};
 		open ($fileh, $$self{'hg-cmd'}
 					. "blame $opt -r $rev \"$filename\" 2>/dev/null |")
-		|| die("hg subprocess died unexpextedly: $!");
+		or die("hg subprocess died unexpextedly: $!");
 		$self->{'fileh'}       = $fileh;
 		$self->{'nextline'}    = undef;
 		$self->{'annotations'} = [];
@@ -193,7 +193,7 @@ sub getfilehandle {
 	} else {
 		open ($fileh, $$self{'hg-cmd'}
 					. "cat -r $rev $filename 2>/dev/null |")
-		|| die("hg subprocess died unexpextedly: $!");
+		or die("hg subprocess died unexpextedly: $!");
 		return $fileh;
 	}
 }
@@ -304,7 +304,7 @@ sub alltags {
 
 	open(TAGS, $$self{'hg-cmd'}
 				. 'tags |')
-	|| die("hg subprocess died unexpextedly: $!");
+	or die("hg subprocess died unexpextedly: $!");
 	while( <TAGS> ) { 
 		m/^(\S+)/;
 		push(@tags, $1);
@@ -336,7 +336,7 @@ sub allbranches {
 
 	open(BRANCH, $$self{'hg-cmd'}
 				. 'branches |')
-	|| die("hg subprocess died unexpextedly: $!");
+	or die("hg subprocess died unexpextedly: $!");
 	while( <BRANCH> ) { 
 		m/^(\S+)/;
 		push(@brch, $1);
@@ -384,7 +384,7 @@ sub parsehg {
 	# data, i.e. changeset-id and commit time.
 	open(HG, $$self{'hg-cmd'}
 				. "log --template '{rev} {date|hgdate}\n' $filename |")
-	|| die("hg subprocess died unexpextedly: $!");
+	or die("hg subprocess died unexpextedly: $!");
 	while (<HG>) {
 # 		$file .= $_;	# For "standard" output
 		m/^(\d+)\s+(\d+)\s+([+-]?\d+)\s*\n/;

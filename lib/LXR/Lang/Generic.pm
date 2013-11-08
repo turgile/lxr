@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.44 2013/11/08 13:26:21 ajlittoz Exp $
+# $Id: Generic.pm,v 1.45 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.44 2013/11/08 13:26:21 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.45 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -123,13 +123,14 @@ replaced by the index of the table in the DB.
 =cut
 
 sub read_config {
-	open(CONF, $config->{'genericconf'}) || die 'Can\'t open ' . $config->{'genericconf'} . ", $!";
+	open(CONF, $config->{'genericconf'})
+	or die 'Can\'t open ' . $config->{'genericconf'} . ", $!";
 
 	local ($/) = undef;
 
 	my $config_contents = <CONF>;
 	$config_contents =~ m/(.*)/s;
-	$config_contents = $1;                                                        #untaint it
+	$config_contents = $1;		#untaint it
 	$generic_config  = eval("\n#line 1 \"generic.conf\"\n" . $config_contents);
 	die($@) if $@;
 	close CONF;
@@ -485,7 +486,7 @@ sub processinclude {
 				)
 			.	$spacer . $lsep
 			.	$link
-			.	$rsep
+			.	$rsep;
 }
 
 

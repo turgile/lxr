@@ -86,12 +86,8 @@ B<Caveat:>
 
 =item
 
-A warning message may be inserted between $prefix and $suffix.
-Care must be taken to ensure that this message is placed in the
-C<E<lt>BODYE<gt>> part of the HTML page.
-
-I<This> caveat I<is particularly aimed at this sub use in makeheader
-where the page has not been started yet.>
+A warning message may be issued with a C<warn> statement
+and get caught elsewhere.
 
 =back
 
@@ -107,18 +103,15 @@ my ($who, $prefix, $suffix) = @_;
 			$template = <TEMPL>;
 			close(TEMPL);
 		} else {
-			$template .= warning
-							( "Template file '$who' => '"
-							. $config->{$who}
-							. "' does not exist"
-							);
+			warn( "Template file '$who' => '"
+				. $config->{$who}
+				. "' does not exist\n"
+				);
 			$template .= $suffix;
 		}
 	} else {
-		$template .= warning
-						( "Template '$who' is not defined"
-						);
-			$template .= $suffix;
+		warn( "Template '$who' is not defined\n");
+		$template .= $suffix;
 	}
 	return $template
 }
@@ -1584,9 +1577,10 @@ sub makeheader {
 
 	$template = gettemplate
 					( $tmplname
-					, "<html><body>\n<hr>\n"
-					, "<hr>\n<p>Trying to display \$pathname</p>\n"
+					, "<hr>\n"
+					, "<p class='error'>Trying to display \$pathname</p>\n"
 					);
+	$HTMLheadOK = 1;
 
 	print(
 		expandtemplate

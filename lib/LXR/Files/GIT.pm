@@ -3,7 +3,7 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.15 2013/11/07 17:58:48 ajlittoz Exp $
+# $Id: GIT.pm,v 1.16 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.15 2013/11/07 17:58:48 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.16 2013/11/08 14:22:25 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -374,7 +374,7 @@ sub _git_cmd {
 			, $cmd
 			, @clean
 			)
-	|| die "git subprocess died unexpextedly: $!\n";
+	or die "git subprocess died unexpextedly: $!\n";
 	return $git;
 }
 

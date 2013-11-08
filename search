@@ -1,6 +1,6 @@
 #!/usr/bin/perl -T
 ######################################################################
-# $Id: search,v 1.51 2013/09/24 08:43:06 ajlittoz Exp $
+# $Id: search,v 1.52 2013/11/08 14:22:25 ajlittoz Exp $
 ##
 
 # search --	Freetext search
@@ -25,7 +25,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: search,v 1.51 2013/09/24 08:43:06 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.52 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' }; # if LXR modules are in ./lib
@@ -193,7 +193,7 @@ sub glimpsesearch {
 		# The pattern to search for
 				." -y -n '$searchtext' 2>&1 |"
 			)
-	|| print(STDERR "Glimpse subprocess died unexpextedly: $!\n");
+	or die "Glimpse subprocess died unexpextedly: $!\n";
 
 	my $numlines     = 0;
 	my @glimpselines = ();
@@ -524,10 +524,10 @@ sub search {
 
 	$templ = gettemplate	( 'htmlsearch'
 							, $errorsig
-							, "<h2 class\"error\">Free-text search not available without 'htmlsearch' template</h2>\n"
+							, ''
 							);
 	if ($templ =~ m/^$errorsig/) {
-		die "'htmlsearch' template not configured";
+		die "Free-text search not available without 'htmlsearch' template\n";
 	}
 
 	my $searchtext    = $HTTP->{'param'}{'_string'};
@@ -544,32 +544,29 @@ sub search {
 		} elsif ($config->{'swishbin'} && $config->{'swishdir'}) {
 			@results = swishsearch($searchtext, $filetext, $advanced, $casesensitive);
 		} else {
-			warning('No freetext search engine configured.');
+			warn "No freetext search engine configured.\n";
 		}
 	} elsif ($filetext ne '') {
 		my $FILELISTING;
 		if ($config->{'swishdir'} && $config->{'swishbin'}) {
 			unless ($FILELISTING = IO::File->new($config->{'swishdir'} . "/$releaseid.filenames")) {
-				&warning(
-					"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
-					  . $config->{'swishdir'}
-					  . "/$releaseid.filenames.");
+				warn	"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
+						. $config->{'swishdir'}
+						. "/$releaseid.filenames\n";
 				return;
 			}
 		} elsif ($config->{'glimpsedir'} && $config->{'glimpsebin'}) {
 			unless ($FILELISTING =
 				IO::File->new($config->{'glimpsedir'} . '/' . $releaseid . "/.glimpse_filenames"))
 			{
-				&warning(
-					"Version '$releaseid' has not been indexed and is unavailable for searching<br>Could not open "
-					  . $config->{'glimpsedir'}
-					  . "/$releaseid/.glimpse_filenames.");
+				warn	"Version '$releaseid' has not been indexed and is unavailable for searching\n"
+						. 'Could not open '
+						. $config->{'glimpsedir'}
+						. "/$releaseid/.glimpse_filenames\n";
 				return;
 			}
 		} else {
-			warning(
-				'Freetext search engine required for file search, and no freetext search engine is configured'
-			);
+			warn "Freetext search engine required for file search, and no freetext search engine is configured\n";
 			return;
 		}
 		my $sourceroot = $config->{'sourceroot'} . '/' . $releaseid . '/';
@@ -619,12 +616,12 @@ if ($files->isa('LXR::Files::Plain')) {
 		||	$config->{'swishbin'}
 			&& $config->{'swishbin'} =~ m!^(.*/)?true$!
 		) {
-		print "<h2 class='error'>Free-text search disabled by configuration file!</h2>\n";
+		warn "Free-text search disabled by configuration file!\n";
 	} else {
 		&search;
 	}
 } else {
-	print "<h2 class='error'>Free-text search not available with VCSs!</h2>\n";
+	warn "Free-text search not available with VCSs!\n";
 }
 makefooter('search');
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -T
 ######################################################################
-# $Id: showconfig,v 1.3 2013/09/24 08:39:05 ajlittoz Exp $
+# $Id: showconfig,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # showconfig --	Present LXR configuration as html
 #
@@ -41,7 +41,7 @@ by a specific one.
 
 =cut
 
-$CVSID = '$Id: showconfig,v 1.3 2013/09/24 08:39:05 ajlittoz Exp $ ';
+$CVSID = '$Id: showconfig,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -331,7 +331,7 @@ $templ = gettemplate	( 'htmlconfig'
 						, ''
 						);
 if ($templ =~ m/^$errorsig/) {
-	die "'htmlconfig' template not configured";
+	die "Can't display configuration without 'htmlconfig' template\n";
 }
 print expandtemplate
 	( $templ

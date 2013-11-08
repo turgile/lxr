@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.105 2013/11/07 17:58:48 ajlittoz Exp $
+# $Id: Common.pm,v 1.106 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.105 2013/11/07 17:58:48 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.106 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 
@@ -52,9 +52,8 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw(
 	$files $index $config
-	$HTTP
+	$HTTP  $HTMLheadOK
 	$pathname $releaseid $identifier
-	&warning &fatal
 	&urlargs &nonvarargs &fileref &diffref &idref &incref
 	&httpinit &httpclean
 );
@@ -73,9 +72,10 @@ our $pathname;
 our $releaseid;
 our $identifier;
 our $HTTP;
+our $HTMLheadOK;
 
 # Debugging flag - MUST be set to zero before public release
-my $wwwdebug = 0;
+my $wwwdebug = 1;
 
 # Initial value of temp file counter (see sub tmpcounter below)
 my $tmpcounter = 23;
@@ -94,8 +94,9 @@ my $HTTP_inited;
 
 =head2 C<warning ($msg)>
 
-Function C<warning> issues a warning message and
-returns to the caller.
+Function C<warning> (hook for C<warn> statement)
+issues a warning message into the error log
+and optionally on screen.
 
 =over
 
@@ -106,15 +107,17 @@ a I<string> containing the message
 =back
 
 The message is prefixed with Perl context information.
-It is printed on STDERR and returned as an HTML fragment
-for whatever use of the caller (usually printing).
+It is printed on STDERR and if enabled on STDOUT as an HTML fragment.
 
 To prevent HTML mayhem, HTML tag delimiters are replaced by their
 entity name equivalent.
 
 I<This function is called after successful initialisation.
-There is no need to check for HTTP state,
-since early errors are fatal and handled by the next function.>
+There is no need to check for HTTP header state,
+since early errors are fatal and handled by the next function.
+However, the C<E<lt>HTMLE<gt>> tag and C<E<lt>BODYE<gt>> element
+may not yet have been emitted if this is an error on the page header
+template.>
 
 =cut
 
@@ -122,17 +125,30 @@ sub warning {
 	my $msg = shift;
 	my $c = join(', line ', (caller)[ 0, 2 ]);
 	print(STDERR '[', scalar(localtime), "] warning: $c: $msg\n");
-	$msg =~ s/</&lt;/g;
-	$msg =~ s/>/&gt;/g;
-	return ("<h4 class=\"warning\"><i>** Warning: $msg</i></h4>\n")
-		if $wwwdebug;
-	return '';
+	if ($wwwdebug) {
+		if (!$HTMLheadOK) {
+			print '<html><head><title>No LXR Page Header Warning!</title>', "\n";
+			print '<base href="', $HTTP->{'host_access'}, $HTTP->{'script_path'}, "/\">\n";
+		# Next line in the hope situation is not too bad
+			print '<link rel="stylesheet" type="text/css" href="templates/lxr.css">', "\n";
+			print '</head>', "\n";
+			print '<body>', "\n";
+			$HTMLheadOK = 1;
+		};
+		$msg =~ s/</&lt;/g;
+		$msg =~ s/>/&gt;/g;
+		$msg =~ s/\n/\n<br>/g;
+		print	'<h4 class="warning"><p class="headline">** Warning **</p>'
+				. $msg
+				. "</h4>\n";
+	}
 }
 
 
 =head2 C<fatal ($msg)>
 
-Function C<fatal> issues an error message and quits.
+Function C<fatal> (hook for C<die> statement)
+issues an error message and quits.
 
 =over
 
@@ -146,6 +162,13 @@ Full Perl context information is given
 and tentative LXR configuration data is dumped (on STDERR).
 
 The message is printed both on STDERR and in the HTML stream.
+
+If variable C<$HTTP_inited> is not set,
+HTTP standard headers have not yet been emitted.
+In this case, minimal headers and HTML initial elements
+(start of stream, C<E<lt>HEADE<gt>> element and start of body)
+are printed before the message
+and the HTML page is properly closed.
 
 I<Note>:
 
@@ -173,16 +196,19 @@ sub fatal {
 	# If HTTP is not yet initialised, emit a minimal set of headers
 	if ($wwwdebug) {
 		if (!$HTTP_inited) {
-			print 'Content-Type: text/html; charset=utf-8', "\n";
-			#Since this a transient error, don't keep it in cache
-			print 'Expires: Thu, 01 Jan 1970 00:00:00 GMT', "\n";
-			print "\n";
-			print '<html><head><title>LXR Fatal Error!</title></head>', "\n";
+			print '<html><head><title>LXR Fatal Error!</title>', "\n";
+			print '<base href="', $HTTP->{'host_access'}, $HTTP->{'script_path'}, "/\">\n";
+		# Next line in the hope situation is not too bad
+			print '<link rel="stylesheet" type="text/css" href="templates/lxr.css">', "\n";
+			print '</head>', "\n";
 			print '<body>', "\n";
 		};
 		$msg =~ s/</&lt;/g;
 		$msg =~ s/>/&gt;/g;
-		print "<h4 class=\"fatal\"><i>** Fatal: $msg</i></h4>\n";
+		$msg =~ s/\n/\n<br>/g;
+		print	'<h4 class="fatal"><p class="headline">** Fatal **</p>'
+				. $msg
+				. "</h4>\n";
 		# Properly close the HTML stream
 		print '</body></html>', "\n";
 	}
@@ -339,9 +365,7 @@ sub fileref {
 	$desc =~ s/</&lt;/g;
 	$desc =~ s/>/&gt;/g;
 
-	if ($line > 0 && length($line) < 4) {
-		$line = ('0' x (4 - length($line))) . $line;
-	}
+	$line = ('0' x (4 - length($line))) . $line;
 
 	return	( "<a class='$css' href=\""
 				. $config->{'virtroot'}
@@ -699,10 +723,11 @@ sub printhttp {
 	if ($HTTP->{'param'}{'_raw'}) {
 
 		#FIXME - need more types here
-		my %type = (
-			'gif'  => 'image/gif',
-			'html' => 'text/html'
-		);
+		my %type =
+			( 'gif'  => 'image/gif'
+			, 'html' => 'text/html'
+			, 'shtml'=> 'text/html'
+			);
 
 		if	(	$pathname =~ m/\.([^.]+)$/
 			&&	exists($type{$1})
@@ -849,9 +874,7 @@ sub httpinit {
 	$files = LXR::Files->new($config);
 	die 'Can\'t create Files for ' . $config->{'sourceroot'}
 		if !defined($files);
-	$index = LXR::Index->new( $config->{'dbname'}
-							, $config->{'dbprefix'}
-							);
+	$index = LXR::Index->new($config);
 	die 'Can\'t create Index for ' . $config->{'dbname'}
 		if !defined($index);
 

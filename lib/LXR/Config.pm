@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.58 2013/09/21 12:18:53 ajlittoz Exp $
+# $Id: Config.pm,v 1.59 2013/11/08 14:22:25 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.58 2013/09/21 12:18:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.59 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -163,7 +163,7 @@ sub readfile {
 	my $file = shift;
 	my @data;
 
-	open(INPUT, $file) || fatal("Config: cannot open $file\n");
+	open(INPUT, $file) or die("Config: cannot open $file");
 	$file = <INPUT>;
 	close(INPUT);
 

@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.50 2013/11/07 17:58:48 ajlittoz Exp $
+# $Id: CVS.pm,v 1.51 2013/11/08 14:22:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::CVS;
 
-$CVSID = '$Id: CVS.pm,v 1.50 2013/11/07 17:58:48 ajlittoz Exp $ ';
+$CVSID = '$Id: CVS.pm,v 1.51 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -300,7 +300,7 @@ sub getfilehandle {
 			, $clean_filename
 # 			, '2>/dev/null'
 			)
-	|| die('Error executing "co"; rcs not installed?');
+	or die('Error executing "co"; rcs not installed?');
 
 	return $fileh;
 }
@@ -381,11 +381,6 @@ This function should not be used outside this module.
 sub toreal {
 	my ($self, $pathname, $releaseid) = @_;
 	my $real = $self->{'rootpath'} . $pathname;
-
-# # nearly all (if not all) method calls eventually call toreal(), so this is a good place to block file access
-# 	foreach my $ignoredir (@{$config->{'ignoredirs'}}) {
-# 		return undef if $real =~ m!/$ignoredir(/|$)!;
-# 	}
 
 	# If directory, nothing more to do
 	return $real if -d $real;
