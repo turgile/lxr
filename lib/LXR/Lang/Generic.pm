@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.43 2013/09/24 15:35:38 ajlittoz Exp $
+# $Id: Generic.pm,v 1.44 2013/11/08 13:26:21 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.43 2013/09/24 15:35:38 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.44 2013/11/08 13:26:21 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -476,7 +476,10 @@ sub processinclude {
 	&LXR::SimpleParse::requeuefrag($source);
 
 	# Reconstruct the highlighted fragment
-	$$frag =	( $self->isreserved($dirname)
+	my $dictname = $dirname;
+	$dictname =~ s/\s+//;		# for C #directives
+	$dictname = uc($dirname) if $$self{'case_insensitive'};
+	$$frag =	( $self->isreserved($dictname)
 				? "<span class='reserved'>$dirname</span>"
 				: $dirname
 				)
