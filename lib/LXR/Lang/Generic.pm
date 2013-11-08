@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.46 2013/11/08 18:14:03 ajlittoz Exp $
+# $Id: Generic.pm,v 1.47 2013/11/08 18:18:54 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.46 2013/11/08 18:14:03 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.47 2013/11/08 18:18:54 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -114,11 +114,28 @@ sub new {
 Internal function (not method!) C<read_config> reads in language
 descriptions from configuration file.
 
-This is only executed once, saving the overhead of processing the
-config file each time.
+Sets in global variable C<$config_contents> a reference to a I<hash>
+equivalent to the configuration file.
+The diffrences are:
 
-The mapping between I<ctags> tags and their human readable counterpart
-is stored in the database for every language. The mapping is then
+=over
+
+=item 1 Keywords are uppercased is language is case-insensitive.
+
+=item 1 Keywords are stored in a I<hash> instead of an array to
+speed up later retrieval (avoiding linear search and its quadratic
+average time)
+
+=item 1 Human-readable text for type is replaced by a record-id
+in the database where text is recorded.
+
+=back
+
+Loading the file and transformung if is only executed once,
+saving the overhead of processing the config file each time.
+
+However, The mapping between I<ctags> tags and their human readable
+counterpart is stored in every database for every language. The mapping is then
 replaced by the index of the table in the DB.
 
 =cut
@@ -127,21 +144,54 @@ sub read_config {
 	open(CONF, $config->{'genericconf'})
 	or die 'Can\'t open ' . $config->{'genericconf'} . ", $!";
 
-	local ($/) = undef;
+	my $todo = !defined($generic_config);
+	if ($todo) {
+		local ($/) = undef;
+		my $config_contents = <CONF>;
+		$config_contents =~ m/(.*)/s;
+		$config_contents = $1;		#untaint it
+		$generic_config  = eval("\n#line 1 \"generic.conf\"\n" . $config_contents);
+		die($@) if $@;
+		close CONF;
+	}
 
-	my $config_contents = <CONF>;
-	$config_contents =~ m/(.*)/s;
-	$config_contents = $1;		#untaint it
-	$generic_config  = eval("\n#line 1 \"generic.conf\"\n" . $config_contents);
-	die($@) if $@;
-	close CONF;
-
-	# Setup the ctags to declid mapping
 	my $langmap = $generic_config->{'langmap'};
+	my $langdesc;  # Language description hash
+	my $typemap;	# Language type letter/text table
+	my $type;		# Letter for type
+	my $tdescr;		# Human-readable type
+	my $langid;		# Language code
+
 	foreach my $lang (keys %$langmap) {
-		my $typemap = $langmap->{$lang}{'typemap'};
-		foreach my $type (keys %$typemap) {
-			$typemap->{$type} = $index->decid($langmap->{$lang}{'langid'}, $typemap->{$type});
+		if ($todo) {
+			$langdesc = $langmap->{$lang};	# Dereference
+	# Transform the 'reserved' keyword list to speed up lookup
+			my $insensitive = 0;
+			if (exists($langdesc->{'flags'})) {
+				foreach (@{$langdesc->{'flags'}}) {
+					if ($_ eq 'case_insensitive') {
+						$insensitive = 1;
+						last;
+					}
+				}
+			}
+			if	(exists($langdesc->{'reserved'})) {
+				my @kwl = @{$langdesc->{'reserved'}};
+				$langdesc->{'reserved'} = {};
+				foreach (@kwl) {
+					if ($insensitive) {
+						$langdesc->{'reserved'}{uc($_)} = 1;
+					} else {
+						$langdesc->{'reserved'}{$_} = 1;
+					}
+				}
+			}
+		}
+	# Setup the ctags to declid mapping
+		$typemap = $langdesc->{'typemap'};
+		$langid  = $langdesc->{'langid'};
+		while (($type, $tdescr) = each %$typemap) {
+			$typemap->{$type} = $index->decid($langid, $tdescr);
 		}
 	}
 }
