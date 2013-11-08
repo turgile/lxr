@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: C.pm,v 1.13 2013/09/21 12:54:53 ajlittoz Exp $
+# $Id: C.pm,v 1.14 2013/11/08 08:59:50 ajlittoz Exp $
 #
 # Enhances the support for the C language over that provided by
 # Generic.pm
@@ -22,7 +22,7 @@
 
 package LXR::Lang::C;
 
-$CVSID = '$Id: C.pm,v 1.13 2013/09/21 12:54:53 ajlittoz Exp $ ';
+$CVSID = '$Id: C.pm,v 1.14 2013/11/08 08:59:50 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -80,7 +80,8 @@ sub processinclude {
 			.	$spacer
 			.	$lsep
 			.	$link
-			.	$rsep;
+			.	$rsep
+			.	$source;
 }
 
 1;
