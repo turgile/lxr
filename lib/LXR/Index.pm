@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Index.pm,v 1.25 2013/11/07 19:39:22 ajlittoz Exp $
+# $Id: Index.pm,v 1.26 2013/11/08 18:14:03 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ If needed, the methods are overridden in the specific modules.
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.25 2013/11/07 19:39:22 ajlittoz Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.26 2013/11/08 18:14:03 ajlittoz Exp $ ';
 
 use strict;
 
@@ -36,6 +36,11 @@ use strict;
 # Global variables
 #
 our (%files, %symcache, %cntcache);
+our $database_id = 0;	# DB counter incremented by genxref or httpinit
+	# This variable is incremented every time a new DB is opened
+	# so that objects 'or procedures) which cache their initialisation
+	# are able to detect DB has change and can synchronise to a fresh
+	# new DB.
 
 
 =head2 C<new ($dbname)>

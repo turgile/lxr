@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.45 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: Generic.pm,v 1.46 2013/11/08 18:14:03 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,14 +35,15 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.45 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.46 2013/11/08 18:14:03 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
 use LXR::Common;
 use LXR::Lang;
 
-my $generic_config;
+my $generic_config;	# Cache for configuration file
+my $seenDB;			# Worh was done for this DB
 
 our @ISA = ('LXR::Lang');
 
@@ -88,11 +89,11 @@ sub new {
 	$$self{'releaseid'}  = $releaseid;
 	$$self{'language'} = $lang;
 
-# 	read_config() unless defined $generic_config;
-	if	(  $index->deccount() <= 0	# Necessary for --allurls processing
-		|| !defined($generic_config)
-		) {
+# 	read_config() if we meet a new DB to make sure the type dictionary
+#	is correctly annotated.
+	if	($seenDB != $LXR::Index::database_id) {
 		read_config();
+		$seenDB = $LXR::Index::database_id;
 	}
 	%$self = (%$self, %$generic_config);
 

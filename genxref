@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.67 2013/09/24 15:21:36 ajlittoz Exp $
+# $Id: genxref,v 1.68 2013/11/08 18:14:03 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -402,14 +402,11 @@ foreach my $treedescr (@config) {
 			. " - Can't run${VTnorm}\n";
 	}
 
-	$files = LXR::Files->new	( $config->{'sourceroot'}
-								, $config->{'sourceparams'}
-								);
+	$files = LXR::Files->new($config);
 	die "${VTred}Can't create file access object ${VTnorm}" . $config->{'sourceroot'}
 		if !defined($files);
-	$index = LXR::Index->new	( $config->{'dbname'}
-								, $config->{'dbprefix'}
-								);
+	$LXR::Index::database_id++;		# Changing database
+	$index = LXR::Index->new($config);
 	die "${VTred}Can't create Index ${VTnorm}" . $config->{'dbname'}
 		if !defined($index);
 
