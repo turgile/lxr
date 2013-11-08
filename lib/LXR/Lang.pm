@@ -1,7 +1,7 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.52 2013/09/24 07:36:09 ajlittoz Exp $
+# $Id: Lang.pm,v 1.53 2013/11/08 09:15:38 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ to capture missing specific implementations.
 
 package LXR::Lang;
 
-$CVSID = '$Id: Lang.pm,v 1.52 2013/09/24 07:36:09 ajlittoz Exp $ ';
+$CVSID = '$Id: Lang.pm,v 1.53 2013/11/08 09:15:38 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;
@@ -210,7 +210,7 @@ Internal function C<multilinetwist> marks the fragment with a CSS class.
 
 a I<string> to mark
 
-=item 1 C<$dir>
+=item 1 C<$css>
 
 a I<string> containing the CSS class
 
@@ -248,9 +248,8 @@ Uses function C<multilinetwist>.
 =cut
 
 sub processcomment {
-	my ($self, $frag) = @_;
-
-	multilinetwist($frag, 'comment');
+	shift @_;
+	goto &multilinetwist;
 }
 
 
@@ -271,9 +270,34 @@ Uses function C<multilinetwist>.
 =cut
 
 sub processstring {
-	my ($self, $frag) = @_;
+	shift @_;
+	goto &multilinetwist;
+}
 
-	multilinetwist($frag, 'string');
+
+=head2 C<processextra ($frag, $kind)>
+
+Method C<processextra> marks the fragment as language specific.
+
+=over
+
+=item 1 C<$frag>
+
+a I<string> to mark
+
+=item 1 C<$kind>
+
+a I<string> containing the CSS class
+
+=back
+
+Uses function C<multilinetwist>.
+
+=cut
+
+sub processextra {
+	shift @_;
+	goto &multilinetwist;
 }
 
 #
