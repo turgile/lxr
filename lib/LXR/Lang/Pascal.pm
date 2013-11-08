@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Pascal.pm,v 1.4 2013/09/21 12:54:53 ajlittoz Exp $
+# $Id: Pascal.pm,v 1.5 2013/11/08 09:04:27 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -32,7 +32,7 @@ It is driven by specifications read from file I<generic.conf>.
 
 package LXR::Lang::Pascal;
 
-$CVSID = '$Id: Pascal.pm,v 1.4 2013/09/21 12:54:53 ajlittoz Exp $ ';
+$CVSID = '$Id: Pascal.pm,v 1.5 2013/11/08 09:04:27 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Lang;
@@ -110,6 +110,7 @@ sub processinclude {
 
 	my $source = $$frag;
 	my $dirname;	# uses directive name and spacing
+	my $dictname;
 	my $file;		# language include file
 	my $path;		# OS include file
 	my $link;		# link to include file
@@ -138,7 +139,8 @@ sub processinclude {
 		$dirname = $1;
 		$file    = $2;
 		$path    = $file;
-		$$frag .= 	( $self->isreserved($dirname)
+		($dictname = $dirname) =~ s/\s//g;
+		$$frag .= 	( $self->isreserved(uc($dictname))
 					? "<span class='reserved'>$dirname</span>"
 					: $dirname
 					);	

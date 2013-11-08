@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: HTML.pm,v 1.2 2013/09/21 12:54:53 ajlittoz Exp $
+# $Id: HTML.pm,v 1.3 2013/11/08 09:04:27 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -32,7 +32,7 @@ It is driven by specifications read from file I<generic.conf>.
 
 package LXR::Lang::HTML;
 
-$CVSID = '$Id: HTML.pm,v 1.2 2013/09/21 12:54:53 ajlittoz Exp $ ';
+$CVSID = '$Id: HTML.pm,v 1.3 2013/11/08 09:04:27 ajlittoz Exp $ ';
 
 use strict;
 require LXR::Lang::Generic;
@@ -85,7 +85,7 @@ sub processinclude {
 		# Advance past keyword, so that parsing may continue without loop.
 		$source =~ s/^(\w+)//;	# Erase keyword
 		$dirname = $1;
-		$$frag =	( $self->isreserved($dirname)
+		$$frag =	( $self->isreserved(uc($dirname))
 					? "<span class='reserved'>$dirname</span>"
 					: $dirname
 					);
@@ -103,7 +103,7 @@ sub processinclude {
 	$path =~ s/&#x22/"/ig;
 	$path =~ s/&#x27/'/ig;
 
-	$$frag = 	( $self->isreserved($dirname)
+	$$frag = 	( $self->isreserved(uc($dirname))
 				? "<span class='reserved'>$dirname</span>"
 				: $dirname
 				)
