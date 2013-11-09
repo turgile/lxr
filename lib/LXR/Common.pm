@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.107 2013/11/08 18:14:03 ajlittoz Exp $
+# $Id: Common.pm,v 1.108 2013/11/09 19:37:11 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.107 2013/11/08 18:14:03 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.108 2013/11/09 19:37:11 ajlittoz Exp $ ';
 
 use strict;
 
@@ -196,6 +196,7 @@ sub fatal {
 	# If HTTP is not yet initialised, emit a minimal set of headers
 	if ($wwwdebug) {
 		if (!$HTTP_inited) {
+			httpminimal();
 			print '<html><head><title>LXR Fatal Error!</title>', "\n";
 			print '<base href="', $HTTP->{'host_access'}, $HTTP->{'script_path'}, "/\">\n";
 		# Next line in the hope situation is not too bad
