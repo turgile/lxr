@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.47 2013/11/08 18:18:54 ajlittoz Exp $
+# $Id: Generic.pm,v 1.48 2013/11/09 10:07:37 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.47 2013/11/08 18:18:54 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.48 2013/11/09 10:07:37 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -135,8 +135,8 @@ Loading the file and transformung if is only executed once,
 saving the overhead of processing the config file each time.
 
 However, The mapping between I<ctags> tags and their human readable
-counterpart is stored in every database for every language. The mapping is then
-replaced by the index of the table in the DB.
+counterpart is stored in every database for every language.
+The mapping, as a table index in the DB, is keptin a new I<hash> C<'typeid'>.
 
 =cut
 
@@ -191,7 +191,7 @@ sub read_config {
 		$typemap = $langdesc->{'typemap'};
 		$langid  = $langdesc->{'langid'};
 		while (($type, $tdescr) = each %$typemap) {
-			$typemap->{$type} = $index->decid($langid, $tdescr);
+			$langdesc->{'typeid'}{$type} = $index->decid($langid, $tdescr);
 		}
 	}
 }
