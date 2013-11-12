@@ -1,7 +1,7 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: diff,v 1.33 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: diff,v 1.34 2013/11/12 19:45:13 ajlittoz Exp $
 #
 # diff --	Display diff output with markup.
 #
@@ -25,7 +25,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: diff,v 1.33 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: diff,v 1.34 2013/11/12 19:45:13 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
@@ -156,10 +156,10 @@ Current values are then transfered into these so-called I<remembered>
 values and user is requested to choose another version.
 
 On second entry, both current values (I<var_name>C<=>...) and
-remembered values (C<~>I<var_name>C<=>...) are present in the
+remembered values (C<~>I~<var_name>C<=>...) are present in the
 query arguments.
-The latter values designate the reference version (in the left pane);
-the former values the "new" version (in the right pane).
+The latter values designate the reference version (in the right pane);
+the former values the "new" version (in the left pane).
 With these two file descriptions, processing can be done.
 
 The file name in C<$pathname> has been nominally transformed by the
@@ -223,11 +223,11 @@ sub printdiff {
 	my ($diffv) = grep(m/v=/, @dargs);
 	$diffv =~ s/v=//;
 
-	unless ($files->isfile($origname, $releaseid)) {
-		print("<p class='error'>*** $origname does not exist in version $releaseid ***</p>\n");
+	unless ($files->isfile($origname, $diffv)) {
+		print("<p class='error'>*** $origname does not exist in version $diffv ***</p>\n");
 		return;
 	}
-	unless ($files->isfile($diffname, $diffv)) {
+	unless ($files->isfile($diffname, $releaseid)) {
 		print("<p class='error'>*** $diffname does not exist in version $releaseid ***</p>\n");
 		return;
 	}
@@ -235,43 +235,53 @@ sub printdiff {
 # 	fflush;
 	# realfilename may create a temporary file
 	# which should be released when no longer needed
-	my $origtemp = $files->realfilename($origname, $releaseid);
-	my $difftemp = $files->realfilename($diffname, $diffv);
+	my $origtemp = $files->realfilename($origname, $diffv);
+	my $difftemp = $files->realfilename($diffname, $releaseid);
 	$ENV{'PATH'} = '/usr/local/bin:/usr/bin:/bin:/usr/sbin';
 	unless (open(DIFF, '-|')) {
 		open(STDERR, '>&STDOUT');
-		exec('diff', '-U0', $origtemp, $difftemp);
+		exec('diff', '-U0', $difftemp, $origtemp);
 		die "*** Diff subprocess died unexpectedly: $!\n";
 	}
 
-	my ($os, $ol, $ns, $nl, $ms, $ml, $bo, $ofs, $dir, %orig, %new, %chg);
+	my ($leftstart, $leftlen);		# What is replaced in left file
+	my ($rightstart, $rightlen);	# What replaces in tight file
+	my $facing;						# Number of facing lines
+	my $rightxcess;					# Running count of lines in excess at right
+	my $leftorg;					# Final real line number at left
+	my $dir;						# Change indicator
+	my %chg;						# All change indicators
+	my $blanks;						# Number of blanks lines to keep abreast
+	my (%leftblanks, %rightblanks);
 
 	while (<DIFF>) {
-		if (($os, $ol, $ns, $nl) = /@@ -(\d+)(?:,(\d+)|) \+(\d+)(?:,(\d+)|) @@/) {
-			$os++ if $ol eq '0';
-			$ns++ if $nl eq '0';
-			$ol = 1 unless defined($ol);
-			$nl = 1 unless defined($nl);
+		if	(($leftstart, $leftlen, $rightstart, $rightlen)
+				= m/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/
+			) {
+			$leftstart++  if $leftlen eq '0';
+			$rightstart++ if $rightlen eq '0';
+			$leftlen  = 1 unless defined($leftlen);
+			$rightlen = 1 unless defined($rightlen);
 
-			$bo = $os + $ofs;
-			if ($ol < $nl) {
-				$ofs += $nl - $ol;
+			$leftorg = $leftstart + $rightxcess;
+			if ($leftlen < $rightlen) {
+				$rightxcess += $rightlen - $leftlen;
 
-				$dir               = '&gt;&gt;';
-				$ms                = $nl - $ol;
-				$ml                = $ol;
-				$orig{ $os + $ol } = $ms;
+				$dir    = '&gt;&gt;';
+				$blanks = $rightlen - $leftlen;
+				$facing = $leftlen;
+				$leftblanks{$leftstart + $leftlen} = $blanks;
 			} else {
-				$dir              = '&lt;&lt;';
-				$ms               = $ol - $nl;
-				$ml               = $nl;
-				$new{ $ns + $nl } = $ms;
+				$dir    = '&lt;&lt;';
+				$blanks = $leftlen - $rightlen;
+				$facing = $rightlen;
+				$rightblanks{$rightstart + $rightlen} = $blanks;
 			}
-			foreach (0 .. $ml - 1) {
-				$chg{ $bo + $_ } = '!!';
+			foreach (0 .. $facing - 1) {
+				$chg{ $leftorg + $_ } = '!!';
 			}
-			foreach (0 .. $ms - 1) {
-				$chg{ $bo + $ml + $_ } = $dir;
+			foreach (0 .. $blanks - 1) {
+				$chg{ $leftorg + $facing + $_ } = $dir;
 			}
 
 		}
@@ -280,29 +290,11 @@ sub printdiff {
 
 	#	Print a descriptive title and tell exactly what versions
 	#	are compared (dump the variable value sets)
-	print	( "<h1>Diff markup</h1>\n"
-			, '<h2>between '
-			, fileref	( $origname
-						, 'diff-fref'
-						, $origname
-						)
-			, ' <small>('
-			);
-	my @fctx;
-	for my $var ($config->allvariables) {
-		next if	exists($config->{'variables'}{$var}{'when'})
-				&& !eval($config->varexpand($config->{'variables'}{$var}{'when'}));
-		my ($varval) = grep(m/$var=/, @dargs);
-		$varval =~ s/$var=//;
-		push (@fctx, $config->vardescription($var).': '.$varval);
-	}
-	print	( join(', ', @fctx)
-			, ')</small><br>'
-			, ' and '
-			);
 	my @linkargs = grep {m/(.*?)=(.*)/; $config->variable($1) ne $2;} @dargs;
 	map (s/(.*?)=/!$1=/, @linkargs);
-	print	( fileref	( $diffname
+	print	( "<h1>Diff markup</h1>\n"
+			, '<h2>between '
+			, fileref	( $diffname
 						, 'diff-fref'
 						, $diffname
 						, undef
@@ -310,11 +302,28 @@ sub printdiff {
 						)
 			, ' <small>('
 			);
-	@fctx = ();
+	my @fctx;
 	for my $var ($config->allvariables) {
 		next if	exists($config->{'variables'}{$var}{'when'})
 				&& !eval($config->varexpand($config->{'variables'}{$var}{'when'}));
 		push (@fctx, $config->vardescription($var).': '.$config->variable($var));
+	}
+	print	( join(', ', @fctx)
+			, ')</small><br>'
+			, ' and '
+			, fileref	( $origname
+						, 'diff-fref'
+						, $origname
+						)
+			, ' <small>('
+			);
+	@fctx = ();
+	for my $var ($config->allvariables) {
+		next if	exists($config->{'variables'}{$var}{'when'})
+				&& !eval($config->varexpand($config->{'variables'}{$var}{'when'}));
+		my ($varval) = grep(m/$var=/, @dargs);
+		$varval =~ s/$var=//;
+		push (@fctx, $config->vardescription($var).': '.$varval);
 	}
 	print	( join(', ', @fctx)
 			, ")</small></h2><hr>\n"
@@ -330,22 +339,22 @@ sub printdiff {
 			$config->variable($1, $2);
 		}
 	}
-	my $orig  = '';
-	markupfile($origh, sub { $orig .= shift });
+	my $rightfile;
+	markupfile($origh, sub { $rightfile .= shift });
 	#	Restore original environment
 	while ((my $var, my $val) = each %oldvars) {
 		$config->variable($var, $val);
 	}
 	%oldvars = {};
-	my $len = $. + $ofs;
 	$origh->close;
 	$files->releaserealfilename($origtemp);
 
 	$pathname = $diffname;
 
 	my $diffh = FileHandle->new($difftemp);
-	my $new   = '';
-	markupfile($diffh, sub { $new .= shift });
+	my $leftfile;
+	markupfile($diffh, sub { $leftfile .= shift });
+	my $len = $. + $rightxcess;	# Total lines displayed
 	$diffh->close;
 	$files->releaserealfilename($difftemp);
 
@@ -354,41 +363,39 @@ sub printdiff {
 	#	Output both versions side by side
 	my $i;
 	$i = 1;
-	$orig =~ s/^/"\n" x ($orig{$i++})/mge;
+	$leftfile  =~ s/^/"\n" x ($leftblanks{$i++})/mge;
 	$i = 1;
-	$new =~ s/^/"\n" x ($new{$i++})/mge;
+	$rightfile =~ s/^/"\n" x ($rightblanks{$i++})/mge;
 
-	my @orig = split(/\n/, $orig);
-	my @new  = split(/\n/, $new);
+	my @leftlines  = split(/\n/, $leftfile);
+	my @rightlines = split(/\n/, $rightfile);
 
 	my $leftwidth = $$HTTP{'param'}{'_diffleftwidth'}
 					|| $config->{'diffleftwidth'}
 					|| 50;
 	print("<pre class=\"filecontent\">\n");
 	foreach $i (0 .. $len) {
-		my $o = htmljust($orig[$i], $leftwidth);
-		my $n = $new[$i];
+		my $l = htmljust($leftlines[$i], $leftwidth);
+		my $r = $rightlines[$i];
 
 		my $diffmark = '  ';
 		if ($chg{ $i + 1 }) {
 			$diffmark = '<span class="diff-mark">' . $chg{ $i + 1 } . "</span>";
 			if ('&lt;&lt;' eq $chg{ $i + 1 }) {
-				$o =~ s|</a> |</a> <span class="diff-left">|;
+				$l =~ s|</a> |</a> <span class="diff-left">|;
 			}
 			if ('&gt;&gt;' eq $chg{ $i + 1 }) {
-				$n =~ s|</a> |</a> <span class="diff-right">|;
+				$r =~ s|</a> |</a> <span class="diff-right">|;
 			}
 			if ('!!' eq $chg{ $i + 1 }) {
-				$o =~ s|</a> |</a> <span class="diff-both">|;
-				$n =~ s|</a> |</a> <span class="diff-both">|;
+				$l =~ s|</a> |</a> <span class="diff-both">|;
+				$r =~ s|</a> |</a> <span class="diff-both">|;
 			}
-			$o .= '</span>';
-			$n .= '</span>';
+			$l .= '</span>';
+			$r .= '</span>';
 		}
 
-		#print("$o <span class=\"diff-mark\">",
-		#      ($chg{$i+1} || "  "), "</span> $n\n");
-		print "$o $diffmark $n\n";
+		print "$l $diffmark $r\n";
 	}
 	print("</pre>\n");
 
