@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating PostgreSQL tables
  *	(C) 2012-2013 A. Littoz
- *	$Id: initdb-p-template.sql,v 1.5 2013/11/17 15:17:24 ajlittoz Exp $
+ *	$Id: initdb-p-template.sql,v 1.6 2013/11/17 15:33:55 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -140,9 +140,30 @@
 -*//*- to activate place "- * /" at end of line (without spaces)
 /*@XQT psql -q -U postgres %DB_name% <<END_OF_TABLES*/
 /*- end of disable/enable comment -*/
+/*-	NOTE:	a substantial performance gain resulted in
+  -			not using SERIAL autoincrementing fields, numbering
+  -			them with unique ids obtained from SEQUENCEs.
+  -			A further marginal gain was possible replacing the
+  -			sequences with user managed numbering.
+  -		The reasons was in the drastic decrease in COMMIT statements.
+  - CAUTION! Since sequence number update is committed to the DB with
+  -			low frequency, this optimisation is not compatible with
+  -			multiple DB writes, i.e. multi-threading or concurrent
+  -			table loading.
+  -*/
+/*@IF 0 */
+/*- Built-in unique record id management -*/
 drop sequence if exists %DB_tbl_prefix%filenum;
 drop sequence if exists %DB_tbl_prefix%symnum;
 drop sequence if exists %DB_tbl_prefix%typenum;
+create sequence %DB_tbl_prefix%filenum;
+create sequence %DB_tbl_prefix%symnum;
+create sequence %DB_tbl_prefix%typenum;
+/*@ELSE*/
+/*- The following is a replacement (initially developed for SQLite) -*/
+/*@ADD initdb/unique-user-sequences.sql*/
+/*@ENDIF*/
+
 drop table    if exists %DB_tbl_prefix%files cascade;
 drop table    if exists %DB_tbl_prefix%symbols cascade;
 drop table    if exists %DB_tbl_prefix%definitions cascade;
@@ -150,10 +171,6 @@ drop table    if exists %DB_tbl_prefix%releases cascade;
 drop table    if exists %DB_tbl_prefix%usages cascade;
 drop table    if exists %DB_tbl_prefix%status cascade;
 drop table    if exists %DB_tbl_prefix%langtypes cascade;
-
-create sequence %DB_tbl_prefix%filenum cache 500;
-create sequence %DB_tbl_prefix%symnum  cache 500;
-create sequence %DB_tbl_prefix%typenum cache 10;
 
 
 /* Base version of files */
@@ -233,7 +250,7 @@ create table %DB_tbl_prefix%releases
 	( fileid    int   not null
 	, releaseid bytea not null
 	, constraint %DB_tbl_prefix%pk_releases
-		primary key	(fileid,releaseid)
+		primary key	(fileid, releaseid)
 	, constraint %DB_tbl_prefix%fk_rls_fileid
 		foreign key (fileid)
 		references %DB_tbl_prefix%files(fileid)
@@ -502,6 +519,9 @@ create trigger %DB_tbl_prefix%remove_usage
 	for each row
 	execute procedure %DB_tbl_prefix%decusage();
 
+/*
+ *
+ */
 grant select on %DB_tbl_prefix%files       to public;
 grant select on %DB_tbl_prefix%symbols     to public;
 grant select on %DB_tbl_prefix%definitions to public;
