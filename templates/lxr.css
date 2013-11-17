@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.16 2013/09/24 09:05:52 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.17 2013/11/17 17:51:00 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -76,6 +76,35 @@
 
   .compact
 { padding: 0
+; margin: 0
+}
+
+  .fatal
+{ color: red
+; margin: 2.5cm
+; margin-top: 4cm
+; padding: 1cm
+; border-width: thick
+; border-style: solid
+; border-color: red
+; background-color: #FFFFDD
+}
+
+  .warning
+{ color: maroon
+; margin: 0.5cm
+; padding: 0.5cm
+; border-width: medium
+; border-style: solid
+; border-color: orange
+; background-color: #FFEEEE
+}
+
+  .fatal .headline
+, .warning .headline
+{ text-align: center
+; text-transform: uppercase
+; padding-bottom: 0.3cm
 ; margin: 0
 }
 
@@ -432,18 +461,33 @@
 
 /* Syntactic highlighting*/
 /* comments */
-  .comment
+  [class|=comment]
 { color: #808080
 ; font-style: italic
 }
+/* plain ol'doc (in Perl) */
+  .comment-d
+{
+  font-style: normal
+}
 /* strings */
-  .string
+  [class|=string]
 { color: #BB0000
+}
+/* OS command (in Perl) */
+  .string-x
+{
+  color: #BB5500
 }
 /* reserved words */
   .reserved
 { color: green
 ; font-weight: bold
+}
+/* extras */
+  [class|=extra]
+{ color: purple
+; font-style: italic
 }
 
 /*************************/
