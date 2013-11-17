@@ -1,7 +1,7 @@
 #
 #	Web server configuration for LXR root directory
 #
-#	$Id: htaccess-generic,v 1.7 2013/09/03 08:56:16 ajlittoz Exp $
+#	$Id: htaccess-generic,v 1.8 2013/11/17 09:15:55 ajlittoz Exp $
 #
 #	Content of this file is independent of the location of
 #	the LXR root directory.
@@ -13,7 +13,8 @@
 # directive syntax and semantics changed between releases.
 # When updating 2.2 -> 2.4, uncomment 2.4 specific lines
 #@IF	!%Apache24%
-#@	ASK,Apache24 Is your Apache version 2.4 or higher?; 1; yes, no; y, n
+#@	ASK,Apache24 Is your Apache version 2.4 or higher?\
+	#@	; 1; yes, no; y, n
 #@ENDIF
 
 
