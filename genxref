@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.68 2013/11/08 18:14:03 ajlittoz Exp $
+# $Id: genxref,v 1.69 2013/11/17 15:57:42 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -84,14 +84,15 @@ END_HELP
 
 my $failure = 0;	# Cumulative failure indicator
 
-if	( !$option{'checkonly'}
-	&& !$option{'url'}
-	&& !$option{'allurls'}
+if	(	!$option{'checkonly'}
+	&&	!$option{'url'}
+	&&	!$option{'allurls'}
 	) {
 	die("${VTred}ERROR:${VTnorm} in real mode (not checking mode set by ${VTbold}--checkonly${VTnorm}),\n"
 		. "an URL must be specified through ${VTyellow}--url${VTnorm} or ${VTyellow}--allurls${VTnorm}.${VTnorm}\n"
 		. "Try \"genxref --help\".\n");
 }
+
 
 ##############################################################
 #
@@ -110,7 +111,7 @@ if (open(CONFIG, $lxrconf)) {
 	my $config_contents = <CONFIG>;
 	$/ = $oldsep;
 	close(CONFIG);
-	$config_contents =~ /(.*)/s;
+	$config_contents =~ m/(.*)/s;
 	$config_contents = $1;    #untaint it
 	@config = eval("\n#line 1 \"configuration file\"\n" . $config_contents);
 	die($@) if $@;
@@ -353,8 +354,9 @@ my $repeatbannercountdown = $repeatbannerevery;
 
 my $magicfile = $global->{'magicmime'};
 our $filetype = File::MMagic->new
-		( -f $magicfile ? ($magicfile)
-		: -f 'lib/magic.mime'? ('lib/magic.mime') : ()
+		( -f $magicfile
+		? ($magicfile)
+		: -f 'lib/magic.mime' ? ('lib/magic.mime') : ()
 		);
 
 my $hostname = $global->{'host_names'}[0];	# Global host name
@@ -416,7 +418,6 @@ foreach my $treedescr (@config) {
 	$autoversionflag = 0;
 	$repeatbannercountdown = $repeatbannerevery;
 
-
 	if (exists($option{'allversions'}) || !exists($option{'version'})) {
 		if	(  $files->isa('LXR::Files::CVS')
 			&& ref($config->{'variables'}{'v'}{'range'}) eq 'CODE'
@@ -426,7 +427,7 @@ foreach my $treedescr (@config) {
 		} else {
 			@versions = $config->varrange('v');
 			die "${VTred}Option --allversions cannot be used because no versions found automatically.${VTnorm}"
-				. "Use --version=VERSION or fix $lxrconf.\n"
+				. "\nUse --version=VERSION or fix $lxrconf.\n"
 				if scalar @versions <= 0;
 		}
 	} else {
@@ -435,22 +436,25 @@ foreach my $treedescr (@config) {
 
 	%versionset = ();
 	if ($files->isa('LXR::Files::CVS') && scalar(@versions)<=0) {
+		print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 		$index->purgeall;
+		print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
 		$$LXR::Common::HTTP{'param'}{'_showattic'} = 1;
-		$printdirbanner = 1;
-		directorytreetraversal	( \&Tagger::processfile
-								, 'head'
-								, ''
-								, '/'
-								);
 		$printdirbanner = 1;
 		directorytreetraversal	( \&Tagger::processrefs
 								, 'head'
 								, ''
 								, '/'
 								);
-		if ( exists($option{'allversions'})
-			&& $option{'allversions'} ne 'noauto'
+		$printdirbanner = 1;
+		$autoversionflag++ if $autoversionflag;	# Don't do it again
+		directorytreetraversal	( \&Tagger::processrefs
+								, 'head'
+								, ''
+								, '/'
+								);
+		if	(	exists($option{'allversions'})
+			&&	$option{'allversions'} ne 'noauto'
 			) {
 			dump_versionset('CVS', \%versionset);
 		}
@@ -470,7 +474,9 @@ foreach my $treedescr (@config) {
 		# 		|| exists($option{'version'}) && (1 == $config->varrange('v'))
 				|| !exists($option{'version'})
 				) {
+				print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 				$index->purgeall;
+				print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
 			} else {
 				$dopurge = 1
 			}
@@ -501,6 +507,7 @@ foreach my $treedescr (@config) {
 				print STDERR "${VTyellow}Free-text search setup suppressed for VCS storage${VTnorm}\n";
 			}
 			$printdirbanner = 1;
+
 			directorytreetraversal	( \&Tagger::processfile
 									, $version
 									, ''
@@ -514,7 +521,6 @@ foreach my $treedescr (@config) {
 									);
 		}
 	}
-
 	$index->final_cleanup();
 }
 
@@ -529,13 +535,18 @@ foreach my $treedescr (@config) {
 
 sub dirbannerprint {
 	my ($head, $releaseid, $dirname, $filename) = @_;
-	my $editpos = 3 + length($head) + length($releaseid) + length($dirname);
+
 
 	if ($printdirbanner) {
 		print(STDERR "${VTmagenta}$head $releaseid $dirname");
 		$printdirbanner = undef;
 	} else {
-		print(STDERR &VTCUU(1), &VTCHA($editpos), &VTEL(0), "${VTmagenta}")
+		print(STDERR
+				  &VTCUU(1)
+				, &VTCHA(3 + length($head) + length($releaseid) + length($dirname))
+				, &VTEL(0)
+				, ${VTmagenta}
+				)
 	}
 	$repeatbannercountdown = $repeatbannerevery;
 	print(STDERR "$filename${VTnorm}\n");
@@ -575,9 +586,11 @@ sub directorytreetraversal {
 			foreach my $releaseid (@versions) {
 				if ($repeatbannercountdown <=0) {
 					$printdirbanner = 1;
-					dirbannerprint('***', $releaseid, $dirname, '');
+					dirbannerprint('**=', $releaseid, $dirname, '');
 				}
-				$versionset{$releaseid} = '';	# remember this version
+				if (1 == $autoversionflag) {		# Only in 1st unthreaded pass
+					$versionset{$releaseid} = '';	# remember this version
+				}
 				my $didoneprocess = &$process_sub($pathname, $releaseid, $config, $files, $index);
 				$repeatbannercountdown-- if $didoneprocess;
 				$didprocess //= $didoneprocess;
@@ -585,7 +598,7 @@ sub directorytreetraversal {
 		} else {
 			if ($repeatbannercountdown <=0) {
 				$printdirbanner = 1;
-				dirbannerprint('***', $releaseid, $dirname, '');
+				dirbannerprint('**=', $releaseid, $dirname, '');
 			}
 			$didprocess = &$process_sub($pathname, $releaseid, $config, $files, $index);
 			$repeatbannercountdown-- if $didprocess;
