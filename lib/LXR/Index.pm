@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Index.pm,v 1.26 2013/11/08 18:14:03 ajlittoz Exp $
+# $Id: Index.pm,v 1.27 2013/11/17 08:57:26 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ If needed, the methods are overridden in the specific modules.
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.26 2013/11/08 18:14:03 ajlittoz Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.27 2013/11/17 08:57:26 ajlittoz Exp $ ';
 
 use strict;
 
@@ -41,6 +41,9 @@ our $database_id = 0;	# DB counter incremented by genxref or httpinit
 	# so that objects 'or procedures) which cache their initialisation
 	# are able to detect DB has change and can synchronise to a fresh
 	# new DB.
+
+my ($filenum, $symnum, $typenum);	# Counters for unique record id
+my ($fileini, $symini, $typeini);	#	user management
 
 
 =head2 C<new ($dbname)>
@@ -134,7 +137,14 @@ sub new {
 	# differs from one DB engine to another.
 	my $prefix = $config->{'dbprefix'};
 
-	# 'files_insert' mandatory but involves auto-increment
+	if (!exists($index->{'files_insert'})) {
+		$index->{'files_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}files"
+				. ' (filename, revision, fileid)'
+				. ' values (?, ?, ?)'
+				);
+	}
 	if (!exists($index->{'files_select'})) {
 		$index->{'files_select'} =
 			$index->{dbh}->prepare
@@ -155,7 +165,14 @@ sub new {
 				);
 	}
 
-	# 'symbols_insert' mandatory but involves auto-increment
+	if (!exists($index->{'symbols_insert'})) {
+		$index->{'symbols_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}symbols"
+				. ' (symname, symid, symcount)'
+				. ' values (?, ?, 0)'
+				);
+	}
 	if (!exists($index->{'symbols_byname'})) {
 		$index->{'symbols_byname'} =
 			$index->{dbh}->prepare
@@ -364,7 +381,14 @@ sub new {
 				);
 	}
 
-	# 'langtypes_insert' mandatory but involves auto-increment
+	if (!exists($index->{'langtypes_insert'})) {
+		$index->{'langtypes_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}langtypes"
+				. ' (typeid, langid, declaration)'
+				. ' values (?, ?, ?)'
+				);
+	}
 	if (!exists($index->{'langtypes_select'})) {
 		$index->{'langtypes_select'} =
 			$index->{dbh}->prepare
@@ -391,6 +415,62 @@ sub new {
 				);
 	}
 	return $index;
+}
+
+=head2 C<uniquecountersinit ($prefix)>
+
+C<uniquecountersinit> initialises the unique counters for
+file, symbol and type ids.
+
+I<This is a C<new> extension method for derived object usage.>
+
+=over
+
+=item 1 C<$prefix>
+
+a I<string> containing the database table prefix
+
+=back
+
+Several database engines have better performance using cached counters
+for fields with C<unique> attributes unstead of the built-in features.
+It comes from the fact that the used (incremented) value is not written
+back immediately to disk (fewer commits).
+
+This trick is valid because e write to the DB only at I<genxref> time
+and DB loading is B<single thread>.
+
+B<CAUTION!>
+
+=over
+
+B<Don't forget to write the final values to the DB before disconnecting.
+See C<uniquecounterssave>.>
+
+=back
+
+=cut
+
+sub uniquecountersinit {
+	my ($self, $prefix) = @_;
+
+	$self->{'filenum_lastval'} = 
+		$self->{dbh}->prepare("select fid from ${prefix}filenum");
+	$self->{'filenum_lastval'}->execute();
+	$fileini = $filenum = $self->{'filenum_lastval'}->fetchrow_array();
+	$self->{'filenum_lastval'} = undef;
+
+	$self->{'symnum_lastval'} = 
+		$self->{dbh}->prepare("select sid from ${prefix}symnum");
+	$self->{'symnum_lastval'}->execute();
+	$symini = $symnum = $self->{'symnum_lastval'}->fetchrow_array();
+	$self->{'symnum_lastval'}  = undef;
+
+	$self->{'typenum_lastval'} = 
+		$self->{dbh}->prepare("select tid from ${prefix}typenum");
+	$self->{'typenum_lastval'}->execute();
+	$typeini = $typenum = $self->{'typenum_lastval'}->fetchrow_array();
+	$self->{'typenum_lastval'} = undef;
 }
 
 
@@ -463,11 +543,10 @@ sub fileid {
 
 	$fileid = $self->fileidifexists(@_);
 	unless ($fileid) {
-		$self->{'files_insert'}->execute(@_);
-		$self->{'files_select'}->execute(@_);
-		($fileid) = $self->{'files_select'}->fetchrow_array();
+		$fileid = ++$filenum;
+		$self->{'files_insert'}->execute(@_, $fileid);
 		$self->{'status_insert'}->execute($fileid, 0);
-# opt	$self->{'files_select'}->finish();
+# 			$self->commit;
 # 		$files{"$filename\t$revision"} = $fileid;
 	}
 	return $fileid;
@@ -1152,10 +1231,9 @@ sub symid {
 		$self->{'symbols_byname'}->execute($symname);
 		($symid, $symcount) = $self->{'symbols_byname'}->fetchrow_array();
 		unless ($symid) {
-			$self->{'symbols_insert'}->execute($symname);
-            # Get the id of the new symbol
-			$self->{'symbols_byname'}->execute($symname);
-			($symid, $symcount) = $self->{'symbols_byname'}->fetchrow_array();
+			$symid = ++$symnum;
+			$symcount = 0;
+			$self->{'symbols_insert'}->execute($symname, $symid);
 		}
 		$symcache{$symname} = $symid;
 		$cntcache{$symname} = -$symcount;
@@ -1247,46 +1325,18 @@ is missing (e.g. PostgreSQL and SQLite).>
 sub decid {
 # 	my ($self, $lang, $string) = @_;
 	my $self = shift @_;
-	my $id;
+	my $declid;
 
 	$self->{'langtypes_select'}->execute(@_);
-	($id) = $self->{'langtypes_select'}->fetchrow_array();
-	unless (defined($id)) {
-		$self->{'langtypes_insert'}->execute(@_);
-		$self->{'langtypes_select'}->execute(@_);
-		($id) = $self->{'langtypes_select'}->fetchrow_array();
+	($declid) = $self->{'langtypes_select'}->fetchrow_array();
+# opt	$self->{'langtypes_select'}->finish();
+	unless (defined($declid)) {
+		$declid = ++$typenum;
+		$self->{'langtypes_insert'}->execute($declid, @_);
 	}
 # opt	$self->{'langtypes_select'}->finish();
 
-	return $id;
-}
-
-=head2 C<deccount ()>
-
-C<deccount> retrieves the number of type declarations in the database.
-
-It is used as a check to see if the database has been initialised.
-The previous mechanism based on a package variable in F<Generic.pm>
-proved not reliable with C<--allurls> implementation.
-
-B<Requires:>
-
-=over
-
-=item * C<langtypes_count>
-
-=back
-
-=cut
-
-sub deccount {
-	my $self = shift @_;
-	my $dcount;
-
-	$self->{'langtypes_count'}->execute();
-	($dcount) = $self->{'langtypes_count'}->fetchrow_array();
-	$self->{'langtypes_count'}->finish();
-	return $dcount;
+	return $declid;
 }
 
 =head2 C<commit ()>
@@ -1524,7 +1574,7 @@ B<Requires:>
 
 =item * C<delete_usages>
 
-=item * C<delete_symbolss>
+=item * C<delete_symbols>
 
 =item * C<delete_releases>
 
@@ -1606,6 +1656,135 @@ sub purgeall {
 	$self->{'purge_all'}->execute();
 }
 
+=head2 C<uniquecountersreset ($force)>
+
+C<uniquecountersreset> restarts the counters from 0.
+
+=over
+
+=item 1 C<$force>
+
+an I<integer> used to force the C<$>I<xxx>C<ini> variables
+
+If different from 0, this forces C<uniquecounterssave> to write
+the reset values to the DB if immediately called after this method.
+
+It is better to call the method a second time with argument 0 to
+avoid any unforeseen side-effects, though there should be none.
+
+=back
+
+=cut
+
+sub uniquecountersreset {
+	my ($force) = @_;
+	$filenum = 0;
+	$symnum = 0;
+	$typenum = 0;
+	$fileini = $force;
+	$symini  = $force;
+	$typeini = $force;
+}
+
+=head2 C<uniquecounterssave ()>
+
+C<uniquecounterssave> stores in the DB the current values of the
+file, symbol and type counters for later sessions.
+
+=cut
+
+sub uniquecounterssave {
+	my	($self
+		, $filenum, $symnum, $typenum
+		, $fileini, $symini, $typeini
+		) = @_;
+
+	$self->{dbh}{'AutoCommit'} = 0;
+	my $prefix = $self->{'config'}{'dbprefix'};
+	if ($filenum != $fileini) {
+		my $fnnv =
+			$self->{dbh}->prepare
+				( "update ${prefix}filenum"
+				. ' set fid = ?'
+				. ' where rcd = 0'
+				);
+		$fnnv->execute($filenum);
+		$fnnv = undef;
+	}
+	if ($symnum != $symini) {
+		my $snnv =
+			$self->{dbh}->prepare
+				( "update ${prefix}symnum"
+				. ' set sid = ?'
+				. ' where rcd = 0'
+			);
+		$snnv->execute($symnum);
+		$snnv = undef;
+	}
+	if ($typenum != $typeini) {
+		my $tnnv =
+			$self->{dbh}->prepare
+				( "update ${prefix}typenum"
+				. ' set tid = ?'
+				. ' where rcd = 0'
+				);
+		$tnnv->execute($typenum);
+		$tnnv = undef;
+	}
+}
+
+=head2 C<dropuniversalqueries ()>
+
+C<dropuniversalqueries> deactivates all "universal" query statement
+to prevent annoying "Disconnect invalidates xx active statement handles ..."
+messages from disturbing the end user.
+Derived instances are responsible for killing their own queries.
+
+Most are probably overkill since C<execure> or C<fetchrow_array> may
+already have disactivated the statement.
+
+Must be called before C<final_cleanup> before disconnecting.
+
+=cut
+
+sub dropuniversalqueries {
+	my ($self) = @_;
+
+	# Kill the universal statement handles (specific modules
+	# are responsible for their own additions).
+	$self->{'files_insert'} = undef;
+	$self->{'files_select'} = undef;
+	$self->{'allfiles_select'} = undef;
+	$self->{'symbols_insert'} = undef;
+	$self->{'symbols_byname'} = undef;
+	$self->{'symbols_byid'} = undef;
+	$self->{'symbols_setref'} = undef;
+	$self->{'related_symbols_select'} = undef;
+	$self->{'delete_symbols'} = undef;
+	$self->{'definitions_insert'} = undef;
+	$self->{'definitions_select'} = undef;
+	$self->{'delete_file_definitions'} = undef;
+	$self->{'delete_definitions'} = undef;
+	$self->{'releases_insert'} = undef;
+	$self->{'releases_select'} = undef;
+	$self->{'delete_one_release'} = undef;
+	$self->{'delete_releases'} = undef;
+	$self->{'status_insert'} = undef;
+	$self->{'status_select'} = undef;
+	$self->{'status_update'} = undef;
+	$self->{'status_timestamp'} = undef;
+	$self->{'status_update_timestamp'} = undef;
+	$self->{'delete_unused_status'} = undef;
+	$self->{'usages_insert'} = undef;
+	$self->{'usages_select'} = undef;
+	$self->{'delete_file_usages'} = undef;
+	$self->{'delete_usages'} = undef;
+	$self->{'langtypes_insert'} = undef;
+	$self->{'langtypes_select'} = undef;
+	$self->{'langtypes_count'} = undef;
+	$self->{'purge_all'} = undef;
+}
+
 =head2 C<final_cleanup ()>
 
 C<final_cleanup> allows to execute last-minute actions on the database
@@ -1619,11 +1798,7 @@ sub final_cleanup {
 	my ($self) = @_;
 
 	$self->commit();
-	$self->{'files_select'} = undef;
-	$self->{'releases_select'} = undef;
-	$self->{'status_select'} = undef;
-	$self->{'langtypes_select'} = undef;
-	$self->{'symbols_byname'} = undef;
+	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
 }
 
