@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating MySQL tables
  *	(C) 2012 A. Littoz
- *	$Id: initdb-m-template.sql,v 1.4 2013/01/21 16:35:04 ajlittoz Exp $
+ *	$Id: initdb-m-template.sql,v 1.5 2013/11/17 09:28:36 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -278,7 +278,6 @@ create table %DB_tbl_prefix%definitions
 	, constraint %DB_tbl_prefix%fk_defn_fileid
 		foreign key (fileid)
 		references %DB_tbl_prefix%files(fileid)
-	, index (typeid, langid)
 	, constraint %DB_tbl_prefix%fk_defn_type
 		foreign key (typeid, langid)
 		references %DB_tbl_prefix%langtypes(typeid, langid)
@@ -291,11 +290,18 @@ create table %DB_tbl_prefix%definitions
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
  */
+delimiter //
 drop trigger if exists %DB_tbl_prefix%remove_definition;
 create trigger %DB_tbl_prefix%remove_definition
 	after delete on %DB_tbl_prefix%definitions
 	for each row
-	call %DB_tbl_prefix%decsym(old.symid);
+	begin
+		call %DB_tbl_prefix%decsym(old.symid);
+		if old.relid is not null
+		then call %DB_tbl_prefix%decsym(old.relid);
+		end if;
+	end//
+delimiter ;
 
 /* Usages */
 create table %DB_tbl_prefix%usages
