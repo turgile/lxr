@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.48 2013/11/09 10:07:37 ajlittoz Exp $
+# $Id: Generic.pm,v 1.49 2013/11/17 09:05:31 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.48 2013/11/09 10:07:37 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.49 2013/11/17 09:05:31 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -100,6 +100,15 @@ sub new {
 	# Set langid
 	$$self{'langid'} = $self->langinfo('langid');
 	die "No langid for language $lang" unless defined $self->{'langid'};
+
+	# Cache flag to boost performance
+	$$self{'case_insensitive'} = $self->flagged('case_insensitive');
+	# Cache keywords to boost performance
+	if (exists($self->{'langmap'}{$lang}{'reserved'})) {
+		$self->{'reserved'} = \%{$self->{'langmap'}{$lang}{'reserved'}};
+	} else {
+		$self->{'reserved'} = undef;
+	}
 
 	# Make sure that at least a default identifier definition exists
 	#	default must also cover C and C++ reserved words and Perl -variables
@@ -194,6 +203,12 @@ sub read_config {
 			$langdesc->{'typeid'}{$type} = $index->decid($langid, $tdescr);
 		}
 	}
+### The following line is commented out to improve performance.
+### The consequence is a higher load of memory since DB updates
+### are kept in memory until commit time (at least on directory
+### exit).
+# 	$index->commit();
+### This line is ABSOLUTELY mandatory in case multi-thread is publicly released
 }
 
 
@@ -236,9 +251,10 @@ in the database.
 
 sub indexfile {
 	my ($self, $name, $path, $fileid, $index, $config) = @_;
+	my $nsym = 0;
 
-	my $typemap = $self->langinfo('typemap');
-	my $insensitive = $self->flagged('case_insensitive');
+	my $typeid = $self->langinfo('typeid');
+	my $insensitive = $self->{'case_insensitive'};
 
 	my $langforce = ${ $self->{'eclangnamemapping'} }{ $self->language };
 	if (!defined $langforce) {
@@ -262,22 +278,25 @@ sub indexfile {
 		  or die "Can't run ectags, $!";
 
 	# Parse the results
-		while (<CTAGS>) {
+		my @decls = <CTAGS>;
+		close(CTAGS);
+		$nsym = scalar(@decls);
+		while ($_ = shift(@decls)) {
 			chomp;
 
-			my ($sym, $file, $line, $type, $ext) = split(/\t/, $_);
-			$line =~ s/;\"$//;  #" fix fontification
-			$ext  =~ m/language:(\w+)/;
-			$type = $typemap->{$type};
+			my ($sym, $file, $line, $type, $ext) = split(/\t/o, $_);
+			$line =~ s/;\"$//o;  #" fix fontification
+			$ext  =~ m/language:(\w+)/o;
+			$type = $typeid->{$type};
 			if (!defined $type) {
-				print 'Warning: Unknown type ', (split(/\t/, $_))[3], "\n";
+				print 'Warning: Unknown type ', (split(/\t/o, $_))[3], "\n";
 				next;
 			}
 
 			# TODO: can we make it more generic in parsing the extension fields?
-			if (defined($ext) && $ext =~ m/^(struct|union|class|enum):(.*)/) {
+			if (defined($ext) && $ext =~ m/^(struct|union|class|enum):(.*)/o) {
 				$ext = $2;
-				$ext =~ s/::<anonymous>//g;
+				$ext =~ s/::<anonymous>//go;
 				$ext = uc($ext) if $insensitive;
 			} else {
 				$ext = undef;
@@ -286,9 +305,122 @@ sub indexfile {
 			$sym = uc($sym) if $insensitive;
 			$index->setsymdeclaration($sym, $fileid, $line, $self->{'langid'}, $type, $ext);
 		}
-		close(CTAGS);
-
+### The following line is commented out to improve performance.
+### The consequence is a higher load of memory since DB updates
+### are kept in memory until commit time (at least on directory
+### exit).
+# 		$index->commit();
+### This line is ABSOLUTELY mandatory in case multi-thread is publicly released
 	}
+	return $nsym;
+}
+
+
+=head2 C<referencefile ($name, $path, $fileid, $index, $config)>
+
+Method C<referencefile> is invoked during I<genxref> to parse and collect
+the references in a file.
+
+=over
+
+=item 1 C<$name>
+
+a I<string> containing the LXR file name
+
+=item 1 C<$path>
+
+a I<string> containing the OS file name
+
+When files are stored in VCSes, C<$path> is the name of a temporary file.
+
+=item 1 C<$fileid>
+
+an I<integer> containing the internal DB id for the file/revision
+
+=item 1 C<$index>
+
+a I<reference> to the index (DB) object
+
+=item 1 C<$config>
+
+a I<reference> to the configuration objet
+
+=back
+
+Using I<SimpleParse>'s C<nextfrag>, it focuses on "untyped"
+fragments (aka. code fragments) from which symbols are extracted.
+User symbols, if already declared, are entered in the reference
+data base.
+
+=cut
+
+sub referencefile {
+	my ($self, $name, $path, $fileid, $index, $config) = @_;
+	my @refs;
+
+	require LXR::SimpleParse;
+
+	# Use dummy tabwidth here since it doesn't matter for referencing
+	my $fh = FileHandle->new($path);
+	if (!defined($fh)) {
+		return (-1, 0);
+	}
+	&LXR::SimpleParse::init	( $fh # FileHandle->new($path)
+							, 1
+							, $self->parsespec
+							);
+	$LXR::SimpleParse::dountab = 0;	# Does not matter for references
+
+	my $linenum = 1;
+	my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
+	my @lines;
+	my $string;
+	my $l;
+	my $identdef = $self->langinfo('identdef');
+	my $insensitive = $self->{'case_insensitive'};
+
+	while (defined($frag)) {
+
+		if (defined($btype)) {
+			if	(	'comment'	eq substr($btype, 0, 7)
+				||	'string'	eq substr($btype, 0, 6)
+				||	'include'	eq $btype
+				||	'extra'		eq substr($btype, 0, 5)
+				) {
+				$linenum += () = $frag =~ m/\n/gs;
+			} else {
+				print "BTYPE was: $btype\n";
+			}
+		} else {
+			@lines = split(/\n/o, $frag, -1);
+			foreach $l (@lines) {
+				foreach $string ($l =~ m/($identdef)\b/og) {
+			#		print "considering $string\n";
+					$string = uc($string) if $insensitive;
+					if (!$self->isreserved($string)) {
+					# setsymreference decides by itself to record the
+					# the symbol as a reference or not, based on the
+					# DB dictionary (stated otherwise: it does not add
+					# new symbols to the existing dictionary.
+			#			print "adding $string to references\n";
+# 						$index->setsymreference($string, $fileid, $linenum);
+						push @refs, [$string, $linenum];
+					}
+				}
+				$linenum++;
+			}
+			$linenum--;
+		}
+		($btype, $frag) = &LXR::SimpleParse::nextfrag;
+	}
+	my $nsym = scalar(@refs);
+	if ($nsym > 0) {
+		for my $ref (@refs) {	# Symbols found, enter then into DB
+			my ($string, $line) = @$ref;
+			$index->setsymreference($string, $fileid, $line);
+		}
+	}
+	return ($linenum, $nsym);
 }
 
 
@@ -563,10 +695,12 @@ sub processcode {
 	my ($self, $code) = @_;
 	my ($start, $id);
 
-	my $source = $$code;
 	my $answer = '';
 	my $identdef = $self->langinfo('identdef');
-	my $insensitive = $self->flagged('case_insensitive');
+	my $insensitive = $self->{'case_insensitive'};
+	my $prefix;		# Unparsed bit before symbol
+	my $symbol;		# Parsed symbol
+	my $dictsymbol;	# Transformed symbol for dictionary lookup
 
 # Repeatedly remove what looks like an identifier from the head of
 # the source line and mark it if it is a reserved word or known 
@@ -578,21 +712,24 @@ sub processcode {
 #		markings simultaneously to avoid interferences;
 #		second reason, $2 is not a reference
 
-	while ( $source =~ s/^(.*?)($identdef)//s)
+	while ( $$code =~ s/^(.*?)($identdef)//s)
 	{
-		my $dictsymbol = $2;
+		$prefix = $1;
+		$symbol = $2;
+		$dictsymbol = $2;
+		$dictsymbol =~ s/\s+//;		# for C #directives
 		$dictsymbol = uc($dictsymbol) if $insensitive;
-		$answer .= $1
-				.	( $self->isreserved($2)
-					? "<span class='reserved'>$2</span>"
+		$answer .= $prefix
+				.	( $self->isreserved($dictsymbol)
+					? "<span class='reserved'>$symbol</span>"
 					:	( $index->issymbol($dictsymbol, $$self{'releaseid'})
-						? join($2, @{$$self{'itag'}})
-						: $2
+						? join($symbol, @{$$self{'itag'}})
+						: $symbol
 						)
 					);
 	}
 	# don't forget the last chunk of the line containing no target
-	$$code = $answer . $source;
+	$$code = $answer . $$code;
 }
 
 
@@ -617,116 +754,9 @@ betwwen upper case versions of the words.
 sub isreserved {
 	my ($self, $frag) = @_;
 
-	$frag =~ s/\s//g ;        # for those who write # include
-	if ($self->flagged('case_insensitive')) {
-		$frag = uc($frag);
-		foreach my $word (@{$self->langinfo('reserved')}) {
-			$word = uc($word);
-			return 1 if $frag eq $word;
-		}
-	} else {
-		foreach my $word (@{$self->langinfo('reserved')}) {
-			return 1 if $frag eq $word;
-		}
-	}
-	return 0;
-}
-
-
-=head2 C<referencefile ($name, $path, $fileid, $index, $config)>
-
-Method C<referencefile> is invoked during I<genxref> to parse and collect
-the references in a file.
-
-=over
-
-=item 1 C<$name>
-
-a I<string> containing the LXR file name
-
-=item 1 C<$path>
-
-a I<string> containing the OS file name
-
-When files are stored in VCSes, C<$path> is the name of a temporary file.
-
-=item 1 C<$fileid>
-
-an I<integer> containing the internal DB id for the file/revision
-
-=item 1 C<$index>
-
-a I<reference> to the index (DB) object
-
-=item 1 C<$config>
-
-a I<reference> to the configuration objet
-
-=back
-
-Using I<SimpleParse>'s C<nextfrag>, it focuses on "untyped"
-fragments (aka. code fragments) from which symbols are extracted.
-User symbols, if already declared, are entered in the reference
-data base.
-
-=cut
-
-sub referencefile {
-	my ($self, $name, $path, $fileid, $index, $config) = @_;
-
-	require LXR::SimpleParse;
-
-	# Use dummy tabwidth here since it doesn't matter for referencing
-	&LXR::SimpleParse::init	( FileHandle->new($path)
-							, 1
-							, $self->parsespec
-							);
-
-	my $linenum = 1;
-	my ($btype, $frag) = &LXR::SimpleParse::nextfrag;
-	my @lines;
-	my $ls;
-	my $identdef = $self->langinfo('identdef');
-	my $insensitive = $self->flagged('case_insensitive');
-
-	while (defined($frag)) {
-		@lines = ($frag =~ m/(.*?\n)/g, $frag =~ m/([^\n]*)$/);
-
-		if (defined($btype)) {
-			if	(  $btype eq 'comment'
-				|| $btype eq 'string'
-				|| $btype eq 'include'
-				) {
-				$linenum += @lines - 1;
-			} else {
-				print "BTYPE was: $btype\n";
-			}
-		} else {
-			my $l;
-			my $string;
-			foreach $l (@lines) {
-
-				foreach ($l =~ m/($identdef)\b/og) {
-					$string = $_;
-
-			#		print "considering $string\n";
-					if (!$self->isreserved($string)) {
-					# setsymreference decides by itself to record the
-					# the symbol as a reference or not, based on the
-					# DB dictionary (stated otherwise: it does not add
-					# new symbols to the existing dictionary.
-			#			print "adding $string to references\n";
-						$string = uc($string) if $insensitive;
-						$index->setsymreference($string, $fileid, $linenum);
-					}
-				}
-				$linenum++;
-			}
-			$linenum--;
-		}
-		($btype, $frag) = &LXR::SimpleParse::nextfrag;
-	}
-	return $linenum;
+	my $kw = $self->{'reserved'};
+	return 0 if !defined($kw);
+	return exists($$kw{$frag});
 }
 
 
@@ -773,6 +803,9 @@ sub langinfo {
 	if (defined $val && defined $$val{$item}) {
 		if (ref($$val{$item}) eq 'ARRAY') {
 			return wantarray ? @{ $$val{$item} } : $$val{$item};
+		}
+		if (ref($$val{$item}) eq 'HASH') {
+			return wantarray ? %{ $$val{$item} } : $$val{$item};
 		}
 		return $$val{$item};
 	} else {
