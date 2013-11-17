@@ -1,8 +1,8 @@
 /*- -*- tab-width: 4 -*- -*/
 /*-
  *	SQL template for creating PostgreSQL tables
- *	(C) 2012 A. Littoz
- *	$Id: initdb-p-template.sql,v 1.3 2013/01/11 12:08:48 ajlittoz Exp $
+ *	(C) 2012-2013 A. Littoz
+ *	$Id: initdb-p-template.sql,v 1.4 2013/11/17 11:12:07 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -321,12 +321,16 @@ create table %DB_tbl_prefix%symbols
 	, constraint %DB_tbl_prefix%uk_symbols
 		unique (symname)
 	);
+-- create index %DB_tbl_prefix%symlookup
+-- 	on %DB_tbl_prefix%symbols
+-- 	using btree (symname);
 
 /* The following function decrements the symbol reference count
+ * for a definition
  * (to be used in triggers).
  */
-drop function if exists %DB_tbl_prefix%decsym();
-create function %DB_tbl_prefix%decsym()
+drop function if exists %DB_tbl_prefix%decdecl();
+create function %DB_tbl_prefix%decdecl()
 	returns trigger
 	language PLpgSQL
 /*@IF	%_shell% */
@@ -339,7 +343,39 @@ create function %DB_tbl_prefix%decsym()
 				set	symcount = symcount - 1
 				where symid = old.symid
 				and symcount > 0;
-			return old;
+			if old.relid is not null
+			then update %DB_tbl_prefix%symbols
+				set	symcount = symcount - 1
+				where symid = old.relid
+				and symcount > 0;
+			end if;
+			return new;
+		end;
+/*@IF	%_shell% */
+	\$\$;
+/*@ELSE*/
+	$$;
+/*@ENDIF	%_shell% */
+
+/* The following function decrements the symbol reference count
+ * for a usage
+ * (to be used in triggers).
+ */
+drop function if exists %DB_tbl_prefix%decusage();
+create function %DB_tbl_prefix%decusage()
+	returns trigger
+	language PLpgSQL
+/*@IF	%_shell% */
+	as \$\$
+/*@ELSE*/
+	as $$
+/*@ENDIF	%_shell% */
+		begin
+			update %DB_tbl_prefix%symbols
+				set	symcount = symcount - 1
+				where symid = old.symid
+				and symcount > 0;
+			return new;
 		end;
 /*@IF	%_shell% */
 	\$\$;
@@ -383,12 +419,32 @@ create index %DB_tbl_prefix%i_definitions
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
  */
+-- drop function if exists %DB_tbl_prefix%proxy_rem_def();
+-- create function %DB_tbl_prefix%proxy_rem_def()
+-- 	returns trigger
+-- 	language PLpgSQL
+-- /*@IF	%_shell% */
+-- 	as \$\$
+-- /*@ELSE*/
+-- 	as $$
+-- /*@ENDIF	%_shell% */
+-- 		begin
+-- 			perform %DB_tbl_prefix%decsym(old.symid);
+-- 			if old.relid is not null
+-- 			then perform %DB_tbl_prefix%decsym(old.relid);
+-- 			end if;
+-- 		end;
+-- /*@IF	%_shell% */
+-- 	\$\$;
+-- /*@ELSE*/
+-- 	$$;
+-- /*@ENDIF	%_shell% */
 drop trigger if exists %DB_tbl_prefix%remove_definition
 	on %DB_tbl_prefix%definitions;
 create trigger %DB_tbl_prefix%remove_definition
 	after delete on %DB_tbl_prefix%definitions
 	for each row
-	execute procedure %DB_tbl_prefix%decsym();
+	execute procedure %DB_tbl_prefix%decdecl();
 
 /* Usages */
 create table %DB_tbl_prefix%usages
@@ -409,12 +465,29 @@ create index %DB_tbl_prefix%i_usages
 /* The following trigger maintains correct symbol reference count
  * after usage deletion.
  */
+-- drop function if exists %DB_tbl_prefix%proxy_rem_usg();
+-- create function %DB_tbl_prefix%proxy_rem_usg()
+-- 	returns trigger
+-- 	language PLpgSQL
+-- /*@IF	%_shell% */
+-- 	as \$\$
+-- /*@ELSE*/
+-- 	as $$
+-- /*@ENDIF	%_shell% */
+-- 		begin
+-- 			perform %DB_tbl_prefix%decsym(old.symid);
+-- 		end;
+-- /*@IF	%_shell% */
+-- 	\$\$;
+-- /*@ELSE*/
+-- 	$$;
+-- /*@ENDIF	%_shell% */
 drop trigger if exists %DB_tbl_prefix%remove_usage
 	on %DB_tbl_prefix%usages;
 create trigger %DB_tbl_prefix%remove_usage
 	after delete on %DB_tbl_prefix%usages
 	for each row
-	execute procedure %DB_tbl_prefix%decsym();
+	execute procedure %DB_tbl_prefix%decusage();
 
 grant select on %DB_tbl_prefix%files       to public;
 grant select on %DB_tbl_prefix%symbols     to public;

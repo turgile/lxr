@@ -1,8 +1,8 @@
 /*- -*- tab-width: 4 -*- */
 /*
  *	SQL template for creating MySQL tables
- *	(C) 2012 A. Littoz
- *	$Id: initdb-s-template.sql,v 1.3 2013/01/11 12:08:48 ajlittoz Exp $
+ *	(C) 2012-2013 A. Littoz
+ *	$Id: initdb-s-template.sql,v 1.4 2013/11/17 11:12:07 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -181,6 +181,8 @@ create table %DB_tbl_prefix%symbols
 	, symcount	int
 	, symname	varchar(255) not null unique
 	);
+create index %DB_tbl_prefix%symlookup
+	on %DB_tbl_prefix%symbols(symname);
 
 /* Definitions */
 /*	symid, fileid and line define the location of the declaration
@@ -226,6 +228,11 @@ create trigger %DB_tbl_prefix%remove_definition
 			set	symcount = symcount - 1
 			where symid = old.symid
 			and symcount > 0;
+		update %DB_tbl_prefix%symbols
+			set	symcount = symcount - 1
+			where symid = old.relid
+			and symcount > 0
+			and old.relid is not null;
 	end;
 
 /* Usages */
