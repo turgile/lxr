@@ -247,7 +247,7 @@ Consequently, comments have two forms:
 
 The opening delimiter (C< E<lt>!-- >) MUST be followed by a spacer,
 i.e. a space, tab or newline.
-The closing delimiter (C< --E<gt> >) should also be preceded by a spacer
+The closing delimiter (C< --E<gt> >) should also be preceded by a spacer.
 These comments will be removed.
 
 =item 1 Sticky comments
