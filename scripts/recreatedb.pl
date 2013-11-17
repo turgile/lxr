@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: recreatedb.pl,v 1.8 2013/09/02 17:07:51 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.9 2013/11/17 15:50:21 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #
 ###############################################
 
-# $Id: recreatedb.pl,v 1.8 2013/09/02 17:07:51 ajlittoz Exp $
+# $Id: recreatedb.pl,v 1.9 2013/11/17 15:50:21 ajlittoz Exp $
 
 use strict;
 use lib 'lib', do { $0 =~ m{(.*)/}; "$1" };
@@ -48,7 +48,7 @@ use LXR::Common;
 #
 ##############################################################
 
-my $version = '$Revision: 1.8 $';
+my $version = '$Revision: 1.9 $';
 $version =~ s/Revision: (.*) /$1/;
 $version =~ s/\$//g;
 
@@ -192,10 +192,13 @@ if (@ARGV == 1) {
 # If lxr-ctx not given, use default companion filename
 if (! $lxrctx) {
 	$lxrctx		= $lxrconf;
-	$lxrctx		=~ s/\.[^.]*$//;	# Remove extension
-	$lxrctxdft	=~ s/^[^.]*//;	# Context file extension
-	$lxrctx		=~ s/$/$lxrctxdft/;	# Insert correct extension
-	if ($lxrctx !~ m!/!) {
+	my $extpos  = rindex($lxrctx, '.');
+	if (0 <= $extpos) {		# Remove the extension
+		$lxrctx = substr($lxrctx, 0, $extpos);
+	}
+	$extpos  = rindex($lxrctxdft, '.');		# Default extension
+	$lxrctx	.= substr($lxrctxdft, $extpos);	# Insert correct extension
+	if (0 >= index($lxrctx, '/')) {
 		$lxrctx = $confdir . '/' . $lxrctx;
 	}
 }
@@ -375,10 +378,15 @@ my %markers =
 		, '%_nodbuser%'	=> $nodbuser
 		, '%_nodbprefix%' => $nodbprefix
 		, '%_shell%'	=> 1
-		);
 
-my $sample;
-$markers{'%LXRroot%'} = $rootdir;
+	# Global parameters: directories, server URL
+	# (may be overwritten, but not recommended!)
+		, '%LXRconfUser%'	=> getlogin	# OS-user running configuration
+		, '%LXRroot%'		=> $rootdir
+		, '%LXRtmpldir%'	=> $tmpldir
+		, '%LXRovrdir%'		=> $ovrdir
+		, '%LXRconfdir%'	=> $confdir
+		);
 
 $markers{'%DB_name%'} = $dbname if $dbname;
 $markers{'%DB_user%'} = $dbuser if $dbuser;
@@ -394,8 +402,9 @@ $markers{'%DB_global_prefix%'} = $dbprefix if $dbprefix;
 ##############################################################
 
 unlink "${confdir}/${scriptout}";
-open(DEST, '>>', "${confdir}/${scriptout}")
+open(DEST, '>', "${confdir}/${scriptout}")
 or die("${VTred}ERROR:${VTnorm} couldn't open output file \"${confdir}/$scriptout\"\n");
+print DEST "#!/bin/sh\n";
 
 if ($verbose) {
 	print "\n";
@@ -451,9 +460,9 @@ foreach my $config (@config) {
 		$dbengine_seen{$treedbengine} = 1;
 	}
 
-	my $input = $ovrdir . "/initdb/initdb-${dbengine}-template.sql";
+	my $input = $ovrdir . "/initdb/initdb-${treedbengine}-template.sql";
 	if (! -e $input) {
-		$input = $tmpldir . "/initdb/initdb-${dbengine}-template.sql";
+		$input = $tmpldir . "/initdb/initdb-${treedbengine}-template.sql";
 	}
 	open(SOURCE, '<', $input)
 	or die("${VTred}ERROR:${VTnorm} couldn't open  script template file \"${input}\"\n");
