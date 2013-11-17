@@ -2,7 +2,7 @@
 /*-
  *	SQL template for creating PostgreSQL tables
  *	(C) 2012-2013 A. Littoz
- *	$Id: initdb-p-template.sql,v 1.4 2013/11/17 11:12:07 ajlittoz Exp $
+ *	$Id: initdb-p-template.sql,v 1.5 2013/11/17 15:17:24 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -52,19 +52,28 @@
 /*--*/
 /*--*/
 
+/*-	-------------------------------------------------------------
+ *-		Note about createlang below
+ *-	Prior to PostgreSQL release 9.0, the SQL driver is not loaded
+ *-	by default. It is therefore necessary to run command createlang.
+ *-	This is superfluous with releases >= 9.0 and results in an
+ *-	harmless warning which can be ignored
+ *-	-----------------------------------------------------------*/
 /*-		Create databases under LXR user
 		but it prevents from deleting user if databases exist
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
 /*@IF	%_createglobals% && %_globaldb% */
 /*@XQT echo "*** PostgreSQL - Creating global database %DB_name%"*/
-/*@XQT dropdb   -U %DB_user% %DB_name%*/
-/*@XQT createdb -U %DB_user% %DB_name%*/
+/*@XQT dropdb     -U %DB_user% %DB_name%*/
+/*@XQT createdb   -U %DB_user% %DB_name%*/
+/*@XQT createlang -U %DB_user% -d %DB_name% plpgsql*/
 /*@ENDIF*/
 /*@IF	!%_globaldb% */
 /*@IF		%_dbuseroverride% */
 /*@XQT echo "*** PostgreSQL - Creating tree database %DB_name%"*/
-/*@XQT dropdb   -U %DB_tree_user% %DB_name%*/
-/*@XQT createdb -U %DB_tree_user% %DB_name%*/
+/*@XQT dropdb     -U %DB_tree_user% %DB_name%*/
+/*@XQT createdb   -U %DB_tree_user% %DB_name%*/
+/*@XQT createlang -U %DB_tree_user% -d %DB_name% plpgsql*/
 /*@ELSE*/
 /*-	When an overriding username is already known, %_dbuseroverride% is left
  *	equal to zero to prevent generating a duplicate user. We must however
@@ -72,11 +81,13 @@
  *	DB owner. -*/
 /*@XQT echo "*** PostgreSQL - Creating tree database %DB_name%"*/
 /*@IF			%DB_tree_user% */
-/*@XQT dropdb   -U %DB_tree_user% %DB_name%*/
-/*@XQT createdb -U %DB_tree_user% %DB_name%*/
+/*@XQT dropdb     -U %DB_tree_user% %DB_name%*/
+/*@XQT createdb   -U %DB_tree_user% %DB_name%*/
+/*@XQT createlang -U %DB_tree_user% -d %DB_name% plpgsql*/
 /*@ELSE*/
-/*@XQT dropdb   -U %DB_user% %DB_name%*/
-/*@XQT createdb -U %DB_user% %DB_name%*/
+/*@XQT dropdb     -U %DB_user% %DB_name%*/
+/*@XQT createdb   -U %DB_user% %DB_name%*/
+/*@XQT createlang -U %DB_user% -d %DB_name% plpgsql*/
 /*@ENDIF		%DB_tree_user% */
 /*@ENDIF	%_dbuseroverride% */
 /*@ENDIF !%_globaldb% */
@@ -88,13 +99,15 @@
 -*//*- to activate place "- * /" at end of line (without spaces)
 /*@IF	%_createglobals% && %_globaldb% */
 /*@XQT echo "*** PostgreSQL - Creating global database %DB_name%"*/
-/*@XQT dropdb   -U postgres %DB_name%*/
-/*@XQT createdb -U postgres %DB_name%*/
+/*@XQT dropdb     -U postgres %DB_name%*/
+/*@XQT createdb   -U postgres %DB_name%*/
+/*@XQT createlang -U postgres -d %DB_name% plpgsql*/
 /*@ENDIF*/
 /*@IF	!%_globaldb% */
 /*@XQT echo "*** PostgreSQL - Creating tree database %DB_name%"*/
-/*@XQT dropdb   -U postgres %DB_name%*/
-/*@XQT createdb -U postgres %DB_name%*/
+/*@XQT dropdb     -U postgres %DB_name%*/
+/*@XQT createdb   -U postgres %DB_name%*/
+/*@XQT createlang -U postgres -d %DB_name% plpgsql*/
 /*@ENDIF	!%_globaldb% */
 /*- end of disable/enable comment -*/
 /*--*/
