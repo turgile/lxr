@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Index.pm,v 1.27 2013/11/17 08:57:26 ajlittoz Exp $
+# $Id: Index.pm,v 1.28 2013/11/20 14:58:18 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ If needed, the methods are overridden in the specific modules.
 
 package LXR::Index;
 
-$CVSID = '$Id: Index.pm,v 1.27 2013/11/17 08:57:26 ajlittoz Exp $ ';
+$CVSID = '$Id: Index.pm,v 1.28 2013/11/20 14:58:18 ajlittoz Exp $ ';
 
 use strict;
 
@@ -1677,7 +1677,7 @@ avoid any unforeseen side-effects, though there should be none.
 =cut
 
 sub uniquecountersreset {
-	my ($force) = @_;
+	my ($self, $force) = @_;
 	$filenum = 0;
 	$symnum = 0;
 	$typenum = 0;
@@ -1694,10 +1694,7 @@ file, symbol and type counters for later sessions.
 =cut
 
 sub uniquecounterssave {
-	my	($self
-		, $filenum, $symnum, $typenum
-		, $fileini, $symini, $typeini
-		) = @_;
+	my	($self) = @_;
 
 	$self->{dbh}{'AutoCommit'} = 0;
 	my $prefix = $self->{'config'}{'dbprefix'};
