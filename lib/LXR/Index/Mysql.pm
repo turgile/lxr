@@ -1,7 +1,7 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Mysql.pm,v 1.38 2013/11/17 08:57:26 ajlittoz Exp $
+# $Id: Mysql.pm,v 1.39 2013/11/20 14:57:19 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 package LXR::Index::Mysql;
 
-$CVSID = '$Id: Mysql.pm,v 1.38 2013/11/17 08:57:26 ajlittoz Exp $ ';
+$CVSID = '$Id: Mysql.pm,v 1.39 2013/11/20 14:57:19 ajlittoz Exp $ ';
 
 use strict;
 use DBI;
@@ -92,7 +92,7 @@ sub new {
 	# End of variants
 
 	$self->{'purge_all'} = $self->{dbh}->prepare
-		( "call ${prefix}purgeall()"
+		( "call ${prefix}PurgeAll()"
 		);
 
 	# Variant U
@@ -178,6 +178,15 @@ sub new {
 # # opt	$self->{'last_auto_val'}->finish();
 # 	return $declid;
 # }
+
+sub purgeall {
+	my ($self) = @_;
+
+	$self->{'purge_all'}->execute();
+	# Variant U
+	$self->uniquecountersreset(0);
+	# End of variants
+}
 
 sub final_cleanup {
 	my ($self) = @_;
