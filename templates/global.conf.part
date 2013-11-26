@@ -2,7 +2,7 @@
 #- LXR master configuration file
 #-	Global configuration section
 #-
-#-	$Id: global.conf.part,v 1.5 2013/09/03 08:45:11 ajlittoz Exp $
+#-	$Id: global.conf.part,v 1.6 2013/11/26 08:49:14 ajlittoz Exp $
 #-
 #-
 #-	This file fragment is meant to be "included" to form the
@@ -100,7 +100,7 @@
 		# All paths in this subsection are relative to LXR root directory
 
 		# Templates used for headers and footers
-	, 'htmlfatal'		=> 'templates/html/html-fatal.html'
+	, 'htmlfatal'		=> '%LXRroot%/templates/html/html-fatal.html'
 #@MSG 'Buttons-and-menus' interface is recommended for the kernel
 #@MSG to avoid screen cluttering.
 #@ASK --- Use 'buttons-and-menus' instead of 'link' interface?; 1;yes, no; Y, N
