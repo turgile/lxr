@@ -1,7 +1,7 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: source,v 1.67 2013/11/08 12:32:37 ajlittoz Exp $
+# $Id: source,v 1.68 2013/11/29 15:44:55 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -26,7 +26,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.67 2013/11/08 12:32:37 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.68 2013/11/29 15:44:55 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -881,7 +881,7 @@ sub printfile {
 				if (exists($config->{'cvswebprefix'})) {
 					my $revtarget = '';
 					$revtarget = "#rev$releaseid" if lc($releaseid) ne 'head';
-					print '<a href="'
+					print '<a class="cvsweb" href="'
 					  . $config->{'cvswebprefix'}
 					  . $pathname
 					  . $config->{'cvswebpostfix'}

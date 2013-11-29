@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.17 2013/11/17 17:51:00 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.18 2013/11/29 15:44:56 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -32,6 +32,7 @@
 , .tree-sel
 , .lxrdesc
 , SELECT
+, A.cvsweb
 , TD.identline
 , TD.searchline
 { font-family: "Gill Sans", Helvetica, Arial, sans
@@ -418,6 +419,15 @@
 /*************/
 /* file view */
 /*************/
+/* link to cvslog */
+  A.cvsweb
+{ border-width: medium
+; border-style: ridge
+; background-color: #eeeeee
+; padding: 0 0.54cm 0 0.54cm
+; color: black
+}
+
 /* most recent addition to file */
   .annot-cur
 { background-color: #ffcc88
