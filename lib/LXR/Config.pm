@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Config.pm,v 1.59 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: Config.pm,v 1.60 2013/11/29 16:01:05 ajlittoz Exp $
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ an abstract interface to the C<'variables'>.
 
 package LXR::Config;
 
-$CVSID = '$Id: Config.pm,v 1.59 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: Config.pm,v 1.60 2013/11/29 16:01:05 ajlittoz Exp $ ';
 
 use strict;
 use File::Path;
@@ -511,43 +511,44 @@ FINAL:
 	# Set-up various directories as necessary
 	_ensuredirexists($self->{'tmpdir'});
 
+	if ($self->{'sourceroot'} !~ m/^\w+:/) {
 #	See if there is ambiguity on the free-text search engine
-	if (exists $self->{'glimpsebin'} && exists $self->{'swishbin'}) {
-		die "Both Glimpse and Swish have been specified in $confpath.\n"
-			."Please choose one of them by commenting out either glimpsebin or swishbin.\n";
-		
-	} elsif (exists $self->{'glimpsebin'}) {    
-		if (!exists($self->{'glimpsedir'})) {
-			die "Please specify 'glimpsedirbase' or 'glimpsedir' in $confpath\n"
-				unless exists($self->{'glimpsedirbase'});
-			$self->{'glimpsedir'}	= $self->{'glimpsedirbase'}
+#	only when tree is stored in plain files
+#	since free-text search is not operational with VCSes,
+		if (exists $self->{'glimpsebin'} && exists $self->{'swishbin'}) {
+			die "Both Glimpse and Swish have been specified in $confpath.\n"
+				."Please choose one of them by commenting out either glimpsebin or swishbin.\n";
+			
+		} elsif (exists $self->{'glimpsebin'}) {    
+			if (!exists($self->{'glimpsedir'})) {
+				die "Please specify 'glimpsedirbase' or 'glimpsedir' in $confpath\n"
+					unless exists($self->{'glimpsedirbase'});
+				$self->{'glimpsedir'}	= $self->{'glimpsedirbase'}
+										. $self->{'virtroot'}
+										. ('argument' eq $routing
+										? $self->{'treename'}
+										: ''
+										)
+										;
+			}
+			_ensuredirexists($self->{'glimpsedir'});
+		} elsif (exists $self->{'swishbin'}) {    
+			if (!exists($self->{'swishdir'})) {
+				die "Please specify 'swishdirbase' or 'swishdir' in $confpath\n"
+					unless exists($self->{'swishdirbase'});
+				$self->{'swishdir'}	= $self->{'swishdirbase'}
 									. $self->{'virtroot'}
 									. ('argument' eq $routing
-									  ? $self->{'treename'}
-									  : ''
-									  )
+									? $self->{'treename'}
+									: ''
+									)
 									;
+			}
+			_ensuredirexists($self->{'swishdir'});
+		} else {
+			die	"Neither Glimpse nor Swish have been specified in $confpath.\n"
+				."Please choose one of them by specifing a value for either glimpsebin or swishbin.\n";
 		}
-		_ensuredirexists($self->{'glimpsedir'});
-	} elsif (exists $self->{'swishbin'}) {    
-		if (!exists($self->{'swishdir'})) {
-			die "Please specify 'swishdirbase' or 'swishdir' in $confpath\n"
-				unless exists($self->{'swishdirbase'});
-			$self->{'swishdir'}	= $self->{'swishdirbase'}
-								. $self->{'virtroot'}
-								. ('argument' eq $routing
-								  ? $self->{'treename'}
-								  : ''
-								  )
-								;
-		}
-		_ensuredirexists($self->{'swishdir'});
-	} else {
-	# Since free-text search is not operational with VCSes,
-	# don't complain if not configured.
-	die	"Neither Glimpse nor Swish have been specified in $confpath.\n"
-		."Please choose one of them by specifing a value for either glimpsebin or swishbin.\n"
-		unless $self->{'sourceroot'} =~ m!^[^/]+:! ;
 	}
 	return 1;
 }
