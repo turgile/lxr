@@ -1512,10 +1512,10 @@ sub atticlink {
 # and the current page is related to some file activity
 # (i.e. displaying a directory or a source file)
 	return '&nbsp;' if !$files->isa('LXR::Files::CVS');
-	return '&nbsp;' if substr($who, 0, 6) ne 'source';
+	return '&nbsp;' if $who ne 'sourcedir';
 # Now build the opposite of the current state
 	if ($HTTP->{'param'}->{'_showattic'}) {
-		return	( '<a class="modes" href="'
+		return	( '<div class="cvsattic"><a class="modes" href="'
 				. $config->{'virtroot'}
 				. 'source'
 				. ( exists($config->{'treename'})
@@ -1524,10 +1524,10 @@ sub atticlink {
 				  )
 				. $pathname
 				. &urlargs("_showattic=0")
-				. '">Hide attic files</a>'
+				. '">Hide attic files</a></div>'
 				);
 	} else {
-		return	( '<a class="modes" href="'
+		return	( '<div class="cvsattic"><a class="modes" href="'
 				. $config->{'virtroot'}
 				. 'source'
 				. ( exists($config->{'treename'})
@@ -1536,7 +1536,7 @@ sub atticlink {
 				  )
 				. $pathname
 				. &urlargs('_showattic=1')
-				. '">Show attic files</a>'
+				. '">Show attic files</a></div>'
 				);
 	}
 }

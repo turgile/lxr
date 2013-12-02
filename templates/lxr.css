@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.19 2013/12/02 10:54:09 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.20 2013/12/02 17:00:48 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -32,8 +32,8 @@
 , .tree-sel
 , .lxrdesc
 , SELECT
-, A.cvsweb
-, A.cvsattic
+, .cvsweb
+, .cvsattic
 , TD.identline
 , TD.searchline
 { font-family: "Gill Sans", Helvetica, Arial, sans
@@ -157,7 +157,7 @@
 }
 
 /* Attic view switch */
-  TD.cvsattic
+  .cvsattic
 	/* definition similar to cvsweb */
 { border-width: medium
 ; border-style: outset
