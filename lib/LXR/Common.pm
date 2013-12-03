@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.108 2013/11/09 19:37:11 ajlittoz Exp $
+# $Id: Common.pm,v 1.109 2013/12/03 09:59:54 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.108 2013/11/09 19:37:11 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.109 2013/12/03 09:59:54 ajlittoz Exp $ ';
 
 use strict;
 
@@ -119,6 +119,27 @@ However, the C<E<lt>HTMLE<gt>> tag and C<E<lt>BODYE<gt>> element
 may not yet have been emitted if this is an error on the page header
 template.>
 
+B<Note:>
+
+=over
+
+=item
+
+I<Since it proved a valuable debuging aid, the function has been modified
+so that it can be used very early in LXR initialisation.
+Variable C<$HTMLheadOK> tells if the "standard" header part of the
+page has already been sent to screen.
+If not, some general purpose header is emitted to support HTML layout
+of the warning message.>
+
+I<Of course, when the standard header part is later emitted,
+some of its components will be discarded (or not properly set) by the browser
+because they occur at an inappropriate location (not HTML-compliant).
+This happens only in exceptional circumstances, usually requiring
+fix by the LXR administrator.>
+
+=back
+
 =cut
 
 sub warning {
@@ -170,7 +191,7 @@ In this case, minimal headers and HTML initial elements
 are printed before the message
 and the HTML page is properly closed.
 
-I<Note>:
+B<Note>:
 
 =over
 
@@ -339,7 +360,7 @@ an I<array> containing "key=value" elements
 
 =back
 
-Notes:
+B<Notes:>
 
 =over
 
