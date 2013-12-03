@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Mercurial.pm,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: Mercurial.pm,v 1.5 2013/12/03 13:38:23 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Mercurial;
 
-$CVSID = '$Id: Mercurial.pm,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: Mercurial.pm,v 1.5 2013/12/03 13:38:23 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;
@@ -60,6 +60,7 @@ sub new {
 		. ';HGRCPATH=' . $rootpath . '/hg.rc hg ';
 	$cmd =~ m/(.*)/;
 	$self->{'hg-cmd'} = $1;	# Untaint string
+	$self->{'path'} = $config->{'hgpath'};
 
 	return $self;
 }
@@ -73,6 +74,7 @@ sub getdir {
 	# Paths on the hg command lines must not start with a slash
 	# to be relative to 'rootpath'. Changes LXR convention.
 	$hgpath =~ s,^/+,,;
+	$ENV{'PATH'} = $self->{'path'};
 	open(DIR, $$self{'hg-cmd'}
 				. "ls-onelevel -r \"$releaseid\" \"$hgpath\" |")
 	or die ("hg subprocess died unexpectedly: $!");
@@ -120,6 +122,7 @@ sub filerev {
 	my ($self, $filename, $releaseid) = @_;
 	my ($rev, $outrev);
 
+	$ENV{'PATH'} = $self->{'path'};
 	$filename =~ s,^/+,,;
 	$self->parsehg($filename);
 	if ($releaseid !~ m/^\d+$/) {
@@ -168,8 +171,9 @@ sub filerev {
 #	checked out content can be read.
 sub getfilehandle {
 	my ($self, $filename, $releaseid, $withannot) = @_;
-	my ($fileh);
+	my $fileh;
 
+	$ENV{'PATH'} = $self->{'path'};
 	$filename =~ s,^/+,,;
 	$filename =~ m/(.*)/;
 	$filename = $1;
@@ -241,6 +245,7 @@ sub getfilesize {
 	my $rev = $self->filerev($filename, $releaseid);
 	$rev =~ m/(.*)/;
 	$rev = $1;
+	$ENV{'PATH'} = $self->{'path'};
 	my $fsize = `$$self{'hg-cmd'} fsize -r $rev $filename`;
 	return $fsize;
 }
@@ -302,6 +307,7 @@ sub alltags {
 	my ($self, $filename) = @_;
 	my @tags;
 
+	$ENV{'PATH'} = $self->{'path'};
 	open(TAGS, $$self{'hg-cmd'}
 				. 'tags |')
 	or die("hg subprocess died unexpextedly: $!");
@@ -334,6 +340,7 @@ sub allbranches {
 	my ($self, $filename) = @_;
 	my @brch;
 
+	$ENV{'PATH'} = $self->{'path'};
 	open(BRANCH, $$self{'hg-cmd'}
 				. 'branches |')
 	or die("hg subprocess died unexpextedly: $!");
@@ -380,6 +387,7 @@ sub parsehg {
 	$filename =~ m/(.*)/;
 	$filename = $1;
 	my $file = '';
+	$ENV{'PATH'} = $self->{'path'};
 	# This log request with a template retrieves only the LXR-relevant
 	# data, i.e. changeset-id and commit time.
 	open(HG, $$self{'hg-cmd'}

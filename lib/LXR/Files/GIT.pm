@@ -3,7 +3,7 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.16 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: GIT.pm,v 1.17 2013/12/03 13:38:23 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ module, but at least it works for LXR.
 
 package LXR::Files::GIT;
 
-$CVSID = '$Id: GIT.pm,v 1.16 2013/11/08 14:22:25 ajlittoz Exp $';
+$CVSID = '$Id: GIT.pm,v 1.17 2013/12/03 13:38:23 ajlittoz Exp $';
 
 use strict;
 use Time::Local;
@@ -71,6 +71,7 @@ sub new {
 			|| $config->{'sourceparams'}{'git_blame'};
 		# Blame support will only work when commit IDs are available,
 		# called annotations here...
+	$self->{'path'} = $config->{'gitpath'};
 	return $self;
 }
 
@@ -367,6 +368,7 @@ sub _git_cmd {
 	}
 	my $git;
 	$! = '';
+	$ENV{'PATH'} = $self->{'path'};
 	open	( $git
 			, '-|'
 			, 'git'

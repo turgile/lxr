@@ -2,7 +2,7 @@
 #- LXR master configuration file
 #-	Global configuration section
 #-
-#-	$Id: global.conf.part,v 1.6 2013/11/26 08:49:14 ajlittoz Exp $
+#-	$Id: global.conf.part,v 1.7 2013/12/03 13:38:23 ajlittoz Exp $
 #-
 #-
 #-	This file fragment is meant to be "included" to form the
@@ -70,8 +70,11 @@
 		#- Location of the ectags.conf file
 	, 'ectagsconf' => '%LXRroot%/templates/ectags.conf'
 
-		#- Paths for CVS module
+		#- Paths for VCS storage modules
 	, 'cvspath' => '/bin:/usr/local/bin:/usr/bin:/usr/sbin'
+	, 'gitpath' => '/bin:/usr/local/bin:/usr/bin:/usr/sbin'
+	, 'hgpath'  => '/bin:/usr/local/bin:/usr/bin:/usr/sbin'
+	, 'svnpath' => '/bin:/usr/local/bin:/usr/bin:/usr/sbin'
 
 		# Computer DNS names subsection #
 		#================================

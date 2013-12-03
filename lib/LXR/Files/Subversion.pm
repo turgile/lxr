@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Subversion.pm,v 1.8 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: Subversion.pm,v 1.9 2013/12/03 13:38:23 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Methods are sorted in the same order as in the super-class.
 
 package LXR::Files::Subversion;
 
-$CVSID = '$Id: Subversion.pm,v 1.8 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: Subversion.pm,v 1.9 2013/12/03 13:38:23 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -52,6 +52,7 @@ sub new {
 	$self->{'svn_annotations'} = $config->{'sourceparams'}{'svn_annotations'}
 		# Blame support will only work when annotations are available,
 		or $config->{'sourceparams'}{'svn_blame'};
+	$self->{'path'} = $config->{'svnpath'};
 	return $self;
 }
 
@@ -66,6 +67,7 @@ sub getdir {
 	$path = $self->revpath($pathname, $releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	open(DIR, "svn list $path |")
 	or die("svn subprocess died unexpextedly: $!");
 
@@ -92,6 +94,7 @@ sub getannotations {
 	$uri = $self->revpath($filename,$releaseid);
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	open(ANNO,"svn blame $uri |")
 	or die("svn subprocess died unexpextedly: $!");
 	while( <ANNO> ) { 
@@ -133,6 +136,7 @@ sub filerev {
 		my $path = $self->revpath($filename, $releaseid);
 		$path =~ m/(.*)/;
 		$path = $1;	# Untaint path
+		$ENV{'PATH'} = $self->{'path'};
 		my $res = `LANGUAGE=en svn info $path|grep 'Last Changed Rev'`;
 		$res =~ m/(\d+)/;
 		return $1;
@@ -146,6 +150,7 @@ sub getfilehandle {
 	my ($self, $filename, $releaseid, $withannot) = @_;
 	my $fileh;
 
+	$ENV{'PATH'} = $self->{'path'};
 	my $path = $self->revpath($filename, $releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
@@ -212,6 +217,7 @@ sub getfilesize {
 	my $path = $self->revpath($filename,$releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	$res = `svn list -v $path`;
 	$res =~ m/\s*\d+\s+\w+\s+(?:O\s+)?(\d+)/;
 	return $1;
@@ -225,6 +231,7 @@ sub getfiletime {
 	my $path = $self->revpath($filename,$releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	$line = `LANGUAGE=en svn info $path|grep 'Last Changed Date'`;
 	$line =~ m/(\d[\d-+ :]+)/;
 	$line = $1;
@@ -250,6 +257,7 @@ sub isdir {
 	my $path = $self->revpath($pathname,$releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	my $res = `LANGUAGE=en svn info $path 2>/dev/null|grep 'Node Kind'`;
 	return index($res, 'directory') >= 0;
 }
@@ -260,6 +268,7 @@ sub isfile {
 	my $path = $self->revpath($pathname,$releaseid);
 	$path =~ m/(.*)/;
 	$path = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	my $res = `LANGUAGE=en svn info $path 2>/dev/null|grep 'Node Kind'`;
 	return index($res, 'file') >= 0;
 }
@@ -300,6 +309,7 @@ sub allreleases {
 	$uri = $self->{'rootpath'} . '/trunk' . $filename;
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	open(LOG,"svn log $uri |")
 	or die("svn subprocess died unexpextedly: $!");
 	while(<LOG>){
@@ -319,6 +329,7 @@ sub allbranches {
 	$uri = $self->{'rootpath'} . '/branches';
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	open(BRCH,"svn list $uri |")
 	or die("svn subprocess died unexpextedly: $!");
 	while(<BRCH>){
@@ -352,6 +363,7 @@ sub alltags {
 	$uri = $self->{'rootpath'} . '/tags';
 	$uri =~ m/(.*)/;
 	$uri = $1;	# Untaint path
+	$ENV{'PATH'} = $self->{'path'};
 	open(TAGS,"svn list $uri |")
 	or die("svn subprocess died unexpextedly: $!");
 	while(<TAGS>){
