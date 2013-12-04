@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.109 2013/12/03 09:59:54 ajlittoz Exp $
+# $Id: Common.pm,v 1.110 2013/12/04 14:35:29 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 This module contains HTTP initialisation and various HTML tag generation.
 
-I<Note:>
+B<Note:>
 
 =over
 
@@ -42,7 +42,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.109 2013/12/03 09:59:54 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.110 2013/12/04 14:35:29 ajlittoz Exp $ ';
 
 use strict;
 
