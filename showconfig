@@ -1,6 +1,6 @@
 #!/usr/bin/perl -T
 ######################################################################
-# $Id: showconfig,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: showconfig,v 1.5 2014/03/09 15:20:48 ajlittoz Exp $
 #
 # showconfig --	Present LXR configuration as html
 #
@@ -41,7 +41,7 @@ by a specific one.
 
 =cut
 
-$CVSID = '$Id: showconfig,v 1.4 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: showconfig,v 1.5 2014/03/09 15:20:48 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -83,7 +83,7 @@ sub dumphash {
 	# Compute left spaces in case we need to recurse
 		$d =~ m/([^\n]*)$/s;
 		my $indent = length($1);
-		my $v = %$h->{$k};
+		my $v = $h->{$k};
 		if (ref($v) eq 'ARRAY') {
 			$d .= '[ ' . join("\n".' 'x$indent.', ', @$v);
 			if (1 < scalar(@$v)) {
