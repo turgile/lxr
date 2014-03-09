@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Generic.pm,v 1.49 2013/11/17 09:05:31 ajlittoz Exp $
+# $Id: Generic.pm,v 1.50 2014/03/09 15:26:25 ajlittoz Exp $
 #
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
@@ -35,7 +35,7 @@ such as speed optimisation on specific languages.
 
 package LXR::Lang::Generic;
 
-$CVSID = '$Id: Generic.pm,v 1.49 2013/11/17 09:05:31 ajlittoz Exp $ ';
+$CVSID = '$Id: Generic.pm,v 1.50 2014/03/09 15:26:25 ajlittoz Exp $ ';
 
 use strict;
 use FileHandle;
@@ -486,7 +486,7 @@ an optional I<string> containing a preferred directory for the include'd file
 
 =back
 
-Algorithm:
+=head3 Algorithm
 
 =over
 

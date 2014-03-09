@@ -180,7 +180,7 @@ No escape mechanism is presently implemented.
 Note, however, that if you are generating HTML you can use &#125;
 or &#x7D;.
 
-B<Note:>
+B<Notes:>
 
 =over
 
@@ -245,14 +245,14 @@ Consequently, comments have two forms:
 
 =item 1 Normal verbose comments
 
-The opening delimiter (C< E<lt>!-- >) MUST be followed by a spacer,
+The opening delimiter (C<&lt;!-- >) MUST be followed by a spacer,
 i.e. a space, tab or newline.
-The closing delimiter (C< --E<gt> >) should also be preceded by a spacer.
+The closing delimiter (C<--E<gt>>) should also be preceded by a spacer.
 These comments will be removed.
 
 =item 1 Sticky comments
 
-The start delimiter (C< E<lt>!-- >) is immediately followed by a
+The start delimiter (C<&lt;!-->) is immediately followed by a
 significant character.
 These comments (most notably SSI commands) will be left in the expanded template.
 

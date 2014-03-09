@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.110 2013/12/04 14:35:29 ajlittoz Exp $
+# $Id: Common.pm,v 1.111 2014/03/09 15:26:25 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,7 @@ B<Note:>
 
 =over
 
-=item
-
-I<It initially contained nearly all support routines
+=item I<It initially contained nearly all support routines
 but for the "object" collections (files, index, lang), and was
 then correctly the "common" module.
 Its size grew beyond maintanability and readability and forced a
@@ -42,7 +40,7 @@ content.>
 
 package LXR::Common;
 
-$CVSID = '$Id: Common.pm,v 1.110 2013/12/04 14:35:29 ajlittoz Exp $ ';
+$CVSID = '$Id: Common.pm,v 1.111 2014/03/09 15:26:25 ajlittoz Exp $ ';
 
 use strict;
 
@@ -198,7 +196,7 @@ B<Note>:
 =item
 
 I<The message may be emitted after the final closing
-E<lt>/C<HTML>E<gt> tag if some regular HTML precedes the call
+C<&lt;/HTMLE<gt>> tag if some regular HTML precedes the call
 to this subroutine.
 This is not HTML-compliant.
 Some browsers may complain.>
