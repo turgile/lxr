@@ -1,5 +1,5 @@
 /*
- *	$Id: lxr.css,v 1.20 2013/12/02 17:00:48 ajlittoz Exp $
+ *	$Id: lxr.css,v 1.21 2014/03/10 16:58:21 ajlittoz Exp $
  */
 
 /* Some definitions are grouped together to allow modification
@@ -459,6 +459,9 @@
 /* link - the line number */
   A.fline
 { text-decoration: none
+}
+  a.fline:target
+{ background-color: yellow
 }
 
 /* link to other site (http, ftp and mailto) */
