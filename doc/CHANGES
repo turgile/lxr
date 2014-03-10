@@ -3,6 +3,29 @@ which could impact your existing trees.
 
 If they result in an incompatibility, you must reindex your tree.
 
+        =======================
+        LXR 2.0  -->  LXR 2.0.1
+        =======================
+
+Bug fix release, no feature added, no change in manuals.
+
+Git interface
+-------------
+Fix for a spurious bug (depends on distro) preventing from listing a file
+Fix for 'range' function in lxr.conf
+
+Ruby parser
+-----------
+Fix for an endless loop
+
+showconfig
+----------
+Fix for a syntax error
+
+Configuration wizard
+--------------------
+Fix truncation of host/alias names
+
         =====================
         LXR 1.2  -->  LXR 2.0
         =====================
