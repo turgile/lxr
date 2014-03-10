@@ -1,7 +1,7 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: ContextMgr.pm,v 1.5 2013/11/07 17:38:36 ajlittoz Exp $
+# $Id: ContextMgr.pm,v 1.6 2014/03/10 10:09:28 ajlittoz Exp $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -319,13 +319,13 @@ sub contextSave {
 		print DEST "\$port = '$port';\n";
 	# @hostaliases added in version 3
 		print DEST '@schemealiases = qw( ';
-		print DEST join ('\n                   , ', @schemealiases);
+		print DEST join ("\n                   , ", @schemealiases);
 		print DEST "\n                   );\n";
 		print DEST '@hostaliases = qw( ';
-		print DEST join ('\n                 , ', @hostaliases);
+		print DEST join ("\n                 , ", @hostaliases);
 		print DEST "\n                 );\n";
 		print DEST '@portaliases = qw( ';
-		print DEST join ('\n                 , ', @portaliases);
+		print DEST join ("\n                 , ", @portaliases);
 		print DEST "\n                 );\n";
 		print DEST "\$treematch = '$treematch';\n";
 		print DEST "\$commonvirtroot = $commonvirtroot;\n";
@@ -607,18 +607,13 @@ sub contextServer {
 				? [ '//localhost' ]
 				: [ ]
 			);
-		$primaryhost =~ m!^([^/]+)?//([^:]+?)(?::(\d+))?/?!;
+		$primaryhost =~ m!^([^/]+)?//([^:]+)(?::(\d+))?/?!;
 		$scheme   = $1;
 		$hostname = $2;
 		$port     = $3;
 		$scheme = 'http:' if !defined($1);
 		$port   = 80  if 'http:' eq $scheme && !defined($3);
 		$port   = 443 if 'https:' eq $1 && !defined($3);
-# 		if (!defined($hostname)) {
-# 			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
-# 			$primaryhost = undef;
-# 			next;
-# 		}
 	}
 	my $aliashost;
 	@schemealiases = ();
@@ -634,14 +629,10 @@ sub contextServer {
 									)
 					)
 			) {;
-		$aliashost =~ m!^([^/]+)?//([^:]+?)(?::(\d+))?/?!;
+		$aliashost =~ m!^([^/]+)?//([^:]+)(?::(\d+))?/?!;
 		my $aliasscheme = $1;
 		my $aliasname   = $2;
 		my $aliasport   = $3;
-# 		if (!defined($aliasname)) {
-# 			print "${VTred}ERROR:${VTnorm} invalid host name or scheme, try again ...\n";
-# 			next;
-# 		}
 		$aliasscheme = 'http:' if !defined($1);
 		$aliasport   = 80  if 'http:' eq $aliasscheme && !defined($3);
 		$aliasport   = 443 if 'https:' eq $1 && !defined($3);
