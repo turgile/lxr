@@ -1,6 +1,6 @@
 #!/usr/bin/perl -T
 ######################################################################
-# $Id: search,v 1.52 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: search,v 1.53 2014/04/06 17:14:42 ajlittoz Exp $
 ##
 
 # search --	Freetext search
@@ -25,7 +25,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: search,v 1.52 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: search,v 1.53 2014/04/06 17:14:42 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' }; # if LXR modules are in ./lib
@@ -582,7 +582,7 @@ sub search {
 		( $templ
 		,	( 'variables'			=> \&varinputs
 			, 'searchtext'			=> sub { $_ = $searchtext; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
-			, 'searchtext_escaped'	=> sub { $_ = $searchtext; s/\"/&quot;/g; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
+			, 'searchtext_escaped'	=> sub { $_ = $searchtext; s/&/&amp;/g; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 			, 'filetext_escaped'	=> sub { $_ = $filetext; s/\"/&quot;/g; return $_; }
 			, 'advancedchecked'		=> sub { $advanced ? 'checked' : '' }
 			, 'casesensitivechecked'=> sub { $casesensitive ? 'checked' : '' }

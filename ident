@@ -1,7 +1,7 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: ident,v 1.39 2013/11/08 14:22:25 ajlittoz Exp $
+# $Id: ident,v 1.40 2014/04/06 17:14:42 ajlittoz Exp $
 #
 # ident --	Look up identifiers
 #
@@ -25,7 +25,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: ident,v 1.39 2013/11/08 14:22:25 ajlittoz Exp $ ';
+$CVSID = '$Id: ident,v 1.40 2014/04/06 17:14:42 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib
@@ -561,8 +561,8 @@ sub printident {
 		expandtemplate
 			( $templ
 			,	( 'variables'		=> \&varinputs
-				, 'identifier'		=> sub { $_ = $identifier; s/</&lt;/g; s/>/&gt;/g; return $_; }
-				, 'identifier_escaped'=> sub { $_ = $identifier; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
+				, 'identifier'		=> sub { $_ = $identifier; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
+				, 'identifier_escaped'=> sub { $_ = $identifier; s/&/&amp;/g; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 				, 'checked'			=> sub { $defonly ? 'checked="checked"' : '' }
 				, 'varbtnaction'	=> sub { varbtnaction(@_, 'ident') }
 				, 'urlargs'			=> sub { urlexpand('-', 'ident') }
