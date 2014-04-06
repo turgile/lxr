@@ -1222,7 +1222,12 @@ sub varlinks {
 					  ? '/'.$config->{'treename'}
 					  : ''
 					  )
-					. &urlargs("$var=$val", '_string=' . $HTTP->{'param'}{'_string'})
+					. &urlargs	( "$var=$val"
+								, '_string=' . $HTTP->{'param'}{'_string'}
+								, '_filestring=' . $HTTP->{'param'}{'_filestring'}
+								, '_advanced=' . $HTTP->{'param'}{'_advanced'}
+								, '_casesensitive=' . $HTTP->{'param'}{'_casesensitive'}
+								)
 					. "\">$val</a>";
 			}
 		}
