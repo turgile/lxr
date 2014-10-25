@@ -1,7 +1,7 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: source,v 1.68 2013/11/29 15:44:55 ajlittoz Exp $
+# $Id: source,v 1.69 2014/10/25 18:29:06 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -26,7 +26,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.68 2013/11/29 15:44:55 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.69 2014/10/25 18:29:06 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -868,6 +868,11 @@ sub printfile {
 			#	}
 			} else {
 				# Check for a discrepancy between file and database states
+				# Two implementations are available hereunder. Uncomment only one:
+				# - standard notification (warning on stale index)
+				# - permanent notification (indexing time always displayed or warning)
+				# Standard notification is recommended
+############ Standard notification ############
 				if	(!$index->filetimestamp
 								( $pathname
 								, $files->filerev($pathname, $releaseid)
@@ -878,6 +883,29 @@ sub printfile {
 						"<p class=\"error\">\n<i>Warning, cross-references for $pathname need to be fixed.</i>\n</p>\n"
 					);
 				}
+############ End of standard notification ############
+# ############ Special request from KDE site maintainer ############
+# # NOTE: Is it really relevant since the above block gives an error
+# #		indication when indexing time is stale?
+# #	The main difference is explicit notice of non-parsed file
+# 				my $t = indextime(@_,  '', $pathname);
+# 				if ('-' eq $t) {
+# 					if (LXR::Lang::parseable($pathname)) {
+# 						print(
+# 							"<p class=\"error\">\n<i>Warning, cross-references for $pathname need to be fixed.</i>\n</p>\n"
+# 						);
+# 					} else {
+# 						print(
+# 							"<p class=\"error\">\n<i>Warning, $pathname is written in an unparsed language.</i>\n</p>\n"
+# 						);
+# 					};
+# 				} else {
+# 					print(
+# 						"<p>\nFile indexed on <i>$t</i>\n</p>\n"
+# 					);
+# 				};
+# ############ End of special request ############
+
 				if (exists($config->{'cvswebprefix'})) {
 					my $revtarget = '';
 					$revtarget = "#rev$releaseid" if lc($releaseid) ne 'head';
