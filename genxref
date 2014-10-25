@@ -2,7 +2,7 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.69 2013/11/17 15:57:42 ajlittoz Exp $
+# $Id: genxref,v 1.70 2014/10/25 18:14:44 ajlittoz Exp $
 #
 #	Runs source-tree indexation
 #
@@ -441,7 +441,7 @@ foreach my $treedescr (@config) {
 		print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
 		$$LXR::Common::HTTP{'param'}{'_showattic'} = 1;
 		$printdirbanner = 1;
-		directorytreetraversal	( \&Tagger::processrefs
+		directorytreetraversal	( \&Tagger::processfile
 								, 'head'
 								, ''
 								, '/'
