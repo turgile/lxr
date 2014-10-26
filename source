@@ -1,7 +1,7 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: source,v 1.69 2014/10/25 18:29:06 ajlittoz Exp $
+# $Id: source,v 1.70 2014/10/26 13:47:18 ajlittoz Exp $
 #
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
@@ -26,7 +26,7 @@
 #
 ######################################################################
 
-$CVSID = '$Id: source,v 1.69 2014/10/25 18:29:06 ajlittoz Exp $ ';
+$CVSID = '$Id: source,v 1.70 2014/10/26 13:47:18 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -770,7 +770,24 @@ sub next_annot {
 	}
 
 	$$r = $rev;
-	my $la = length($auth);
+	# NOTE: modern VCSes return their annotations in Unicode, but user
+	# may have requested another display encoding (e.g. ISO-8859-x).
+	# We don't try to transcode since this may be time-consuming for
+	# little benefit. We just hope that, on average, truncation will
+	# not occur too frequently in the middle of an UTF-8 sequence.
+	# UTF-8-aware length computation and truncation is attempted only
+	# on author's name. Nothing is done on the revision id because
+	# it usually does not contain fancy characters (read it is numeric
+	# with eventual ASCII punctuation). svn allows more freedom in
+	# revision naming and may conflict with this choice. You'll also
+	# be in trouble when displaying UTF-8 with CVS returning ISO-8859.
+	my $la;
+	if ('utf-8' ne $config->{'encoding'}) {
+		$la = length($auth);
+	} else {
+		use utf8;
+		$la = length($auth);
+	};
 	my $lr = length($rev);
 	# After this call to length, $rev may be edited to contain
 	# HTML element and $lr will be different from length($rev).
@@ -783,8 +800,13 @@ sub next_annot {
 				) {	# truncate first author
 				$la = 14 - $lr;
 				$la = 4 if $la < 4;
-				$auth = substr($auth, 0, $la++)
-						. '<span class="error">*</span>';
+				if ('utf-8' ne $config->{'encoding'}) {
+					$auth = substr($auth, 0, $la++)
+				} else {
+					use utf8;
+					$auth = substr($auth, 0, $la++)
+				};
+				$auth .= '<span class="error">*</span>';
 			}
 			if ($lr+$la >15) { # now truncate revision
 				$lr = 14 - $la;
