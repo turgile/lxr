@@ -3,6 +3,50 @@ which could impact your existing trees.
 
 If they result in an incompatibility, you must reindex your tree.
 
+        =========================
+        LXR 2.0.2  -->  LXR 2.0.3
+        =========================
+
+Bug fix release, no feature added, no change in manuals.
+
+Debian-based compatibility (configuration wizard)
+--------------------------
+Debian-based distros (Ubuntu among these) appear to not set properly the
+working directory before launching LXR CGI scripts, resulting in various
+"file not found" errors. Configuration wizard is updated to use only
+OS-absolute paths.
+
+tree-server1.conf.part
+----------------------
+A syntax error prevents correct canonization of hostanme (relevant only in
+multiple-trees context with tree selection based on hostname)
+
+source
+------
+Attempt to truncate author's name (when source file comes from a VCS) on a
+valid UTF-8 character boundary. If 'encoding' parameter is not set to 'utf-8',
+you may see strange glyphs since the UTF-8 sequence is not transcoded.
+NOTE: truncation should be checked likewise in diff's htmljust() sub
+      but this has not been done and causes an incorrect glyph to be
+      displayed in the last pane column (if this character is not a pure
+      ASCII one).
+
+        =========================
+        LXR 2.0.1  -->  LXR 2.0.2
+        =========================
+
+Bug fix release, no feature added, no change in manuals.
+
+XSS protection
+--------------
+Characters & < > are always replaced by the HTML entity reference so that
+they can't be interpreted as an HTML tag
+
+Query state (URL arguments)
+-----------
+All user query criteria forwarded in the generated URL (useful mainly for
+ident and search)
+
         =======================
         LXR 2.0  -->  LXR 2.0.1
         =======================
