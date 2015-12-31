@@ -1,8 +1,6 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: source,v 1.70 2014/10/26 13:47:18 ajlittoz Exp $
-#
 # source --	Present sourcecode as html, complete with references
 #  the '/icons' images are available in any standard Apache installation
 #
@@ -25,8 +23,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 ######################################################################
-
-$CVSID = '$Id: source,v 1.70 2014/10/26 13:47:18 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib
@@ -782,6 +778,7 @@ sub next_annot {
 	# revision naming and may conflict with this choice. You'll also
 	# be in trouble when displaying UTF-8 with CVS returning ISO-8859.
 	my $la;
+	my $pat;
 	if ('utf-8' ne $config->{'encoding'}) {
 		$la = length($auth);
 	} else {
@@ -800,13 +797,9 @@ sub next_annot {
 				) {	# truncate first author
 				$la = 14 - $lr;
 				$la = 4 if $la < 4;
-				if ('utf-8' ne $config->{'encoding'}) {
-					$auth = substr($auth, 0, $la++)
-				} else {
-					use utf8;
-					$auth = substr($auth, 0, $la++)
-				};
+				$auth = pack('(U)'.$la, unpack('U*', $auth));
 				$auth .= '<span class="error">*</span>';
+				$la++;
 			}
 			if ($lr+$la >15) { # now truncate revision
 				$lr = 14 - $la;
