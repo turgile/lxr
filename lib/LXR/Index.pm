@@ -354,8 +354,8 @@ sub new {
 				. ' where s.symname = ?'
 				. '  and  r.releaseid = ?'
 				. '  and  u.symid  = s.symid'
-				. '  and  f.fileid = r.fileid'
 				. '  and  u.fileid = r.fileid'
+				. '  and  f.fileid = r.fileid'
 				. ' order by f.filename, u.line'
 				);
 	}
@@ -1797,6 +1797,20 @@ sub final_cleanup {
 	$self->commit();
 	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
+}
+
+=head2 C<post_processing ()>
+
+C<post_processing> executes maintenance actions on the database at end of
+I<genxref> processing.
+
+Must be the last action called before C<Index> object disappears.
+
+=cut
+
+sub post_processing {
+	my ($self) = @_;
+
 }
 
 1;

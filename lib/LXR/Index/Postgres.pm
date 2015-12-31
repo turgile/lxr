@@ -235,8 +235,23 @@ sub final_cleanup {
 #B 	$self->{'reset_symnum'} = undef;
 #B 	$self->{'reset_typenum'} = undef;
 	# End of variants
+
 	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
+}
+
+sub post_processing {
+	my ($self) = @_;
+
+	my $dbfile = $config->{'dbname'};
+	my $dbhost = $dbfile;
+	$dbfile =~ s/^.*dbi:Pg:dbname=//;
+	$dbfile =~ s/;.*$//;
+	$dbhost =~ s/^.*host=//;
+	$dbhost =~ s/;.*$//;
+	my $dbuser = $config->{'dbuser'};
+	my $dbpass = $config->{'dbpass'};
+	`psql -d $dbfile -h $dbhost -U $dbuser -W -c 'vacuum analyze;'`
 }
 
 1;

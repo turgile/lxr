@@ -50,6 +50,7 @@ GetOptions	(\%option
 			, 'reindexall'
 			, 'checkonly'
 			, 'accept'
+			, 'novacuum'
 			);
 
 if ($option{'help'}) {
@@ -76,6 +77,10 @@ Valid options are:
   --reindexall       Purges existing index data
   --checkonly        Verify tools version and stop
   --accept           Accept parameter suggestions to continue with indexing
+  --novacuum         Do not VACUUM database tables after generating the
+                     cross-references (mainly for PostgreSQL because it sollicits
+                     password from the user preventing unattended operation;
+                     VACUUM can always be launched manually)
   
 Report bugs at http://sourceforge.net/projects/lxr/.
 END_HELP
@@ -522,6 +527,12 @@ foreach my $treedescr (@config) {
 		}
 	}
 	$index->final_cleanup();
+}
+
+if (!$option{'novacuum'}) {
+	print STDERR "\nDatabase optimisation ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
+	$index->post_processing();
+	print STDERR &VTCUU(1), &VTCHA(27), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
 }
 
 

@@ -117,8 +117,18 @@ sub final_cleanup {
 	$self->{'purge_releases'} = undef;
 	$self->{'purge_status'} = undef;
 	$self->{'purge_files'} = undef;
+
 	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
+}
+
+sub post_processing {
+	my ($self) = @_;
+
+	my $dbfile = $config->{'dbname'};
+	$dbfile =~ s/^.*dbi:SQLite:dbname=//;
+	$dbfile =~ s/;.*$//;
+	`sqlite3 $dbfile 'vacuum'`
 }
 
 1;

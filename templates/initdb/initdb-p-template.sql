@@ -444,7 +444,7 @@ create table %DB_tbl_prefix%definitions
 	);
 create index %DB_tbl_prefix%i_definitions
 	on %DB_tbl_prefix%definitions
-	using btree (symid);
+	using btree (symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
@@ -490,7 +490,7 @@ create table %DB_tbl_prefix%usages
 	);
 create index %DB_tbl_prefix%i_usages
 	on %DB_tbl_prefix%usages
-	using btree (symid);
+	using btree (symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
  * after usage deletion.

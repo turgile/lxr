@@ -286,7 +286,7 @@ create table %DB_tbl_prefix%definitions
 	, typeid  smallint         not null
 	, langid  tinyint unsigned not null
 	, relid   int
-	, index %DB_tbl_prefix%i_definitions (symid)
+	, index %DB_tbl_prefix%i_definitions (symid, fileid)
 	, constraint %DB_tbl_prefix%fk_defn_symid
 		foreign key (symid)
 		references %DB_tbl_prefix%symbols(symid)
@@ -323,7 +323,7 @@ create table %DB_tbl_prefix%usages
 	( symid   int not null
 	, fileid  int not null
 	, line    int not null
-	, index %DB_tbl_prefix%i_usages (symid)
+	, index %DB_tbl_prefix%i_usages (symid, fileid)
 	, constraint %DB_tbl_prefix%fk_use_symid
 		foreign key (symid)
 		references %DB_tbl_prefix%symbols(symid)

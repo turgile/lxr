@@ -289,7 +289,7 @@ create table %DB_tbl_prefix%definitions
 	);
 
 create index %DB_tbl_prefix%i_definitions
-	on %DB_tbl_prefix%definitions(symid);
+	on %DB_tbl_prefix%definitions(symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
@@ -315,7 +315,7 @@ create table %DB_tbl_prefix%usages
 	);
 
 create index %DB_tbl_prefix%i_usages
-	on %DB_tbl_prefix%usage(symid);
+	on %DB_tbl_prefix%usage(symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
  * after usage deletion.

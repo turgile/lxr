@@ -202,4 +202,36 @@ sub final_cleanup {
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
 }
 
+sub post_processing {
+	my ($self) = @_;
+
+	my $dbfile = $config->{'dbname'};
+	my $dbhost = $dbfile;
+	$dbfile =~ s/^.*dbi:Pg:dbname=//;
+	$dbfile =~ s/;.*$//;
+	$dbhost =~ s/^.*host=//;
+	$dbhost =~ s/;.*$//;
+	my $dbuser = $config->{'dbuser'};
+	my $dbpass = $config->{'dbpass'};
+	my $prefix = $config->{'dbprefix'};
+	my $statement = 'optimize local table'
+				. " ${prefix}files"
+				. " ${prefix}status"
+				. " ${prefix}releases"
+				. " ${prefix}langtypes"
+				. " ${prefix}symbols"
+				. " ${prefix}definitions"
+				. " ${prefix}usages";
+	`mysql $dbfile -u $dbuser -p$dbpass -e $statement`;
+	$statement = 'analyze local table'
+				. " ${prefix}files"
+				. " ${prefix}status"
+				. " ${prefix}releases"
+				. " ${prefix}langtypes"
+				. " ${prefix}symbols"
+				. " ${prefix}definitions"
+				. " ${prefix}usages";
+	`mysql $dbfile -u $dbuser -p$dbpass -e $statement`;
+}
+
 1;
