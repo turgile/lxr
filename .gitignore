@@ -1,0 +1,29 @@
+# NOTE:
+#	This file is duplicated under 2 name variants
+#
+# 1-	gitignore
+#			the master (visible) editable file
+# 2-	.gitignore
+#			Git-active filtering file
+#	Once, you are satisfied with your changes, activate the filter file with
+#		cp gitignore .gitignore
+#
+
+
+# Ignore binary object directory and CMake utilities
+# None with Perl
+
+# Do not mess KDevelop internal settings
+
+*.kdev4
+.kdev*
+
+
+# Generated
+# None with Perl
+
+
+# Temporaries
+custom.d
+test*
+Test*
