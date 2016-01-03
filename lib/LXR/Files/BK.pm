@@ -96,7 +96,7 @@ sub getdir {
 		my ($path, $node) = $_ =~ m!(.*/)([^/]+)$!;
 		!$self->_ignorefiles($path, $node);
 			} @files;
-	return (sort(@dirs), sort(@files));
+	return sort({lc($a) cmp lc($b)} @dirs), sort {lc($a) cmp lc($b)} @files;
 }
 
 sub getannotations {

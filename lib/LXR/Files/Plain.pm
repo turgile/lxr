@@ -74,7 +74,7 @@ sub getdir {
 	}
 	closedir(DIR);
 
-	return sort(@dirs), sort(@files);
+	return sort({lc($a) cmp lc($b)} @dirs), sort {lc($a) cmp lc($b)} @files;
 }
 
 #	There are no annotations in real files,
