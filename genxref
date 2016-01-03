@@ -2,8 +2,6 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: genxref,v 1.70 2014/10/25 18:14:44 ajlittoz Exp $
-#
 #	Runs source-tree indexation
 #
 # This program is free software; you can redistribute it and/or modify
@@ -437,6 +435,29 @@ foreach my $treedescr (@config) {
 		}
 	} else {
 		@versions = $option{'version'};
+		my $version_OK = 0;
+		for ($config->varrange('v')) {
+			if ($versions[0] eq $_) {
+				$version_OK = 1;
+				last;
+			}
+		}
+		my $version_exists = 1;
+		if	($files->isa('LXR::Files::Plain')) {
+			$version_exists = $files->isdir('/', $versions[0]); 
+		}
+		if (!$version_OK || !$version_exists) {
+			print STDERR "${VTred}ERROR:${VTnorm} ";
+			if ($version_OK) {
+				print STDERR "no corresponding directory ${VTwhite}", $versions[0], "${VTnorm} in source root\n";
+			} elsif ($version_exists) {
+				print STDERR "version ${VTwhite}", $versions[0], "${VTnorm} not listed in ${VTwhite}lxr.conf${VTnorm}, ";
+				print STDERR "but a directory exists in source root\n";
+			} else {
+				print STDERR "unknown version ${VTwhite}", $versions[0], "${VTnorm}\n";
+			}
+			die "${VTred}No version to index.${VTnorm}\n"
+		}
 	}
 
 	%versionset = ();
