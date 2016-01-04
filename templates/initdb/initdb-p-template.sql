@@ -2,7 +2,6 @@
 /*-
  *	SQL template for creating PostgreSQL tables
  *	(C) 2012-2013 A. Littoz
- *	$Id: initdb-p-template.sql,v 1.6 2013/11/17 15:33:55 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script

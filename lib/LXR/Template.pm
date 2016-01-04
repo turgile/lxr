@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 #############################################################
 #
-# $Id: Template.pm,v 1.0 2011/12/11 09:15:00 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
+#
 #############################################################
 
 # =encoding utf8	Not recognised??
@@ -30,8 +28,6 @@ customisable HTML page.
 =cut
 
 package LXR::Template;
-
-$CVSID = '$Id: Template.pm,v 1.0 2011/12/11 09:15:00 ajlittoz Exp $';
 
 use strict;
 

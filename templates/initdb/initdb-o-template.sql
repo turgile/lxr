@@ -2,7 +2,6 @@
 /*-
  *	SQL template for creating Oracle tables
  *	(C) 2012-2013 A. Littoz
- *	$Id: initdb-o-template.sql,v 1.4 2013/11/17 11:12:07 ajlittoz Exp $
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script

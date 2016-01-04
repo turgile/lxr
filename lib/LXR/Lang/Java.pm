@@ -1,7 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Java.pm,v 1.12 2013/09/24 07:59:19 ajlittoz Exp $
 #
 # Enhances the support for the Java language over that provided by
 # Generic.pm
@@ -22,8 +21,6 @@
 ###############################################
 
 package LXR::Lang::Java;
-
-my $CVSID = '$Id: Java.pm,v 1.12 2013/09/24 07:59:19 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;

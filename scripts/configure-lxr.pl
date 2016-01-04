@@ -2,8 +2,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: configure-lxr.pl,v 1.15 2013/11/07 17:38:36 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -19,8 +17,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 ###############################################
-
-# $Id: configure-lxr.pl,v 1.15 2013/11/07 17:38:36 ajlittoz Exp $
 
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
@@ -39,9 +35,7 @@ use VTescape;
 #
 ##############################################################
 
-my $version = '$Revision: 1.15 $';
-$version =~ s/Revision: (.*) /$1/;
-$version =~ s/\$//g;
+my $version = '2.1';
 
 #	Who am I? Strip directory path.
 my $cmdname = $0;

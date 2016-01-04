@@ -3,8 +3,6 @@
 #
 # GIT.pm - A file backend for LXR based on GIT.
 #
-# $Id: GIT.pm,v 1.17 2013/12/03 13:38:23 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -51,8 +49,6 @@ module, but at least it works for LXR.
 =cut
 
 package LXR::Files::GIT;
-
-$CVSID = '$Id: GIT.pm,v 1.17 2013/12/03 13:38:23 ajlittoz Exp $';
 
 use strict;
 use Time::Local;

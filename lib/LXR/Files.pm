@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Files.pm,v 1.24 2013/11/07 17:58:48 ajlittoz Exp $
-
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -27,8 +25,6 @@ source-tree, independent of the repository format.
 =cut
 
 package LXR::Files;
-
-$CVSID = '$Id: Files.pm,v 1.24 2013/11/07 17:58:48 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;

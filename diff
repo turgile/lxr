@@ -1,8 +1,6 @@
 #!/usr/bin/perl -T
 ######################################################################
 #
-# $Id: diff,v 1.34 2013/11/12 19:45:13 ajlittoz Exp $
-#
 # diff --	Display diff output with markup.
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -24,8 +22,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 ######################################################################
-
-$CVSID = '$Id: diff,v 1.34 2013/11/12 19:45:13 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : "lib" }; # if LXR modules are in ./lib

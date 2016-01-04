@@ -1,6 +1,5 @@
 #!/usr/bin/perl -T
 ######################################################################
-# $Id: showconfig,v 1.5 2014/03/09 15:20:48 ajlittoz Exp $
 #
 # showconfig --	Present LXR configuration as html
 #
@@ -40,8 +39,6 @@ With such a layout, it is easy to see if a global value is overridden
 by a specific one.
 
 =cut
-
-$CVSID = '$Id: showconfig,v 1.5 2014/03/09 15:20:48 ajlittoz Exp $ ';
 
 use strict;
 use lib do { $0 =~ m{(.*)/} ? "$1/lib" : 'lib' };  # if LXR modules are in ./lib

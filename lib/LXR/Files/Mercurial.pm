@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Mercurial.pm,v 1.5 2013/12/03 13:38:23 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -30,8 +28,6 @@ Methods are sorted in the same order as in the super-class.
 =cut
 
 package LXR::Files::Mercurial;
-
-$CVSID = '$Id: Mercurial.pm,v 1.5 2013/12/03 13:38:23 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;

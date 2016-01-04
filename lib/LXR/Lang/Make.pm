@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Make.pm,v 1.4 2013/11/08 09:06:26 ajlittoz Exp $
-#
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
 # someone writes better support.
@@ -31,8 +29,6 @@ It is driven by specifications read from file I<generic.conf>.
 =cut
 
 package LXR::Lang::Make;
-
-$CVSID = '$Id: Make.pm,v 1.4 2013/11/08 09:06:26 ajlittoz Exp $ ';
 
 use strict;
 require LXR::Lang::Generic;

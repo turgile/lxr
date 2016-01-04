@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: CVS.pm,v 1.51 2013/11/08 14:22:25 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -30,8 +28,6 @@ Methods are sorted in the same order as in the super-class.
 =cut
 
 package LXR::Files::CVS;
-
-$CVSID = '$Id: CVS.pm,v 1.51 2013/11/08 14:22:25 ajlittoz Exp $ ';
 
 use strict;
 use Time::Local;

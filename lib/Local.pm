@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*- mode: perl -*-
 ###############################################
 #
-# $Id: Local.pm,v 1.3 2013/09/24 08:54:19 ajlittoz Exp $
-#
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -28,8 +26,6 @@
 # different for each project.
 
 package Local;
-
-$CVSID = '$Id: Local.pm,v 1.3 2013/09/24 08:54:19 ajlittoz Exp $ ';
 
 use strict;
 

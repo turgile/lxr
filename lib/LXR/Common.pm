@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Common.pm,v 1.111 2014/03/09 15:26:25 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -39,8 +37,6 @@ content.>
 =cut
 
 package LXR::Common;
-
-$CVSID = '$Id: Common.pm,v 1.111 2014/03/09 15:26:25 ajlittoz Exp $ ';
 
 use strict;
 

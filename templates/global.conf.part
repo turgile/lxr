@@ -2,9 +2,6 @@
 #- LXR master configuration file
 #-	Global configuration section
 #-
-#-	$Id: global.conf.part,v 1.7 2013/12/03 13:38:23 ajlittoz Exp $
-#-
-#-
 #-	This file fragment is meant to be "included" to form the
 #-	complete configuration file.
 #-

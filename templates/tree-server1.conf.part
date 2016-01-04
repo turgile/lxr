@@ -3,9 +3,6 @@
 #-	Tree configuration section
 #-		Server configuration subsection part 1
 #-
-#-	$Id: tree-server1.conf.part,v 1.4 2014/10/25 18:42:07 ajlittoz Exp $
-#-
-#-
 #-	This file fragment is meant to be "included" to form the
 #-	complete configuration file.
 #-

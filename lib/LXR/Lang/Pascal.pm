@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Pascal.pm,v 1.5 2013/11/08 09:04:27 ajlittoz Exp $
-#
 # Implements generic support for any language that ectags can parse.
 # This may not be ideal support, but it should at least work until
 # someone writes better support.
@@ -31,8 +29,6 @@ It is driven by specifications read from file I<generic.conf>.
 =cut
 
 package LXR::Lang::Pascal;
-
-$CVSID = '$Id: Pascal.pm,v 1.5 2013/11/08 09:04:27 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Lang;

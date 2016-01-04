@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*- #
 ##############################################
 #
-# $Id: SimpleParse.pm,v 1.23 2013/11/08 08:27:24 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -28,8 +26,6 @@ source file into homogeneous regions (i.e. fragments defined by
 =cut
 
 package LXR::SimpleParse;
-
-$CVSID = '$Id: SimpleParse.pm,v 1.23 2013/11/08 08:27:24 ajlittoz Exp $ ';
 
 use strict;
 use integer;

@@ -3,9 +3,6 @@
 #-	Tree configuration section
 #-		Data storage subsection
 #-
-#-	$Id: datastorage.conf.part,v 1.4 2013/11/17 09:13:21 ajlittoz Exp $
-#-
-#-
 #-	This file fragment is meant to be "included" to form the
 #-	complete configuration file.
 #-

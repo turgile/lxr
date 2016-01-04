@@ -1,8 +1,6 @@
 # -*- tab-width: 4; cperl-indent-level: 4 -*-
 ###############################################
 #
-# $Id: Lang.pm,v 1.54 2014/03/09 16:00:52 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -34,8 +32,6 @@ to capture missing specific implementations.
 =cut
 
 package LXR::Lang;
-
-$CVSID = '$Id: Lang.pm,v 1.54 2014/03/09 16:00:52 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;

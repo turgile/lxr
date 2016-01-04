@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Index.pm,v 1.28 2013/11/20 14:58:18 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -27,8 +25,6 @@ If needed, the methods are overridden in the specific modules.
 =cut
 
 package LXR::Index;
-
-$CVSID = '$Id: Index.pm,v 1.28 2013/11/20 14:58:18 ajlittoz Exp $ ';
 
 use strict;
 

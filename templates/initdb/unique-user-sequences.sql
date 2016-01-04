@@ -2,7 +2,6 @@
 /*
  *	SQL template for user management of unique record numbers
  *	(C) 2013-2013 A. Littoz
- *	$Id: unique-user-sequences.sql,v 1.1 2013/11/17 15:33:55 ajlittoz Exp $
  *
  *	This template is intended to be included in other SQL templates
  *	and further customised by Perl script initdb-config.pl.

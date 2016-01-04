@@ -1,8 +1,6 @@
 # -*- tab-width: 4 perl-indent-level: 4-*-
 ###############################
 #
-# $Id: Oracle.pm,v 1.27 2013/11/07 19:39:22 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -20,8 +18,6 @@
 ###############################
 
 package LXR::Index::Oracle;
-
-$CVSID = '$Id: Oracle.pm,v 1.27 2013/11/07 19:39:22 ajlittoz Exp $ ';
 
 # ***
 # *** CAUTION -CAUTION - CAUTION ***

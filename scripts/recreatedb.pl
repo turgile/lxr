@@ -2,8 +2,6 @@
 # -*- tab-width: 4 -*-"
 ###############################################
 #
-# $Id: recreatedb.pl,v 1.9 2013/11/17 15:50:21 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -19,8 +17,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 ###############################################
-
-# $Id: recreatedb.pl,v 1.9 2013/11/17 15:50:21 ajlittoz Exp $
 
 use strict;
 use lib 'lib', do { $0 =~ m{(.*)/}; "$1" };
@@ -48,9 +44,7 @@ use LXR::Common;
 #
 ##############################################################
 
-my $version = '$Revision: 1.9 $';
-$version =~ s/Revision: (.*) /$1/;
-$version =~ s/\$//g;
+my $version = '1.9';
 
 #	Who am I? Strip directory path.
 my $cmdname = $0;

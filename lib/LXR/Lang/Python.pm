@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Python.pm,v 1.11 2013/09/24 07:59:19 ajlittoz Exp $
-#
 # Enhances the support for the Python language over that provided by
 # Generic.pm
 #
@@ -32,8 +30,6 @@ It only overrides C<processinclude> for efficiency.
 =cut
 
 package LXR::Lang::Python;
-
-$CVSID = '$Id: Python.pm,v 1.11 2013/09/24 07:59:19 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Common;

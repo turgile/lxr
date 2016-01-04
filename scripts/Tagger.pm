@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Tagger.pm,v 1.3 2013/11/17 15:57:42 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -20,8 +18,6 @@
 ###############################################
 
 package Tagger;
-
-$CVSID = '$Id: Tagger.pm,v 1.3 2013/11/17 15:57:42 ajlittoz Exp $ ';
 
 use strict;
 use LXR::Lang;

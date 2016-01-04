@@ -1,8 +1,6 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# $Id: Markup.pm,v 1.10 2013/11/08 08:38:19 ajlittoz Exp $
-#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -29,8 +27,6 @@ syntactic components or otherwise interesting elements of a block.
 =cut
 
 package LXR::Markup;
-
-$CVSID = '$Id: Markup.pm,v 1.10 2013/11/08 08:38:19 ajlittoz Exp $';
 
 use strict;
 
