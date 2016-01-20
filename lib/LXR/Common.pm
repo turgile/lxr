@@ -953,9 +953,10 @@ display comes from a link in a file and user then jumps to another
 file in the directory.
 It is assumed that usually user wants both files with same version.  
 
-For identifier query, the provided release MUST be kept, even if it
-does not exist, since there is no way in I<ident> to set a
-version (all links would then point to default version).
+For identifier query, under some VCS, the provided release could be
+reverted to the default one if the eventual file in the query string
+does not exist in this version It is recommended to submit user queries
+(as opposed to those from a link in a source) without path info.
 
 =back
 
@@ -967,13 +968,21 @@ sub clean_release {
 	if	(	!$files->isa('LXR::Files::CVS')
 		||	substr($pathname, -1) ne '/'
 		) {
-		my @rels = $config->varrange('v');
-		my %test;
-		@test{@rels} = undef;
-
-		if(!exists $test{$releaseid}) {
-			$releaseid = $config->vardefault('v');
+# ajl 20160116 - which is faster?
+#	Sequential scan through versions, but no hash construction
+#	average: half the number of versions
+		foreach ($config->varrange('v')) {
+			return $releaseid if $_ eq $releaseid;
 		}
+		$releaseid = $config->vardefault('v');
+#	Direct access through hash, with cost of building hash
+# 		my @rels = $config->varrange('v');
+# 		my %test;
+# 		@test{@rels} = undef;
+#
+# 		if(!exists $test{$releaseid}) {
+# 			$releaseid = $config->vardefault('v');
+# 		}
 	}
 	return $releaseid;
 }
