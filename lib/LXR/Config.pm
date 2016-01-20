@@ -29,6 +29,7 @@ an abstract interface to the C<'variables'>.
 package LXR::Config;
 
 use strict;
+use File::MMagic;
 use File::Path;
 
 use LXR::Common;
@@ -515,30 +516,34 @@ FINAL:
 			die "Both Glimpse and Swish have been specified in $confpath.\n"
 				."Please choose one of them by commenting out either glimpsebin or swishbin.\n";
 			
-		} elsif (exists $self->{'glimpsebin'}) {    
-			if (!exists($self->{'glimpsedir'})) {
-				die "Please specify 'glimpsedirbase' or 'glimpsedir' in $confpath\n"
-					unless exists($self->{'glimpsedirbase'});
-				$self->{'glimpsedir'}	= $self->{'glimpsedirbase'}
+		} elsif (exists $self->{'glimpsebin'}) {
+			if ('/true' ne substr($self->{'glimpsebin'}, -5)) {
+				if (!exists($self->{'glimpsedir'})) {
+					die "Please specify 'glimpsedirbase' or 'glimpsedir' in $confpath\n"
+						unless exists($self->{'glimpsedirbase'});
+					$self->{'glimpsedir'}	= $self->{'glimpsedirbase'}
+											. $self->{'virtroot'}
+											. ('argument' eq $routing
+											? $self->{'treename'}
+											: ''
+											)
+											;
+				}
+			}
+			_ensuredirexists($self->{'glimpsedir'});
+		} elsif (exists $self->{'swishbin'}) {    
+			if ('/true' ne substr($self->{'swishbin'}, -5)) {
+				if (!exists($self->{'swishdir'})) {
+					die "Please specify 'swishdirbase' or 'swishdir' in $confpath\n"
+						unless exists($self->{'swishdirbase'});
+					$self->{'swishdir'}	= $self->{'swishdirbase'}
 										. $self->{'virtroot'}
 										. ('argument' eq $routing
 										? $self->{'treename'}
 										: ''
 										)
 										;
-			}
-			_ensuredirexists($self->{'glimpsedir'});
-		} elsif (exists $self->{'swishbin'}) {    
-			if (!exists($self->{'swishdir'})) {
-				die "Please specify 'swishdirbase' or 'swishdir' in $confpath\n"
-					unless exists($self->{'swishdirbase'});
-				$self->{'swishdir'}	= $self->{'swishdirbase'}
-									. $self->{'virtroot'}
-									. ('argument' eq $routing
-									? $self->{'treename'}
-									: ''
-									)
-									;
+				}
 			}
 			_ensuredirexists($self->{'swishdir'});
 		} else {
@@ -546,6 +551,16 @@ FINAL:
 				."Please choose one of them by specifing a value for either glimpsebin or swishbin.\n";
 		}
 	}
+
+#	Create a filter function able to discard non-text files
+	my $magic = File::MMagic->new	( -f $self->{'magicmime'}
+									? ($self->{'magicmime'})
+									: -f 'lib/magic.mime' ? ('lib/magic.mime') : ()
+									);
+	$self->{'&discard'} = sub { 'text/' ne substr($magic->checktype_contents(@_[0]), 0, 5) };
+#	Same, to return the complete MIME type
+	$self->{'&mimetype'} = sub {$magic->checktype_contents(@_[0])};
+
 	return 1;
 }
 
