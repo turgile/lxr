@@ -335,7 +335,7 @@ print expandtemplate
 	,	( 'conffile'	=> sub { '<em>' . $config->{'confpath'} . '</em>' }
 		, 'virtroot'	=> sub { $pgs[$which]->{'virtroot'} }
 		, 'parmgroupnr'	=> sub { $which
-								. (1 <$HTTP->{'param'}{'_confall'}
+								. (1 < $HTTP->{'param'}{'_confall'}
 								  ? ' (apocalyptical)'
 								  : ''
 								  )
