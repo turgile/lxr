@@ -348,10 +348,17 @@ sub filerev {
 	return $filerev;
 }
 
-=head2 C<getfilehandle ($pathname, $releaseid)>
+=head2 C<getfilehandle ($pathname, $releaseid, $withannot)>
 
 C<getfilehandle> returns a handle to the designated file
 for further access to the content.
+
+C<getrawfilehandle> is identical, except the file will be
+accessed in I<binary> mode.
+By default, it is an alias for C<getfilehandle> with third
+argument undefined.
+This method must be overridden if the specific object has requested
+the C<:utf8> layer to become a true "binary" access.
 
 =over
 
@@ -359,10 +366,14 @@ for further access to the content.
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2 C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
+
+=item 3 C<$withannot>
+
+"true" if annotations are also collected
 
 =back
 
@@ -372,10 +383,15 @@ the repository (check out, file extraction, &hellip;).
 =cut
 
 sub getfilehandle {
-	my ($self, $filename, $releaseid) = @_;
+	my ($self, $filename, $releaseid, $withannot) = @_;
 	warn  __PACKAGE__."::getfilehandle not implemented. Parameters @_";
 	my $fh;
 	return $fh;
+}
+
+sub getrawfilehandle {
+	my $self = shift @_;
+	return $self->getfilehandle(@_);
 }
 
 =head2 C<getfilesize ($pathname, $releaseid)>

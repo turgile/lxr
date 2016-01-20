@@ -206,6 +206,21 @@ sub getfilehandle {
 	return undef;
 }
 
+sub getrawfilehandle {
+	my ($self, $filename, $releaseid) = @_;
+
+	# Simplidied version of getfilehandle as we want "binary" access to content
+	$filename =~ s,^/+,,;
+	my $sha1hashline = $self->_git_oneline ('ls-tree', $releaseid, '--', $filename);
+	if ($sha1hashline =~ m/^\d+ blob ([[:xdigit:]]+)\t.*/) {
+		my $fh = $self->_git_cmd ('cat-file', 'blob', $1);
+		die('Error executing "git cat-file"') unless $fh;
+		binmode $fh;
+		return $fh;
+	}
+	return undef;
+}
+
 sub loadline {
 	my ($self) = @_;
 
