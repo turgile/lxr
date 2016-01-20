@@ -138,7 +138,7 @@ sub checkvalidref {
 	# always return true.
 	# However, the line is left here in case some evolution would
 	# need it
-	#	&&	LXR::Lang::parseable($file)
+	#	&&	LXR::Lang::parseable($file, $releaseid)
 		) {
 		$bad_refs++;
 		'identinvalid'

@@ -508,12 +508,14 @@ sub descexpand {
 			, ('desctext' => sub { return dirdesc($dir . $node, $releaseid); }
 			  )
 			);
-	} else {
+	} elsif (LXR::Lang::parseable($dir.$node, $releaseid)) {
 		return expandtemplate
 			( $templ
 			, ('desctext' => sub { return filedesc($node, $dir, $releaseid); }
 			  )
 			);
+	} else {
+		return '&nbsp;';
 	}
 }
 
@@ -628,7 +630,7 @@ sub direxpand {
 					, 'indextime'   => sub {
 						my $t = indextime(@_,  $node, $dir);
 						if ('-' eq $t) {
-							if (LXR::Lang::parseable($dir.$node)) {
+							if (LXR::Lang::parseable($dir.$node, $releaseid)) {
 								return 'Not valid'
 							};
 							return '-';
@@ -643,7 +645,7 @@ sub direxpand {
 												, $releaseid
 												)
 											)
-									&&	LXR::Lang::parseable($dir.$node)
+									&&	LXR::Lang::parseable($dir.$node, $releaseid)
 									) {
 									'dirindexinvalid'
 								} else {
@@ -869,6 +871,14 @@ sub printfile {
 		printdir($pathname);
 	} else {
 
+		# Avoid UTF-8 sanity errors with non-text files
+		# when tree is stored in a Git repository
+		if	(	$files->isa('LXR::Files::GIT')
+			&&	! LXR::Lang::parseable($pathname, $releaseid)
+			) {
+			$files->{'git-annotations'} = 0;
+			$files->{'git_blame'} = 0;
+		}
 		# Request annotated content (through defined third argument)
 		my $fileh = $files->getfilehandle($pathname, $releaseid, !$raw);
 
@@ -892,7 +902,7 @@ sub printfile {
 								( $pathname
 								, $files->filerev($pathname, $releaseid)
 								)
-					&& LXR::Lang::parseable($pathname)
+					&& LXR::Lang::parseable($pathname, $releaseid)
 					) {
 					print(
 						"<p class=\"error\">\n<i>Warning, cross-references for $pathname need to be fixed.</i>\n</p>\n"
@@ -905,7 +915,7 @@ sub printfile {
 # #	The main difference is explicit notice of non-parsed file
 # 				my $t = indextime(@_,  '', $pathname);
 # 				if ('-' eq $t) {
-# 					if (LXR::Lang::parseable($pathname)) {
+# 					if (LXR::Lang::parseable($pathname, $releaseid)) {
 # 						print(
 # 							"<p class=\"error\">\n<i>Warning, cross-references for $pathname need to be fixed.</i>\n</p>\n"
 # 						);
@@ -942,9 +952,9 @@ sub printfile {
 					$l =~ s/(\n)/$1.next_annot($currev, \$oldrev, \$bg)/ge;
 					print $l;
 				};
-				&$outfun("<pre class=\"filecontent\">\n");
+				print '<pre class="filecontent">';
 				markupfile($fileh, $outfun);
-				&$outfun("</pre>\n");
+				print "</pre>\n";
 			}
 		} else {
 			print(

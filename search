@@ -362,7 +362,7 @@ sub checkvalidref {
 				( $file
 				, $files->filerev($file, $releaseid)
 				)
-		&&	LXR::Lang::parseable($file)
+		&&	LXR::Lang::parseable($file, $releaseid)
 		) {
 		'searchinvalid'
 	} else {

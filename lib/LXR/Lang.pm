@@ -1,4 +1,4 @@
-# -*- tab-width: 4; cperl-indent-level: 4 -*-
+# -*- tab-width: 4 -*-
 ###############################################
 #
 # This program is free software; you can redistribute it and/or modify
@@ -108,13 +108,15 @@ sub new {
 
 	# If it did not succeed, read the first line and try for an interpreter
 	if (!defined $lang) {
+		my $extract;
+		my $fh = $files->getrawfilehandle($pathname, $releaseid);
+		return undef if !defined $fh;
+		read ($fh, $extract, 1024);
+		return undef if &{$config->{'&discard'}}($extract);
 
 		# Try to see if it's a #! script or an emacs mode-tagged file
-		my $fh = $files->getfilehandle($pathname, $releaseid);
-		return undef if !defined $fh;
-		my $line = $fh->getline;
-		($line =~ m/^\#!\s*(\S+)/s)
-		|| ($line =~ m/^.*-[*]-.*?[ \t;]mode:[ \t]*(\w+).*-[*]-/);
+		($extract =~ m/^\#!\s*(\S+)/s)
+		|| ($extract =~ m/^.*-[*]-.*?[ \t;]mode:[ \t]*(\w+).*-[*]-/);
 
 		my $shebang  = $1;
 		my %filetype = %{ $config->{'filetype'} };
@@ -144,7 +146,7 @@ sub new {
 }
 
 
-=head2 C<parseable ($pathname)>
+=head2 C<parseable ($pathname, $releaseid)>
 
 Function C<parseable> return 1 if the designated file can be parsed
 some way or other.
@@ -155,6 +157,11 @@ some way or other.
 
 a I<string> containing the name of the file to parse
 
+=item 2 C<$releaseid>
+
+the release (or version) in which C<$pathname> is expected to
+be found
+
 =back
 
 This a streamlined version of method C<new> where the filename argument
@@ -164,7 +171,7 @@ or the first line of the file against the I<interpreters> list.
 =cut
 
 sub parseable {
-	my ($pathname) = @_;
+	my ($pathname, $releaseid) = @_;
 	my ($lang, $langkey, $type);
 
 	# Try first to find a handler based on the file name
@@ -178,11 +185,13 @@ sub parseable {
 
 	# If it did not succeed, read the first line and try for an interpreter
 	# Try to see if it's a #! script or an emacs mode-tagged file
-	my $fh = $files->getfilehandle($pathname, $releaseid);
+	my $extract;
+	my $fh = $files->getrawfilehandle($pathname, $releaseid);
 	return undef if !defined $fh;
-	my $line = $fh->getline;
-	($line =~ m/^\#!\s*(\S+)/s)
-	|| ($line =~ m/^.*-[*]-.*?[ \t;]mode:[ \t]*(\w+).*-[*]-/);
+	read ($fh, $extract, 1024);
+	return undef if &{$config->{'&discard'}}($extract);
+	($extract =~ m/^\#!\s*(\S+)/s)
+	|| ($extract =~ m/^.*-[*]-.*?[ \t;]mode:[ \t]*(\w+).*-[*]-/);
 
 	my $shebang  = $1;
 	my %inter    = %{ $config->{'interpreters'} };

@@ -273,7 +273,6 @@ sub markupfile {
 
 	my ($fileh, $outfun) = @_;
 	my ($dir) = $pathname =~ m|^(.*/)|;
-	my $graphic = $config->{'graphicfile'};
 
 	#	Every line is tagged with an <A> anchor so that it can be referenced
 	#	and jumped to. The easiest way to create this anchor is to generate
@@ -308,7 +307,7 @@ sub markupfile {
 
 		($btype, $frag) = &LXR::SimpleParse::nextfrag;
 
-		&$outfun(join($line++, @ltag)) if defined($frag);
+		&$outfun("\n".join($line++, @ltag)) if defined($frag);
 
 		#	Loop until nextfrag returns no more fragments
 		while (defined($frag)) {
@@ -353,7 +352,7 @@ sub markupfile {
 			&$outfun($ofrag);
 		}
 
-	} elsif ($pathname =~ m/\.($graphic)$/) {
+	} elsif ($pathname =~ m/\.$config->{'graphicfile'}$/) {
 	# Graphic files are detected by their extension
 		&$outfun('<b>Image: </b>');
 		&$outfun('<img src="'
@@ -374,41 +373,59 @@ sub markupfile {
 			&$outfun(join($line++, @ltag) . $_);
 		}
 	} else {
-		return unless defined($_ = $fileh->getline);
+		my $rfh = $files->getrawfilehandle($pathname, $releaseid);
+		die "Can't get raw filehandle for $pathname in version $releaseid,"
+			unless $rfh;
+		my $extract;
+		read ($rfh, $extract, 1024);
+		my $mime = &{$config->{'&mimetype'}}($extract);
 
+		if ('image/' eq substr($mime, 0, 6)) {
+	# Same as above
+			&$outfun("<b>$mime: </b>");
+			&$outfun('<img src="'
+					. $config->{'sourceaccess'}
+					. '/' . $config->variable('v')
+					. $pathname
+					. '" border="0"'
+					. " alt=\"No access to $pathname or browser cannot display this format\">");
+
+		} elsif	(	'text/' ne substr($extract, 0, 5)
+				&&	substr($extract, 0, 2) ne '#!'
+				&&	$extract !~ m/-\*-.*-\*-/
+				&&	(	$extract =~ m/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F\xFF]/
+					||	(	$extract !~ m/(.*)\R/	# no newline
+						||	length($1) > 132
+						)
+					)
+				) {
 		# If it's not a script or something with an Emacs spec header and
-		# the first line is very long or containts control characters...
-		if	(	substr($_, 0, 2) ne '#!'
-			&&	! m/-\*-.*-\*-/
-			&&	(	length($_) > 132
-				||	m/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]/
-				)
-			) {
-			# We postulate that it's a binary file.
-			&$outfun('<ul><b>Binary File: ');
+		# the first line is very long or contains control characters...
+		# We postulate that it's a binary file.
+			&$outfun("<ul><b>Binary File ($mime): ");
 			# jwz: URL-quote any special characters.
 			my $uname = $pathname;
 			$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 
-			&$outfun	( '<a href="'
-						. $config->{'virtroot'}
-						. 'source'
-						. $uname
-						. &urlargs('_raw=1')
-						. '">'
-						);
-			&$outfun("$pathname</a></b>");
-			&$outfun('</ul>');
+			&$outfun(fileref($pathname, '', $pathname, 0, '_raw=1'));
+			&$outfun('</b>');
 
 		} else {
 		# Unqualified text file, do minimal work
-			do {
+		# If it comes from a Git repository, revert what we did in printfile()
+			if ($files->isa('LXR::Files::GIT')) {
+				$files->{'git_blame'} = $config->{'sourceparams'}{'git_blame'};
+				$files->{'git_annotations'} = $config->{'sourceparams'}{'git_annotations'}
+						|| $config->{'sourceparams'}{'git_blame'};
+			}
+			&$outfun("\n");
+			while (defined($_ = $fileh->getline)) {
 				&LXR::SimpleParse::untabify($_);
 				&markspecials($_);
 				&freetextmarkup($_);
 				&htmlquote($_);
 				&$outfun(join($line++, @ltag) . $_);
-			} while (defined($_ = $fileh->getline));
+			};
 
 		}
 	}
