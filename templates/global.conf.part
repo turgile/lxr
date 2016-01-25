@@ -159,7 +159,7 @@
 		# Which file extensions are associated with which icon
 		# Below is an example using 'Oxygen' theme available with KDE
 		# small-icons/ is a symbolic link to
-		#		 /usr/share/icons/oxygen/22x22/mimetypes/
+		#		 /usr/share/icons/oxygen/22x22/
 		# (This location is valid for Fedora distributions,
 		# check for others)
 # 	, 'iconfolder' => 'small-icons/'
