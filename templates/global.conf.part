@@ -73,6 +73,12 @@
 	, 'hgpath'  => '/bin:/usr/local/bin:/usr/bin:/usr/sbin'
 	, 'svnpath' => '/bin:/usr/local/bin:/usr/bin:/usr/sbin'
 
+		# Path to "magic" file to guess file content
+		# CAUTION!
+		#	This is a Fedora path; may be different under
+		#	other distributions.
+	, 'magicmime' => '/usr/share/misc/magic'
+
 		# Computer DNS names subsection #
 		#================================
 #@IF	'H' ne "%_routing%" && 'P' ne "%_routing%"
