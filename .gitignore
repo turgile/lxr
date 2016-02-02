@@ -19,8 +19,10 @@
 .kdev*
 
 
-# Generated
-# None with Perl
+# Generated (in case the working directory also serves as proof-of-concept
+# server)
+.htaccess
+lxr.conf
 
 
 # Temporaries
