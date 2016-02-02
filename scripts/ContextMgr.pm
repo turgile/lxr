@@ -585,6 +585,8 @@ sub contextServer {
 		print "${VTyellow}Reminder:${VTnorm} Since you chose to give a different hostname\n";
 		print "          to every tree, you'll be asked for the hostname when describing\n";
 		print "          yours trees.\n";
+		print "${VTred}IMPORTANT!${VTnorm} You'll have to manually edit the server configuration files\n";
+		print "           to erase // prefix and port suffix from host descriptors.\n";
 		print "\n";
 		goto END_HOST;
 	}
