@@ -554,8 +554,8 @@ FINAL:
 
 #	Create a filter function able to discard non-text files
 	my $magic = File::MMagic->new	( -f $self->{'magicmime'}
-									? ($self->{'magicmime'})
-									: -f 'lib/magic.mime' ? ('lib/magic.mime') : ()
+									? $self->{'magicmime'}
+									: -f 'lib/magic.mime' ? 'lib/magic.mime' : ()
 									);
 	$self->{'&discard'} = sub { 'text/' ne substr($magic->checktype_contents(@_[0]), 0, 5) };
 #	Same, to return the complete MIME type

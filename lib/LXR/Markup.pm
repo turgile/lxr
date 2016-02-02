@@ -351,17 +351,10 @@ sub markupfile {
 
 			&$outfun($ofrag);
 		}
+		return;
+	}
 
-	} elsif ($pathname =~ m/\.$config->{'graphicfile'}$/) {
-	# Graphic files are detected by their extension
-		&$outfun('<b>Image: </b>');
-		&$outfun('<img src="'
-				. $config->{'sourceaccess'}
-				. '/' . $config->variable('v')
-				. $pathname
-				. '" border="0"'
-				. " alt=\"No access to $pathname or browser cannot display this format\">");
-	} elsif ($pathname =~ m|/CREDITS$|) {
+	if ($pathname =~ m|/CREDITS$|) {
 	# Special case
 		while (defined($_ = $fileh->getline)) {
 			&LXR::SimpleParse::untabify($_);
@@ -372,63 +365,86 @@ sub markupfile {
 			s/^(W:\s+)(.*)/$1<a href=\"$2\">$2<\/a>/gm;
 			&$outfun(join($line++, @ltag) . $_);
 		}
-	} else {
+		return;
+	}
+
+	my $isgraphic = $pathname =~ m/\.$config->{'graphicfile'}$/;
+	# Graphic files detected by their extension
+	my ($extract, $mime);
+	if (! $isgraphic) {
 		my $rfh = $files->getrawfilehandle($pathname, $releaseid);
 		die "Can't get raw filehandle for $pathname in version $releaseid,"
 			unless $rfh;
-		my $extract;
 		read ($rfh, $extract, 1024);
-		my $mime = &{$config->{'&mimetype'}}($extract);
-
-		if ('image/' eq substr($mime, 0, 6)) {
-	# Same as above
-			&$outfun("<b>$mime: </b>");
-			&$outfun('<img src="'
+		$mime = $config->{'&mimetype'}($extract);
+		$isgraphic = 'image/' eq substr($mime, 0, 6);
+	# Graphic files detected on their content
+	}
+	if ($isgraphic) {
+		print '</pre>';
+		if ($files->isa('LXR::Files::Plain')) {
+			print '<p><b>Image';
+			if ($mime) {
+				print ' </b>', $mime, '<b>';
+			}
+			print ':</b> ';
+			print	'<img src="'
 					. $config->{'sourceaccess'}
 					. '/' . $config->variable('v')
 					. $pathname
 					. '" border="0"'
-					. " alt=\"No access to $pathname or browser cannot display this format\">");
+					. " alt=\"No access to $pathname or browser cannot display this format\">"
+					;
+		} else {
+			print '<p class=error>Sorry, no graphic file display under VCS storage!</p>', "\n";
+			print '<p>Alternatively, you may download it and locally play with it: ';
+			print fileref($pathname, '', $pathname, 0, '_raw=1');
+			if ($mime) {
+				print ' (<em>', $mime, '</em>)';
+			}
+		}
+		print '</p><pre>', "\n";
+		return;
+	}
 
-		} elsif	(	'text/' ne substr($extract, 0, 5)
-				&&	substr($extract, 0, 2) ne '#!'
-				&&	$extract !~ m/-\*-.*-\*-/
-				&&	(	$extract =~ m/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F\xFF]/
-					||	(	$extract !~ m/(.*)\R/	# no newline
-						||	length($1) > 132
-						)
-					)
-				) {
+	if	(	'text/' ne substr($mime, 0, 5)
+		&&	substr($extract, 0, 2) ne '#!'
+		&&	$extract !~ m/-\*-.*-\*-/
+		&&	(	$extract =~ m/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F\xFF]/
+			||	(	$extract !~ m/(.*)\R/	# no newline
+				||	length($1) > 132
+				)
+			)
+		) {
 		# If it's not a script or something with an Emacs spec header and
 		# the first line is very long or contains control characters...
 		# We postulate that it's a binary file.
-			&$outfun("<ul><b>Binary File ($mime): ");
-			# jwz: URL-quote any special characters.
-			my $uname = $pathname;
-			$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
+		print '</pre><p><b>Binary File </b>(', $mime, ')<b>:</b> ';
+		# jwz: URL-quote any special characters.
+		my $uname = $pathname;
+		$uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 
-			&$outfun(fileref($pathname, '', $pathname, 0, '_raw=1'));
-			&$outfun('</b>');
+		print fileref($pathname, '', $pathname, 0, '_raw=1');
+		print '</p><pre>', "\n";
+		return;
+	}
 
-		} else {
 		# Unqualified text file, do minimal work
 		# If it comes from a Git repository, revert what we did in printfile()
-			if ($files->isa('LXR::Files::GIT')) {
-				$files->{'git_blame'} = $config->{'sourceparams'}{'git_blame'};
-				$files->{'git_annotations'} = $config->{'sourceparams'}{'git_annotations'}
-						|| $config->{'sourceparams'}{'git_blame'};
-			}
-			&$outfun("\n");
-			while (defined($_ = $fileh->getline)) {
-				&LXR::SimpleParse::untabify($_);
-				&markspecials($_);
-				&freetextmarkup($_);
-				&htmlquote($_);
-				&$outfun(join($line++, @ltag) . $_);
-			};
-
-		}
+	if ($files->isa('LXR::Files::GIT')) {
+		$files->{'git_blame'} = $config->{'sourceparams'}{'git_blame'};
+		$files->{'git_annotations'} = $config->{'sourceparams'}{'git_annotations'}
+				|| $config->{'sourceparams'}{'git_blame'};
 	}
+	&$outfun("\n");
+	while (defined($_ = $fileh->getline)) {
+		&LXR::SimpleParse::untabify($_);
+		&markspecials($_);
+		&freetextmarkup($_);
+		&htmlquote($_);
+		&$outfun(join($line++, @ltag) . $_);
+	};
+
 }
 
 1;

@@ -355,13 +355,6 @@ my $printdirbanner;	# Flag to print again directory banner
 my $repeatbannerevery = 25;
 my $repeatbannercountdown = $repeatbannerevery;
 
-my $magicfile = $global->{'magicmime'};
-our $filetype = File::MMagic->new
-		( -f $magicfile
-		? ($magicfile)
-		: -f 'lib/magic.mime' ? ('lib/magic.mime') : ()
-		);
-
 my $hostname = $global->{'host_names'}[0];	# Global host name
 if ($option{'url'}) {	# Single 'url'
 	@config = (1);		# Fake list to prevent looping
@@ -607,7 +600,7 @@ sub directorytreetraversal {
 										);
 			} $files->getdir($pathname, $releaseid);
 		$index->forcecommit();
-	} elsif (!exists $binaryfiles{$pathname}) {
+	} elsif (!exists $binaryfiles{$releaseid}{$pathname}) {
 		my $didprocess;
 		if	($autoversionflag) {
 		# Some 'Files' objects need this variable properly set to
@@ -620,11 +613,15 @@ sub directorytreetraversal {
 					$printdirbanner = 1;
 					dirbannerprint('**=', $releaseid, $dirname, '');
 				}
-				if (1 == $autoversionflag) {		# Only in 1st unthreaded pass
+				if (1 == $autoversionflag) {		# Only in first pass
 					$versionset{$releaseid} = '';	# remember this version
 				}
 				my $didoneprocess = &$process_sub($pathname, $releaseid, $config, $files, $index);
-				$repeatbannercountdown-- if $didoneprocess;
+				if ($didoneprocess) {
+					$repeatbannercountdown--;
+				} else {
+					$binaryfiles{releaseid}{$pathname} = 1;
+				}
 				$didprocess //= $didoneprocess;
 			}
 		} else {
@@ -648,9 +645,9 @@ sub feedswish {
 		  $files->getdir($pathname, $releaseid);
 	} else {
 		if (my $fh = $files->getfilehandle($pathname, $releaseid)) {
-			if ($files->getfilesize($pathname, $releaseid) > 0
-				&& $filetype->checktype_filehandle($fh) =~ m%(text|message)/%)
-			{
+			if	(	$files->getfilesize($pathname, $releaseid) > 0
+				&&	LXR::Lang::parseable($pathname, $releaseid)
+				) {
 				print(STDERR "&&> $pathname $releaseid \n");
 				print $filelist "$pathname\n";
 				my $contents = $files->getfile($pathname, $releaseid);
@@ -661,7 +658,7 @@ sub feedswish {
 					, "\n", $contents
 					);
 			} else {
-				$binaryfiles{$pathname} = 1;
+				$binaryfiles{$releaseid}{$pathname} = 1;
 			}
 			close($fh);
 		}
