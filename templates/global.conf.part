@@ -77,7 +77,15 @@
 		# CAUTION!
 		#	This is a Fedora path; may be different under
 		#	other distributions.
-	, 'magicmime' => '/usr/share/misc/magic'
+	# # # BUG # # #
+	# A bug in File::MMagic version 1.27 prevents from using this
+	# system magic file because it starts with a newline.
+	# Parameter is commented out. Your alternate choice is:
+	# 1) remove the initial offending empty lines,
+	# 2) use another file without initial blank lines,
+	# 3) default to the old magic file shipping with the release,
+	# 4) work without any magic file to revert to internal tables.
+#	, 'magicmime' => '/usr/share/misc/magic'
 
 		# Computer DNS names subsection #
 		#================================
