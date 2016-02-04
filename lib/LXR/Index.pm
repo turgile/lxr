@@ -34,7 +34,7 @@ use strict;
 our (%files, %symcache, %cntcache);
 our $database_id = 0;	# DB counter incremented by genxref or httpinit
 	# This variable is incremented every time a new DB is opened
-	# so that objects 'or procedures) which cache their initialisation
+	# so that objects (or procedures) which cache their initialisation
 	# are able to detect DB has change and can synchronise to a fresh
 	# new DB.
 
@@ -94,7 +94,7 @@ method descriptions.
 #	only once and do not contribute to the running time behaviour.
 
 sub new {
-	my ($self, $config) = @_;
+	my ($self, $config, $write_enabled) = @_;
 	my $index;
     
 	%files    = ();
@@ -109,16 +109,16 @@ sub new {
 		my $dbname = uc($1);
 		if ('MYSQL' eq $dbname) {
 			require  LXR::Index::Mysql;
-			$index = LXR::Index::Mysql->new($config);
+			$index = LXR::Index::Mysql->new($config, $write_enabled);
 		} elsif ('PG' eq $dbname) {
 			require  LXR::Index::Postgres;
-			$index = LXR::Index::Postgres->new($config);
+			$index = LXR::Index::Postgres->new($config, $write_enabled);
 		} elsif ('SQLITE' eq $dbname) {
 			require  LXR::Index::SQLite;
-			$index = LXR::Index::SQLite->new($config);
+			$index = LXR::Index::SQLite->new($config, $write_enabled);
 		} elsif ('ORACLE' eq $dbname) {
 			require  LXR::Index::Oracle;
-			$index = LXR::Index::Oracle->new($config);
+			$index = LXR::Index::Oracle->new($config, $write_enabled);
 		} else {
 			die 'Can\'t find database ' . $config->{'dbname'};
 		}
@@ -126,6 +126,7 @@ sub new {
 		die 'Can\'t find database ' . $config->{'dbname'};
 	}
 	$index->{'config'} = $config;
+	$index->{'write_enabled'} = 1 if $write_enabled;
 
 	# Common syntax transactions
 	# Care is taken not to replace specific syntax transactions which

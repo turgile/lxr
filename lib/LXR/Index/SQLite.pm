@@ -41,7 +41,7 @@ our @ISA = ('LXR::Index');
 #	only once and do not contribute to the running time behaviour.
 
 sub new {
-	my ($self, $config) = @_;
+	my ($self, $config, $write_enabled) = @_;
 
 	$self = bless({}, $self);
 	$self->{dbh} = DBI->connect($config->{'dbname'})
@@ -73,8 +73,10 @@ sub new {
 #	These counters provide unique record ids for
 #	files, symbols and language types.
 
-	$self->uniquecountersinit($prefix);
+	if ($write_enabled) {
+		$self->uniquecountersinit($prefix);
 	# The final $x_num will be saved in final_cleanup before disconnecting
+	}
 
 	return $self;
 }
@@ -104,8 +106,10 @@ sub purgeall {
 sub final_cleanup {
 	my ($self) = @_;
 
-	$self->uniquecounterssave();
-	$self->{dbh}->commit;
+	if (exists($self->{'write_enabled'})) {
+		$self->uniquecounterssave();
+		$self->{dbh}->commit;
+	}
 	$self->{'purge_definitions'} = undef;
 	$self->{'purge_usages'} = undef;
 	$self->{'purge_langtypes'} = undef;

@@ -404,7 +404,7 @@ foreach my $treedescr (@config) {
 	die "${VTred}Can't create file access object ${VTnorm}" . $config->{'sourceroot'}
 		if !defined($files);
 	$LXR::Index::database_id++;		# Changing database
-	$index = LXR::Index->new($config);
+	$index = LXR::Index->new($config, 1);	# write mode requested
 	die "${VTred}Can't create Index ${VTnorm}" . $config->{'dbname'}
 		if !defined($index);
 

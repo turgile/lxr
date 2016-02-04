@@ -26,7 +26,7 @@ use LXR::Common;
 our @ISA = ('LXR::Index');
 
 sub new {
-	my ($self, $config) = @_;
+	my ($self, $config, $write_enabled) = @_;
 
 	$self = bless({}, $self);
 	$self->{dbh} = DBI->connect	( $config->{'dbname'}
@@ -42,6 +42,7 @@ sub new {
 
 	my $prefix = $config->{'dbprefix'};
 
+	if ($write_enabled) {
 #	MySQL may be run with its built-in unique record id management
 #	mechanisms. There is only a small performance improvement
 #	between the most efficient variant and user management.
@@ -60,41 +61,42 @@ sub new {
 #			Comment out the unused ones.
 
 	# Variant B
-#B	$self->{'last_auto_val'} = 
-#B		$self->{dbh}->prepare('select last_insert_id()');
-	# End of variants
+#B		$self->{'last_auto_val'} = 
+#B			$self->{dbh}->prepare('select last_insert_id()');
+	# End of prefix for variant B
 
-	# Variant A & B
-#AB	$self->{'files_insert'} =
-#AB		$self->{dbh}->prepare
-#AB			( "insert into ${prefix}files"
-#AB			. ' (filename, revision, fileid)'
-#AB			. ' values (?, ?, NULL)'
-#AB			);
+	# Variants A & B
+#AB		$self->{'files_insert'} =
+#AB			$self->{dbh}->prepare
+#AB				( "insert into ${prefix}files"
+#AB				. ' (filename, revision, fileid)'
+#AB				. ' values (?, ?, NULL)'
+#AB				);
 #AB
-#AB	$self->{'symbols_insert'} =
-#AB		$self->{dbh}->prepare
-#AB			( "insert into ${prefix}symbols"
-#AB			. ' (symname, symid, symcount)'
-#AB			. ' values ( ?, NULL, 0)'
-#AB			);
+#AB		$self->{'symbols_insert'} =
+#AB			$self->{dbh}->prepare
+#AB				( "insert into ${prefix}symbols"
+#AB				. ' (symname, symid, symcount)'
+#AB				. ' values ( ?, NULL, 0)'
+#AB				);
 #AB
-#AB	$self->{'langtypes_insert'} =
-#AB		$self->{dbh}->prepare
+#AB		$self->{'langtypes_insert'} =
+#AB			$self->{dbh}->prepare
 #AB			( "insert into ${prefix}langtypes"
-#AB			. ' (typeid, langid, declaration)'
-#AB			. ' values (NULL, ?, ?)'
-#AB			);
-	# End of variants
+#AB				. ' (typeid, langid, declaration)'
+#AB				. ' values (NULL, ?, ?)'
+#AB				);
+	# End of variants A & B
 
-	$self->{'purge_all'} = $self->{dbh}->prepare
-		( "call ${prefix}PurgeAll()"
-		);
+		$self->{'purge_all'} = $self->{dbh}->prepare
+			( "call ${prefix}PurgeAll()"
+			);
 
 	# Variant U
-	$self->uniquecountersinit($prefix);
+		$self->uniquecountersinit($prefix);
 	# The final $x_num will be saved in final_cleanup before disconnecting
 	# End of variants
+	}
 
 	return $self;
 }
@@ -187,13 +189,15 @@ sub purgeall {
 sub final_cleanup {
 	my ($self) = @_;
 
+	if (exists($self->{'write_enabled'})) {
 	# Variant U
-	$self->uniquecounterssave();
+		$self->uniquecounterssave();
 	# End of variants
-	$self->commit();
+		$self->commit();
 	# Variant B
-#B 	$self->{'last_auto_val'} = undef;
+#B 		$self->{'last_auto_val'} = undef;
 	# End of variants
+	}
 	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
 }

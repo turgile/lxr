@@ -38,7 +38,7 @@ use LXR::Common;
 our @ISA = ('LXR::Index');
 
 sub new {
-	my ($self, $config) = @_;
+	my ($self, $config, $write_enabled) = @_;
 
 	$self = bless({}, $self);
 
