@@ -47,10 +47,19 @@ sub new {
 	$self->{dbh} = DBI->connect($config->{'dbname'})
 	or die "Can't open connection to database: $DBI::errstr\n";
 	my $prefix = $config->{'dbprefix'};
+	if ($write_enabled) {
 #	SQLite is forced into explicit commit mode as the medium-sized
 #	test cases have shown a 40-times (!) performance improvement
 #	over auto commit.
-	$self->{dbh}{'AutoCommit'} = 0;
+		$self->{dbh}{'AutoCommit'} = 0;
+	} else {
+#	To really remove all writes from SQLite operation, auto commit
+#	mode must be activated. Otherwise, even with read transactions
+#	such as SELECT, SQLite tries to write into its cache. Auto
+#	commit does not matter when browsing as Perl interpretation
+#	dominates execution time.
+		$self->{dbh}{'AutoCommit'} = 1;
+	}
 
 	$self->{'purge_all'} = undef;	# Prevent parsing the common one
 	$self->{'purge_definitions'} =
