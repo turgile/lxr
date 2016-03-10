@@ -47,6 +47,7 @@ Andre-Littoz <ajlittoz@users.sf.net>
 	"	SQLite backend & many DB patches
 	"	lighttpd, nginx, Cherokee, thtpd web-server support
 	"	Generic parser optimisation
+	"	Conversion of CVS repository to Git
 
 
 -------------------------------------------------------------------------

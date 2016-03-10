@@ -3,6 +3,64 @@ which could impact your existing trees.
 
 If they result in an incompatibility, you must reindex your tree.
 
+        =======================
+        LXR 2.0.3  -->  LXR 2.1
+        =======================
+
+Bug fix release, one feature added, no change in manuals.
+
+Tcl language parser added
+------------
+
+source
+------
+Fix author's name truncation (when source file comes from a VCS) to better
+detect character boundary (inluding diacritics), but diff still not adjusted
+Sort files case-insensitively in directory listing as this seems more useful
+to users
+Improve non-text file screening to avoid UTF-8 fatal error
+
+DB backends (suggested by Juraj Variny)
+-----------
+Index usages table on symbol and file (instead of only symbol) to improve
+performance
+Add table optimisation transaction at end of DB loading
+
+Git storage engine
+------------------
+Improved support and configuration
+
+genxref
+-------
+Make sure the version requested by --version= option exists, otherwise
+genxref would index an empty tree without error notification
+
+doc/HACKING
+-----------
+Fix incorrect link to extracted inline documentation on LXR SourceForge site
+
+doc/INSTALL, BUGS
+-----------------
+Change .shtml page URL to .php for LXR site
+
+lighttpd configuration
+----------------------
+LXR becomes a virtual host to facilitate integration with existing site
+Consistent configuration across URL style choices
+
+Apache configuration
+--------------------
+Configuration files have been made independent of 2.2/2.4 changes; upgrading or
+downgrading Apache version is even possible without reconfiguring
+
+Internal
+--------
+Version management converted to Git, causing changes to avoid errors about
+UTF-8 sanity when accessing files in binary mode (anyway, character set
+management is clumsy, if not faulty, and should be redesigned)
+ChangeLog no longer generated during release procedure (unless users request
+it, it will not be provided from now on)
+
         =========================
         LXR 2.0.2  -->  LXR 2.0.3
         =========================
