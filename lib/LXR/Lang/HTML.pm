@@ -1,9 +1,8 @@
 # -*- tab-width: 4 -*-
 ###############################################
 #
-# Implements generic support for any language that ectags can parse.
-# This may not be ideal support, but it should at least work until
-# someone writes better support.
+# Enhances the support for the HTML language over that provided by
+# Generic.pm
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
