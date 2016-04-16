@@ -79,22 +79,50 @@ sub filedesc {
 	my $fh;
 	my $linecount = 0;
 	my $copy = '';
-	my $desc = '';
+	my $desc = '&nbsp;';	#first as a flag for source code, then description
 	my $maxlines = 40;    #only look at the beginning of the file
 
 	#ignore files that aren't source code
+# NOTE: commented out lines below are an attempt to extract a relevant
+#		description for any file which can be parsed by LXR.
+#		The file extension is checked against those mentioned in
+#		filetype.conf. If check is positive, go ahead.
+#	Unfortunately, extracting code is too C-related.
+#		Submitting a Perl or shel script results in comments being
+#		wiped out because pruning a not "well-behaved" file begins
+#		at the first preprocessor directive (or rather at the first
+#		# sign, which is a comment delimiter).
+#	Consequently, description extractors must be tailored for
+#		target languages. This could be an extension in the same
+#		way the parser is designated in filetype.conf.
+#
+# 	my $extn;	#file extension for which a scanner exists
+# 	foreach my $lk (keys %{ $config->{'filetype'} }) {
+# 		$extn = $config->{'filetype'}{$lk}[1];
+# 		if ($filename =~ m/$extn/) {
+# 			$desc = undef;
+# 			last;
+# 		}
+# 	}
+# 	if (defined($desc)) {
+# 		return ('&nbsp;')
+# 	}
+# ### end of experimental block ###
 	if	(	(substr($filename, -2) ne '.c')
 		&&	(substr($filename, -2) ne '.h')
 		&&	(substr($filename, -3) ne '.cc')
 		&&	(substr($filename, -3) ne '.cp')
 		&&	(substr($filename, -4) ne '.cpp')
 		&&	(substr($filename, -5) ne '.java')
+		&&	(substr($filename, -3) ne '.cs')
 		) {
 	return ('&nbsp;');
 	}
 
 	if ($fh = $files->getfilehandle($dir . $filename, $releaseid)) {
 		while (<$fh>) {
+			next if 1 == $. && substr($_ , 0, 2) eq '#!';
+			next if 2 >= $. && $_ =~  m/^.*-\*-.*-\*-/;
 			$desc = $desc . $_;
 			if ($linecount++ > 60) {
 				last;
@@ -219,7 +247,9 @@ sub filedesc {
 	$desc =~ s#\n\s*/\*+[\s\*]+\*/\n#\n#sg;
 
 	# Don't bother to continue if there aren't any comments here
-	if (-1 == index($desc, '/*')) {
+	if	(	-1 == index($desc, '/*')	# C-family
+		&&	-1 == index($desc, '#')		# shell, Perl, ...
+		) {
 		return ('&nbsp;');
 	}
 
