@@ -280,17 +280,17 @@ sub indexfile {
 		while ($_ = shift(@decls)) {
 			chomp;
 
-			my ($sym, $file, $line, $type, $ext) = split(/\t/o, $_);
-			$line =~ s/;\"$//o;  #" fix fontification
-			$ext  =~ m/language:(\w+)/o;
+			my ($sym, $file, $line, $type, $ext) = split(/\t/, $_);
+			$line =~ s/;\"$//;  #" fix fontification
+			$ext  =~ m/language:(\w+)/;
 			$type = $typeid->{$type};
 			if (!defined $type) {
-				print 'Warning: Unknown type ', (split(/\t/o, $_))[3], "\n";
+				print 'Warning: Unknown type ', (split(/\t/, $_))[3], "\n";
 				next;
 			}
 
 			# TODO: can we make it more generic in parsing the extension fields?
-			if (defined($ext) && $ext =~ m/^(struct|union|class|enum):(.*)/o) {
+			if (defined($ext) && $ext =~ m/^(struct|union|class|enum):(.*)/) {
 				$ext = $2;
 				$ext =~ s/::<anonymous>//go;
 				$ext = uc($ext) if $insensitive;
@@ -388,9 +388,9 @@ sub referencefile {
 				print "BTYPE was: $btype\n";
 			}
 		} else {
-			@lines = split(/\n/o, $frag, -1);
+			@lines = split(/\n/, $frag, -1);
 			foreach $l (@lines) {
-				foreach $string ($l =~ m/($identdef)\b/og) {
+				foreach $string ($l =~ m/($identdef)\b/g) {
 			#		print "considering $string\n";
 					$string = uc($string) if $insensitive;
 					if (!$self->isreserved($string)) {

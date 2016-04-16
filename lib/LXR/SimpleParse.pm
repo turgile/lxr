@@ -236,7 +236,7 @@ sub nextfrag {
 			last if !defined($line);
 			# Interpret an Emacs-style tab specification
 			if	(  $. <= 2		# Line # 1 or 2?
-				&& $line =~ m/^.*-\*-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-\*-/o
+				&& $line =~ m/^.*-\*-.*?[ \t;]tab-width:[ \t]*([0-9]+).*-\*-/
 				) {
 				if ($1) {	# make sure there really is a non-zero tabwidth
 					$tabwidth = $1;
@@ -299,7 +299,7 @@ sub nextfrag {
 
 #	Have we already started a region?
 		if	(	defined($frag)				# something in output buffer?
-			&&	$frag !~ m/^[\xFF\n]*$/o	# not just newlines?
+			&&	$frag !~ m/^[\xFF\n]*$/	# not just newlines?
 			) {
 #	We already have something in the buffer.
 #	Is it a named category?
@@ -334,7 +334,7 @@ sub nextfrag {
 					unshift(@frags, $next) if $next ne '';	# Requeue last part
 					$next = $2;			# Delimiter
 					$frag .= $1;		# Stuff part before delim
-					last if $frag !~ m/^[\xFF\n]*$/o;
+					last if $frag !~ m/^[\xFF\n]*$/;
 					$frag .= $next;		# Fragment was "empty"
 					$next = undef;
 				} else {
