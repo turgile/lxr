@@ -303,6 +303,7 @@ sub swishsearch {
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
   my $swishCommand =  $config->{'swishbin'}
 					. ' -f ' . $swishIndex
+					. ' -s swishdocpath'
 					. ' -w \'(' . $searchtext . ')\''
 					;
   my $ret = `$swishCommand`;
