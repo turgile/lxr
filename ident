@@ -422,7 +422,7 @@ sub defsexpand {
 
 	my @defs  = $index->symdeclarations($identifier, $releaseid);
 	my @idefs = $index->symdeclarations(uc($identifier), $releaseid);
-	return '' if (scalar(@defs)+scalar(@idefs) == 0);
+	return '<h2>No definition found</h2>' if (scalar(@defs)+scalar(@idefs) == 0);
 
 	my %defs;	# Quich access to native-case definition, key is file
 	foreach my $i (@defs) {	# Group all definitions from a file
@@ -455,6 +455,8 @@ NATIVE_CASE:	# Remove uppercase duplicates
 			,	( 'refs'	=> sub { refsexpand (@_, \@defs) }
 				, 'occurs'	=> sub { scalar(@defs) }
 				, 'filehits'=> sub { $file_hits }
+				, 'identifier'		=> sub { $_ = $identifier; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
+				, 'identifier_escaped'=> sub { $_ = $identifier; s/&/&amp;/g; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 				, 'indexwarning' => sub { expandwarning(@_) }
 				)
 			);
@@ -495,7 +497,7 @@ sub usesexpand {
 	return '' if $defonly;
 	my @uses  = $index->symreferences($identifier, $releaseid);
 	my @iuses = $index->symreferences(uc($identifier), $releaseid);
-	return '' if (scalar(@uses)+scalar(@iuses) == 0);
+	return '<h2>No usage found</h2>' if (scalar(@uses)+scalar(@iuses) == 0);
 
 	my %uses;	# Quich access to native-case usages, key is file
 	foreach my $i (@uses) {	# Group all usages from a file
@@ -525,6 +527,8 @@ NATIVE_CASE:	# Remove uppercase duplicates
 			,	( 'refs'	=> sub { refsexpand (@_, \@uses) }
 				, 'occurs'	=> sub { scalar(@uses) }
 				, 'filehits'=> sub { $file_hits }
+				, 'identifier'		=> sub { $_ = $identifier; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
+				, 'identifier_escaped'=> sub { $_ = $identifier; s/&/&amp;/g; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 				, 'indexwarning' => sub { expandwarning(@_) }
 				)
 			);
