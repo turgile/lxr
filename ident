@@ -420,6 +420,7 @@ sub defsexpand {
 	my $templ = shift;
 	my $ret;
 
+	return '' unless $identifier;
 	my @defs  = $index->symdeclarations($identifier, $releaseid);
 	my @idefs = $index->symdeclarations(uc($identifier), $releaseid);
 	return '<h2>No definition found</h2>' if (scalar(@defs)+scalar(@idefs) == 0);
@@ -494,7 +495,7 @@ sub usesexpand {
 	my $templ = shift;
 	my $ret   = '';
 
-	return '' if $defonly;
+	return '' if $defonly || !$identifier;
 	my @uses  = $index->symreferences($identifier, $releaseid);
 	my @iuses = $index->symreferences(uc($identifier), $releaseid);
 	return '<h2>No usage found</h2>' if (scalar(@uses)+scalar(@iuses) == 0);
