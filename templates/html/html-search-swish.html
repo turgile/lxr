@@ -99,12 +99,14 @@ $variables{<input type="hidden" name="$variable" value="$value">
 	(<a href="http://swish-e.org/docs/swish-search.html" target="_blank">Full
 	search syntax documentation</a>)
 </p>
-<p>
-	$maxhits_message
-	$resultcount files found.
-</p>
+<div $noquery>
+	<hr>
+	<p>
+		$maxhits_message
+		$resultcount files found.
+	</p>
    
-<h2>Results for <span class="searchident">$searchtext</span></h2>
+	<h2>Results for <span class="searchident">$searchtext</span></h2>
 
 	<table class="searchref">
 		<thead>
@@ -120,3 +122,4 @@ $results{			<tr>
 			</tr>
 }		</tbody>
 	</table>
+</div>

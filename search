@@ -585,6 +585,7 @@ sub search {
 			, 'casesensitivechecked'=> sub { $casesensitive ? 'checked' : '' }
 			, 'varbtnaction'		=> sub { varbtnaction(@_, 'search') }
 			, 'urlargs'				=> sub { urlexpand('-', 'search') }
+			, 'noquery'				=> sub { return 'hidden' if $searchtext eq '' && $filetext eq '' }
 			, 'maxhits_message'		=> sub {
 				return @results == $maxhits
 				  ? "<b>Too many hits, displaying first $maxhits</b><br>"

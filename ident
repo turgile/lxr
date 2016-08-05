@@ -567,6 +567,7 @@ sub printident {
 				, 'checked'			=> sub { $defonly ? 'checked="checked"' : '' }
 				, 'varbtnaction'	=> sub { varbtnaction(@_, 'ident') }
 				, 'urlargs'			=> sub { urlexpand('-', 'ident') }
+				, 'noquery'				=> sub { return 'hidden' if !$identifier }
 				, 'defs'			=> \&defsexpand
 				, 'uses'			=> \&usesexpand
 				)

@@ -98,13 +98,14 @@ and can be used for building simple regex.
 	Powered by <a href="http://webglimpse.net" target="_blank">Glimpse</a>.
 	(<a href="http://webglimpse.net/docs/tips.html">Tips for search syntax.</a>)
 </p>
-<hr>
-<p>
-	$maxhits_message
-	$resultcount occurences found.
-</p>
-   
-<h2>Results for <span class="searchident">$searchtext</span></h2>
+<div $noquery>
+	<hr>
+	<p>
+		$maxhits_message
+		$resultcount occurences found.
+	</p>
+	
+	<h2>Results for <span class="searchident">$searchtext</span></h2>
 
 	<table class="searchref">
 		<thead>
@@ -122,3 +123,4 @@ $results{			<tr>
 			</tr>
 }		</tbody>
 	</table>
+</div>
