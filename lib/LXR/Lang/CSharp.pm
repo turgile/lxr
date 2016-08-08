@@ -27,7 +27,7 @@ use LXR::Common;
 use LXR::Lang;
 require LXR::Lang::Generic;
 
-@LXR::Lang::C::ISA = ('LXR::Lang::Generic');
+@LXR::Lang::CSharp::ISA = ('LXR::Lang::Generic');
 
 # Only override the include handling.  For C#, this is really package
 # handling, as there is no include mechanism, so deals with "package"
