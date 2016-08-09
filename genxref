@@ -454,6 +454,7 @@ foreach my $treedescr (@config) {
 	}
 
 	%versionset = ();
+	$SIG{__DIE__} = \&abortcleanup;
 	if ($files->isa('LXR::Files::CVS') && scalar(@versions)<=0) {
 		print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 		$index->purgeall;
@@ -540,6 +541,7 @@ foreach my $treedescr (@config) {
 									);
 		}
 	}
+	delete $SIG{__DIE__};
 	$index->final_cleanup();
 }
 
@@ -557,6 +559,12 @@ if (!$option{'novacuum'}) {
 ###  Support routines
 ###
 ###
+
+sub abortcleanup {
+	delete $SIG{__DIE__};	# avoid recursive trap
+	$index->final_cleanup();
+	die;
+}
 
 sub dirbannerprint {
 	my ($head, $releaseid, $dirname, $filename) = @_;
