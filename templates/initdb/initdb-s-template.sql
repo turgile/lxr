@@ -1,7 +1,7 @@
 /*- -*- tab-width: 4 -*- */
 /*
  *	SQL template for creating MySQL tables
- *	(C) 2012-2013 A. Littoz
+ *	(C) 2012-2016 A. Littoz
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -36,6 +36,7 @@ drop table if exists %DB_tbl_prefix%releases;
 drop table if exists %DB_tbl_prefix%usages;
 drop table if exists %DB_tbl_prefix%status;
 drop table if exists %DB_tbl_prefix%langtypes;
+drop table if exists %DB_tbl_prefix%times;
 
 /*- Tables for unique ids management -*/
 /*@ADD initdb/unique-user-sequences.sql*/
@@ -242,5 +243,22 @@ create trigger %DB_tbl_prefix%remove_usage
 			where symid = old.symid
 			and symcount > 0;
 	end;
+
+/* Statistics */
+/*	releaseid:	"public" release tag
+ *	starttime:	indexation start time
+ *	purgeend :	DB purge end time
+ *	textend  :	plain-text indexing end time
+ *	defnend  :	definitions collection end time
+ *	usageend :	usages collection end time
+ */
+create table %DB_tbl_prefix%times
+	[ releaseid varchar(255) not null primary key
+	, starttime int
+	, purgeend  int
+	, textend   int
+	, defnend   int
+	, usageend  int
+	);
 /*@XQT END_OF_TABLES*/
 

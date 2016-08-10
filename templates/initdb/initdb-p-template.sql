@@ -1,7 +1,7 @@
 /*- -*- tab-width: 4 -*- -*/
 /*-
  *	SQL template for creating PostgreSQL tables
- *	(C) 2012-2013 A. Littoz
+ *	(C) 2012-2016 A. Littoz
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -163,13 +163,14 @@ create sequence %DB_tbl_prefix%typenum;
 /*@ADD initdb/unique-user-sequences.sql*/
 /*@ENDIF*/
 
-drop table    if exists %DB_tbl_prefix%files cascade;
-drop table    if exists %DB_tbl_prefix%symbols cascade;
-drop table    if exists %DB_tbl_prefix%definitions cascade;
-drop table    if exists %DB_tbl_prefix%releases cascade;
-drop table    if exists %DB_tbl_prefix%usages cascade;
-drop table    if exists %DB_tbl_prefix%status cascade;
-drop table    if exists %DB_tbl_prefix%langtypes cascade;
+drop table if exists %DB_tbl_prefix%files cascade;
+drop table if exists %DB_tbl_prefix%symbols cascade;
+drop table if exists %DB_tbl_prefix%definitions cascade;
+drop table if exists %DB_tbl_prefix%releases cascade;
+drop table if exists %DB_tbl_prefix%usages cascade;
+drop table if exists %DB_tbl_prefix%status cascade;
+drop table if exists %DB_tbl_prefix%langtypes cascade;
+drop table if exists %DB_tbl_prefix%times cascade;
 
 
 /* Base version of files */
@@ -518,6 +519,23 @@ create trigger %DB_tbl_prefix%remove_usage
 	for each row
 	execute procedure %DB_tbl_prefix%decusage();
 
+/* Statistics */
+/*	releaseid:	"public" release tag
+ *	starttime:	indexation start time
+ *	purgeend :	DB purge end time
+ *	textend  :	plain-text indexing end time
+ *	defnend  :	definitions collection end time
+ *	usageend :	usages collection end time
+ */
+create table %DB_tbl_prefix%times
+	[ releaseid bytea not null primary key
+	, starttime int
+	, purgeend  int
+	, textend   int
+	, defnend   int
+	, usageend  int
+	);
+
 /*
  *
  */
@@ -528,5 +546,6 @@ grant select on %DB_tbl_prefix%releases    to public;
 grant select on %DB_tbl_prefix%usages      to public;
 grant select on %DB_tbl_prefix%status      to public;
 grant select on %DB_tbl_prefix%langtypes   to public;
+grant select on %DB_tbl_prefix%times       to public;
 /*@XQT END_OF_TABLES*/
 

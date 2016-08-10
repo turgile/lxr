@@ -411,6 +411,31 @@ sub new {
 				. ' cascade'
 				);
 	}
+
+	if (!exists($index->{'times_insert'})) {
+		$index->{'times_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}times"
+				. ' (releaseid, starttime, purgeend, textend, defnend, usageend)'
+				. ' values (?, ?, ?, ?, ?, ?)'
+				);
+	}
+	if (!exists($index->{'times_select'})) {
+		$index->{'times_select'} =
+			$index->{dbh}->prepare
+				( "select * from ${prefix}times"
+				. ' where releaseid = ?'
+				);
+	}
+	if (!exists($index->{'times_update'})) {
+		$index->{'times_update'} =
+			$index->{dbh}->prepare
+				( "update ${prefix}times"
+				. ' set starttime = ?, purgeend = ?, textend = ?'
+				. ' , defnend = ?, usageend = ?'
+				. ' where releaseid = ?'
+				);
+	}
 	return $index;
 }
 
@@ -1776,7 +1801,67 @@ sub dropuniversalqueries {
 	$self->{'langtypes_insert'} = undef;
 	$self->{'langtypes_select'} = undef;
 	$self->{'langtypes_count'} = undef;
+	$self->{'times_insert'} = undef;
+	$self->{'times_select'} = undef;
+	$self->{'times_update'} = undef;
 	$self->{'purge_all'} = undef;
+}
+
+=head2 C<rememberperformance ($releaseid, @wtimes)>
+
+C<rememberperformance> writes genxref's milestone times to the DB.
+
+=over
+
+=item 1 C<$releaseid>
+
+the release (or version) for which all recorded files should be returned
+
+=item 2 C<@wtimes>
+
+an I<integer> array containing the milestone times
+
+=back
+
+B<Note:>
+
+=over
+
+=item
+
+I<This is for informational purpose only.
+It allows to analyse later genxref steps performance.>
+
+=back
+
+B<Requires:>
+
+=over
+
+=item * C<times_select>
+
+=item * C<times_insert>
+
+=item * C<times_update>
+
+
+=back
+
+=cut
+
+sub rememberperformance {
+	my ($self, $releaseid, @wtimes) = @_;
+	my @recorded;
+    
+	$#wtimes = 4;	# make sure array has 5 elements
+	$self->{'times_select'}->execute($releaseid);
+	@recorded = $self->{'times_select'}->fetchrow_array();
+# opt	$self->{'times_select'}->finish();
+	if ($#recorded < 0) {
+		$self->{'times_insert'}->execute($releaseid, @wtimes);
+	} else {
+		$self->{'times_update'}->execute(@wtimes, $releaseid);
+	}
 }
 
 =head2 C<final_cleanup ()>

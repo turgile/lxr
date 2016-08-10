@@ -1,7 +1,7 @@
 /*- -*- tab-width: 4 -*- */
 /*-
  *	SQL template for creating MySQL tables
- *	(C) 2012-2013 A. Littoz
+ *	(C) 2012-2016 A. Littoz
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -341,6 +341,24 @@ create trigger %DB_tbl_prefix%remove_usage
 	for each row
 	call %DB_tbl_prefix%decsym(old.symid);
 
+/* Statistics */
+/*	releaseid:	"public" release tag
+ *	starttime:	indexation start time
+ *	purgeend :	DB purge end time
+ *	textend  :	plain-text indexing end time
+ *	defnend  :	definitions collection end time
+ *	usageend :	usages collection end time
+ */
+create table %DB_tbl_prefix%times
+	( releaseid varbinary(255) not null primary key
+	, starttime int
+	, purgeend  int
+	, textend   int
+	, defnend   int
+	, usageend  int
+	)
+	engine = MyISAM;
+
 delimiter //
 create procedure %DB_tbl_prefix%PurgeAll ()
 begin
@@ -366,6 +384,7 @@ begin
 	truncate table %DB_tbl_prefix%releases;
 	truncate table %DB_tbl_prefix%status;
 	truncate table %DB_tbl_prefix%files;
+	truncate table %DB_tbl_prefix%times;
 	set session foreign_key_checks = @old_check;
 end//
 delimiter ;

@@ -76,6 +76,8 @@ sub new {
 		$self->{dbh}->prepare("delete from ${prefix}status");
 	$self->{'purge_files'} =
 		$self->{dbh}->prepare("delete from ${prefix}files");
+	$self->{'purge_times'} =
+		$self->{dbh}->prepare("delete from ${prefix}times");
 
 #	Since SQLite has no auto-incrementing counter,
 #	we simulate them in specific one-record tables.
@@ -109,6 +111,7 @@ sub purgeall {
 	$self->{'purge_releases'}->execute();
 	$self->{'purge_status'}->execute();
 	$self->{'purge_files'}->execute();
+	$self->{'purge_times'}->execute();
 	$self->{dbh}->commit;
 }
 
@@ -126,6 +129,7 @@ sub final_cleanup {
 	$self->{'purge_releases'} = undef;
 	$self->{'purge_status'} = undef;
 	$self->{'purge_files'} = undef;
+	$self->{'purge_times'} = undef;
 
 	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";

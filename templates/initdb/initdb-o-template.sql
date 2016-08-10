@@ -1,7 +1,7 @@
 /*- -*- tab-width: 4 -*- -*/
 /*-
  *	SQL template for creating Oracle tables
- *	(C) 2012-2013 A. Littoz
+ *	(C) 2012-2016 A. Littoz
  *
  *	This template is intended to be customised by Perl script
  *	initdb-config.pl which creates a ready to use shell script
@@ -57,6 +57,7 @@ drop table    if exists %DB_tbl_prefix%symbols;
 drop table    if exists %DB_tbl_prefix%releases;
 drop table    if exists %DB_tbl_prefix%status;
 drop table    if exists %DB_tbl_prefix%files;
+drop table    if exists %DB_tbl_prefix%times;
 
 commit;
 
@@ -326,6 +327,25 @@ create or replace trigger %DB_tbl_prefix%remove_usage
 
 commit;
 
+/* Statistics */
+/*	releaseid:	"public" release tag
+ *	starttime:	indexation start time
+ *	purgeend :	DB purge end time
+ *	textend  :	plain-text indexing end time
+ *	defnend  :	definitions collection end time
+ *	usageend :	usages collection end time
+ */
+create table %DB_tbl_prefix%times
+	[ releaseid varchar(255) not null primary key
+	, starttime number
+	, purgeend  number
+	, textend   number
+	, defnend   number
+	, usageend  number
+	);
+
+commit;
+
 create or replace procedure %DB_tbl_prefix%PurgeAll ()
 as
 begin
@@ -338,6 +358,7 @@ begin
 	truncate table %DB_tbl_prefix%releases;
 	truncate table %DB_tbl_prefix%status;
 	truncate table %DB_tbl_prefix%files;
+	truncate table %DB_tbl_prefix%times;
 	commit;
 end;
 /
@@ -355,6 +376,7 @@ grant select, insert, update, delete on %DB_tbl_prefix%releases    to %DB_user%;
 grant select, insert, update, delete on %DB_tbl_prefix%status      to %DB_user%;
 grant select, insert, update, delete on %DB_tbl_prefix%files       to %DB_user%;
 grant select, insert, update, delete on %DB_tbl_prefix%langtypes   to %DB_user%;
+grant select, insert, update, delete on %DB_tbl_prefix%times       to %DB_user%;
 
 commit;
 

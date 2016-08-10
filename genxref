@@ -348,6 +348,15 @@ if ($failure > 0) {
 
 my %versionset;		# cumulative version set
 my $autoversionflag;
+my $versioninprogress;	# for exception handler
+my $milestone = 0;	# genxref's milestones during version indexation:
+					# 0: start
+					# 1: end purge
+					# 2: end free-text search indexing
+					# 3: end definition collection
+					# 4: end usage collection
+my @wtimes;	# milestone dates as wall time
+			# (more meaningful to casual user than system user time)
 my %binaryfiles;
 
 my $printdirbanner;	# Flag to print again directory banner
@@ -456,23 +465,43 @@ foreach my $treedescr (@config) {
 	%versionset = ();
 	$SIG{__DIE__} = \&abortcleanup;
 	if ($files->isa('LXR::Files::CVS') && scalar(@versions)<=0) {
+		$versioninprogress = 'CVS all versions';
+		$wtimes[0] = time();	# start time
+		$milestone = 1;
 		print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 		$index->purgeall;
 		print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
+		$wtimes[1] = time();
+		$wtimes[2] = $wtimes[1];	# no free-text search with VCS
 		$$LXR::Common::HTTP{'param'}{'_showattic'} = 1;
 		$printdirbanner = 1;
+		$milestone = 3;
 		directorytreetraversal	( \&Tagger::processfile
 								, 'head'
 								, ''
 								, '/'
 								);
+		$wtimes[3] = time();
 		$printdirbanner = 1;
+		$milestone = 4;
 		$autoversionflag++ if $autoversionflag;	# Don't do it again
 		directorytreetraversal	( \&Tagger::processrefs
 								, 'head'
 								, ''
 								, '/'
 								);
+		$wtimes[4] = time();
+		$index->rememberperformance($versioninprogress , @wtimes);
+	# Indexing summary for this version
+		print "\n";
+		print  "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}"
+				, ' == '
+				, "${CSI}41m${VTwhite}all versions in CVS ${VTnorm}\n" ;
+		print '    Purge              : ', elapsed($wtimes[1]-$wtimes[0]), "\n";
+		print '    Free-text indexing : ', elapsed($wtimes[2]-$wtimes[1]), "\n";
+		print '    Definitions parse  : ', elapsed($wtimes[3]-$wtimes[2]), "\n";
+		print '    References parse   : ', elapsed($wtimes[4]-$wtimes[3]), "\n";
+
 		if	(	exists($option{'allversions'})
 			&&	$option{'allversions'} ne 'noauto'
 			) {
@@ -480,6 +509,8 @@ foreach my $treedescr (@config) {
 		}
 
 	} else {
+		$wtimes[0] = time();	# start time
+		$milestone = 1;
 
 #	purgeall() is much faster than a sequence of purge($version);
 #	if there is only one version in the range, use it instead of
@@ -505,6 +536,11 @@ foreach my $treedescr (@config) {
 		}
 
 		foreach my $version (@versions) {
+			$versioninprogress = $version;
+			if (1 != $milestone) {
+				$wtimes[0] = time();
+				$milestone = 1;
+			}
 			print STDERR "\n${CSI}44m${VTwhite}Processing $url ${VTnorm}"
 					, ' == '
 					, "${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
@@ -516,33 +552,52 @@ foreach my $treedescr (@config) {
 			if ($docareful) {
 				cleanindex($version);
 			}
+			$wtimes[1] = time();
 			if ($files->isa('LXR::Files::Plain')) {
+				$milestone = 2;
 				if ($foundglimpse > 0 || $foundswishe > 0) {
 					gensearch($version);
 				} else {
 					print STDERR "${VTyellow}Free-text search disabled${VTnorm}\n";
 				}
 				print STDERR "\n";
+				$wtimes[2] = time();
 			} else {
 				print STDERR "${VTyellow}Free-text search setup suppressed for VCS storage${VTnorm}\n";
+				$wtimes[2] = $wtimes[1];
 			}
 			$printdirbanner = 1;
-
+			$milestone = 3;
 			directorytreetraversal	( \&Tagger::processfile
 									, $version
 									, ''
 									, '/'
 									);
+			$wtimes[3] = time();
 			$printdirbanner = 1;
+			$milestone = 4;
 			directorytreetraversal	( \&Tagger::processrefs
 									, $version
 									, ''
 									, '/'
 									);
+			$wtimes[4] = time();
+			$index->rememberperformance($version , @wtimes);
+
+	# Indexing summary for this version
+			print "\n";
+			print  "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}"
+					, ' == '
+					, "${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
+			print '    Purge              : ', elapsed($wtimes[1]-$wtimes[0]), "\n";
+			print '    Free-text indexing : ', elapsed($wtimes[2]-$wtimes[1]), "\n";
+			print '    Definitions parsing: ', elapsed($wtimes[3]-$wtimes[2]), "\n";
+			print '    References parsing : ', elapsed($wtimes[4]-$wtimes[3]), "\n";
 		}
 	}
 	delete $SIG{__DIE__};
 	$index->final_cleanup();
+	
 }
 
 if (!$option{'novacuum'}) {
@@ -562,6 +617,11 @@ if (!$option{'novacuum'}) {
 
 sub abortcleanup {
 	delete $SIG{__DIE__};	# avoid recursive trap
+	$wtimes[$milestone] = -time();	# flag error termination
+	while (++$milestone <= 4) {
+		$wtimes[$milestone] = $wtimes[$milestone-1];
+	}
+	$index->rememberperformance($versioninprogress, @wtimes);
 	$index->final_cleanup();
 	die;
 }
@@ -760,6 +820,15 @@ sub dump_versionset {
 	}
 	close($vfh);
 	print "=== $count versions written to ${VTyellow}$versionfile${VTnorm}\n";
+}
+
+sub elapsed {
+	my $time = shift;
+
+	my $seconds = $time % 60;
+	$time = ($time - $seconds) / 60;
+	my $minutes = $time %60;
+	return ($time-$minutes)/60 . ':' . $minutes . ':' . $seconds;
 }
 
 #	Look at each file recorded in the DB for this version
