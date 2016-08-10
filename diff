@@ -183,7 +183,7 @@ under control of the patch directives.
 sub printdiff {
 	my (@dargs) = @_;
 
-	unless (defined @dargs) {
+	if ($#dargs < 0) {
 	# First pass through the script
 	# Request second version
 		my @vars;
