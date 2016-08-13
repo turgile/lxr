@@ -49,6 +49,7 @@ our @EXPORT = qw(
 	$HTTP  $HTMLheadOK
 	$pathname $releaseid $identifier
 	&_edittime
+	&indexstate
 	&urlargs &nonvarargs &fileref &diffref &idref &incref
 	&httpinit &httpclean
 );
@@ -278,6 +279,46 @@ sub _edittime {
 			$mon + 1, $mday, $hour, $min, $sec
 		);
 	}
+}
+
+
+=head2 C<indexstate ()>
+
+Function C<indexstate> the most recent indexation time for the current
+tree or 0 if it is not indexed yet, -1 if performance data is incompatible.
+
+=head3 Algorithm
+
+The I<times> table records pertaining to the current version of
+the tree are read in and the various I<genxref>'s milestone dates
+are scanned to deduce the state.
+
+=cut
+
+sub indexstate {
+	my (@milestones_f, @milestones_i);
+	my @milestones;
+
+	@milestones_f = $index->getperformance($releaseid, 1);	# full indexing
+	@milestones_i = $index->getperformance($releaseid, 0);	# incremental indexing
+	if	(	$#milestones_f < 0
+		&&	$#milestones_i < 0
+		) {
+		return (0, undef);
+	}
+	@milestones = @milestones_f;
+	if ($#milestones < 0) {
+		@milestones = @milestones_i;
+	} elsif ($milestones[2] < $milestones_i[2]) {
+		@milestones = @milestones_i;
+	}
+	if ($#milestones != 6) {
+		return (-1, undef)
+	}
+	if (0 > $milestones[6]) {
+		return ($milestones[2],-$milestones[6])
+	}
+	return ($milestones[6], undef);
 }
 
 
@@ -729,36 +770,29 @@ Presently, only a Last-Modified and a Content-Type header are output.
 
 sub printhttp {
 
-	# Print out a Last-Modified date that is the larger of: the
-	# underlying file that we are presenting (passed in as an
-	# argument to this function) and the configuration file lxr.conf.
-	# If we can't stat either of them, don't print out a L-M header.
-	# (Note that this stats lxr.conf but not lxr/lib/LXR/Common.pm.
-	# Oh well, I can live with that I guess...)	-- jwz, 16-Jun-98
-
-	# Made it stat all currently loaded modules.  -- agg.
+	# Print out a Last-Modified date that is the larger of:
+	#	- the underlying file that we are presenting
+	#	- the configuration file lxr.conf
+	#	- last indexation time
+	#	- optionally, indexation time for this file
+	# ajl-150813: this a new attempt to make smart use of Last-Modified header
+	#	in the hope to eradicate frequent "did not send HTTP headers" warning
+	#	in Apache log (seems to occur after code is modified or page content
+	#	conflicts with some cache on the way).
+	# For prior implementation, see git history; there has been many hesitations
+	# about it.
 
 	my $time = $files->getfiletime($pathname, $releaseid);
 	my $time2 = (stat($config->{'confpath'}))[9];
 	$time = $time2 if !defined $time || $time2 > $time;
-
-	# Remove this to see if we get a speed increase by not stating all
-	# the modules.  Since for most sites the modules change rarely,
-	# this is a big hit for each access.
-
-	# 	my %mods = ('main' => $0, %INC);
-	# 	my ($mod, $path);
-	# 	while (($mod, $path) = each %mods) {
-	# 		$mod  =~ s/.pm$//;
-	# 		$mod  =~ s|/|::|g;
-	# 		$path =~ s|/+|/|g;
-
-	# 		no strict 'refs';
-	# 		next unless $ {$mod.'::CVSID'};
-
-	# 		$time2 = (stat($path))[9];
-	# 		$time = $time2 if $time2 > $time;
-	# 	}
+	($time2) = indexstate();
+	$time = $time2 if $time2 > $time;
+	if ('/' ne substr($pathname, -1)) {
+		$time2 = $index->filetimestamp	( $pathname
+										, $files->filerev($pathname, $releaseid)
+										);
+		$time = $time2 if $time2 > $time;
+	}
 
 	if ($time > 0) {
 		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);

@@ -570,7 +570,7 @@ sub printident {
 				, 'noquery'				=> sub { return 'hidden' if !$identifier }
 				, 'defs'			=> \&defsexpand
 				, 'uses'			=> \&usesexpand
-				, 'indexstate'		=> \&indexstate
+				, 'indexstate'		=> \&displayindexstate
 				)
 			)
 	);

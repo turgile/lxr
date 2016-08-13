@@ -671,7 +671,7 @@ sub printdir {
 			( $templ
 			,	( 'files' => sub { direxpand(@_, $dir) }
 				, 'description' => sub { dirdesc($dir, $releaseid) }
-				, 'indexstate'	=> \&indexstate
+				, 'indexstate'	=> \&displayindexstate
 				)
 			)
 	);
