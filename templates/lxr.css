@@ -318,46 +318,72 @@
 ; font-style: italic
 }
 
-/******************/
-/* directory view */
-/******************/
-/** directory listing header **/
+/****************/
+/* tabular data */
+/****************/
+/* used fordirectory listing and indexing performance statistics */
+/** table header/footer **/
   .dirheader
+, .dirfooter
+/*, .perfheader
+, .perffooter*/
 { background-color: #aaddff
 ; color: #000000
 }
+/* Just for fun, so that table cannot be mistaken for directory*/
+  .perfheader
+, .perffooter
+{ background-color: #ffddaa
+}
 
-/** directory listing area **/
+/** table content area **/
   .dircontent
+, .perfcontent
 { width: 100%
 ; border: none
 }
 
-  .dircontent TH
+  .dirheader TH
+, .dirfooter TH
+, .perfheader TH
+, .perffooter TH
 { border-right: 1pt solid white
 ; border-left: none
 ; border-top: none
-; border-bottom: 1pt solid blue
 ; text-align: center
+}
+
+  .dirheader TH
+, .perfheader TH
+{ border-bottom: 1pt solid blue
+}
+
+  .dirfooter TH
+, .perffooter TH
+{ border-top: 1pt solid blue
 }
 
 /* "odd" lines (three at once) */
   .dirrow1
+, .perfrow1
 { background-color: white
 ; font-size: 10pt
 }
 /* "even" lines (three at once) */
   .dirrow2
+, .perfrow2
 { background-color: #eeeeee
 ; font-size: 10pt
 }
 
   .dirrow1 TD
 , .dirrow2 TD
+, .perfrow1 TD
+, .perfrow2 TD
 { border-right: thin solid #999999
 }
 
-/** individual cell formatting **/
+/** individual cell formatting for directory listing **/
 /* link to file or folder */
   A.dirfile
 , A.dirfolder
@@ -386,7 +412,7 @@
 
   TD.dirname
 { text-align: left
-; padding: 0 1pt 0 2pt
+; padding: 0 3pt
 }
 
   TD.dirsize
@@ -398,7 +424,7 @@
 , TD.dirindex
 , TD.dirindexinvalid
 { text-align: right
-; padding: 0 1pt 0 5pt
+; padding: 0 5pt
 }
 
   TD.dirindexinvalid
@@ -409,6 +435,7 @@
   TD.dirdesc
 { text-align: left
 ; padding-left: 5pt
+; padding-right: 3pt
 }
 
   TD.dirdesc P
@@ -421,6 +448,34 @@
 { color: #666666
 ; font-style: italic
 }
+
+/** individual cell formatting for performance data **/
+/* indexed version */
+  TD.perfversion
+{ padding: 0 1em 0 0
+}
+
+/* indexation date */
+  TD.perfdate
+{ padding: 0 1em
+; text-align: center
+}
+
+/* durations */
+  TD.perfpurge
+, TD.perffreetext
+, TD.perfdefn
+, TD.perfrefs
+{ text-align: right
+; padding: 0 1em
+}
+/* total duration */
+  TD.perftotal
+{ text-align: right
+; font-weight: bold
+; padding: 0 1em
+}
+
 
 /*************/
 /* file view */

@@ -27,9 +27,9 @@
 </ul>
 $perffullpurge{<p>Last full database purge (<code>--reindexall</code>) on $perfdate took $perfpurge.</p>}
 <h3><code>--reindexall</code> timings</h3>
-<table class=dircontent>
+<table class=perfcontent>
 	<thead>
-		<tr class=dirheader>
+		<tr class=perfheader>
 			<th class=perfversion>Version</th>
 			<th class=perfdate>Date (UTC)</th>
 			<th class=perfpurge>Purge</th>
@@ -40,7 +40,7 @@ $perffullpurge{<p>Last full database purge (<code>--reindexall</code>) on $perfd
 		</tr>
 	</thead>
 	<tfoot>
-		<tr class=dirheader>
+		<tr class=perffooter>
 			<th class=perfversion>Version</th>
 			<th class=perfdate>Date (UTC)</th>
 			<th class=perfpurge>Purge</th>
@@ -65,9 +65,9 @@ $perffull{		<tr class=$lineclass>
 <p>Approximate time to fully reindex the tree
 not counting global database purge but including individual partial purges): $perftotal
 <h3>Incremental update timings</h3>
-<table class=dircontent>
+<table class=perfcontent>
 	<thead>
-		<tr class=dirheader>
+		<tr class=perfheader>
 			<th class=perfversion>Version</th>
 			<th class=perfdate>Date (UTC)</th>
 			<th class=perfpurge>Purge</th>
@@ -78,7 +78,7 @@ not counting global database purge but including individual partial purges): $pe
 		</tr>
 	</thead>
 	<tfoot>
-		<tr class=dirheader>
+		<tr class=perffooter>
 			<th class=perfversion>Version</th>
 			<th class=perfdate>Date (UTC)</th>
 			<th class=perfpurge>Purge</th>
