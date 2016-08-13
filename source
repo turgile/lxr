@@ -358,38 +358,6 @@ sub filesize {
 }
 
 
-=head2 C<_edittime ($thetime)>
-
-Function C<_edittime> is an internal auxiliary function.
-It returns a human-readable date/time in a string.
-
-=over
-
-=item 1 C<$thetime>
-
-an I<integer> containing an UTC time in seconds since the epoch
-
-=back
-
-=cut
-
-sub _edittime {
-	my ($thetime) = @_;
-
-	if (0 <= index($thetime, ':')) { # Was a formatted string provided?
-		return $thetime;
-	} else {
-		my @t = gmtime($thetime);
-		my ($sec, $min, $hour, $mday, $mon, $year) = @t;
-		return sprintf(
-			'%04d-%02d-%02d %02d:%02d:%02d',
-			$year + 1900,
-			$mon + 1, $mday, $hour, $min, $sec
-		);
-	}
-}
-
-
 =head2 C<modtime ($templ, $node, $dir)>
 
 Function C<modtime> is a "$variable" substitution function.
@@ -703,6 +671,7 @@ sub printdir {
 			( $templ
 			,	( 'files' => sub { direxpand(@_, $dir) }
 				, 'description' => sub { dirdesc($dir, $releaseid) }
+				, 'indexstate'	=> \&indexstate
 				)
 			)
 	);
@@ -893,43 +862,25 @@ sub printfile {
 			#	}
 			} else {
 				# Check for a discrepancy between file and database states
-				# Two implementations are available hereunder. Uncomment only one:
-				# - standard notification (warning on stale index)
-				# - permanent notification (indexing time always displayed or warning)
-				# Standard notification is recommended
-############ Standard notification ############
-				if	(!$index->filetimestamp
-								( $pathname
-								, $files->filerev($pathname, $releaseid)
-								)
-					&& LXR::Lang::parseable($pathname, $releaseid)
-					) {
+				if (! LXR::Lang::parseable($pathname, $releaseid)) {
 					print(
-						"<p class=\"error\">\n<i>Warning, cross-references for $pathname need to be fixed.</i>\n</p>\n"
+						"<p>\n<i class=error>Warning, </i>$pathname<i class=error> is written in an unsupported language."
+						, " File is not indexed.</i>\n</p>\n"
 					);
+				} else {
+					my $t = indextime(@_,  '', $pathname);
+					if ('-' eq $t) {
+						print(
+							"<p>\n<i class=error>Warning, file </i>$pathname<i class=error> was not indexed"
+							, "\nor was modified since last indexation"
+							, " (in which case cross-reference links may be missing, inaccurate or erroneous).</i></p>\n"
+						);
+					} else {
+						print(
+							"<p>\nFile indexing completed on $t\n</p>\n"
+						);
+					}
 				}
-############ End of standard notification ############
-# ############ Special request from KDE site maintainer ############
-# # NOTE: Is it really relevant since the above block gives an error
-# #		indication when indexing time is stale?
-# #	The main difference is explicit notice of non-parsed file
-# 				my $t = indextime(@_,  '', $pathname);
-# 				if ('-' eq $t) {
-# 					if (LXR::Lang::parseable($pathname, $releaseid)) {
-# 						print(
-# 							"<p class=\"error\">\n<i>Warning, cross-references for $pathname need to be fixed.</i>\n</p>\n"
-# 						);
-# 					} else {
-# 						print(
-# 							"<p class=\"error\">\n<i>Warning, $pathname is written in an unparsed language.</i>\n</p>\n"
-# 						);
-# 					};
-# 				} else {
-# 					print(
-# 						"<p>\nFile indexed on <i>$t</i>\n</p>\n"
-# 					);
-# 				};
-# ############ End of special request ############
 
 				if (exists($config->{'cvswebprefix'})) {
 					my $revtarget = '';

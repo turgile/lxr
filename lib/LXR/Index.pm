@@ -408,6 +408,7 @@ sub new {
 				. ", ${prefix}usages, ${prefix}langtypes"
 				. ", ${prefix}symbols, ${prefix}releases"
 				. ", ${prefix}status, ${prefix}files"
+				. ", ${prefix}times"
 				. ' cascade'
 				);
 	}
@@ -416,8 +417,8 @@ sub new {
 		$index->{'times_insert'} =
 			$index->{dbh}->prepare
 				( "insert into ${prefix}times"
-				. ' (releaseid, starttime, purgeend, textend, defnend, usageend)'
-				. ' values (?, ?, ?, ?, ?, ?)'
+				. ' (releaseid, reindex, starttime, purgeend, textend, defnend, usageend)'
+				. ' values (?, ?, ?, ?, ?, ?, ?)'
 				);
 	}
 	if (!exists($index->{'times_select'})) {
@@ -425,15 +426,19 @@ sub new {
 			$index->{dbh}->prepare
 				( "select * from ${prefix}times"
 				. ' where releaseid = ?'
+				. ' and reindex = ?'
 				);
 	}
 	if (!exists($index->{'times_update'})) {
 		$index->{'times_update'} =
 			$index->{dbh}->prepare
 				( "update ${prefix}times"
-				. ' set starttime = ?, purgeend = ?, textend = ?'
-				. ' , defnend = ?, usageend = ?'
+				. ' set starttime = ?'
+				. ', purgeend = ?, textend = ?'
+				. ', defnend = ?, usageend = ?'
+				. ', reindex = ?'
 				. ' where releaseid = ?'
+				. ' and reindex = ?'
 				);
 	}
 	return $index;
@@ -1807,15 +1812,15 @@ sub dropuniversalqueries {
 	$self->{'purge_all'} = undef;
 }
 
-=head2 C<rememberperformance ($releaseid, @wtimes)>
+=head2 C<saveperformance ($releaseid, @wtimes)>
 
-C<rememberperformance> writes genxref's milestone times to the DB.
+C<saveperformance> writes genxref's milestone times to the DB.
 
 =over
 
 =item 1 C<$releaseid>
 
-the release (or version) for which all recorded files should be returned
+the release (or version) for which performance data should be saved
 
 =item 2 C<@wtimes>
 
@@ -1844,24 +1849,56 @@ B<Requires:>
 
 =item * C<times_update>
 
+=back
+
+=cut
+
+sub saveperformance {
+	my ($self, $releaseid, $reindex, @wtimes) = @_;
+	my @recorded;
+
+	$#wtimes = 4;	# make sure array has 5 elements
+	$self->{'times_select'}->execute($releaseid, $reindex);
+	@recorded = $self->{'times_select'}->fetchrow_array();
+# opt	$self->{'times_select'}->finish();
+	if ($#recorded < 0) {
+		$self->{'times_insert'}->execute($releaseid, $reindex, @wtimes);
+	} else {
+		$self->{'times_update'}->execute
+			(@wtimes, $reindex, $releaseid, $reindex);
+	}
+}
+
+=head2 C<getperformance ($releaseid)>
+
+C<getperformance> retrieves genxref's milestone times from the DB.
+
+=over
+
+=item 1 C<$releaseid>
+
+the release (or version) for which performance data should be returned
+
+=back
+
+B<Requires:>
+
+=over
+
+=item * C<times_select>
 
 =back
 
 =cut
 
-sub rememberperformance {
-	my ($self, $releaseid, @wtimes) = @_;
+sub getperformance {
+	my ($self, $releaseid, $reindex) = @_;
 	my @recorded;
-    
-	$#wtimes = 4;	# make sure array has 5 elements
-	$self->{'times_select'}->execute($releaseid);
+
+	$self->{'times_select'}->execute($releaseid, $reindex);
 	@recorded = $self->{'times_select'}->fetchrow_array();
 # opt	$self->{'times_select'}->finish();
-	if ($#recorded < 0) {
-		$self->{'times_insert'}->execute($releaseid, @wtimes);
-	} else {
-		$self->{'times_update'}->execute(@wtimes, $releaseid);
-	}
+	return @recorded;
 }
 
 =head2 C<final_cleanup ()>

@@ -40,6 +40,7 @@ our @EXPORT = qw(
 	expandtemplate
 	varbtnaction
 	urlexpand
+	indexstate
 	makeheader
 	makefooter
 	makeerrorpage
@@ -1354,6 +1355,15 @@ sub varbtnaction {
 				  : ''
 				  )
 				. '">';
+	} elsif ($who eq 'perf') {
+		$action = 'href="'
+				. $config->{'virtroot'}
+				. 'perf'
+				. ( exists($config->{'treename'})
+				  ? '/'.$config->{'treename'}
+				  : ''
+				  )
+				. '">';
 	}
 	$action =~ m!href="(.*?)(\?|">)!;	# extract href target as action
 	return $1;
@@ -1420,6 +1430,52 @@ sub varexpand {
 	return ($varex);
 }
 
+
+=head2 C<indexstate ()>
+
+Function C<indexstate> is a "$variable" substitution function.
+It returns a HTML <p> element containing the indexing state of
+the current version.
+
+=head3 Algorithm
+
+The I<times> table record pertaining to the current version of
+the tree is read in and the various I<genxref>'s milestone dates
+are scanned to deduce the state.
+
+=cut
+
+sub indexstate {
+	my (@milestones_f, @milestones_i);
+	my @milestones;
+
+	@milestones_f = $index->getperformance($releaseid, 1);	# full indexing
+	@milestones_i = $index->getperformance($releaseid, 0);	# incremental indexing
+	if	(	$#milestones_f < 0
+		&&	$#milestones_i < 0
+		) {
+		return '<p class=error>This version has not been indexed</p>' . "\n";
+	}
+	@milestones = @milestones_f;
+	if ($#milestones < 0) {
+		@milestones = @milestones_i;
+	} elsif ($milestones[2] < $milestones_i[2]) {
+		@milestones = @milestones_i;
+	}
+	if ($#milestones != 6) {
+		return '<p class=error>Incompatible indexation performance data</p>' . "\n";
+	}
+	if (0 > $milestones[6]) {
+		return '<p class=error>Indexation started on '
+			. _edittime($milestones[2])
+			. ' crashed on '
+			. _edittime(-$milestones[6])
+			. ' (all times in UTC)</p>' . "\n"
+	}
+	return '<p>Last indexation on '
+		. _edittime($milestones[6])
+		. ' UTC</p>' . "\n";
+}
 
 =head2 C<devinfo ($templ)>
 

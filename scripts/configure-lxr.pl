@@ -812,7 +812,7 @@ chmod 0775, "${confdir}/${scriptout}";	# Make sure script has x permission
 #	are kept, set them explicitly on scripts.
 #	We suppose configure-lxr.pl has correct permissions, otherwise we
 #	can't bootstrap.
-chmod 0775, 'diff', 'genxref', 'ident', 'search', 'showconfig', 'source';
+chmod 0775, 'diff', 'genxref', 'ident', 'perf', 'search', 'showconfig', 'source';
 chmod 0775, "${scriptdir}/kernel-vars-grab.sh";
 chmod 0775, "${scriptdir}/set-lxr-version.sh";
 chmod 0775, "${scriptdir}/recreatedb.pl";

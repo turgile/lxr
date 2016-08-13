@@ -48,6 +48,7 @@ our @EXPORT = qw(
 	$files $index $config
 	$HTTP  $HTMLheadOK
 	$pathname $releaseid $identifier
+	&_edittime
 	&urlargs &nonvarargs &fileref &diffref &idref &incref
 	&httpinit &httpclean
 );
@@ -240,6 +241,43 @@ Function C<tmpcounter> returns a unique id for numbering temporary files.
 
 sub tmpcounter {
 	return $tmpcounter++;
+}
+
+
+#######################################
+#
+#	Useful general purpose functions
+#
+
+
+=head2 C<_edittime ($thetime)>
+
+Function C<_edittime>  returns a human-readable date/time in a string.
+
+=over
+
+=item 1 C<$thetime>
+
+an I<integer> containing an UTC time in seconds since the epoch
+
+=back
+
+=cut
+
+sub _edittime {
+	my ($thetime) = @_;
+
+	if (0 <= index($thetime, ':')) { # Was a formatted string provided?
+		return $thetime;
+	} else {
+		my @t = gmtime($thetime);
+		my ($sec, $min, $hour, $mday, $mon, $year) = @t;
+		return sprintf(
+			'%04d-%02d-%02d %02d:%02d:%02d',
+			$year + 1900,
+			$mon + 1, $mday, $hour, $min, $sec
+		);
+	}
 }
 
 

@@ -246,6 +246,7 @@ create trigger %DB_tbl_prefix%remove_usage
 
 /* Statistics */
 /*	releaseid:	"public" release tag
+ *	reindex  :	reundex-all flag
  *	starttime:	indexation start time
  *	purgeend :	DB purge end time
  *	textend  :	plain-text indexing end time
@@ -253,7 +254,8 @@ create trigger %DB_tbl_prefix%remove_usage
  *	usageend :	usages collection end time
  */
 create table %DB_tbl_prefix%times
-	[ releaseid varchar(255) not null primary key
+	( releaseid varchar(255)
+	, reindex   int
 	, starttime int
 	, purgeend  int
 	, textend   int

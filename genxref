@@ -349,6 +349,7 @@ if ($failure > 0) {
 my %versionset;		# cumulative version set
 my $autoversionflag;
 my $versioninprogress;	# for exception handler
+my $reindexmode;	# --reindexall state equivalent and exception handler use
 my $milestone = 0;	# genxref's milestones during version indexation:
 					# 0: start
 					# 1: end purge
@@ -491,8 +492,9 @@ foreach my $treedescr (@config) {
 								, '/'
 								);
 		$wtimes[4] = time();
-		$index->rememberperformance($versioninprogress , @wtimes);
+		$index->saveperformance($versioninprogress, 1 ,@wtimes);
 	# Indexing summary for this version
+		STDERR->autoflush(1);
 		print "\n";
 		print  "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}"
 				, ' == '
@@ -501,6 +503,7 @@ foreach my $treedescr (@config) {
 		print '    Free-text indexing : ', elapsed($wtimes[2]-$wtimes[1]), "\n";
 		print '    Definitions parse  : ', elapsed($wtimes[3]-$wtimes[2]), "\n";
 		print '    References parse   : ', elapsed($wtimes[4]-$wtimes[3]), "\n";
+		STDERR->autoflush(0);
 
 		if	(	exists($option{'allversions'})
 			&&	$option{'allversions'} ne 'noauto'
@@ -520,19 +523,58 @@ foreach my $treedescr (@config) {
 #	selective DB cleaning is needed.
 		my $dopurge = 0;
 		my $docareful = 0;
+		$reindexmode = 0;
 		if (exists($option{'reindexall'})) {
+			$reindexmode = 1;
 			if	( exists($option{'allversions'})
-		# 		|| exists($option{'version'}) && (1 == $config->varrange('v'))
 				|| !exists($option{'version'})
 				) {
 				print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 				$index->purgeall;
+				$wtimes[1] = time();
+				$wtimes[2] = $wtimes[1];
+				$wtimes[3] = $wtimes[2];
+				$wtimes[4] = $wtimes[3];
+				$index->saveperformance('', 1, @wtimes);
 				print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
+				$wtimes[0] = $wtimes[1];
 			} else {
 				$dopurge = 1
 			}
 		} else {
-			$docareful = 1;
+			my $vc;
+			if	( exists($option{'allversions'})
+				|| !exists($option{'version'})
+				) {
+				$index->{'version_count'} =
+					$index->{dbh}->prepare
+						( 'select count(reindex) from '.$config->{'dbprefix'}.'times'
+						. ' where reindex = 1'
+						);
+				$index->{'version_count'}->execute();
+				($vc) = $index->{'version_count'}->fetchrow_array();
+				$index->{'version_count'} = undef;
+				if (0 == $vc) {	# initial indexing
+					$reindexmode = 1;
+				} else {
+					$docareful = 1;
+				}
+			} else {
+				$index->{'version_count'} =
+					$index->{dbh}->prepare
+						( 'select count(releaseid) from '.$config->{'dbprefix'}.'times'
+						. ' where reindex = 1'
+						. ' and releaseid = ?'
+						);
+				$index->{'version_count'}->execute($option{'version'});
+				($vc) = $index->{'version_count'}->fetchrow_array();
+				$index->{'version_count'} = undef;
+				if (0 == $vc) {	# initial indexing
+					$reindexmode = 1;
+				} else {
+					$docareful = 1;
+				}
+			}
 		}
 
 		foreach my $version (@versions) {
@@ -582,10 +624,9 @@ foreach my $treedescr (@config) {
 									, '/'
 									);
 			$wtimes[4] = time();
-			$index->rememberperformance($version , @wtimes);
+			$index->saveperformance($version, $reindexmode, @wtimes);
 
 	# Indexing summary for this version
-			print "\n";
 			print  "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}"
 					, ' == '
 					, "${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
@@ -621,7 +662,7 @@ sub abortcleanup {
 	while (++$milestone <= 4) {
 		$wtimes[$milestone] = $wtimes[$milestone-1];
 	}
-	$index->rememberperformance($versioninprogress, @wtimes);
+	$index->saveperformance($versioninprogress, $reindexmode, @wtimes);
 	$index->final_cleanup();
 	die;
 }
@@ -828,7 +869,7 @@ sub elapsed {
 	my $seconds = $time % 60;
 	$time = ($time - $seconds) / 60;
 	my $minutes = $time %60;
-	return ($time-$minutes)/60 . ':' . $minutes . ':' . $seconds;
+	return ($time-$minutes)/60 . ':' . sprintf('%2.2d:%2.2d', $minutes, $seconds);
 }
 
 #	Look at each file recorded in the DB for this version

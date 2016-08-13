@@ -98,7 +98,7 @@ Options -Indexes
 # ----------- LXR scripts configuration -----------
 #
 #
-<Files ~ (search|source|ident|diff|showconfig)$>
+<Files ~ (search|source|ident|diff|showconfig|perf)$>
 	<IfModule mod_version.c>
 		<IfVersion < 2.4>
 			Allow from all

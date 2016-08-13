@@ -131,6 +131,7 @@
 	, 'htmlident'		=> '%LXRroot%/templates/html/html-ident.html'
 	, 'htmlsearch'		=> '%LXRroot%/templates/html/html-search-%search_engine%.html'
 	, 'htmlconfig'		=> '%LXRroot%/templates/html/html-config.html'
+	, 'htmlperf'		=> '%LXRroot%/templates/html/html-perf.html
 
 		# htmlhead and htmltail can be customised for the various
 		# LXR operations. Just replace html by source (listing file),
