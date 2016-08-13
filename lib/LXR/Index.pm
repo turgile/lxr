@@ -902,9 +902,16 @@ was parsed for references.
 
 =over
 
-=item 1 C<$fileid>
+=item 1 C<$filename>
 
-an I<integer> representing a file in the DB
+a I<string> containing the path relative to C<'sourceroot'>
+
+=item 2 C<$revision>
+
+the revision for the file
+
+B<CAUTION:> this is not a release id!
+It is computed by method C<filerev> in the I<Files> classes.
 
 =back
 
