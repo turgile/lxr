@@ -257,6 +257,9 @@ sub indexfile {
 		$langforce = $self->language;
 	}
 
+	# Escape shell special characters (maybe overkill, but safer)
+	$path =~ s/([ |&;()<>!{}[\]])/\\$1/g;
+
 	# Launch ctags
 	if ($config->{'ectagsbin'}) {
 		open(CTAGS,
@@ -361,7 +364,7 @@ sub referencefile {
 	if (!defined($fh)) {
 		return (-1, 0);
 	}
-	&LXR::SimpleParse::init	( $fh # FileHandle->new($path)
+	&LXR::SimpleParse::init	( $fh
 							, 1
 							, $self->parsespec
 							);
