@@ -151,7 +151,7 @@ sub onelineexpand {
 				, 'perfversion' => sub { $perfdata[0] }
 				, 'perfdate' => sub { _edittime($perfdata[2]) }
 				, 'perfpurge' => sub { duration($perfdata[2], $perfdata[3]) }
-				, 'preffreetext'  => sub { duration($perfdata[3], $perfdata[4]) }
+				, 'preffreetext' => sub { duration($perfdata[3], $perfdata[4]) }
 				, 'perfdefn'=> sub { duration($perfdata[4], $perfdata[5]) }
 				, 'perfrefs' => sub { duration($perfdata[5], $perfdata[6]) }
 				, 'perftotal' => sub { if (0 > $perfdata[6]) {
@@ -167,9 +167,9 @@ sub onelineexpand {
 }
 
 
-=head2 C<perffullexpand ($templ)>
+=head2 C<perfdataexpand ($templ, $reindex)>
 
-Function C<perffullexpand> is a "$function" substitution function
+Function C<perfdataexpand> is a "$function" substitution function
 for C<perffull>.
 It returns its template argument expanded for every line in the DB selection.
 
@@ -179,6 +179,10 @@ It returns its template argument expanded for every line in the DB selection.
 
 a I<string> containing the template
 
+=item 2 C<$reindex>
+
+the full reindex flag as 0 or 1 to select the proper values
+
 =back
 
 It fetches versions involved in purgeing indexations.
@@ -187,8 +191,8 @@ The "line" is expanded by a common procedure.
 
 =cut
 
-sub perffullexpand {
-	my ($templ) = @_;
+sub perfdataexpand {
+	my ($templ, $reindex) = @_;
 	my $direx = '';
 	my @versions;
 	my $releaseid;
@@ -197,7 +201,7 @@ sub perffullexpand {
 	$index->{'times_versions'} =
 		$index->{dbh}->prepare
 			( 'select releaseid from '.$config->{'dbprefix'}.'times'
-			  . ' where reindex = 1'
+			  . ' where reindex = '.$reindex
 			  . ' order by releaseid desc'
 			);
 	$index->{'times_versions'}->execute();
@@ -206,50 +210,7 @@ sub perffullexpand {
 	}
 	$index->{'times_versions'} = undef;
 	$totaltime = 0;
-	return onelineexpand($templ, 1, @versions);
-}
-
-
-=head2 C<perfincexpand ($templ)>
-
-Function C<perffullexpand> is a "$function" substitution function
-for C<perfinc>.
-It returns its template argument expanded for every line in the DB selection.
-
-=over
-
-=item 1 C<$templ>
-
-a I<string> containing the template
-
-=back
-
-It fetches versions involved in incremental indexations.
-
-The "line" is expanded by a common procedure.
-
-=cut
-
-sub perfincexpand {
-	my ($templ) = @_;
-	my $direx = '';
-	my @versions;
-	my $releaseid;
-	my @perfdata;
-
-	$index->{'times_versions'} =
-		$index->{dbh}->prepare
-			( 'select releaseid from '.$config->{'dbprefix'}.'times'
-			  . ' where reindex = 0'
-			  . ' order by releaseid desc'
-			);
-	$index->{'times_versions'}->execute();
-	while (($releaseid) = $index->{'times_versions'}->fetchrow_array()) {
-		push(@versions, $releaseid) unless $releaseid eq ''
-	}
-	$index->{'times_versions'} = undef;
-	$totaltime = 0;
-	return onelineexpand($templ, 0, @versions);
+	return onelineexpand($templ, $reindex, @versions);
 }
 
 
@@ -297,6 +258,28 @@ sub perffpurgeexpand {
 }
 
 
+=head2 C<gettotaltime ()>
+
+Auxiliary function C<gettotaltime> returns the total elapsed time
+over all version indexations (as the sum of individual total
+elapsed times).
+
+Due to I<Perl> binding rules for variables (at time of
+C<sub> definition), global variable C<$totaltime> cannot be
+simply referenced in the calling argument list of function
+for C<perftotal> because it would capture the value at
+definition time, namely 0.
+
+By using a function, we insure we always get the current
+value at time of call.
+
+=cut
+
+sub gettotaltime {
+	return $totaltime;
+}
+
+
 =head2 Script entry point
 
 Selects the correct header and footer, retrieves the C<'htmlperf'> template
@@ -322,10 +305,10 @@ if ($templ =~ m/^$errorsig/) {
 $totaltime = 0;
 print(expandtemplate
 		( $templ
-		,	( 'perffull' => sub { perffullexpand(@_) }
-			, 'perfinc' => sub { perfincexpand(@_) }
+		,	( 'perffull' => sub { perfdataexpand(@_, 1) }
+			, 'perfinc' => sub { perfdataexpand(@_, 0) }
 			, 'perffullpurge' => sub { perffpurgeexpand(@_) }
-			, 'perftotal'=> sub { duration(0, $totaltime) }
+			, 'perftotal'=> sub { duration(0, gettotaltime()) }
 			)
 		)
 );
