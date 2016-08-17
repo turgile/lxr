@@ -34,7 +34,7 @@
 /*@IF	%_createglobals% */
 /*@XQT echo "*** MySQL - Creating global user %DB_user%"*/
 /*@XQT mysql -u root -p <<END_OF_USER*/
-drop user '%DB_user%'@'localhost';
+drop user if exists '%DB_user%'@'localhost';
 /*@XQT END_OF_USER*/
 /*@XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_user%'@'localhost' identified by '%DB_password%';
@@ -260,6 +260,7 @@ create table %DB_tbl_prefix%symbols
 /* The following function decrements the symbol reference count
  * (to be used in triggers).
  */
+drop procedure if exists %DB_tbl_prefix%decsym;
 delimiter //
 create procedure %DB_tbl_prefix%decsym(in whichsym int)
 begin
@@ -304,8 +305,8 @@ create table %DB_tbl_prefix%definitions
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
  */
-delimiter //
 drop trigger if exists %DB_tbl_prefix%remove_definition;
+delimiter //
 create trigger %DB_tbl_prefix%remove_definition
 	after delete on %DB_tbl_prefix%definitions
 	for each row
@@ -361,6 +362,7 @@ create table %DB_tbl_prefix%times
 	)
 	engine = MyISAM;
 
+drop procedure if exists %DB_tbl_prefix%PurgeAll;
 delimiter //
 create procedure %DB_tbl_prefix%PurgeAll ()
 begin
@@ -379,13 +381,43 @@ begin
 	insert into %DB_tbl_prefix%typenum
 		(rcd, tid) VALUES (0, 0);
 /*@ENDIF*/
-	truncate table %DB_tbl_prefix%definitions;
-	truncate table %DB_tbl_prefix%usages;
-	truncate table %DB_tbl_prefix%langtypes;
-	truncate table %DB_tbl_prefix%symbols;
-	truncate table %DB_tbl_prefix%releases;
-	truncate table %DB_tbl_prefix%status;
-	truncate table %DB_tbl_prefix%files;
+/* *** *** ajl 160815 *** *** */
+/* A bug in TRUNCATE TABLE management causes it to become
+ * unacceptably slow on huge tables. To avoid the performance
+ * penalty, an alternate strategy is used.
+ * The tables which are deemed to have small to "acceptable"
+ * sizes are processed as usual.
+ */
+--	truncate table %DB_tbl_prefix%definitions;
+--	truncate table %DB_tbl_prefix%usages;
+--	truncate table %DB_tbl_prefix%langtypes;
+--	truncate table %DB_tbl_prefix%symbols;
+--	truncate table %DB_tbl_prefix%releases;
+--	truncate table %DB_tbl_prefix%status;
+--	truncate table %DB_tbl_prefix%files;
+/* This is the workaround: */
+	rename table %DB_tbl_prefix%definitions to trash;
+	create table %DB_tbl_prefix%definitions like trash;
+	drop table trash;
+	rename table %DB_tbl_prefix%usages to trash;
+	create table %DB_tbl_prefix%usages like trash;
+	drop table trash;
+	rename table %DB_tbl_prefix%langtypes to trash;
+	create table %DB_tbl_prefix%langtypes like trash;
+	drop table trash;
+	rename table %DB_tbl_prefix%symbols to trash;
+	create table %DB_tbl_prefix%symbols like trash;
+	drop table trash;
+	rename table %DB_tbl_prefix%releases to trash;
+	create table %DB_tbl_prefix%releases like trash;
+	drop table trash;
+	rename table %DB_tbl_prefix%status to trash;
+	create table %DB_tbl_prefix%status like trash;
+	drop table trash;
+	rename table %DB_tbl_prefix%files to trash;
+	create table %DB_tbl_prefix%files like trash;
+	drop table trash;
+/* End of work around */
 	truncate table %DB_tbl_prefix%times;
 	set session foreign_key_checks = @old_check;
 end//
