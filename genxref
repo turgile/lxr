@@ -465,11 +465,19 @@ foreach my $treedescr (@config) {
 
 	%versionset = ();
 	$SIG{__DIE__} = \&abortcleanup;
+	$index->{'indexing_complete'} =
+		$index->{dbh}->prepare
+			( 'delete from '.$config->{'dbprefix'}.'times'
+			. ' where releaseid = ' . "''" . ' and reindex = 0'
+			);
+	@wtimes = (time(), 0, 0, 0, 0);	# start time
+	$index->saveperformance('', 0 ,@wtimes);
+	$milestone = 1;
+
 	if ($files->isa('LXR::Files::CVS') && scalar(@versions)<=0) {
 		$versioninprogress = 'CVS all versions';
-		$wtimes[0] = time();	# start time
-		$milestone = 1;
 		print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
+		$wtimes[0] = time();
 		$index->purgeall;
 		print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
 		$wtimes[1] = time();
@@ -513,7 +521,6 @@ foreach my $treedescr (@config) {
 
 	} else {
 		$wtimes[0] = time();	# start time
-		$milestone = 1;
 
 #	purgeall() is much faster than a sequence of purge($version);
 #	if there is only one version in the range, use it instead of
@@ -637,6 +644,8 @@ foreach my $treedescr (@config) {
 		}
 	}
 	delete $SIG{__DIE__};
+	$index->{'indexing_complete'}->execute();
+	$index->{'indexing_complete'} = undef;
 	$index->final_cleanup();
 	
 }
@@ -663,6 +672,8 @@ sub abortcleanup {
 		$wtimes[$milestone] = $wtimes[$milestone-1];
 	}
 	$index->saveperformance($versioninprogress, $reindexmode, @wtimes);
+	$index->{'indexing_complete'}->execute();
+	$index->{'indexing_complete'} = undef;
 	$index->final_cleanup();
 	die;
 }

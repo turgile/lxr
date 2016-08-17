@@ -1454,6 +1454,11 @@ sub displayindexstate {
 	if (-1 == $indexdate) {
 		return '<p class=error>Incompatible indexation performance data</p>' . "\n";
 	}
+	if (-2 == $indexdate) {
+		return '<p class=error>Indexing started on '
+			. _edittime($crash)
+			. ' still in progress</p>' . "\n";
+	}
 	if (defined($crash)) {
 		return '<p class=error>Indexation started on '
 			. _edittime($indexdate)

@@ -285,7 +285,8 @@ sub _edittime {
 =head2 C<indexstate ()>
 
 Function C<indexstate> the most recent indexation time for the current
-tree or 0 if it is not indexed yet, -1 if performance data is incompatible.
+tree or 0 if it is not indexed yet, -1 if performance data is incompatible,
+-2 if indexing in progress.
 
 =head3 Algorithm
 
@@ -299,6 +300,10 @@ sub indexstate {
 	my (@milestones_f, @milestones_i);
 	my @milestones;
 
+	@milestones = $index->getperformance('', 0);	# indexing in progress flag
+	if ($#milestones > 0) {
+		return (-2, $milestones[2]);
+	}
 	@milestones_f = $index->getperformance($releaseid, 1);	# full indexing
 	@milestones_i = $index->getperformance($releaseid, 0);	# incremental indexing
 	if	(	$#milestones_f < 0
