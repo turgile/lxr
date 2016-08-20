@@ -207,7 +207,7 @@ sub post_processing {
 
 	my $dbfile = $config->{'dbname'};
 	my $dbhost = $dbfile;
-	$dbfile =~ s/^.*dbi:Pg:dbname=//;
+	$dbfile =~ s/^.*dbi:mysql:dbname=//;
 	$dbfile =~ s/;.*$//;
 	$dbhost =~ s/^.*host=//;
 	$dbhost =~ s/;.*$//;
