@@ -29,6 +29,7 @@
 /*--*/
 /*@XQT echo "*** SQLite -  Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
 /*@XQT sqlite3 %DB_name% <<END_OF_TABLES*/
+/*@IF		!%_DBupdate% */
 drop table if exists %DB_tbl_prefix%files;
 drop table if exists %DB_tbl_prefix%symbols;
 drop table if exists %DB_tbl_prefix%definitions;
@@ -41,18 +42,19 @@ drop table if exists %DB_tbl_prefix%times;
 /*- Tables for unique ids management -*/
 /*@ADD initdb/unique-user-sequences.sql*/
 
+/*@ENDIF	!%_DBupdate% */
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file
  */
-create table %DB_tbl_prefix%files
+create table if not exists %DB_tbl_prefix%files
 	( fileid    int          not null primary key
 	, filename  varchar(255) not null
 	, revision  varchar(255) not null
 	, constraint %DB_tbl_prefix%uk_files
 		unique (filename, revision)
 	);
-create index %DB_tbl_prefix%filelookup
+create index if not exists %DB_tbl_prefix%filelookup
 	on %DB_tbl_prefix%files(filename);
 
 /* Status of files in the DB */
@@ -68,7 +70,7 @@ create index %DB_tbl_prefix%filelookup
 /* Deletion of a record automatically removes the associated
  * base version files record.
  */
-create table %DB_tbl_prefix%status
+create table if not exists %DB_tbl_prefix%status
 	( fileid    int     not null primary key
 	, relcount  int
 	, indextime int
@@ -98,7 +100,7 @@ create trigger %DB_tbl_prefix%remove_file
 	fileid:		refers to base version
 	releaseid:	"public" release tag
  */
-create table %DB_tbl_prefix%releases 
+create table if not exists %DB_tbl_prefix%releases 
 	( fileid    int          not null
 	, releaseid varchar(255) not null
 	, constraint %DB_tbl_prefix%pk_releases
@@ -142,7 +144,7 @@ create trigger %DB_tbl_prefix%remove_release
 /* Types for a language */
 /*	declaration:	provided by generic.conf
  */
-create table %DB_tbl_prefix%langtypes
+create table if not exists %DB_tbl_prefix%langtypes
 	( typeid       smallint         not null
 	, langid       tinyint unsigned not null
 	, declaration  varchar(255)     not null
@@ -155,12 +157,12 @@ create table %DB_tbl_prefix%langtypes
 	symcount:	number of definitions and usages for this name
 	symname:	symbol name
  */
-create table %DB_tbl_prefix%symbols
+create table if not exists %DB_tbl_prefix%symbols
 	( symid		int          not null primary key
 	, symcount	int
 	, symname	varchar(255) not null unique
 	);
-create index %DB_tbl_prefix%symlookup
+create index if not exists %DB_tbl_prefix%symlookup
 	on %DB_tbl_prefix%symbols(symname);
 
 /* Definitions */
@@ -170,7 +172,7 @@ create index %DB_tbl_prefix%symlookup
 	relid:	optional id of the englobing declaration
 			(refers to another symbol, not a definition)
  */
-create table %DB_tbl_prefix%definitions
+create table if not exists %DB_tbl_prefix%definitions
 	( symid   int      not null
 	, fileid  int      not null
 	, line    int      not null
@@ -191,7 +193,7 @@ create table %DB_tbl_prefix%definitions
 		foreign key (relid)
 		references %DB_tbl_prefix%symbols(symid)
 	);
-create index %DB_tbl_prefix%i_definitions
+create index if not exists %DB_tbl_prefix%i_definitions
 	on %DB_tbl_prefix%definitions(symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
@@ -215,7 +217,7 @@ create trigger %DB_tbl_prefix%remove_definition
 	end;
 
 /* Usages */
-create table %DB_tbl_prefix%usages
+create table if not exists %DB_tbl_prefix%usages
 	( symid   int not null
 	, fileid  int not null
 	, line    int not null
@@ -226,7 +228,7 @@ create table %DB_tbl_prefix%usages
 		foreign key (fileid)
 		references %DB_tbl_prefix%files(fileid)
 	);
-create index %DB_tbl_prefix%i_usages
+create index if not exists %DB_tbl_prefix%i_usages
 	on %DB_tbl_prefix%usages(symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
@@ -253,7 +255,7 @@ create trigger %DB_tbl_prefix%remove_usage
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table %DB_tbl_prefix%times
+create table if not exists %DB_tbl_prefix%times
 	( releaseid varchar(255)
 	, reindex   int
 	, starttime int

@@ -31,6 +31,7 @@
 	of a single psql invocation. -*/
 /*--*/
 /*--*/
+/*@IF		!%_DBupdate% */
 /*@IF	%_createglobals% */
 /*@XQT echo "Note: deletion of user below fails if it owns databases"*/
 /*@XQT echo "      and other objects."*/
@@ -112,6 +113,7 @@
 /*--*/
 /*--*/
 
+/*@ENDIF	!%_DBupdate% */
 /*@XQT echo "*** PostgreSQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
 /*-		Create databases under LXR user
  *		but it prevents from deleting user if databases exist
@@ -150,6 +152,7 @@
   -			multiple DB writes, i.e. multi-threading or concurrent
   -			table loading.
   -*/
+/*@IF		!%_DBupdate% */
 /*@IF 0 */
 /*- Built-in unique record id management -*/
 drop sequence if exists %DB_tbl_prefix%filenum;
@@ -173,20 +176,33 @@ drop table if exists %DB_tbl_prefix%langtypes cascade;
 drop table if exists %DB_tbl_prefix%times cascade;
 
 
+/*@ENDIF	!%_DBupdate% */
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file
  */
-create table %DB_tbl_prefix%files
+create table if not exists %DB_tbl_prefix%files
 	( fileid		int   not null primary key -- given by filenum
 	, filename		bytea not null
 	, revision		bytea not null
 	, constraint %DB_tbl_prefix%uk_files
 		unique		(filename, revision)
 	);
-create index %DB_tbl_prefix%filelookup
+/*- CAUTION! CAUTION! -*/
+/*- "if not exists" is valid only from PostgreSQL version 9.5 onwards
+ * For maximum safety, "create index" is interpreted only when creating
+ * the database. If index is modified, manually edit this block for
+ * automatic DB upgrade.
+-*/
+/*@IF		!%_DBupdate% */
+create index
+/*@	IF 0 */
+	if not exists
+/*@	ENDIF */
+	%DB_tbl_prefix%filelookup
 	on %DB_tbl_prefix%files
 	using btree (filename);
+/*@ENDIF */
 
 /* Status of files in the DB */
 /*	fileid:		refers to base version
@@ -198,7 +214,7 @@ create index %DB_tbl_prefix%filelookup
 	Though this table could be merged with 'files',
 	performance is improved with access to a very small item.
  */
-create table %DB_tbl_prefix%status
+create table if not exists %DB_tbl_prefix%status
 	( fileid	int      not null primary key
 	, relcount  int
 	, indextime int
@@ -213,6 +229,8 @@ create table %DB_tbl_prefix%status
  * (from releases), once status has been deleted so that
  * foreign key constrained has been cleared.
  */
+drop trigger if exists %DB_tbl_prefix%remove_file
+	on %DB_tbl_prefix%status;
 drop function if exists %DB_tbl_prefix%erasefile();
 create function %DB_tbl_prefix%erasefile()
 	returns trigger
@@ -233,8 +251,6 @@ create function %DB_tbl_prefix%erasefile()
 	$$;
 /*@ENDIF	%_shell% */
 
-drop trigger if exists %DB_tbl_prefix%remove_file
-	on %DB_tbl_prefix%status;
 create trigger %DB_tbl_prefix%remove_file
 	after delete on %DB_tbl_prefix%status
 	for each row
@@ -246,7 +262,7 @@ create trigger %DB_tbl_prefix%remove_file
 	fileid:		refers to base version
 	releaseid:	"public" release tag
  */
-create table %DB_tbl_prefix%releases
+create table if not exists %DB_tbl_prefix%releases
 	( fileid    int   not null
 	, releaseid bytea not null
 	, constraint %DB_tbl_prefix%pk_releases
@@ -259,6 +275,8 @@ create table %DB_tbl_prefix%releases
 /* The following triggers maintain relcount integrity
  * in status table after insertion/deletion of releases
  */
+drop trigger if exists %DB_tbl_prefix%add_release
+	on %DB_tbl_prefix%releases;
 drop function if exists %DB_tbl_prefix%increl();
 create function %DB_tbl_prefix%increl()
 	returns trigger
@@ -284,8 +302,6 @@ create function %DB_tbl_prefix%increl()
 	$$;
 /*@ENDIF	%_shell% */
 
-drop trigger if exists %DB_tbl_prefix%add_release
-	on %DB_tbl_prefix%releases;
 create trigger %DB_tbl_prefix%add_release
 	after insert on %DB_tbl_prefix%releases
 	for each row
@@ -296,6 +312,8 @@ create trigger %DB_tbl_prefix%add_release
  * to cause reindexing, especially if the file is shared by
  * several releases
  */
+drop trigger if exists %DB_tbl_prefix%remove_release
+	on %DB_tbl_prefix%releases;
 drop function if exists %DB_tbl_prefix%decrel();
 create function %DB_tbl_prefix%decrel()
 	returns trigger
@@ -321,8 +339,6 @@ create function %DB_tbl_prefix%decrel()
 	$$;
 /*@ENDIF	%_shell% */
 
-drop trigger if exists %DB_tbl_prefix%remove_release
-	on %DB_tbl_prefix%releases;
 create trigger %DB_tbl_prefix%remove_release
 	after delete on %DB_tbl_prefix%releases
 	for each row
@@ -331,7 +347,7 @@ create trigger %DB_tbl_prefix%remove_release
 /* Types for a language*/
 /*	declaration:	provided by generic.conf
  */
-create table %DB_tbl_prefix%langtypes
+create table if not exists %DB_tbl_prefix%langtypes
 	( typeid		smallint     not null -- given by typenum
 	, langid		smallint     not null
 	, declaration	varchar(255) not null
@@ -344,7 +360,7 @@ create table %DB_tbl_prefix%langtypes
 	symcount:	number of definitions and usages for this name
 	symname:	symbol name
  */
-create table %DB_tbl_prefix%symbols
+create table if not exists %DB_tbl_prefix%symbols
 	( symid		int   not null primary key -- given by symnum
 	, symcount  int
 	, symname	bytea not null
@@ -359,6 +375,8 @@ create table %DB_tbl_prefix%symbols
  * for a definition
  * (to be used in triggers).
  */
+drop trigger if exists %DB_tbl_prefix%remove_definition
+	on %DB_tbl_prefix%definitions;
 drop function if exists %DB_tbl_prefix%decdecl();
 create function %DB_tbl_prefix%decdecl()
 	returns trigger
@@ -391,6 +409,8 @@ create function %DB_tbl_prefix%decdecl()
  * for a usage
  * (to be used in triggers).
  */
+drop trigger if exists %DB_tbl_prefix%remove_usage
+	on %DB_tbl_prefix%usages;
 drop function if exists %DB_tbl_prefix%decusage();
 create function %DB_tbl_prefix%decusage()
 	returns trigger
@@ -421,7 +441,7 @@ create function %DB_tbl_prefix%decusage()
 	relid:	optional id of the englobing declaration
 			(refers to another symbol, not a definition)
  */
-create table %DB_tbl_prefix%definitions
+create table if not exists %DB_tbl_prefix%definitions
 	( symid		int      not null
 	, fileid	int      not null
 	, line		int      not null
@@ -442,9 +462,21 @@ create table %DB_tbl_prefix%definitions
 		foreign key (relid)
 		references %DB_tbl_prefix%symbols(symid)
 	);
-create index %DB_tbl_prefix%i_definitions
+/*- CAUTION! CAUTION! -*/
+/*- "if not exists" is valid only from PostgreSQL version 9.5 onwards
+ * For maximum safety, "create index" is interpreted only when creating
+ * the database. If index is modified, manually edit this block for
+ * automatic DB upgrade.
+-*/
+/*@IF		!%_DBupdate% */
+create index
+/*@	IF 0 */
+	if not exists
+/*@	ENDIF */
+	%DB_tbl_prefix%i_definitions
 	on %DB_tbl_prefix%definitions
 	using btree (symid, fileid);
+/*@ENDIF */
 
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
@@ -469,15 +501,13 @@ create index %DB_tbl_prefix%i_definitions
 -- /*@ELSE*/
 -- 	$$;
 -- /*@ENDIF	%_shell% */
-drop trigger if exists %DB_tbl_prefix%remove_definition
-	on %DB_tbl_prefix%definitions;
 create trigger %DB_tbl_prefix%remove_definition
 	after delete on %DB_tbl_prefix%definitions
 	for each row
 	execute procedure %DB_tbl_prefix%decdecl();
 
 /* Usages */
-create table %DB_tbl_prefix%usages
+create table if not exists %DB_tbl_prefix%usages
 	( symid		int not null
 	, fileid	int not null
 	, line		int not null
@@ -488,9 +518,21 @@ create table %DB_tbl_prefix%usages
 		foreign key (fileid)
 		references %DB_tbl_prefix%files(fileid)
 	);
-create index %DB_tbl_prefix%i_usages
+/*- CAUTION! CAUTION! -*/
+/*- "if not exists" is valid only from PostgreSQL version 9.5 onwards
+ * For maximum safety, "create index" is interpreted only when creating
+ * the database. If index is modified, manually edit this block for
+ * automatic DB upgrade.
+-*/
+/*@IF		!%_DBupdate% */
+create index
+/*@	IF 0 */
+	if not exists
+/*@	ENDIF */
+	%DB_tbl_prefix%i_usages
 	on %DB_tbl_prefix%usages
 	using btree (symid, fileid);
+/*@ENDIF */
 
 /* The following trigger maintains correct symbol reference count
  * after usage deletion.
@@ -512,8 +554,6 @@ create index %DB_tbl_prefix%i_usages
 -- /*@ELSE*/
 -- 	$$;
 -- /*@ENDIF	%_shell% */
-drop trigger if exists %DB_tbl_prefix%remove_usage
-	on %DB_tbl_prefix%usages;
 create trigger %DB_tbl_prefix%remove_usage
 	after delete on %DB_tbl_prefix%usages
 	for each row
@@ -528,7 +568,7 @@ create trigger %DB_tbl_prefix%remove_usage
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table %DB_tbl_prefix%times
+create table if not exists %DB_tbl_prefix%times
 	( releaseid bytea
 	, reindex   int
 	, starttime int

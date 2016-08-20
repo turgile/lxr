@@ -47,6 +47,7 @@
 
 -- This assumes you have a user '%DB_user%' set up already.
 
+/*@IF		!%_DBupdate% */
 drop sequence if exists %DB_tbl_prefix%filenum;
 drop sequence if exists %DB_tbl_prefix%symnum;
 drop sequence if exists %DB_tbl_prefix%typenum;
@@ -88,11 +89,12 @@ NOORDER;
 commit;
 
 
+/*@ENDIF	!%_DBupdate% */
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file
  */
-create table %DB_tbl_prefix%files
+create table if not exists %DB_tbl_prefix%files
 	( fileid	number -- given by filenum
 	, filename	varchar2(255)
 	, revision	varchar2(255)
@@ -102,7 +104,7 @@ create table %DB_tbl_prefix%files
 		unique (filename, revision)
 	);
 
-create index %DB_tbl_prefix%filelookup
+create index if not exists %DB_tbl_prefix%filelookup
 	on %DB_tbl_prefix%files(filename);
 
 commit;
@@ -120,7 +122,7 @@ commit;
 /* Deletion of a record automatically removes the associated
  * base version files record.
  */
-create table %DB_tbl_prefix%status
+create table if not exists %DB_tbl_prefix%status
 	( fileid	number not null
 	, relcount  number
 	, indextime number
@@ -153,7 +155,7 @@ commit;
 	fileid:		refers to base version
 	releaseid:	"public" release tag
  */
-create table %DB_tbl_prefix%releases
+create table if not exists %DB_tbl_prefix%releases
 	( fileid	number
 	, releaseid	varchar2(255)
 	, constraint %DB_tbl_prefix%pk_releases
@@ -197,7 +199,7 @@ commit;
 /* Types */
 /*	declaration:	provided by generic.conf
  */
-create table %DB_tbl_prefix%langtypes
+create table if not exists %DB_tbl_prefix%langtypes
 	( typeid		number NULL
 	, langid		number NOT NULL
 	, declaration	varchar2(255)
@@ -212,7 +214,7 @@ commit;
  * 	symcount:	number of definitions and usages for this name
  *	symname:	symbol name
  */
-create table %DB_tbl_prefix%symbols
+create table if not exists %DB_tbl_prefix%symbols
 	( symid		number
 	, symcount	number
 	, symname	varchar2(255)
@@ -222,7 +224,7 @@ create table %DB_tbl_prefix%symbols
 		unique (symnane)
 	);
 
-create index %DB_tbl_prefix%symlookup
+create index if not exists %DB_tbl_prefix%symlookup
 	on %DB_tbl_prefix%files(symname);
 
 /* The following function decrements the symbol reference count
@@ -267,7 +269,7 @@ commit;
  *	relid:	optional id of the englobing declaration
  *			(refers to another symbol, not a definition)
  */
-create table %DB_tbl_prefix%definitions
+create table if not exists %DB_tbl_prefix%definitions
 	( symid		number
 	, fileid	number
 	, line		number
@@ -288,7 +290,7 @@ create table %DB_tbl_prefix%definitions
 		references %DB_tbl_prefix%symbols(symid)
 	);
 
-create index %DB_tbl_prefix%i_definitions
+create index if not exists %DB_tbl_prefix%i_definitions
 	on %DB_tbl_prefix%definitions(symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
@@ -302,7 +304,7 @@ create or replace trigger %DB_tbl_prefix%remove_definition
 commit;
 
 /* Usages */
-create table %DB_tbl_prefix%usages
+create table if not exists %DB_tbl_prefix%usages
 	( fileid	number
 	, line		number
 	, symid		number
@@ -314,7 +316,7 @@ create table %DB_tbl_prefix%usages
 		references %DB_tbl_prefix%files(fileid)
 	);
 
-create index %DB_tbl_prefix%i_usages
+create index if not exists %DB_tbl_prefix%i_usages
 	on %DB_tbl_prefix%usage(symid, fileid);
 
 /* The following trigger maintains correct symbol reference count
@@ -336,7 +338,7 @@ commit;
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table %DB_tbl_prefix%times
+create table if not exists %DB_tbl_prefix%times
 	( releaseid varchar(255)
 	, reindex   ,umber
 	, starttime number

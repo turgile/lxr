@@ -25,6 +25,7 @@
  * along with this program. If not, see <http://www.gnu.org/licences/>.
  * **************************************************************
 -*/
+/*@IF		!%_DBupdate% */
 /*-	The following shell command sequence will succeed even if an
 	individual command fails because the object exists or cannot
 	be created. This is the reason to have many commands instead
@@ -95,6 +96,7 @@ create database %DB_name%;
 /*--*/
 /*--*/
 
+/*@ENDIF	!%_DBupdate% */
 /*@XQT echo "*** MySQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
 /*-		Create tables under LXR user
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
@@ -130,6 +132,7 @@ use %DB_name%;
 /*@ELSE*/
 /*- Unique record id user management (initially developed for SQLite) -*/
 /*@	DEFINE autoinc='              '*/
+/*@IF		!%_DBupdate% */
 /*@ADD initdb/unique-user-sequences.sql*/
 alter table %DB_tbl_prefix%filenum
 	engine = MyISAM;
@@ -138,13 +141,13 @@ alter table %DB_tbl_prefix%symnum
 alter table %DB_tbl_prefix%typenum
 	engine = MyISAM;
 
+/*@ENDIF	%!_DBupdate% */
 /*@ENDIF*/
-
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file
  */
-create table %DB_tbl_prefix%files
+create table if not exists %DB_tbl_prefix%files
 	( fileid    int %autoinc% not null primary key
 	, filename  varbinary(255)     not null
 	, revision  varbinary(255)     not null
@@ -167,7 +170,7 @@ create table %DB_tbl_prefix%files
 /* Deletion of a record automatically removes the associated
  * base version files record.
  */
-create table %DB_tbl_prefix%status
+create table if not exists %DB_tbl_prefix%status
 	( fileid    int     not null primary key
 	, relcount  int
 	, indextime int
@@ -195,7 +198,7 @@ create trigger %DB_tbl_prefix%remove_file
  *	fileid:		refers to base version
  *	releaseid:	"public" release tag
  */
-create table %DB_tbl_prefix%releases 
+create table if not exists %DB_tbl_prefix%releases 
 	( fileid    int            not null
 	, releaseid varbinary(255) not null
 	, constraint %DB_tbl_prefix%pk_releases
@@ -236,7 +239,7 @@ create trigger %DB_tbl_prefix%remove_release
 /* Types for a language */
 /*	declaration:	provided by generic.conf
  */
-create table %DB_tbl_prefix%langtypes
+create table if not exists %DB_tbl_prefix%langtypes
 	( typeid       smallint         not null %autoinc%
 	, langid       tinyint unsigned not null
 	, declaration  varchar(255)     not null
@@ -250,7 +253,7 @@ create table %DB_tbl_prefix%langtypes
  * 	symcount:	number of definitions and usages for this name
  *	symname:	symbol name
  */
-create table %DB_tbl_prefix%symbols
+create table if not exists %DB_tbl_prefix%symbols
 	( symid    int            not null %autoinc% primary key
 	, symcount int
 	, symname  varbinary(255) not null unique
@@ -279,7 +282,7 @@ delimiter ;
  *	relid:	optional id of the englobing declaration
  *			(refers to another symbol, not a definition)
  */
-create table %DB_tbl_prefix%definitions
+create table if not exists %DB_tbl_prefix%definitions
 	( symid   int              not null
 	, fileid  int              not null
 	, line    int              not null
@@ -319,7 +322,7 @@ create trigger %DB_tbl_prefix%remove_definition
 delimiter ;
 
 /* Usages */
-create table %DB_tbl_prefix%usages
+create table if not exists %DB_tbl_prefix%usages
 	( symid   int not null
 	, fileid  int not null
 	, line    int not null
@@ -351,7 +354,7 @@ create trigger %DB_tbl_prefix%remove_usage
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table %DB_tbl_prefix%times
+create table if not exists %DB_tbl_prefix%times
 	( releaseid varbinary(255)
 	, reindex   int
 	, starttime int

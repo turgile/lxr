@@ -44,7 +44,7 @@ use LXR::Common;
 #
 ##############################################################
 
-my $version = '1.9';
+my $version = '2.2';
 
 #	Who am I? Strip directory path.
 my $cmdname = $0;
@@ -69,6 +69,7 @@ chomp($rootdir);
 my ($scriptdir) = $0 =~ m!([^/]+)/[^/]+$!;
 my $tmpldir = 'templates';
 my $ovrdir  = 'custom.d/templates';
+my $update;
 my $verbose;
 my $scriptout = 'initdb.sh';
 my $lxrconf = 'lxr.conf';
@@ -82,6 +83,7 @@ if (!GetOptions	(\%option
 				, 'script-out=s'=> \$scriptout
 				, 'tmpl-dir=s'	=> \$tmpldir
 				, 'tmpl-ovr=s'	=> \$ovrdir
+				, 'update|u'	=> \$update
 				, 'verbose|v'	=> \$verbose
 				, 'version'
 				)
@@ -119,6 +121,7 @@ Valid options are:
       --tmpl-ovr=directory
                   Define template user-override directory
                   (default: $ovrdir)
+  -u, --update    Update database schema preserving table contents
   -v, --verbose   Explain what is being done
       --version   Print version information and quit
 
@@ -245,7 +248,13 @@ exit $error if $error;
 
 if ($verbose) {
 	$verbose = 2;		# Force max verbosity in support routines
-	print "${VTyellow}***${VTnorm} ${VTred}L${VTblue}X${VTgreen}R${VTnorm} DB initialisation reconstruction  (version: $version) ${VTyellow}***${VTnorm}\n";
+	print "${VTyellow}***${VTnorm} ${VTred}L${VTblue}X${VTgreen}R${VTnorm} DB ";
+	if ($update) {
+		print 'schema update';
+	} else {
+		print 'initialisation reconstruction';
+	}
+	print "(version: $version) ${VTyellow}***${VTnorm}\n";
 	print "\n";
 	print "LXR root directory is ${VTbold}$rootdir${VTnorm}\n";
 	print "Configuration read from ${VTbold}$lxrconf${VTnorm}\n";
@@ -380,6 +389,8 @@ my %markers =
 		, '%LXRtmpldir%'	=> $tmpldir
 		, '%LXRovrdir%'		=> $ovrdir
 		, '%LXRconfdir%'	=> $confdir
+	# (cannot be overridden)
+		, '%_DBupdate%'		=> $update
 		);
 
 $markers{'%DB_name%'} = $dbname if $dbname;
@@ -406,7 +417,11 @@ if ($verbose) {
 foreach my $config (@config) {
 
 	if ($verbose) {
-		print "${VTyellow}***${VTnorm} scanning ${VTbold}$$config{'virtroot'}${VTnorm} tree configuration section ${VTyellow}***${VTnorm}\n";
+		print "${VTyellow}***${VTnorm} scanning ${VTbold}$$config{'treename'}${VTnorm} tree configuration section ${VTyellow}***${VTnorm}\n";
+# NOTE:	the treename is displayed ONLY when 'routing' is 'argument', which is the now
+#		recommended method. Managing all the variants would require too much effort.
+#		In single tree context, not displaying a tree name really does not matter
+#		since there is a single tree after all.
 	}
 	#	Start each iteration in default configuration
 	$markers{'%_dbuseroverride%'} = 0;
@@ -444,7 +459,8 @@ foreach my $config (@config) {
 	}
 	if (!defined($markers{'%DB_name%'})) {
 		print "${VTred}ERROR:${VTnorm} no data base name (either tree-specific or global)\n";
-		print "for tree ${VTred}$$config{'virtroot'}${VTnorm}!\n";
+		print "for tree ${VTred}$$config{'treename'}${VTnorm}!\n";
+# See NOTE above about 'treename'
 	}
 
 	if	(	$dbenginechanged
