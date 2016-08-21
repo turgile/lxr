@@ -78,8 +78,14 @@ sub filedesc {
 	my ($filename, $dir, $releaseid) = @_;
 	my $fh;
 	my $linecount = 0;
-	my $copy = '';
-	my $desc = '&nbsp;';	#first as a flag for source code, then description
+	my $copy;
+	my $desc;	# see comment
+# NOTE:	in dme's implementation, $desc served as a flag for parseable
+#		source code, in which case extracting a description is attempted.
+#		$desc is then initialised to default content &nbsp;.
+#		This part has been commented out. If it is activated again,
+#		$desc MUST be initialised to something not undef, like '',
+#		otherwise, the test will fail.
 	my $maxlines = 40;    #only look at the beginning of the file
 
 	#ignore files that aren't source code
@@ -212,13 +218,13 @@ sub filedesc {
 
 			#htmlify the comments making links to symbols and files
 			$desc = markupstring($desc, $dir);
-			return ($desc);
+			return $desc ? $desc : '&nbsp;';
 		}
 	}
 
 	# if java and the <filename><seperator> check above didn't work, just dump the whole javadoc
 	if (substr($filename, -5) eq '.java') {
-		return $desc;
+		return  $desc ? "<p>$desc</p>" : '&nbsp;';
 	}
 
 	# we didn't find any well behaved descriptions above so start over
