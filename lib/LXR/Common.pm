@@ -143,6 +143,9 @@ sub warning {
 	my $c = join(', line ', (caller)[ 0, 2 ]);
 	print(STDERR '[', scalar(localtime), "] warning: $c: $msg\n");
 	if ($wwwdebug) {
+		if (!$HTTP_inited) {
+			httpminimal();
+		}
 		if (!$HTMLheadOK) {
 			print '<html><head><title>No LXR Page Header Warning!</title>', "\n";
 			print '<base href="', $HTTP->{'host_access'}, $HTTP->{'script_path'}, "/\">\n";
