@@ -280,15 +280,16 @@ sub indexfile {
 		my @decls = <CTAGS>;
 		close(CTAGS);
 		$nsym = scalar(@decls);
+		my $type;
 		while ($_ = shift(@decls)) {
 			chomp;
 
-			my ($sym, $file, $line, $type, $ext) = split(/\t/, $_);
+			my ($sym, $file, $line, $letter, $ext) = split(/\t/, $_);
 			$line =~ s/;\"$//;  #" fix fontification
 			$ext  =~ m/language:(\w+)/;
-			$type = $typeid->{$type};
+			$type = $typeid->{$letter};
 			if (!defined $type) {
-				print 'Warning: Unknown type ', (split(/\t/, $_))[3], "\n";
+				print 'Warning: Unknown type ', $letter, "\n";
 				next;
 			}
 
