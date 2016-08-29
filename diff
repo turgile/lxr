@@ -358,9 +358,9 @@ sub printdiff {
 
 	#	Output both versions side by side
 	my $i;
-	$i = 1;
+	$i = 0;
 	$leftfile  =~ s/^/"\n" x ($leftblanks{$i++})/mge;
-	$i = 1;
+	$i = 0;
 	$rightfile =~ s/^/"\n" x ($rightblanks{$i++})/mge;
 
 	my @leftlines  = split(/\n/, $leftfile);
@@ -370,20 +370,20 @@ sub printdiff {
 					|| $config->{'diffleftwidth'}
 					|| 50;
 	print("<pre class=\"filecontent\">\n");
-	foreach $i (0 .. $len) {
+	foreach $i (1 .. $len) {
 		my $l = htmljust($leftlines[$i], $leftwidth);
 		my $r = $rightlines[$i];
 
 		my $diffmark = '  ';
-		if ($chg{ $i + 1 }) {
-			$diffmark = '<span class="diff-mark">' . $chg{ $i + 1 } . "</span>";
-			if ('&lt;&lt;' eq $chg{ $i + 1 }) {
+		if ($chg{$i}) {
+			$diffmark = '<span class="diff-mark">' . $chg{$i} . "</span>";
+			if ('&lt;&lt;' eq $chg{$i}) {
 				$l =~ s|</a> |</a> <span class="diff-left">|;
 			}
-			if ('&gt;&gt;' eq $chg{ $i + 1 }) {
+			if ('&gt;&gt;' eq $chg{$i}) {
 				$r =~ s|</a> |</a> <span class="diff-right">|;
 			}
-			if ('!!' eq $chg{ $i + 1 }) {
+			if ('!!' eq $chg{$i}) {
 				$l =~ s|</a> |</a> <span class="diff-both">|;
 				$r =~ s|</a> |</a> <span class="diff-both">|;
 			}
