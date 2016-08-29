@@ -25,6 +25,32 @@
  * along with this program. If not, see <http://www.gnu.org/licences/>.
  * **************************************************************
 -*/
+/*- ***********************************
+ *  **         **         **         **
+ *- ** CAUTION ** CAUTION ** CAUTION **
+ *  **         **         **         **
+ *  ***********************************
+ *
+ * As of 2016-08, there is still a performance BUG in MySQL where
+ * TRUNCATE TABLE is horribly slow (mostly noticeable on big tables).
+ * A workaround has been implementaed with
+ * RENAME TABLE; CREATE TABLE; DROP TABLE; instead.
+ * BUT (1): TRIGGERS associated with the dropped table are also erased.
+ *		They must therefore be recreated.
+ * BUT (2): CREATE TRIGGER cannot be used in a PROCEDURE.
+ *		The idea was to have the definition of the TRIGGER only once
+ *		in a procedure and to CALL it when creating the DB and also
+ *		inside PurgeAll() when "truncating" the table with the
+ *		workaround.
+ *		This can't be done.
+ * So BEWARE: the code to create the triggers must be duplicatied
+ * in Mysql.pm's purgeall().
+ * Do not forget this duplication as long as the workaround is necessary!
+ *
+ *  ** END OF CAUTION COMMENT
+ */
+/*-
+-*/
 /*@IF		!%_DBupdate% */
 /*-	The following shell command sequence will succeed even if an
 	individual command fails because the object exists or cannot
@@ -185,6 +211,9 @@ create table if not exists %DB_tbl_prefix%status
  * (from releases), once status has been deleted so that
  * foreign key constrained has been cleared.
  */
+/*-
+ *  ==> See CAUTION comment at beginning of file
+ */
 drop trigger if exists %DB_tbl_prefix%remove_file;
 create trigger %DB_tbl_prefix%remove_file
 	after delete on %DB_tbl_prefix%status
@@ -212,6 +241,9 @@ create table if not exists %DB_tbl_prefix%releases
 /* The following triggers maintain relcount integrity
  * in status table after insertion/deletion of releases
  */
+/*-
+ *  ==> See CAUTION comment at beginning of file
+ */
 drop trigger if exists %DB_tbl_prefix%add_release;
 create trigger %DB_tbl_prefix%add_release
 	after insert on %DB_tbl_prefix%releases
@@ -223,6 +255,9 @@ create trigger %DB_tbl_prefix%add_release
  * is given to genxref; it is thus necessary to reset status
  * to cause reindexing, especially if the file is shared by
  * several releases
+ */
+/*-
+ *  ==> See CAUTION comment at beginning of file
  */
 drop trigger if exists %DB_tbl_prefix%remove_release;
 create trigger %DB_tbl_prefix%remove_release
@@ -308,6 +343,9 @@ create table if not exists %DB_tbl_prefix%definitions
 /* The following trigger maintains correct symbol reference count
  * after definition deletion.
  */
+/*-
+ *  ==> See CAUTION comment at beginning of file
+ */
 drop trigger if exists %DB_tbl_prefix%remove_definition;
 delimiter //
 create trigger %DB_tbl_prefix%remove_definition
@@ -338,6 +376,9 @@ create table if not exists %DB_tbl_prefix%usages
 
 /* The following trigger maintains correct symbol reference count
  * after usage deletion.
+ */
+/*-
+ *  ==> See CAUTION comment at beginning of file
  */
 drop trigger if exists %DB_tbl_prefix%remove_usage;
 create trigger %DB_tbl_prefix%remove_usage
@@ -399,6 +440,9 @@ begin
 --	truncate table %DB_tbl_prefix%status;
 --	truncate table %DB_tbl_prefix%files;
 /* This is the workaround: */
+/*-
+ *  ==> See CAUTION comment at beginning of file
+ */
 	rename table %DB_tbl_prefix%definitions to trash;
 	create table %DB_tbl_prefix%definitions like trash;
 	drop table trash;

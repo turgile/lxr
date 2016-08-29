@@ -184,6 +184,81 @@ sub purgeall {
 	# Variant U
 	$self->uniquecountersreset(0);
 	# End of variants
+	# Fix a collateral effect of TRUNCATE TABLES performance bug workaround
+	my $prefix = $config->{'dbprefix'};
+	my $recreate_trigger;
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			("drop trigger if exists ${prefix}remove_file;");
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			( "create trigger ${prefix}remove_file"
+			. " after delete on ${prefix}status"
+			. '   for each row'
+			. "     delete from ${prefix}files"
+			. '     where fileid = old.fileid;'
+			);
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			("drop trigger if exists ${prefix}add_release;");
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			( "create trigger ${prefix}add_release"
+			. " after insert on ${prefix}releases"
+			. '   for each row'
+			. "     update ${prefix}status"
+			. '       set relcount = relcount + 1'
+			. '       where fileid = new.fileid;'
+			);
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			("drop trigger if exists ${prefix}remove_release;");
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			( "create trigger ${prefix}remove_release"
+			. " after delete on ${prefix}releases"
+			. '   for each row'
+			. "     update ${prefix}status"
+			. '       set relcount = relcount - 1'
+			. '       where fileid = old.fileid'
+			. '       and relcount > 0;'
+			);
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			("drop trigger if exists ${prefix}remove_definition;");
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			( "create trigger ${prefix}remove_definition"
+			. " after delete on ${prefix}definitions"
+			. '   for each row'
+			. '   begin'
+			. "     call ${prefix}decsym(old.symid);"
+			. '     if old.relid is not null'
+			. "     then call ${prefix}decsym(old.relid);"
+			. '     end if;'
+			. '   end;'
+			);
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			( "drop trigger if exists ${prefix}remove_usage;");
+	$recreate_trigger->execute();
+	$recreate_trigger =
+		$self->{dbh}->prepare
+			( "create trigger ${prefix}remove_usage"
+			. " after delete on ${prefix}usages"
+			. '   for each row'
+			. "     call ${prefix}decsym(old.symid);"
+			);
+	$recreate_trigger->execute();
+	$recreate_trigger = undef;
 }
 
 sub final_cleanup {
