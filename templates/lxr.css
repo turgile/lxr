@@ -106,6 +106,22 @@
 ; margin: 0
 }
 
+  .indexstate
+{ margin: 0.3cm 2cm 0.5cm 2cm
+; padding: 10px 0.5cm
+; background-color: #f8f8f8
+; border: thin solid #888888
+; text-align: center
+}
+
+  [class~=indexstate] [class~=error]
+{ border: thick solid red
+}
+
+  [class~=indexstate] [class~=warning]
+{ border: thin solid red
+}
+
 /***********************/
 /* headers and footers */
 /***********************/

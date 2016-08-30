@@ -1451,24 +1451,24 @@ sub displayindexstate {
 	my ($indexdate, $crash) = indexstate();
 
 	if (0 == $indexdate) {
-		return '<p class=error>This version has not been indexed</p>' . "\n";
+		return '<p class="indexstate error">This version has not been indexed</p>' . "\n";
 	}
 	if (-1 == $indexdate) {
-		return '<p class=error>Incompatible indexation performance data</p>' . "\n";
+		return '<p class="indexstate error">Incompatible indexation performance data</p>' . "\n";
 	}
 	if (-2 == $indexdate) {
-		return '<p class=error>Indexing started on '
+		return '<p class="indexstate warning">Indexing started on '
 			. _edittime($crash)
 			. ' still in progress</p>' . "\n";
 	}
 	if (defined($crash)) {
-		return '<p class=error>Indexation started on '
+		return '<p class="indexstate error">Indexation started on '
 			. _edittime($indexdate)
 			. ' crashed on '
 			. _edittime($crash)
 			. ' (all times in UTC)</p>' . "\n"
 	}
-	return '<p>Last indexation on '
+	return '<p class=indexstate>Last indexation on '
 		. _edittime($indexdate)
 		. ' UTC</p>' . "\n";
 }

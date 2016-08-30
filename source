@@ -864,20 +864,20 @@ sub printfile {
 				# Check for a discrepancy between file and database states
 				if (! LXR::Lang::parseable($pathname, $releaseid)) {
 					print(
-						"<p>\n<i class=error>Warning, </i>$pathname<i class=error> is written in an unsupported language."
+						"<p class=\"indexstate warning\">\n<i class=error>Warning, </i>$pathname<i class=error> is written in an unsupported language."
 						, " File is not indexed.</i>\n</p>\n"
 					);
 				} else {
 					my $t = indextime(@_,  '', $pathname);
 					if ('-' eq $t) {
 						print(
-							"<p>\n<i class=error>Warning, file </i>$pathname<i class=error> was not indexed"
+							"<p class=\"indexstate warning\">\n<i class=error>Warning, file </i>$pathname<i class=error> was not indexed"
 							, "\nor was modified since last indexation"
 							, " (in which case cross-reference links may be missing, inaccurate or erroneous).</i></p>\n"
 						);
 					} else {
 						print(
-							"<p>\nFile indexing completed on $t\n</p>\n"
+							"<p class=indexstate>\nFile indexing completed on $t\n</p>\n"
 						);
 					}
 				}
