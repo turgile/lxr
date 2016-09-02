@@ -41,7 +41,8 @@
 #@	IF	!%_globaldb%
 #@		ASK,DB_name --- Database file? (e.g. /home/myself/storage.db); -2\
 		#@				; ^/,absolute file path required\
-		#@				, [^/]$,must be a file
+		#@				, [^/]$,must be a file\
+		#@				, ^[^;]+$,filename cannot contain semicolon
 #@		CANONR,DB_name ',\'
 #@	ENDIF
 	, 'dbname' => 'dbi:SQLite:dbname=%DB_name%'
