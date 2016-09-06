@@ -438,7 +438,7 @@ sub parse_statement {
 			if (!($cline = &$source())) {
 				die "EOF while expecting statement continuation";
 			}
-			if ($cline !~ s/^\s*//) {
+			if ($cline !~ s/^\s*//) {	# drop initial whitespace
 				die "Incorrect continuation for statement at line $linenr!";
 			}
 			chomp($$line);
@@ -474,7 +474,7 @@ sub interpret_statement {
 								# Shell command
 	if ($command eq 'XQT') {
 		if ($$markers{'%_shell%'}) {
-			$$outerline =~ s:^${comstart}\@${command}\s(.*)\s*${comend}\s*\n:$1\n:;
+			$$outerline =~ s/^${comstart}\@(?:\w+:)*\s*${command}\s(.*)\s*${comend}\s*\n/$1\n/;
 		} #else {		# Uncomment to remove line from output
 		#	return 1;
 		#}
@@ -651,8 +651,9 @@ sub interpret_statement {
 				$string =~ s/$match/$replace/;
 			}
 		}
+		substitute_markers (\$string, $markers, $comstart, $comend);
 		$$markers{"%$var%"} = $string;
-		next;
+		return 1;
 	}
 
 								# Conditional block
@@ -987,7 +988,7 @@ sub interpret_statement {
 		|| $command eq 'ENDON'
 		|| $command eq 'ENDP2'
 		) {
-		print "${VTred}ERROR:${VTnorm} spurious $command!\n";
+		print "${VTred}ERROR:${VTnorm} spurious $command at line $.!\n";
 		return 1;
 	}
 
