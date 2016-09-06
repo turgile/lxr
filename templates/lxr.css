@@ -114,11 +114,11 @@
 ; text-align: center
 }
 
-  [class~=indexstate] [class~=error]
+  P.indexstate.error
 { border: thick solid red
 }
 
-  [class~=indexstate] [class~=warning]
+  P.indexstate.warning
 { border: thin solid red
 }
 
