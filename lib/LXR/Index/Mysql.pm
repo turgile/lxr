@@ -189,7 +189,7 @@ sub purgeall {
 	my $recreate_trigger;
 	$recreate_trigger =
 		$self->{dbh}->prepare
-			("drop trigger if exists ${prefix}remove_file;");
+			("drop trigger if exists ${prefix}remove_file");
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
@@ -197,12 +197,12 @@ sub purgeall {
 			. " after delete on ${prefix}status"
 			. '   for each row'
 			. "     delete from ${prefix}files"
-			. '     where fileid = old.fileid;'
+			. '     where fileid = old.fileid'
 			);
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
-			("drop trigger if exists ${prefix}add_release;");
+			("drop trigger if exists ${prefix}add_release");
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
@@ -211,12 +211,12 @@ sub purgeall {
 			. '   for each row'
 			. "     update ${prefix}status"
 			. '       set relcount = relcount + 1'
-			. '       where fileid = new.fileid;'
+			. '       where fileid = new.fileid'
 			);
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
-			("drop trigger if exists ${prefix}remove_release;");
+			("drop trigger if exists ${prefix}remove_release");
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
@@ -226,12 +226,12 @@ sub purgeall {
 			. "     update ${prefix}status"
 			. '       set relcount = relcount - 1'
 			. '       where fileid = old.fileid'
-			. '       and relcount > 0;'
+			. '       and relcount > 0'
 			);
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
-			("drop trigger if exists ${prefix}remove_definition;");
+			("drop trigger if exists ${prefix}remove_definition");
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
@@ -239,23 +239,23 @@ sub purgeall {
 			. " after delete on ${prefix}definitions"
 			. '   for each row'
 			. '   begin'
-			. "     call ${prefix}decsym(old.symid);"
+			. "     call ${prefix}decsym(old.symid)"
 			. '     if old.relid is not null'
-			. "     then call ${prefix}decsym(old.relid);"
+			. "     then call ${prefix}decsym(old.relid)"
 			. '     end if;'
-			. '   end;'
+			. '   end'
 			);
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
-			( "drop trigger if exists ${prefix}remove_usage;");
+			( "drop trigger if exists ${prefix}remove_usage");
 	$recreate_trigger->execute();
 	$recreate_trigger =
 		$self->{dbh}->prepare
 			( "create trigger ${prefix}remove_usage"
 			. " after delete on ${prefix}usages"
 			. '   for each row'
-			. "     call ${prefix}decsym(old.symid);"
+			. "     call ${prefix}decsym(old.symid)"
 			);
 	$recreate_trigger->execute();
 	$recreate_trigger = undef;
