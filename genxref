@@ -92,8 +92,22 @@ if	(	!$option{'checkonly'}
 	&&	!$option{'allurls'}
 	) {
 	die("${VTred}ERROR:${VTnorm} in real mode (not checking mode set by ${VTbold}--checkonly${VTnorm}),\n"
-		. "an URL must be specified through ${VTyellow}--url${VTnorm} or ${VTyellow}--allurls${VTnorm}.${VTnorm}\n"
+		. "an URL must be specified through ${VTyellow}--url${VTnorm} or ${VTyellow}--allurls${VTnorm}.\n"
 		. "Try \"genxref --help\".\n");
+}
+if	(	exists($option{'url'})
+	&&	exists($option{'allurls'})
+	) {
+	die("${VTred}ERROR:${VTnorm} options ${VTyellow}--url${VTnorm} and ${VTyellow}--allurls${VTnorm}"
+		. "cannot be specified simultaneously.\n");
+}
+if	(	!exists($option{'allversions'})
+	&&	!exists($option{'version'})
+	) {
+# Create a courtesy --allversions option to simplify further coding, so that we do not
+# repeatedly code exists($options{'allversions'} || !exists($options('version'). Checking
+# for --allurls will be enough.
+	$option{'allversions'} = ' ';
 }
 
 
@@ -424,7 +438,7 @@ foreach my $treedescr (@config) {
 	$autoversionflag = 0;
 	$repeatbannercountdown = $repeatbannerevery;
 
-	if (exists($option{'allversions'}) || !exists($option{'version'})) {
+	if (exists($option{'allversions'})) {
 		if	(  $files->isa('LXR::Files::CVS')
 			&& ref($config->{'variables'}{'v'}{'range'}) eq 'CODE'
 			) {
@@ -515,6 +529,7 @@ foreach my $treedescr (@config) {
 
 		if	(	exists($option{'allversions'})
 			&&	$option{'allversions'} ne 'noauto'
+			&&	$option{'allversions'} ne ' '	# don't consider courtesy value
 			) {
 			dump_versionset('CVS', \%versionset);
 		}
@@ -533,9 +548,7 @@ foreach my $treedescr (@config) {
 		$reindexmode = 0;
 		if (exists($option{'reindexall'})) {
 			$reindexmode = 1;
-			if	( exists($option{'allversions'})
-				|| !exists($option{'version'})
-				) {
+			if	(exists($option{'allversions'})) {
 				print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 				$index->purgeall;
 				$wtimes[1] = time();
@@ -550,9 +563,7 @@ foreach my $treedescr (@config) {
 			}
 		} else {
 			my $vc;
-			if	( exists($option{'allversions'})
-				|| !exists($option{'version'})
-				) {
+			if	(exists($option{'allversions'})) {
 				$index->{'version_count'} =
 					$index->{dbh}->prepare
 						( 'select count(reindex) from '.$config->{'dbprefix'}.'times'
