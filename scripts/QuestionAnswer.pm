@@ -111,9 +111,17 @@ sub get_user_choice {
 	#	Get answer from user and return a normalised one
 QLOOP:
 	while (1) {
+		my $multiline = "\n" eq substr($question, -1, 1);
+		if ($multiline) {
+			$question = substr($question, 0, -1);
+		}
 		print $question;
 		if (@choices) {
-			print " [${VTyellow}", join("${VTnorm}/${VTyellow}", @choices), "${VTnorm}]";
+			if ($multiline) {
+				print ":\n   ${VTyellow}", join("${VTnorm}\n   ${VTyellow}", @choices), "${VTnorm}\n";
+			} else {
+				print " [", join("${VTnorm}/${VTyellow}", @choices), "${VTnorm}]";
+			}
 		}
 		print " ${VTslow}${VTyellow}>${VTnorm} ";
 		my $userentry = <STDIN>;
