@@ -36,21 +36,26 @@ require LXR::Lang::Generic;
 our @ISA = ('LXR::Lang::Generic');
 
 
-=head2 C<new ($pathname, $releaseid, $lang)>
+=head2 C<new ($writeDB, $pathname, $releaseid, $lang)>
 
 Method C<new> creates a new language object.
 
 =over
 
-=item 1 C<$pathname>
+=item 1 C<$writeDB>
+
+a I<boolean> I<integer> requesting to store language properties
+(huyman-readable type description) into the database
+
+=item 2 C<$pathname>
 
 a I<string> containing the name of the file to parse
 
-=item 1 C<$releaseid>
+=item 3 C<$releaseid>
 
 a I<string> containing the release (version) of the file to parse
 
-=item 1 C<$lang>
+=item 4 C<$lang>
 
 a I<string> which is the I<key> for the specification I<hash>
 C<'langmap'> in file I<generic.conf>
@@ -68,11 +73,11 @@ This extension is needed to synthesize included file names.
 =cut
 
 sub new {
-	my ($proto, $pathname, $releaseid, $lang) = @_;
+	my ($proto, $writeDB,  $pathname, $releaseid, $lang) = @_;
 	my $class = ref($proto) || $proto;
 
 	# Call the effective creator
-	my $self = $class->SUPER::new($pathname, $releaseid, $lang);
+	my $self = $class->SUPER::new($writeDB, $pathname, $releaseid, $lang);
 	$pathname =~ m/\.([^.]+)$/;
 	$$self{'pasextension'}  = $1;
 	return $self;

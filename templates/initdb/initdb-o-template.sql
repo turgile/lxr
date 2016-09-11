@@ -9,7 +9,6 @@
  *		./custom.d/"customised result file name"
  *
  */
-
 /* **************************************************************
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +24,13 @@
  * along with this program. If not, see <http://www.gnu.org/licences/>.
  * **************************************************************
 -*/
-
+###
+#
+#		*** Oracle: %DB_name% ***
+#
+###
 /*@XQT echo "*** Oracle - Database creation (!!! untested !!!) ***" */
+/*@XQT if (( NO_DB == 0 )) ; then */
 /*@XQT sqlplus <<END_OF_TABLES*/
 -- ***
 -- *** CAUTION -CAUTION - CAUTION ***
@@ -47,7 +51,6 @@
 
 -- This assumes you have a user '%DB_user%' set up already.
 
-/*@IF		!%_DBupdate% */
 drop sequence if exists %DB_tbl_prefix%filenum;
 drop sequence if exists %DB_tbl_prefix%symnum;
 drop sequence if exists %DB_tbl_prefix%typenum;
@@ -87,9 +90,11 @@ CACHE 5
 NOORDER;         
 
 commit;
+quit
+/*@XQT END_OF_TABLES*/
+/*@XQT fi */
 
-
-/*@ENDIF	!%_DBupdate% */
+/*@XQT sqlplus <<END_OF_TABLES*/
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file

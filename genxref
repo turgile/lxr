@@ -23,7 +23,7 @@
 use strict;
 use lib 'lib', 'scripts';
 use Fcntl;
-use Getopt::Long;
+use Getopt::Long qw(:config gnu_getopt);
 use IO::Handle;
 use File::MMagic;
 
@@ -48,7 +48,9 @@ GetOptions	(\%option
 			, 'reindexall'
 			, 'checkonly'
 			, 'accept'
+			, 'T'
 			, 'novacuum'
+			, 'U'
 			);
 
 if ($option{'help'}) {
@@ -75,6 +77,12 @@ Valid options are:
   --reindexall       Purges existing index data
   --checkonly        Verify tools version and stop
   --accept           Accept parameter suggestions to continue with indexing
+  -T                 Do not trace activity
+                     Note: with "monster" trees like Linux kernel, this means
+                           nothing will be printed for hours; check the disk
+                           activity LED before deciding that your computer
+                           is frozen. Don't foolishly kill the task or reboot
+                           the computer!
   --novacuum         Do not VACUUM database tables after generating the
                      cross-references (mainly for PostgreSQL because it sollicits
                      password from the user preventing unattended operation;
@@ -109,6 +117,9 @@ if	(	!exists($option{'allversions'})
 # for --allurls will be enough.
 	$option{'allversions'} = ' ';
 }
+
+
+my $trace = !$option{'T'};
 
 
 ##############################################################
@@ -428,9 +439,10 @@ foreach my $treedescr (@config) {
 	die "${VTred}Can't create file access object ${VTnorm}" . $config->{'sourceroot'}
 		if !defined($files);
 	$LXR::Index::database_id++;		# Changing database
-	$index = LXR::Index->new($config, 1);	# write mode requested
+	$index = LXR::Index->new($config);
 	die "${VTred}Can't create Index ${VTnorm}" . $config->{'dbname'}
 		if !defined($index);
+	$index->write_open();	# enable write transactions
 
 	%binaryfiles = ();
 
@@ -479,11 +491,6 @@ foreach my $treedescr (@config) {
 
 	%versionset = ();
 	$SIG{__DIE__} = \&abortcleanup;
-	$index->{'indexing_complete'} =
-		$index->{dbh}->prepare
-			( 'delete from '.$config->{'dbprefix'}.'times'
-			. ' where releaseid = ' . "''" . ' and reindex = 0'
-			);
 	@wtimes = (time(), 0, 0, 0, 0);	# start time
 	$index->saveperformance('', 0 ,@wtimes);
 	$milestone = 1;
@@ -655,16 +662,23 @@ foreach my $treedescr (@config) {
 		}
 	}
 	delete $SIG{__DIE__};
-	$index->{'indexing_complete'}->execute();
-	$index->{'indexing_complete'} = undef;
+	$index->{dbh}->do
+			( 'delete from '.$config->{'dbprefix'}.'times'
+			. ' where releaseid = ' . "''" . ' and reindex = 0'
+			);
+	$index->write_close();
 	$index->final_cleanup();
-	
-}
 
-if (!$option{'novacuum'}) {
-	print STDERR "\nDatabase optimisation ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
-	$index->post_processing();
-	print STDERR &VTCUU(1), &VTCHA(27), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
+	# IMPORTANT REMINDER:
+	#	DB has been disconnected, consequently post_processing must not reference the DB
+	#	through the DBI/DBM interface.
+	if	(	!$option{'novacuum'}
+		&&	!($option{'U'} && $config->{'dbname'} =~ m/^dbi:Pg:/)
+		) {
+		print STDERR "\nDatabase optimisation ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
+		$index->post_processing();
+		print STDERR &VTCUU(1), &VTCHA(27), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
+	}
 }
 
 
@@ -713,7 +727,7 @@ sub directorytreetraversal {
 	my $pathname = $dirname . $filename;
 
 	if (substr($filename, -1) eq '/') {
-		dirbannerprint('***', $releaseid, $dirname, $filename);
+		dirbannerprint('***', $releaseid, $dirname, $filename) if $trace;
 		my $needbanner;
 		map {	my $node = $_;
 				my $type = substr($node, -1);
@@ -722,7 +736,7 @@ sub directorytreetraversal {
 					&&	$needbanner
 					) {
 					$needbanner = undef;
-					dirbannerprint('***', $releaseid, $dirname, $filename);
+					dirbannerprint('***', $releaseid, $dirname, $filename) if $trace;
 				}
 				directorytreetraversal	( $process_sub
 										, $releaseid
@@ -742,12 +756,12 @@ sub directorytreetraversal {
 			foreach my $releaseid (@versions) {
 				if ($repeatbannercountdown <=0) {
 					$printdirbanner = 1;
-					dirbannerprint('**=', $releaseid, $dirname, '');
+					dirbannerprint('**=', $releaseid, $dirname, '') if $trace;
 				}
 				if (1 == $autoversionflag) {		# Only in first pass
 					$versionset{$releaseid} = '';	# remember this version
 				}
-				my $didoneprocess = &$process_sub($pathname, $releaseid, $config, $files, $index);
+				my $didoneprocess = &$process_sub($pathname, $releaseid, $config, $files, $index, $trace);
 				if ($didoneprocess) {
 					$repeatbannercountdown--;
 				} else {
@@ -758,9 +772,9 @@ sub directorytreetraversal {
 		} else {
 			if ($repeatbannercountdown <=0) {
 				$printdirbanner = 1;
-				dirbannerprint('**=', $releaseid, $dirname, '');
+				dirbannerprint('**=', $releaseid, $dirname, '') if $trace;
 			}
-			$didprocess = &$process_sub($pathname, $releaseid, $config, $files, $index);
+			$didprocess = &$process_sub($pathname, $releaseid, $config, $files, $index, $trace);
 			$repeatbannercountdown-- if $didprocess;
 		}
 		$printdirbanner //= $didprocess;
@@ -771,7 +785,7 @@ sub feedswish {
 	my ($pathname, $releaseid, $swish, $filelist) = @_;
 
 	if (substr($pathname, -1) eq '/') {
-		print(STDERR "&&& $pathname $releaseid \n");
+		print STDERR "&&& $pathname $releaseid \n" if $trace;
 		map { feedswish($pathname . $_, $releaseid, $swish, $filelist) }
 		  $files->getdir($pathname, $releaseid);
 	} else {
@@ -779,7 +793,7 @@ sub feedswish {
 			if	(	$files->getfilesize($pathname, $releaseid) > 0
 				&&	LXR::Lang::parseable($pathname, $releaseid)
 				) {
-				print(STDERR "&&> $pathname $releaseid \n");
+				print STDERR "&&> $pathname $releaseid \n" if $trace;
 				print $filelist "$pathname\n";
 				my $contents = $files->getfile($pathname, $releaseid);
 				$swish->print

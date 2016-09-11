@@ -38,17 +38,24 @@ use LXR::Common;
 use IO::Handle;
 
 
-=head2 C<new ($pathname, $releaseid, @itag)>
+=head2 C<new ($writeDB, $pathname, $releaseid, @itag)>
 
 Method C<new> creates a new language object.
 
 =over
 
-=item 1 C<$pathname>
+=item 1 C<$writeDB>
+
+a I<boolean> I<integer> requesting to write language properties
+into the tree database,
+passed unaltered to the specific parser initialisation method
+(only set to 1 by I<genxref>)
+
+=item 2 C<$pathname>
 
 a I<string> containing the name of the file to parse
 
-=item 1 C<$releaseid>
+=item 3 C<$releaseid>
 
 a I<string> containing the release (version) of the file to parse
 
@@ -64,7 +71,7 @@ use the global variable.>
 
 =back
 
-=item 1 C<@itag>
+=item 4 C<@itag>
 
 an I<array> of 3 elements used to generate an C<E<lt>AE<gt>> link
 for the identifiers found in the file (just insert the identifier name
@@ -88,7 +95,7 @@ the created parser which is then returned.
 =cut
 
 sub new {
-	my ($self, $pathname, $releaseid, @itag) = @_;
+	my ($self, $writeDB, $pathname, $releaseid, @itag) = @_;
 	my ($lang, $langkey, $type);
 
 	# Try first to find a handler based on the file name
@@ -98,7 +105,7 @@ sub new {
 		if ($pathname =~ m/$$type[1]/) {
 			eval "require $$type[2]";
 			die "Unable to load $$type[2] Lang class, $@" if $@;
-			my $create = $$type[2] . '->new($pathname, $releaseid, $$type[0])';
+			my $create = $$type[2] . '->new($writeDB, $pathname, $releaseid, $$type[0])';
 			$lang = eval($create);
 			die "Unable to create $$type[2] Lang object, $@" unless defined $lang;
 			$langkey = $lk;
@@ -128,7 +135,7 @@ sub new {
 				eval "require $filetype{$langkey}[2]";
 				die "Unable to load $filetype{$langkey}[2] Lang class, $@" if $@;
 				my $create = $filetype{$langkey}[2]
-				  . '->new($pathname, $releaseid, $filetype{$langkey}[0])';
+				  . '->new($writeDB, $pathname, $releaseid, $filetype{$langkey}[0])';
 				$lang = eval($create);
 				last if defined $lang;
 				die "Unable to create $filetype{$langkey}[2] Lang object, $@";

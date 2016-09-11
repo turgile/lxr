@@ -38,7 +38,7 @@ use LXR::Common;
 our @ISA = ('LXR::Index');
 
 sub new {
-	my ($self, $config, $write_enabled) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
 
@@ -50,6 +50,12 @@ sub new {
 								  }
 								)
 		or die "Can't open connection to database: $DBI::errstr\n";
+
+	return $self;
+}
+
+sub write_open {
+	my ($self) = @_;
 
 	my $prefix = $config->{'dbprefix'};
 
@@ -77,7 +83,7 @@ sub new {
 	$self->{'purge_all'} = $self->{dbh}->prepare
 		("${prefix}PurgeAll");
 
-	return $self;
+	$self->SUPER::write_open();
 }
 
 1;

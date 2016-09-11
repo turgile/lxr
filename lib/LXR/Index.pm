@@ -94,7 +94,7 @@ method descriptions.
 #	only once and do not contribute to the running time behaviour.
 
 sub new {
-	my ($self, $config, $write_enabled) = @_;
+	my ($self, $config) = @_;
 	my $index;
     
 	%files    = ();
@@ -109,16 +109,16 @@ sub new {
 		my $dbname = uc($1);
 		if ('MYSQL' eq $dbname) {
 			require  LXR::Index::Mysql;
-			$index = LXR::Index::Mysql->new($config, $write_enabled);
+			$index = LXR::Index::Mysql->new($config);
 		} elsif ('PG' eq $dbname) {
 			require  LXR::Index::Postgres;
-			$index = LXR::Index::Postgres->new($config, $write_enabled);
+			$index = LXR::Index::Postgres->new($config);
 		} elsif ('SQLITE' eq $dbname) {
 			require  LXR::Index::SQLite;
-			$index = LXR::Index::SQLite->new($config, $write_enabled);
+			$index = LXR::Index::SQLite->new($config);
 		} elsif ('ORACLE' eq $dbname) {
 			require  LXR::Index::Oracle;
-			$index = LXR::Index::Oracle->new($config, $write_enabled);
+			$index = LXR::Index::Oracle->new($config);
 		} else {
 			die 'Can\'t find database ' . $config->{'dbname'};
 		}
@@ -126,7 +126,6 @@ sub new {
 		die 'Can\'t find database ' . $config->{'dbname'};
 	}
 	$index->{'config'} = $config;
-	$index->{'write_enabled'} = 1 if $write_enabled;
 
 	# Common syntax transactions
 	# Care is taken not to replace specific syntax transactions which
@@ -134,14 +133,6 @@ sub new {
 	# differs from one DB engine to another.
 	my $prefix = $config->{'dbprefix'};
 
-	if (!exists($index->{'files_insert'})) {
-		$index->{'files_insert'} =
-			$index->{dbh}->prepare
-				( "insert into ${prefix}files"
-				. ' (filename, revision, fileid)'
-				. ' values (?, ?, ?)'
-				);
-	}
 	if (!exists($index->{'files_select'})) {
 		$index->{'files_select'} =
 			$index->{dbh}->prepare
@@ -162,14 +153,6 @@ sub new {
 				);
 	}
 
-	if (!exists($index->{'symbols_insert'})) {
-		$index->{'symbols_insert'} =
-			$index->{dbh}->prepare
-				( "insert into ${prefix}symbols"
-				. ' (symname, symid, symcount)'
-				. ' values (?, ?, 0)'
-				);
-	}
 	if (!exists($index->{'symbols_byname'})) {
 		$index->{'symbols_byname'} =
 			$index->{dbh}->prepare
@@ -184,14 +167,6 @@ sub new {
 				. ' where symid = ?'
 				);
 	}
-	if (!exists($index->{'symbols_setref'})) {
-		$index->{'symbols_setref'} =
-			$index->{dbh}->prepare
-				( "update ${prefix}symbols"
-				. ' set symcount = ?'
-				. ' where symid = ?'
-				);
-	}
 	if (!exists($index->{'related_symbols_select'})) {
 		$index->{'related_symbols_select'} =
 			$index->{dbh}->prepare
@@ -201,22 +176,7 @@ sub new {
 				. '  and  s.symid = d.relid'
 				);
 	}
-	if (!exists($index->{'delete_symbols'})) {
-		$index->{'delete_symbols'} =
-			$index->{dbh}->prepare
-				( "delete from ${prefix}symbols"
-				. ' where symcount = 0'
-				);
-	}
 
-	if (!exists($index->{'definitions_insert'})) {
-		$index->{'definitions_insert'} =
-			$index->{dbh}->prepare
-				( "insert into ${prefix}definitions"
-				. ' (symid, fileid, line, langid, typeid, relid)'
-				. ' values (?, ?, ?, ?, ?, ?)'
-				);
-	}
 	if (!exists($index->{'definitions_select'})) {
 		$index->{'definitions_select'} =
 			$index->{dbh}->prepare
@@ -232,6 +192,130 @@ sub new {
 				. '  and  d.typeid = l.typeid'
 				. '  and  f.fileid = r.fileid'
 				. ' order by f.filename, d.line, l.declaration'
+				);
+	}
+
+	if (!exists($index->{'releases_select'})) {
+		$index->{'releases_select'} =
+			$index->{dbh}->prepare
+				( "select fileid from ${prefix}releases"
+				. ' where fileid = ?'
+				. ' and  releaseid = ?'
+				);
+	}
+
+	if (!exists($index->{'status_select'})) {
+		$index->{'status_select'} =
+			$index->{dbh}->prepare
+				( "select status from ${prefix}status"
+				. ' where fileid = ?'
+				);
+	}
+	if (!exists($index->{'status_timestamp'})) {
+		$index->{'status_timestamp'} =
+			$index->{dbh}->prepare
+				( "select indextime from ${prefix}status"
+				. ' where fileid = ?'
+				);
+	}
+
+	if (!exists($index->{'usages_select'})) {
+		$index->{'usages_select'} =
+			$index->{dbh}->prepare
+				( 'select f.filename, u.line'
+				. " from ${prefix}symbols s, ${prefix}files f"
+				.	", ${prefix}releases r, ${prefix}usages u"
+				. ' where s.symname = ?'
+				. '  and  r.releaseid = ?'
+				. '  and  u.symid  = s.symid'
+				. '  and  u.fileid = r.fileid'
+				. '  and  f.fileid = r.fileid'
+				. ' order by f.filename, u.line'
+				);
+	}
+
+	if (!exists($index->{'langtypes_select'})) {
+		$index->{'langtypes_select'} =
+			$index->{dbh}->prepare
+				( "select typeid from ${prefix}langtypes"
+				. ' where langid = ?'
+				. ' and declaration = ?'
+				);
+	}
+	if (!exists($index->{'langtypes_count'})) {
+		$index->{'langtypes_count'} =
+			$index->{dbh}->prepare
+				( "select count(*) from ${prefix}langtypes"
+				);
+	}
+
+	if (!exists($index->{'times_select'})) {
+		$index->{'times_select'} =
+			$index->{dbh}->prepare
+				( "select * from ${prefix}times"
+				. ' where releaseid = ?'
+				. ' and reindex = ?'
+				);
+	}
+	return $index;
+}
+
+=head2 C<write_open ()>
+
+C<write_open> "prepares" the transactions which write into the
+database.
+They are only used by the indexing utility..
+
+The separation between read and write transactions is two-fold.
+
+First, it ensures that faulty code will not corrupt the database
+when the write transactions have not been enabled.
+Second, it improves initialisation speed and decreases memory footprint
+when only browsing the tree..
+
+=cut
+
+sub write_open {
+	my ($index) = @_;
+	my $prefix = $index->{'config'}->{'dbprefix'};
+
+	if (!exists($index->{'files_insert'})) {
+		$index->{'files_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}files"
+				. ' (filename, revision, fileid)'
+				. ' values (?, ?, ?)'
+				);
+	}
+	if (!exists($index->{'symbols_insert'})) {
+		$index->{'symbols_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}symbols"
+				. ' (symname, symid, symcount)'
+				. ' values (?, ?, 0)'
+				);
+	}
+	if (!exists($index->{'symbols_setref'})) {
+		$index->{'symbols_setref'} =
+			$index->{dbh}->prepare
+				( "update ${prefix}symbols"
+				. ' set symcount = ?'
+				. ' where symid = ?'
+				);
+	}
+	if (!exists($index->{'delete_symbols'})) {
+		$index->{'delete_symbols'} =
+			$index->{dbh}->prepare
+				( "delete from ${prefix}symbols"
+				. ' where symcount = 0'
+				);
+	}
+	if (!exists($index->{'definitions_insert'})) {
+		$index->{'definitions_insert'} =
+			$index->{dbh}->prepare
+				( "insert into ${prefix}definitions"
+				. ' (symid, fileid, line, langid, typeid, relid)'
+				. ' values (?, ?, ?, ?, ?, ?)'
 				);
 	}
 	if (!exists($index->{'delete_file_definitions'})) {
@@ -255,21 +339,12 @@ sub new {
 				.	' )'
 				);
 	}
-
 	if (!exists($index->{'releases_insert'})) {
 		$index->{'releases_insert'} =
 			$index->{dbh}->prepare
 				( "insert into ${prefix}releases"
 				. ' (fileid, releaseid)'
 				. ' values (?, ?)'
-				);
-	}
-	if (!exists($index->{'releases_select'})) {
-		$index->{'releases_select'} =
-			$index->{dbh}->prepare
-				( "select fileid from ${prefix}releases"
-				. ' where fileid = ?'
-				. ' and  releaseid = ?'
 				);
 	}
 	if (!exists($index->{'delete_one_release'})) {
@@ -287,7 +362,6 @@ sub new {
 				. ' where releaseid = ?'
 				);
 	}
-
 	if (!exists($index->{'status_insert'})) {
 		$index->{'status_insert'} =
 			$index->{dbh}->prepare
@@ -296,25 +370,11 @@ sub new {
 				. ' values (?, 0, 0, ?)'
 				);
 	}
-	if (!exists($index->{'status_select'})) {
-		$index->{'status_select'} =
-			$index->{dbh}->prepare
-				( "select status from ${prefix}status"
-				. ' where fileid = ?'
-				);
-	}
 	if (!exists($index->{'status_update'})) {
 		$index->{'status_update'} =
 			$index->{dbh}->prepare
 				( "update ${prefix}status"
 				. ' set status = ?'
-				. ' where fileid = ?'
-				);
-	}
-	if (!exists($index->{'status_timestamp'})) {
-		$index->{'status_timestamp'} =
-			$index->{dbh}->prepare
-				( "select indextime from ${prefix}status"
 				. ' where fileid = ?'
 				);
 	}
@@ -333,27 +393,12 @@ sub new {
 				. ' where relcount = 0'
 				);
 	}
-
 	if (!exists($index->{'usages_insert'})) {
 		$index->{'usages_insert'} =
 			$index->{dbh}->prepare
 				( "insert into ${prefix}usages"
 				. ' (fileid, line, symid)'
 				. ' values (?, ?, ?)'
-				);
-	}
-	if (!exists($index->{'usages_select'})) {
-		$index->{'usages_select'} =
-			$index->{dbh}->prepare
-				( 'select f.filename, u.line'
-				. " from ${prefix}symbols s, ${prefix}files f"
-				.	", ${prefix}releases r, ${prefix}usages u"
-				. ' where s.symname = ?'
-				. '  and  r.releaseid = ?'
-				. '  and  u.symid  = s.symid'
-				. '  and  u.fileid = r.fileid'
-				. '  and  f.fileid = r.fileid'
-				. ' order by f.filename, u.line'
 				);
 	}
 	if (!exists($index->{'delete_file_usages'})) {
@@ -377,7 +422,6 @@ sub new {
 				.	' )'
 				);
 	}
-
 	if (!exists($index->{'langtypes_insert'})) {
 		$index->{'langtypes_insert'} =
 			$index->{dbh}->prepare
@@ -386,47 +430,12 @@ sub new {
 				. ' values (?, ?, ?)'
 				);
 	}
-	if (!exists($index->{'langtypes_select'})) {
-		$index->{'langtypes_select'} =
-			$index->{dbh}->prepare
-				( "select typeid from ${prefix}langtypes"
-				. ' where langid = ?'
-				. ' and declaration = ?'
-				);
-	}
-	if (!exists($index->{'langtypes_count'})) {
-		$index->{'langtypes_count'} =
-			$index->{dbh}->prepare
-				( "select count(*) from ${prefix}langtypes"
-				);
-	}
-
-	if (!exists($index->{'purge_all'})) {
-		$index->{'purge_all'} =
-			$index->{dbh}->prepare
-				( "truncate table ${prefix}definitions"
-				. ", ${prefix}usages, ${prefix}langtypes"
-				. ", ${prefix}symbols, ${prefix}releases"
-				. ", ${prefix}status, ${prefix}files"
-				. ", ${prefix}times"
-				. ' cascade'
-				);
-	}
-
 	if (!exists($index->{'times_insert'})) {
 		$index->{'times_insert'} =
 			$index->{dbh}->prepare
 				( "insert into ${prefix}times"
 				. ' (releaseid, reindex, starttime, purgeend, textend, defnend, usageend)'
 				. ' values (?, ?, ?, ?, ?, ?, ?)'
-				);
-	}
-	if (!exists($index->{'times_select'})) {
-		$index->{'times_select'} =
-			$index->{dbh}->prepare
-				( "select * from ${prefix}times"
-				. ' where releaseid = ?'
-				. ' and reindex = ?'
 				);
 	}
 	if (!exists($index->{'times_update'})) {
@@ -441,7 +450,51 @@ sub new {
 				. ' and reindex = ?'
 				);
 	}
-	return $index;
+
+	if (!exists($index->{'purge_all'})) {
+		$index->{'purge_all'} =
+			$index->{dbh}->prepare
+				( "truncate table ${prefix}definitions"
+				. ", ${prefix}usages, ${prefix}langtypes"
+				. ", ${prefix}symbols, ${prefix}releases"
+				. ", ${prefix}status, ${prefix}files"
+				. ", ${prefix}times"
+				. ' cascade'
+				);
+	}
+}
+
+=head2 C<write_close ()>
+
+C<write_close> removes the write-enable transactions.
+
+=cut
+
+sub write_close {
+	my ($self) = @_;
+
+	$self->{dbh}->commit();
+	$self->{'files_insert'} = undef;
+	$self->{'symbols_insert'} = undef;
+	$self->{'symbols_setref'} = undef;
+	$self->{'delete_symbols'} = undef;
+	$self->{'definitions_insert'} = undef;
+	$self->{'delete_file_definitions'} = undef;
+	$self->{'delete_definitions'} = undef;
+	$self->{'releases_insert'} = undef;
+	$self->{'delete_one_release'} = undef;
+	$self->{'delete_releases'} = undef;
+	$self->{'status_insert'} = undef;
+	$self->{'status_update'} = undef;
+	$self->{'status_update_timestamp'} = undef;
+	$self->{'delete_unused_status'} = undef;
+	$self->{'usages_insert'} = undef;
+	$self->{'delete_file_usages'} = undef;
+	$self->{'delete_usages'} = undef;
+	$self->{'langtypes_insert'} = undef;
+	$self->{'times_insert'} = undef;
+	$self->{'times_update'} = undef;
+	$self->{'purge_all'} = undef;
 }
 
 =head2 C<uniquecountersinit ($prefix)>
@@ -1309,10 +1362,11 @@ sub symname {
 	return $symname;
 }
 
-=head2 C<decid ($lang, $string)>
+=head2 C<decid ($writeflag, $lang, $string)>
 
 C<decid> retrieves a unique id for a declaration type in a given
-language. If this declaration is not yet in the DB, record it.
+language. If this declaration is not yet in the DB, record it
+if the write flag is set.
 
 =over
 
@@ -1357,14 +1411,17 @@ is missing (e.g. PostgreSQL and SQLite).>
 =cut
 
 sub decid {
-# 	my ($self, $lang, $string) = @_;
+# 	my ($self, $writeflag, $lang, $string) = @_;
 	my $self = shift @_;
+	my $writeflag = shift @_;
 	my $declid;
 
 	$self->{'langtypes_select'}->execute(@_);
 	($declid) = $self->{'langtypes_select'}->fetchrow_array();
 # opt	$self->{'langtypes_select'}->finish();
-	unless (defined($declid)) {
+	if	(	!defined($declid)
+		&&	$writeflag
+		) {
 		$declid = ++$typenum;
 		$self->{'langtypes_insert'}->execute($declid, @_);
 	}
@@ -1729,38 +1786,34 @@ file, symbol and type counters for later sessions.
 
 sub uniquecounterssave {
 	my	($self) = @_;
-
 	$self->{dbh}{'AutoCommit'} = 0;
 	my $prefix = $self->{'config'}{'dbprefix'};
 	if ($filenum != $fileini) {
-		my $fnnv =
-			$self->{dbh}->prepare
+		$self->{dbh}->do
 				( "update ${prefix}filenum"
 				. ' set fid = ?'
 				. ' where rcd = 0'
+				, undef
+				, $filenum
 				);
-		$fnnv->execute($filenum);
-		$fnnv = undef;
 	}
 	if ($symnum != $symini) {
-		my $snnv =
-			$self->{dbh}->prepare
+		$self->{dbh}->do
 				( "update ${prefix}symnum"
 				. ' set sid = ?'
 				. ' where rcd = 0'
-			);
-		$snnv->execute($symnum);
-		$snnv = undef;
+				, undef
+				, $symnum
+				);
 	}
 	if ($typenum != $typeini) {
-		my $tnnv =
-			$self->{dbh}->prepare
+		$self->{dbh}->do
 				( "update ${prefix}typenum"
 				. ' set tid = ?'
 				. ' where rcd = 0'
+				, undef
+				, $typenum
 				);
-		$tnnv->execute($typenum);
-		$tnnv = undef;
 	}
 }
 
@@ -1783,40 +1836,19 @@ sub dropuniversalqueries {
 
 	# Kill the universal statement handles (specific modules
 	# are responsible for their own additions).
-	$self->{'files_insert'} = undef;
 	$self->{'files_select'} = undef;
 	$self->{'allfiles_select'} = undef;
-	$self->{'symbols_insert'} = undef;
 	$self->{'symbols_byname'} = undef;
 	$self->{'symbols_byid'} = undef;
-	$self->{'symbols_setref'} = undef;
 	$self->{'related_symbols_select'} = undef;
-	$self->{'delete_symbols'} = undef;
-	$self->{'definitions_insert'} = undef;
 	$self->{'definitions_select'} = undef;
-	$self->{'delete_file_definitions'} = undef;
-	$self->{'delete_definitions'} = undef;
-	$self->{'releases_insert'} = undef;
 	$self->{'releases_select'} = undef;
-	$self->{'delete_one_release'} = undef;
-	$self->{'delete_releases'} = undef;
-	$self->{'status_insert'} = undef;
 	$self->{'status_select'} = undef;
-	$self->{'status_update'} = undef;
 	$self->{'status_timestamp'} = undef;
-	$self->{'status_update_timestamp'} = undef;
-	$self->{'delete_unused_status'} = undef;
-	$self->{'usages_insert'} = undef;
 	$self->{'usages_select'} = undef;
-	$self->{'delete_file_usages'} = undef;
-	$self->{'delete_usages'} = undef;
-	$self->{'langtypes_insert'} = undef;
 	$self->{'langtypes_select'} = undef;
 	$self->{'langtypes_count'} = undef;
-	$self->{'times_insert'} = undef;
 	$self->{'times_select'} = undef;
-	$self->{'times_update'} = undef;
-	$self->{'purge_all'} = undef;
 }
 
 =head2 C<saveperformance ($releaseid, @wtimes)>
@@ -1920,7 +1952,6 @@ Must be called before C<Index> object disappears.
 sub final_cleanup {
 	my ($self) = @_;
 
-	$self->commit();
 	$self->dropuniversalqueries();
 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
 }

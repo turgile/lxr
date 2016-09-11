@@ -9,7 +9,6 @@
  *		./custom.d/"customised result file name"
  *
  */
-
 /* **************************************************************
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,11 +24,18 @@
  * along with this program. If not, see <http://www.gnu.org/licences/>.
  * **************************************************************
 -*/
+###
+#
+#		*** SQLite: %DB_name% ***
+#
+###
 /*--*/
 /*--*/
-/*@XQT echo "*** SQLite -  Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
-/*@XQT sqlite3 %DB_name% <<END_OF_TABLES*/
-/*@IF		!%_DBupdate% */
+/*@DEFINE DBN="%DB_name%" */
+/*@CANONR,DBN [^\w],_*/
+/*@XQT if (( NO_DB == 0 && S_DB_%DBN% == 0 )) ; then */
+/*@XQT echo "*** SQLite -  Creating database %DB_name%"*/
+/*@XQT sqlite3 %DB_name% <<END_OF_CREATE*/
 drop table if exists %DB_tbl_prefix%files;
 drop table if exists %DB_tbl_prefix%symbols;
 drop table if exists %DB_tbl_prefix%definitions;
@@ -41,8 +47,12 @@ drop table if exists %DB_tbl_prefix%times;
 
 /*- Tables for unique ids management -*/
 /*@ADD initdb/unique-user-sequences.sql*/
+/*@XQT	END_OF_CREATE*/
+/*@XQT S_DB_%DBN%=1 */
+/*@XQT fi */
 
-/*@ENDIF	!%_DBupdate% */
+/*@XQT echo "*** SQLite -  Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
+/*@XQT sqlite3 %DB_name% <<END_OF_TABLES*/
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file

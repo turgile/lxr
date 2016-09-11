@@ -297,7 +297,7 @@ sub markupfile {
 	# This allows to make no assumption on idref result.
 	my $itagtarget = '---';
 	my @itag = &idref($itagtarget, 'fid', $itagtarget) =~ m/^(.*)$itagtarget(.*)$itagtarget(.*)$/;
-	my $lang = LXR::Lang->new($pathname, $releaseid, @itag);
+	my $lang = LXR::Lang->new(0, $pathname, $releaseid, @itag);
 
 	my ($btype, $frag, $ofrag);
 	if ($lang) {

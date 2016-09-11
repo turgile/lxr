@@ -41,25 +41,35 @@ our @ISA = ('LXR::Index');
 #	only once and do not contribute to the running time behaviour.
 
 sub new {
-	my ($self, $config, $write_enabled) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
 	$self->{dbh} = DBI->connect($config->{'dbname'})
 	or die "Can't open connection to database: $DBI::errstr\n";
-	my $prefix = $config->{'dbprefix'};
-	if ($write_enabled) {
-#	SQLite is forced into explicit commit mode as the medium-sized
-#	test cases have shown a 40-times (!) performance improvement
-#	over auto commit.
-		$self->{dbh}{'AutoCommit'} = 0;
-	} else {
+
 #	To really remove all writes from SQLite operation, auto commit
 #	mode must be activated. Otherwise, even with read transactions
 #	such as SELECT, SQLite tries to write into its cache. Auto
 #	commit does not matter when browsing as Perl interpretation
 #	dominates execution time.
-		$self->{dbh}{'AutoCommit'} = 1;
-	}
+	$self->{dbh}{'AutoCommit'} = 1;
+
+	return $self;
+}
+
+#
+# LXR::Index API Implementation
+#
+
+sub write_open {
+	my ($self) = @_;
+
+	my $prefix = $config->{'dbprefix'};
+
+#	SQLite is forced into explicit commit mode as the medium-sized
+#	test cases have shown a 40-times (!) performance improvement
+#	over auto commit.
+	$self->{dbh}{'AutoCommit'} = 0;
 
 	$self->{'purge_all'} = undef;	# Prevent parsing the common one
 	$self->{'purge_definitions'} =
@@ -84,17 +94,27 @@ sub new {
 #	These counters provide unique record ids for
 #	files, symbols and language types.
 
-	if ($write_enabled) {
-		$self->uniquecountersinit($prefix);
-	# The final $x_num will be saved in final_cleanup before disconnecting
-	}
+	$self->uniquecountersinit($prefix);
+	# The final $x_num will be saved in write_close before disconnecting
 
-	return $self;
+	$self->SUPER::write_open();
 }
 
-#
-# LXR::Index API Implementation
-#
+sub write_close {
+	my ($self) = @_;
+
+	$self->uniquecounterssave();
+	$self->{dbh}->commit;
+
+	$self->{'purge_definitions'} = undef;
+	$self->{'purge_usages'} = undef;
+	$self->{'purge_langtypes'} = undef;
+	$self->{'purge_symbols'} = undef;
+	$self->{'purge_releases'} = undef;
+	$self->{'purge_status'} = undef;
+	$self->{'purge_files'} = undef;
+	$self->{'purge_times'} = undef;
+}
 
 sub purgeall {
 	my ($self) = @_;
@@ -115,25 +135,12 @@ sub purgeall {
 	$self->{dbh}->commit;
 }
 
-sub final_cleanup {
-	my ($self) = @_;
-
-	if (exists($self->{'write_enabled'})) {
-		$self->uniquecounterssave();
-		$self->{dbh}->commit;
-	}
-	$self->{'purge_definitions'} = undef;
-	$self->{'purge_usages'} = undef;
-	$self->{'purge_langtypes'} = undef;
-	$self->{'purge_symbols'} = undef;
-	$self->{'purge_releases'} = undef;
-	$self->{'purge_status'} = undef;
-	$self->{'purge_files'} = undef;
-	$self->{'purge_times'} = undef;
-
-	$self->dropuniversalqueries();
-	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
-}
+# sub final_cleanup {
+# 	my ($self) = @_;
+# 
+# 	$self->dropuniversalqueries();
+# 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
+# }
 
 sub post_processing {
 	my ($self) = @_;

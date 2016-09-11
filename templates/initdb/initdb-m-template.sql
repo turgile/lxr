@@ -9,7 +9,6 @@
  *		./custom.d/"customised result file name"
  *
  */
-
 /* **************************************************************
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +24,14 @@
  * along with this program. If not, see <http://www.gnu.org/licences/>.
  * **************************************************************
 -*/
+###
+#
+#		*** MySQL: %DB_name% ***
+#
+###
 /*- ***********************************
  *  **         **         **         **
- *- ** CAUTION ** CAUTION ** CAUTION **
+ *  ** CAUTION ** CAUTION ** CAUTION **
  *  **         **         **         **
  *  ***********************************
  *
@@ -48,127 +52,132 @@
  * Do not forget this duplication as long as the workaround is necessary!
  *
  *  ** END OF CAUTION COMMENT
- */
-/*-
 -*/
-/*@IF		!%_DBupdate% */
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*-						Part 1					  -*/
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*- ---===>   One-time initialisations   <===---  -*/
+/*-												  -*/
+/*- Do not repeat if multiple databases are       -*/
+/*- created with MySQL:                           -*/
+/*- - users are global, can't be duplicated       -*/
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
 /*-	The following shell command sequence will succeed even if an
 	individual command fails because the object exists or cannot
 	be created. This is the reason to have many commands instead
 	of a single mysql invocation. -*/
 /*--*/
 /*--*/
-/*@IF	%_createglobals% */
-/*@XQT echo "*** MySQL - Creating global user %DB_user%"*/
-/*@XQT mysql -u root -p <<END_OF_USER*/
+
+# NOTE: in LXR, users have universal access to any MySQL databases.
+#       If you want to restrict access, manually configure your
+#       user rights.
+
+/*@IF	%_dbuser% */
+/*@	XQT if (( NO_USER == 0 && M_U_%DB_user% == 0 )) ; then */
+/*@	XQT echo "*** MySQL - Creating global user %DB_user%"*/
+/*@	XQT mysql -u root -p <<END_OF_USER*/
 drop user if exists '%DB_user%'@'localhost';
-/*@XQT END_OF_USER*/
-/*@XQT mysql -u root -p <<END_OF_USER*/
+/*@	XQT END_OF_USER*/
+/*@	XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_user%'@'localhost' identified by '%DB_password%';
 grant all on *.* to '%DB_user%'@'localhost';
-/*@XQT END_OF_USER*/
-/*@ENDIF	%_createglobals% */
+/*@	XQT END_OF_USER*/
+/*@	XQT M_U_%DB_user%=1 */
+/*@	XQT fi */
+/*@ENDIF	%_dbuser% */
 /*@IF	%_dbuseroverride% */
-/*@XQT echo "*** MySQL - Creating tree user %DB_tree_user%"*/
-/*@XQT mysql -u root -p <<END_OF_USER*/
+/*@	XQT if (( M_U_%DB_tree_user% -lt 1 )) ; then */
+/*@	XQT mysql -u root -p <<END_OF_USER*/
+drop user if exists '%DB_tree_user%'@'localhost';
+/*@	XQT END_OF_USER*/
+/*@	XQT echo "*** MySQL - Creating tree user %DB_tree_user%"*/
+/*@	XQT mysql -u root -p <<END_OF_USER*/
 create user '%DB_tree_user%'@'localhost' identified by '%DB_tree_password%';
 grant all on *.* to '%DB_tree_user%'@'localhost';
-/*@XQT END_OF_USER*/
+/*@	XQT END_OF_USER*/
+/*@	XQT M_U_%DB_tree_user%=1 */
+/*@	XQT fi */
 /*@ENDIF	%_dbuseroverride% */
 /*--*/
 /*--*/
 
+/*@XQT if (( NO_DB == 0 && M_DB_%DB_name% == 0 )) ; then */
 /*-		Create databases under LXR user
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
-/*@IF	%_createglobals% && %_globaldb% */
-/*@XQT echo "*** MySQL - Creating global database %DB_name%"*/
-/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
+/*@IF	%_globaldb% */
+/*@	XQT echo "*** MySQL - Creating global database %DB_name%"*/
+/*@	XQT mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@XQT END_OF_CREATE*/
-/*@ENDIF*/
-/*@IF	!%_globaldb% */
-/*@XQT echo "*** MySQL - Creating tree database %DB_name%"*/
-/*@IF		%_dbuseroverride% */
-/*@XQT mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_CREATE*/
-/*@ELSE*/
-/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
-/*@ENDIF*/
+/*@	XQT END_OF_CREATE*/
+/*@ELSE */
+/*@	XQT echo "*** MySQL - Creating tree database %DB_name%"*/
+/*@	IF		%_dbuseroverride% */
+/*@		XQT mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_CREATE*/
+/*@	ELSE*/
+/*@		XQT mysql -u %DB_user% -p%DB_password% <<END_OF_CREATE*/
+/*@	ENDIF*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@XQT END_OF_CREATE*/
-/*@ENDIF	!%_globaldb% */
+/*@	XQT END_OF_CREATE*/
+/*@ENDIF	%_globaldb% */
 /*- end of disable/enable comment -*/
 /*--*/
 /*--*/
 /*-		Create databases under master user,
 		may be restricted by site rules
 -*//*- to activate place "- * /" at end of line (without spaces)
-/*@IF	%_createglobals% && %_globaldb% */
-/*@XQT echo "*** MySQL - Creating global database %DB_name%"*/
-/*@XQT mysql -u root -p <<END_OF_CREATE*/
+/*@IF	%_globaldb% */
+/*@	XQT echo "*** MySQL - Creating global database %DB_name%"*/
+/*@	XQT mysql -u root -p <<END_OF_CREATE*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@XQT END_OF_CREATE*/
-/*@ENDIF*/
-/*@IF	!%_globaldb% */
-/*@XQT echo "*** MySQL - Creating tree database %DB_name%"*/
-/*@XQT mysql -u root -p <<END_OF_CREATE*/
+/*@	XQT END_OF_CREATE*/
+/*@ELSE */
+/*@	XQT echo "*** MySQL - Creating tree database %DB_name%"*/
+/*@	XQT mysql -u root -p <<END_OF_CREATE*/
 drop database if exists %DB_name%;
 create database %DB_name%;
-/*@XQT END_OF_CREATE*/
-/*@ENDIF	!%_globaldb% */
+/*@	XQT END_OF_CREATE*/
+/*@ENDIF	%_globaldb% */
 /*- end of disable/enable comment -*/
-/*--*/
-/*--*/
-
-/*@ENDIF	!%_DBupdate% */
-/*@XQT echo "*** MySQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
-/*-		Create tables under LXR user
--*//*- to activate place "- * /" at end of line (without spaces) -*/
-/*@IF	%_createglobals% && %_globaldb% */
-/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_TEMPLATE*/
-/*@ENDIF*/
-/*@IF	!%_globaldb% */
-/*@IF		%_dbuseroverride% */
-/*@XQT mysql -u %DB_tree_user% -p%DB_tree_password% <<END_OF_TEMPLATE*/
-/*@ELSE*/
-/*@XQT mysql -u %DB_user% -p%DB_password% <<END_OF_TEMPLATE*/
-/*@ENDIF*/
-/*@ENDIF	!%_globaldb% */
-/*- end of disable/enable comment -*/
-/*--*/
-/*--*/
-/*-		Create tables under master user,
-		may be restricted by site rules
--*//*- to activate place "- * /" at end of line (without spaces)
-/*@IF	%_createglobals% && %_globaldb% */
-/*@XQT mysql -u root -p <<END_OF_TEMPLATE*/
-/*@ENDIF*/
-/*@IF	!%_globaldb% */
-/*@XQT mysql -u root -p <<END_OF_TEMPLATE*/
-/*@ENDIF	!%_globaldb% */
-/*- end of disable/enable comment -*/
-/*--*/
-/*--*/
+/*@ADD initdb/mysql-command.sql*/
 use %DB_name%;
-
 /*@IF 0 */
 /*@	DEFINE autoinc='auto_increment'*/
 /*@ELSE*/
 /*- Unique record id user management (initially developed for SQLite) -*/
 /*@	DEFINE autoinc='              '*/
-/*@IF		!%_DBupdate% */
-/*@ADD initdb/unique-user-sequences.sql*/
+/*@	ADD initdb/unique-user-sequences.sql*/
 alter table %DB_tbl_prefix%filenum
 	engine = MyISAM;
 alter table %DB_tbl_prefix%symnum
 	engine = MyISAM;
 alter table %DB_tbl_prefix%typenum
 	engine = MyISAM;
-
-/*@ENDIF	%!_DBupdate% */
 /*@ENDIF*/
+/*@XQT END_OF_SQL*/
+/*@XQT M_DB_%DB_name%=1 */
+/*@XQT fi */
+/*--*/
+/*--*/
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*-						Part 2					  -*/
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*- ---===>    Tree database creation    <===---  -*/
+/*-												  -*/
+/*- Always to be done, this (re)creates the tables-*/
+/*- for the specific database.                    -*/
+/*- SQL is "safe".                                -*/
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*- - - - - - - - - - - - - - - - - - - - - - - - -*/
+/*@XQT echo "*** MySQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
+/*@ADD initdb/mysql-command.sql*/
+use %DB_name%;
+
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
 				of the file
@@ -213,7 +222,7 @@ create table if not exists %DB_tbl_prefix%status
  */
 /*-
  *  ==> See CAUTION comment at beginning of file
- */
+-*/
 drop trigger if exists %DB_tbl_prefix%remove_file;
 create trigger %DB_tbl_prefix%remove_file
 	after delete on %DB_tbl_prefix%status
@@ -243,7 +252,7 @@ create table if not exists %DB_tbl_prefix%releases
  */
 /*-
  *  ==> See CAUTION comment at beginning of file
- */
+-*/
 drop trigger if exists %DB_tbl_prefix%add_release;
 create trigger %DB_tbl_prefix%add_release
 	after insert on %DB_tbl_prefix%releases
@@ -258,7 +267,7 @@ create trigger %DB_tbl_prefix%add_release
  */
 /*-
  *  ==> See CAUTION comment at beginning of file
- */
+-*/
 drop trigger if exists %DB_tbl_prefix%remove_release;
 create trigger %DB_tbl_prefix%remove_release
 	after delete on %DB_tbl_prefix%releases
@@ -345,7 +354,7 @@ create table if not exists %DB_tbl_prefix%definitions
  */
 /*-
  *  ==> See CAUTION comment at beginning of file
- */
+-*/
 drop trigger if exists %DB_tbl_prefix%remove_definition;
 delimiter //
 create trigger %DB_tbl_prefix%remove_definition
@@ -379,7 +388,7 @@ create table if not exists %DB_tbl_prefix%usages
  */
 /*-
  *  ==> See CAUTION comment at beginning of file
- */
+-*/
 drop trigger if exists %DB_tbl_prefix%remove_usage;
 create trigger %DB_tbl_prefix%remove_usage
 	after delete on %DB_tbl_prefix%usages
@@ -442,7 +451,7 @@ begin
 /* This is the workaround: */
 /*-
  *  ==> See CAUTION comment at beginning of file
- */
+-*/
 	rename table %DB_tbl_prefix%definitions to trash;
 	create table %DB_tbl_prefix%definitions like trash;
 	drop table trash;
@@ -469,5 +478,5 @@ begin
 	set session foreign_key_checks = @old_check;
 end//
 delimiter ;
-/*@XQT END_OF_TEMPLATE*/
+/*@XQT END_OF_SQL*/
 

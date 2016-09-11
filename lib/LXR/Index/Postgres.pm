@@ -26,7 +26,7 @@ use LXR::Common;
 our @ISA = ('LXR::Index');
 
 sub new {
-	my ($self, $config, $write_enabled) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
 	$self->{dbh} = DBI->connect	( $config->{'dbname'}
@@ -44,6 +44,12 @@ sub new {
 								)
 	or die "Can't open connection to database: $DBI::errstr\n";
 
+	return $self;
+}
+
+sub write_open {
+	my ($self) = @_;
+
 	my $prefix = $config->{'dbprefix'};
 
 #	Without the following instruction (theoretically meaningless
@@ -51,7 +57,6 @@ sub new {
 #	on the test case!
 #	$self->{dbh}->begin_work() or die "begin_work failed: $DBI::errstr";
 
-	if ($write_enabled) {
 #	PostgreSQL may be run with its built-in unique record id management
 #	mechanisms. There is only a big performance improvement
 #	with user management.
@@ -64,66 +69,65 @@ sub new {
 #			Comment out the unused one.
 
 	# Variant B
-#B 		$self->{'filenum_nextval'} = 
-#B 			$self->{dbh}->prepare("select nextval('${prefix}filenum')");
+#B 	$self->{'filenum_nextval'} = 
+#B 		$self->{dbh}->prepare("select nextval('${prefix}filenum')");
 	# End of variants
-		$self->{'files_insert'} =
-			$self->{dbh}->prepare
-				( "insert into ${prefix}files"
-				. ' (filename, revision, fileid)'
-				. ' values (?, ?, ?)'
-				);
+	$self->{'files_insert'} =
+		$self->{dbh}->prepare
+			( "insert into ${prefix}files"
+			. ' (filename, revision, fileid)'
+			. ' values (?, ?, ?)'
+			);
 
 	# Variant B
-#B 		$self->{'symnum_nextval'} = 
-#B 			$self->{dbh}->prepare("select nextval('${prefix}symnum')");
+#B 	$self->{'symnum_nextval'} = 
+#B 		$self->{dbh}->prepare("select nextval('${prefix}symnum')");
 	# End of variants
-		$self->{'symbols_insert'} =
-			$self->{dbh}->prepare
-				( "insert into ${prefix}symbols"
-				. ' (symname, symid, symcount)'
-				. ' values (?, ?, 0)'
-				);
+	$self->{'symbols_insert'} =
+		$self->{dbh}->prepare
+			( "insert into ${prefix}symbols"
+			. ' (symname, symid, symcount)'
+			. ' values (?, ?, 0)'
+			);
 
 	# Variant B
-#B 		$self->{'typeid_nextval'} = 
-#B 			$self->{dbh}->prepare("select nextval('${prefix}typenum')");
+#B 	$self->{'typeid_nextval'} = 
+#B 		$self->{dbh}->prepare("select nextval('${prefix}typenum')");
 	# End of variants
-		$self->{'langtypes_insert'} =
-			$self->{dbh}->prepare
-				( "insert into ${prefix}langtypes"
-				. ' (typeid, langid, declaration)'
-				. ' values (?, ?, ?)'
-				);
+	$self->{'langtypes_insert'} =
+		$self->{dbh}->prepare
+			( "insert into ${prefix}langtypes"
+			. ' (typeid, langid, declaration)'
+			. ' values (?, ?, ?)'
+			);
 
-		$self->{'delete_definitions'} =
-			$self->{dbh}->prepare
-				( "delete from ${prefix}definitions as d"
-				. " using ${prefix}status t, ${prefix}releases r"
-				. ' where r.releaseid = ?'
-				. '  and  t.fileid = r.fileid'
-				. '  and  t.relcount = 1'
-				. '  and  d.fileid = r.fileid'
-				);
+	$self->{'delete_definitions'} =
+		$self->{dbh}->prepare
+			( "delete from ${prefix}definitions as d"
+			. " using ${prefix}status t, ${prefix}releases r"
+			. ' where r.releaseid = ?'
+			. '  and  t.fileid = r.fileid'
+			. '  and  t.relcount = 1'
+			. '  and  d.fileid = r.fileid'
+			);
 
-		$self->{'delete_usages'} =
-			$self->{dbh}->prepare
-				( "delete from ${prefix}usages as u"
-				. " using ${prefix}status t, ${prefix}releases r"
-				. ' where r.releaseid = ?'
-				. ' and t.fileid = r.fileid'
-				. ' and t.relcount = 1'
-				. ' and u.fileid = r.fileid'
-				);
+	$self->{'delete_usages'} =
+		$self->{dbh}->prepare
+			( "delete from ${prefix}usages as u"
+			. " using ${prefix}status t, ${prefix}releases r"
+			. ' where r.releaseid = ?'
+			. ' and t.fileid = r.fileid'
+			. ' and t.relcount = 1'
+			. ' and u.fileid = r.fileid'
+			);
 
 	# Variant U
 # User unique record id management
-		$self->uniquecountersinit($prefix);
-	# The final $x_num will be saved in final_cleanup before disconnecting
+	$self->uniquecountersinit($prefix);
+	# The final $x_num will be saved in write_close before disconnecting
 	# End of variants
-	}
 
-	return $self;
+	$self->SUPER::write_open();
 }
 
 #
@@ -132,7 +136,7 @@ sub new {
 
 ##### To activate PostgreSQL built-in record id management,
 ##### uncomment the following block.
-##### Check also purgeall() and final_cleanup()
+##### Check also purgeall() and write_close()
 
 # sub fileid {
 # # 	my ($self, $filename, $revision) = @_;
@@ -188,9 +192,8 @@ sub new {
 
 sub purgeall {
 	my ($self) = @_;
-
+ print STDERR "\nEntering purgeall\n";
 # Not really necessary, but nicer for debugging
-
 	# Variant B
 #D 	my $prefix = $self->{'config'}{'dbprefix'};
 #B 	my $rfn = $self->{dbh}->prepare
@@ -210,48 +213,70 @@ sub purgeall {
 	$self->uniquecounterssave();
 	$self->uniquecountersreset(0);
 	# End of variants
-
+ print STDERR "Launching std purge_all\n";
 	$self->{'purge_all'}->execute;
+ print STDERR "Leaving purgeall\n";
 }
 
 #	PostgreSQL is in auto commit mode; disable calls to
 #	commit to suppress warning messages.
 # sub commit{}
 
-sub final_cleanup {
+sub write_close {
 	my ($self) = @_;
 
-	if (exists($self->{'write_enabled'})) {
 	# Variant U
-		$self->uniquecounterssave();
+	$self->uniquecounterssave();
 	# End of variants
-		$self->{dbh}->commit();		# Force a real commit
+	$self->{dbh}->commit();		# Force a real commit
 	# Variant B
-#B 		$self->{'filenum_nextval'} = undef;
-#B 		$self->{'symnum_nextval'} = undef;
-#B 		$self->{'typeid_nextval'} = undef;
-#B 		$self->{'reset_filenum'} = undef;
-#B 		$self->{'reset_symnum'} = undef;
-#B 		$self->{'reset_typenum'} = undef;
+#B 	$self->{'filenum_nextval'} = undef;
+#B 	$self->{'symnum_nextval'} = undef;
+#B 	$self->{'typeid_nextval'} = undef;
+#B 	$self->{'reset_filenum'} = undef;
+#B 	$self->{'reset_symnum'} = undef;
+#B 	$self->{'reset_typenum'} = undef;
 	# End of variants
-	}
 
-	$self->dropuniversalqueries();
-	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
+	$self->SUPER::write_close();
 }
+
+# sub final_cleanup {
+# 	my ($self) = @_;
+# 
+# 	$self->dropuniversalqueries();
+# 	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
+# }
 
 sub post_processing {
 	my ($self) = @_;
 
-	my $dbfile = $config->{'dbname'};
-	my $dbhost = $dbfile;
-	$dbfile =~ s/^.*dbi:Pg:dbname=//;
-	$dbfile =~ s/;.*$//;
-	$dbhost =~ s/^.*host=//;
-	$dbhost =~ s/;.*$//;
+# 	TEMPORARY COMMENT - TEMPORARY COMMENT - TEMPORARY COMMENT !
+#	It looks like the PGPASSFILE, PGPASSWORD parameter passing
+#	or even ~/.pgpass reference does not work. Could not
+#	determine the origin of the problem: Pg library, Perl library,
+#	file permissions or working directory preset.
+#	Consequently, use --novacuum option when indexing unattended
+#	PostgreSQL databases.
+#	-- ajl - 2016-09
+#	To be removed when fixed
+
+	my $dbname = $config->{'dbname'};
+	my $dbhost = $dbname;
+	$dbname =~ s/^.*dbi:Pg:dbname=//;
+	$dbname =~ s/;.*$//;
+	if ($dbhost =~ s/^.*host=//) {
+		$dbhost =~ s/;.*$//;
+	} else {
+		$dbhost = '';
+	}
 	my $dbuser = $config->{'dbuser'};
 	my $dbpass = $config->{'dbpass'};
-	`psql -d $dbfile -h $dbhost -U $dbuser -W -c 'vacuum analyze;'`
+	if ($dbhost) {
+		`PGPASSFILE=custom.d/db-scripts.d/pgpass psql -d $dbname -h $dbhost -U $dbuser -W -c 'vacuum analyze;'`
+	} else {
+		`PGPASSFILE=custom.d/db-scripts.d/pgpass psql -d $dbname -U $dbuser -W -c 'vacuum analyze;'`
+	}
 }
 
 1;

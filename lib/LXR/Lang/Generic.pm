@@ -44,21 +44,26 @@ my $seenDB;			# Worh was done for this DB
 our @ISA = ('LXR::Lang');
 
 
-=head2 C<new ($pathname, $releaseid, $lang)>
+=head2 C<new ($writeDB, $pathname, $releaseid, $lang)>
 
 Method C<new> creates a new language object.
 
 =over
 
-=item 1 C<$pathname>
+=item 1 C<$writeDB>
+
+a I<boolean> I<integer> requesting to store language properties
+(huyman-readable type description) into the database
+
+=item 2 C<$pathname>
 
 a I<string> containing the name of the file to parse
 
-=item 1 C<$releaseid>
+=item 3 C<$releaseid>
 
 a I<string> containing the release (version) of the file to parse
 
-=item 1 C<$lang>
+=item 4 C<$lang>
 
 a I<string> which is the I<key> for the specification I<hash>
 C<'langmap'> in file I<generic.conf>
@@ -78,7 +83,7 @@ specification if none is found.
 =cut
 
 sub new {
-	my ($proto, $pathname, $releaseid, $lang) = @_;
+	my ($proto, $writeDB, $pathname, $releaseid, $lang) = @_;
 	my $class = ref($proto) || $proto;
 	my $self = {};
 	bless($self, $class);
@@ -87,8 +92,11 @@ sub new {
 
 # 	read_config() if we meet a new DB to make sure the type dictionary
 #	is correctly annotated.
-	if	($seenDB != $LXR::Index::database_id) {
-		read_config();
+	
+	if	(	!defined($generic_config)
+		||	$seenDB != $LXR::Index::database_id
+		) {
+		read_config($writeDB);
 		$seenDB = $LXR::Index::database_id;
 	}
 	%$self = (%$self, %$generic_config);
@@ -114,10 +122,19 @@ sub new {
 }
 
 
-=head2 C<read_config ()>
+=head2 C<read_config ($writeDB)>
 
 Internal function (not method!) C<read_config> reads in language
 descriptions from configuration file.
+
+=over
+
+=item 1 C<$writeDB>
+
+a I<boolean> I<integer> requesting to store language properties
+(huyman-readable type description) into the database
+
+=back
 
 Sets in global variable C<$config_contents> a reference to a I<hash>
 equivalent to the configuration file.
@@ -146,19 +163,17 @@ The mapping, as a table index in the DB, is keptin a new I<hash> C<'typeid'>.
 =cut
 
 sub read_config {
+	my ($writeDB) = @_;
+
 	open(CONF, $config->{'genericconf'})
 	or die 'Can\'t open ' . $config->{'genericconf'} . ", $!";
-
-	my $todo = !defined($generic_config);
-	if ($todo) {
-		local ($/) = undef;
-		my $config_contents = <CONF>;
-		$config_contents =~ m/(.*)/s;
-		$config_contents = $1;		#untaint it
-		$generic_config  = eval("\n#line 1 \"generic.conf\"\n" . $config_contents);
-		die($@) if $@;
-		close CONF;
-	}
+	local ($/) = undef;
+	my $config_contents = <CONF>;
+	$config_contents =~ m/(.*)/s;
+	$config_contents = $1;		#untaint it
+	$generic_config  = eval("\n#line 1 \"generic.conf\"\n" . $config_contents);
+	die($@) if $@;
+	close CONF;
 
 	my $langmap = $generic_config->{'langmap'};
 	my $langdesc;  # Language description hash
@@ -168,27 +183,25 @@ sub read_config {
 	my $langid;		# Language code
 
 	foreach my $lang (keys %$langmap) {
-		if ($todo) {
-			$langdesc = $langmap->{$lang};	# Dereference
+		$langdesc = $langmap->{$lang};	# Dereference
 	# Transform the 'reserved' keyword list to speed up lookup
-			my $insensitive = 0;
-			if (exists($langdesc->{'flags'})) {
-				foreach (@{$langdesc->{'flags'}}) {
-					if ($_ eq 'case_insensitive') {
-						$insensitive = 1;
-						last;
-					}
+		my $insensitive = 0;
+		if (exists($langdesc->{'flags'})) {
+			foreach (@{$langdesc->{'flags'}}) {
+				if ($_ eq 'case_insensitive') {
+					$insensitive = 1;
+					last;
 				}
 			}
-			if	(exists($langdesc->{'reserved'})) {
-				my @kwl = @{$langdesc->{'reserved'}};
-				$langdesc->{'reserved'} = {};
-				foreach (@kwl) {
-					if ($insensitive) {
-						$langdesc->{'reserved'}{uc($_)} = 1;
-					} else {
-						$langdesc->{'reserved'}{$_} = 1;
-					}
+		}
+		if	(exists($langdesc->{'reserved'})) {
+			my @kwl = @{$langdesc->{'reserved'}};
+			$langdesc->{'reserved'} = {};
+			foreach (@kwl) {
+				if ($insensitive) {
+					$langdesc->{'reserved'}{uc($_)} = 1;
+				} else {
+					$langdesc->{'reserved'}{$_} = 1;
 				}
 			}
 		}
@@ -196,7 +209,7 @@ sub read_config {
 		$typemap = $langdesc->{'typemap'};
 		$langid  = $langdesc->{'langid'};
 		while (($type, $tdescr) = each %$typemap) {
-			$langdesc->{'typeid'}{$type} = $index->decid($langid, $tdescr);
+			$langdesc->{'typeid'}{$type} = $index->decid($writeDB, $langid, $tdescr);
 		}
 	}
 ### The following line is commented out to improve performance.

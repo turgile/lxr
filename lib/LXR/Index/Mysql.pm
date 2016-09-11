@@ -26,7 +26,7 @@ use LXR::Common;
 our @ISA = ('LXR::Index');
 
 sub new {
-	my ($self, $config, $write_enabled) = @_;
+	my ($self, $config) = @_;
 
 	$self = bless({}, $self);
 	$self->{dbh} = DBI->connect	( $config->{'dbname'}
@@ -40,9 +40,14 @@ sub new {
 #	appreciate since it is within the measurement error).
 		or die "Can't open connection to database: $DBI::errstr\n";
 
+	return $self;
+}
+
+sub write_open {
+	my ($self) = @_;
+
 	my $prefix = $config->{'dbprefix'};
 
-	if ($write_enabled) {
 #	MySQL may be run with its built-in unique record id management
 #	mechanisms. There is only a small performance improvement
 #	between the most efficient variant and user management.
@@ -61,44 +66,56 @@ sub new {
 #			Comment out the unused ones.
 
 	# Variant B
-#B		$self->{'last_auto_val'} = 
-#B			$self->{dbh}->prepare('select last_insert_id()');
+#B	$self->{'last_auto_val'} = 
+#B		$self->{dbh}->prepare('select last_insert_id()');
 	# End of prefix for variant B
 
 	# Variants A & B
-#AB		$self->{'files_insert'} =
-#AB			$self->{dbh}->prepare
-#AB				( "insert into ${prefix}files"
-#AB				. ' (filename, revision, fileid)'
-#AB				. ' values (?, ?, NULL)'
-#AB				);
+#AB	$self->{'files_insert'} =
+#AB		$self->{dbh}->prepare
+#AB			( "insert into ${prefix}files"
+#AB			. ' (filename, revision, fileid)'
+#AB			. ' values (?, ?, NULL)'
+#AB			);
 #AB
-#AB		$self->{'symbols_insert'} =
-#AB			$self->{dbh}->prepare
-#AB				( "insert into ${prefix}symbols"
-#AB				. ' (symname, symid, symcount)'
-#AB				. ' values ( ?, NULL, 0)'
-#AB				);
+#AB	$self->{'symbols_insert'} =
+#AB		$self->{dbh}->prepare
+#AB			( "insert into ${prefix}symbols"
+#AB			. ' (symname, symid, symcount)'
+#AB			. ' values ( ?, NULL, 0)'
+#AB			);
 #AB
-#AB		$self->{'langtypes_insert'} =
-#AB			$self->{dbh}->prepare
-#AB			( "insert into ${prefix}langtypes"
-#AB				. ' (typeid, langid, declaration)'
-#AB				. ' values (NULL, ?, ?)'
-#AB				);
+#AB	$self->{'langtypes_insert'} =
+#AB		$self->{dbh}->prepare
+#AB		( "insert into ${prefix}langtypes"
+#AB			. ' (typeid, langid, declaration)'
+#AB			. ' values (NULL, ?, ?)'
+#AB			);
 	# End of variants A & B
 
-		$self->{'purge_all'} = $self->{dbh}->prepare
-			( "call ${prefix}PurgeAll()"
-			);
+	$self->{'purge_all'} = $self->{dbh}->prepare
+		( "call ${prefix}PurgeAll()"
+		);
 
 	# Variant U
-		$self->uniquecountersinit($prefix);
+	$self->uniquecountersinit($prefix);
 	# The final $x_num will be saved in final_cleanup before disconnecting
 	# End of variants
-	}
 
-	return $self;
+	$self->SUPER::write_open();
+}
+
+sub write_close {
+	my ($self) = @_;
+
+	# Variant U
+	$self->uniquecounterssave();
+	# End of variants
+	# Variant B
+#B 	$self->{'last_auto_val'} = undef;
+	# End of variants
+
+	$self->SUPER::write_close();
 }
 
 ##### To activate MySQL built-in record id management,
@@ -186,95 +203,57 @@ sub purgeall {
 	# End of variants
 	# Fix a collateral effect of TRUNCATE TABLES performance bug workaround
 	my $prefix = $config->{'dbprefix'};
-	my $recreate_trigger;
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			("drop trigger if exists ${prefix}remove_file");
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			( "create trigger ${prefix}remove_file"
 			. " after delete on ${prefix}status"
-			. '   for each row'
-			. "     delete from ${prefix}files"
-			. '     where fileid = old.fileid'
+			. ' for each row'
+			. "  delete from ${prefix}files"
+			. '   where fileid = old.fileid'
 			);
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			("drop trigger if exists ${prefix}add_release");
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			( "create trigger ${prefix}add_release"
 			. " after insert on ${prefix}releases"
-			. '   for each row'
-			. "     update ${prefix}status"
-			. '       set relcount = relcount + 1'
-			. '       where fileid = new.fileid'
+			. ' for each row'
+			. "  update ${prefix}status"
+			. '   set relcount = relcount + 1'
+			. '   where fileid = new.fileid'
 			);
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			("drop trigger if exists ${prefix}remove_release");
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			( "create trigger ${prefix}remove_release"
 			. " after delete on ${prefix}releases"
-			. '   for each row'
-			. "     update ${prefix}status"
-			. '       set relcount = relcount - 1'
-			. '       where fileid = old.fileid'
-			. '       and relcount > 0'
+			. ' for each row'
+			. "  update ${prefix}status"
+			. '   set relcount = relcount - 1'
+			. '   where fileid = old.fileid'
+			. '     and relcount > 0'
 			);
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			("drop trigger if exists ${prefix}remove_definition");
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			( "create trigger ${prefix}remove_definition"
 			. " after delete on ${prefix}definitions"
-			. '   for each row'
-			. '   begin'
-			. "     call ${prefix}decsym(old.symid)"
-			. '     if old.relid is not null'
-			. "     then call ${prefix}decsym(old.relid)"
-			. '     end if;'
-			. '   end'
+			. ' for each row'
+			. '  begin'
+			. "   call ${prefix}decsym(old.symid);"
+			. '   if old.relid is not null'
+			. "   then call ${prefix}decsym(old.relid);"
+			. '   end if;'
+			. '  end'
 			);
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			( "drop trigger if exists ${prefix}remove_usage");
-	$recreate_trigger->execute();
-	$recreate_trigger =
-		$self->{dbh}->prepare
+	$self->{dbh}->do
 			( "create trigger ${prefix}remove_usage"
 			. " after delete on ${prefix}usages"
-			. '   for each row'
-			. "     call ${prefix}decsym(old.symid)"
+			. ' for each row'
+			. "  call ${prefix}decsym(old.symid)"
 			);
-	$recreate_trigger->execute();
-	$recreate_trigger = undef;
-}
-
-sub final_cleanup {
-	my ($self) = @_;
-
-	if (exists($self->{'write_enabled'})) {
-	# Variant U
-		$self->uniquecounterssave();
-	# End of variants
-		$self->commit();
-	# Variant B
-#B 		$self->{'last_auto_val'} = undef;
-	# End of variants
-	}
-	$self->dropuniversalqueries();
-	$self->{dbh}->disconnect() or die "Disconnect failed: $DBI::errstr";
 }
 
 sub post_processing {
