@@ -549,7 +549,7 @@ foreach my $treedescr (@config) {
 		}
 
 	} else {
-		$wtimes[0] = time();	# start time
+		@wtimes = (time(), 0, 0, 0, 0);	# start time
 
 #	purgeall() is much faster than a sequence of purge($version);
 #	if there is only one version in the range, use it instead of
@@ -613,7 +613,7 @@ foreach my $treedescr (@config) {
 		foreach my $version (@versions) {
 			$versioninprogress = $version;
 			if (1 != $milestone) {
-				$wtimes[0] = time();
+				@wtimes = (time(), 0, 0, 0, 0);
 				$milestone = 1;
 			}
 			print STDERR "\n${CSI}44m${VTwhite}Processing $url ${VTnorm}";
