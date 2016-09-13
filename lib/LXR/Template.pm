@@ -554,7 +554,7 @@ sub titleexpand {
 		my $s = $HTTP->{'param'}{'_string'};
 		$ret = $config->{'treename'} .'/'. $config->sourcerootname . ' general search'
 				. ($s ? ": $s" : '');
-	} elsif (substr($who, 0, 4) eq 'perf') {
+	} elsif ($who eq 'perf') {
 		$ret = $config->{'treename'} . ' indexation timings';
 	}
 	$ret =~ s/&/&amp;/g;
@@ -1357,7 +1357,7 @@ sub varbtnaction {
 				  : ''
 				  )
 				. '">';
-	} elsif (substr($who, 0, 4) eq 'perf') {
+	} elsif ($who eq 'perf') {
 		$action = 'href="'
 				. $config->{'virtroot'}
 				. 'perf'
@@ -1595,7 +1595,7 @@ sub atticlink {
 }
 
 
-=head2 C<makeheader ($who)>
+=head2 C<makeheader ($who), $tmplpfx>
 
 Function C<makeheader> outputs the HTML sequence for the top part
 of the page (a header) so that all pages have a similar appearance.
@@ -1607,6 +1607,11 @@ It uses a template whose name is derived from the scriptname.
 
 a I<string> containing the script name
 
+=item 1 C<$tmplpfx>
+
+an optional I<string> containing the template prefix
+(by default, equal to script name)
+
 =back
 
 In case the template is not found, an internal elementary template
@@ -1616,11 +1621,12 @@ An error is also logged for the administrator.
 =cut
 
 sub makeheader {
-	my $who = shift;
+	my ($who, $tmplpfx) = @_;
 	my $tmplname;
 	my $template;
 
-	$tmplname = $who . 'head';
+	$tmplpfx = $who unless defined($tmplpfx);
+	$tmplname = $tmplpfx . 'head';
 	unless	($who ne 'sourcedir' || exists $config->{'sourcedirhead'}) {
 		$tmplname = 'sourcehead';
 	}

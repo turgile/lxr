@@ -307,7 +307,7 @@ if (-2 == $inprogress) {
 	print 'Cache-Control: no-cache', "\n";	# special header for "monitoring" perf
 }
 std_http_headers();
-makeheader(-2 == $inprogress ? 'perfrefresh' : 'perf');
+makeheader('perf', (-2 == $inprogress ? 'perfrefresh' : 'perf'));
 $templ = gettemplate	( 'htmlperf'
 						, $errorsig
 						, ''
