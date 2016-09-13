@@ -197,63 +197,99 @@ sub write_close {
 sub purgeall {
 	my ($self) = @_;
 
-	$self->{'purge_all'}->execute();
-	# Variant U
-	$self->uniquecountersreset(0);
-	# End of variants
-	# Fix a collateral effect of TRUNCATE TABLES performance bug workaround
+	my $dbname = $config->{'dbname'};
+	$dbname =~ s/^.*dbname=//;
+	$dbname =~ s/;.*$//;
 	my $prefix = $config->{'dbprefix'};
-	$self->{dbh}->do
-			("drop trigger if exists ${prefix}remove_file");
-	$self->{dbh}->do
-			( "create trigger ${prefix}remove_file"
-			. " after delete on ${prefix}status"
-			. ' for each row'
-			. "  delete from ${prefix}files"
-			. '   where fileid = old.fileid'
+	my $ttc = $self->{dbh}->prepare
+			( 'select count(*) from information_schema.tables'
+			. ' where table_schema = \''
+			. $dbname
+			. '\''
 			);
-	$self->{dbh}->do
-			("drop trigger if exists ${prefix}add_release");
-	$self->{dbh}->do
-			( "create trigger ${prefix}add_release"
-			. " after insert on ${prefix}releases"
-			. ' for each row'
-			. "  update ${prefix}status"
-			. '   set relcount = relcount + 1'
-			. '   where fileid = new.fileid'
-			);
-	$self->{dbh}->do
-			("drop trigger if exists ${prefix}remove_release");
-	$self->{dbh}->do
-			( "create trigger ${prefix}remove_release"
-			. " after delete on ${prefix}releases"
-			. ' for each row'
-			. "  update ${prefix}status"
-			. '   set relcount = relcount - 1'
-			. '   where fileid = old.fileid'
-			. '     and relcount > 0'
-			);
-	$self->{dbh}->do
-			("drop trigger if exists ${prefix}remove_definition");
-	$self->{dbh}->do
-			( "create trigger ${prefix}remove_definition"
-			. " after delete on ${prefix}definitions"
-			. ' for each row'
-			. '  begin'
-			. "   call ${prefix}decsym(old.symid);"
-			. '   if old.relid is not null'
-			. "   then call ${prefix}decsym(old.relid);"
-			. '   end if;'
-			. '  end'
-			);
-	$self->{dbh}->do
-			( "drop trigger if exists ${prefix}remove_usage");
-	$self->{dbh}->do
-			( "create trigger ${prefix}remove_usage"
-			. " after delete on ${prefix}usages"
-			. ' for each row'
-			. "  call ${prefix}decsym(old.symid)"
-			);
+	$ttc->execute();
+	my ($tablecount) = $ttc->fetchrow_array();
+	$ttc = undef;
+#	If DB is fully dedicated to this tree,
+#	drop DB and reconstruct it.
+#	It is faster than prunig tables because of a performance
+#	bug xith TRUNCATE TABLES in MySQL.
+	if ($LXR::Index::schema_table_count == $tablecount) {
+		$self->write_close();
+		$self->final_cleanup();
+		# Database is fully unlocked, we can launch scripts against it
+# 		print STDERR	# uncomment if trace of next statement needed
+		`NO_USER=1 ./${LXR::Index::db_script_dir}m:${dbname}:${prefix}.sh`;
+		# Recoonect
+		$self->{dbh} = DBI->connect	( $config->{'dbname'}
+									, $config->{'dbuser'}
+									, $config->{'dbpass'}
+									, {'AutoCommit' => 0}
+									)
+			or die "Can't open connection to database: $DBI::errstr\n";
+		# Reconfigure prepared transactions
+		$self->read_open();
+		$self->write_open();
+	} else {
+#	DB hosts several trees. Since we do not know if the other trees
+#	should be purged, purge only the tables related to this tree.
+		$self->{'purge_all'}->execute();
+		# Variant U
+		$self->uniquecountersreset(0);
+		# End of variants
+		# Fix a collateral effect of TRUNCATE TABLES performance bug workaround
+		$self->{dbh}->do
+				("drop trigger if exists ${prefix}remove_file");
+		$self->{dbh}->do
+				( "create trigger ${prefix}remove_file"
+				. " after delete on ${prefix}status"
+				. ' for each row'
+				. "  delete from ${prefix}files"
+				. '   where fileid = old.fileid'
+				);
+		$self->{dbh}->do
+				("drop trigger if exists ${prefix}add_release");
+		$self->{dbh}->do
+				( "create trigger ${prefix}add_release"
+				. " after insert on ${prefix}releases"
+				. ' for each row'
+				. "  update ${prefix}status"
+				. '   set relcount = relcount + 1'
+				. '   where fileid = new.fileid'
+				);
+		$self->{dbh}->do
+				("drop trigger if exists ${prefix}remove_release");
+		$self->{dbh}->do
+				( "create trigger ${prefix}remove_release"
+				. " after delete on ${prefix}releases"
+				. ' for each row'
+				. "  update ${prefix}status"
+				. '   set relcount = relcount - 1'
+				. '   where fileid = old.fileid'
+				. '     and relcount > 0'
+				);
+		$self->{dbh}->do
+				("drop trigger if exists ${prefix}remove_definition");
+		$self->{dbh}->do
+				( "create trigger ${prefix}remove_definition"
+				. " after delete on ${prefix}definitions"
+				. ' for each row'
+				. '  begin'
+				. "   call ${prefix}decsym(old.symid);"
+				. '   if old.relid is not null'
+				. "   then call ${prefix}decsym(old.relid);"
+				. '   end if;'
+				. '  end'
+				);
+		$self->{dbh}->do
+				( "drop trigger if exists ${prefix}remove_usage");
+		$self->{dbh}->do
+				( "create trigger ${prefix}remove_usage"
+				. " after delete on ${prefix}usages"
+				. ' for each row'
+				. "  call ${prefix}decsym(old.symid)"
+				);
+	}
 }
 
 sub post_processing {

@@ -192,30 +192,53 @@ sub write_open {
 
 sub purgeall {
 	my ($self) = @_;
- print STDERR "\nEntering purgeall\n";
+
+	my $dbname = $config->{'dbname'};
+	$dbname =~ s/^.*dbname=//;
+	$dbname =~ s/;.*$//;
+	my $prefix = $config->{'dbprefix'};
+	my $ttc = $self->{dbh}->prepare
+			( 'select count(*) from information_schema.tables'
+			. ' where table_schema = \'public\''
+			);
+	$ttc->execute();
+	my ($tablecount) = $ttc->fetchrow_array();
+	$ttc = undef;
+#	If DB is fully dedicated to this tree,
+#	drop DB and reconstruct it.
+#	It may be faster than prunig tables.
+	if ($LXR::Index::schema_table_count == $tablecount) {
+		$self->write_close();
+		$self->final_cleanup();
+		# Database is fully unlocked, we can launch scripts against it
+# 		print STDERR	# uncomment if trace of next statement needed
+		`NO_USER=1 ./${LXR::Index::db_script_dir}p:${dbname}:${prefix}.sh`;
+		# Recoonect
+		$self->{dbh} = DBI->connect	( $config->{'dbname'}
+									, $config->{'dbuser'}
+									, $config->{'dbpass'}
+									, {'AutoCommit' => 0}
+									)
+			or die "Can't open connection to database: $DBI::errstr\n";
+		# Reconfigure prepared transactions
+		$self->read_open();
+		$self->write_open();
+	} else {
 # Not really necessary, but nicer for debugging
 	# Variant B
-#D 	my $prefix = $self->{'config'}{'dbprefix'};
-#B 	my $rfn = $self->{dbh}->prepare
-#B 		("select setval('${prefix}filenum', 1, false)");
-#B 	$rfn->execute;
-#B 	$rfn = undef;
-#B 	my $rsn = $self->{dbh}->prepare
-#B 		("select setval('${prefix}symnum',  1, false)");
-#B 	$rsn->execute;
-#B 	$rsn = undef;
-#B 	my $rtn = $self->{dbh}->prepare
-#B 		("select setval('${prefix}typenum', 1, false)");
-#B 	$rtn->execute;
-#B 	$rtn = undef;
+#B 		$self->{dbh}->do
+#B 			("select setval('${prefix}filenum', 1, false)");
+#B 		$self->{dbh}->do
+#B 			("select setval('${prefix}symnum',  1, false)");
+#B 		$self->{dbh}->do
+#B 			("select setval('${prefix}typenum', 1, false)");
 	# Variant U
-	$self->uniquecountersreset(-1);
-	$self->uniquecounterssave();
-	$self->uniquecountersreset(0);
+		$self->uniquecountersreset(-1);
+		$self->uniquecounterssave();
+		$self->uniquecountersreset(0);
 	# End of variants
- print STDERR "Launching std purge_all\n";
-	$self->{'purge_all'}->execute;
- print STDERR "Leaving purgeall\n";
+		$self->{'purge_all'}->execute;
+	}
 }
 
 #	PostgreSQL is in auto commit mode; disable calls to

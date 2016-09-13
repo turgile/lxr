@@ -163,6 +163,29 @@ drop table if exists %DB_tbl_prefix%times cascade;
 /*@XQT P_DB_%DB_name%=1 */
 /*@XQT fi */
 /*--*/
+/*-If we don't erase the database, we must erase the triggers
+ *- so that they can be recreated/replaced by the new version.
+ *- However, PostgreSQL requires the associated tables to exist
+ *- otherwise it issues an error.
+ *- Therefore we add an intermediaite step before dropping the
+ *- tables.
+-*/
+/*@XQT if (( NO_DB != 0 )) ; then */
+/*@XQT echo "*** PostgreSQL - Erasing triggers in database %DB_name%"*/
+/*@ADD initdb/psql-command.sql*/
+drop trigger if exists %DB_tbl_prefix%remove_definition
+	on %DB_tbl_prefix%definitions;
+drop trigger if exists %DB_tbl_prefix%add_release
+	on %DB_tbl_prefix%releases;
+drop trigger if exists %DB_tbl_prefix%remove_usage
+	on %DB_tbl_prefix%usages;
+drop trigger if exists %DB_tbl_prefix%remove_release
+	on %DB_tbl_prefix%releases;
+drop trigger if exists %DB_tbl_prefix%remove_file
+	on %DB_tbl_prefix%status;
+/*@XQT END_OF_SQL*/
+/*@XQT fi */
+/*--*/
 /*--*/
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -224,8 +247,6 @@ create table if not exists %DB_tbl_prefix%status
  * (from releases), once status has been deleted so that
  * foreign key constrained has been cleared.
  */
-drop trigger if exists %DB_tbl_prefix%remove_file
-	on %DB_tbl_prefix%status;
 drop function if exists %DB_tbl_prefix%erasefile();
 create function %DB_tbl_prefix%erasefile()
 	returns trigger
@@ -270,8 +291,6 @@ create table if not exists %DB_tbl_prefix%releases
 /* The following triggers maintain relcount integrity
  * in status table after insertion/deletion of releases
  */
-drop trigger if exists %DB_tbl_prefix%add_release
-	on %DB_tbl_prefix%releases;
 drop function if exists %DB_tbl_prefix%increl();
 create function %DB_tbl_prefix%increl()
 	returns trigger
@@ -307,8 +326,6 @@ create trigger %DB_tbl_prefix%add_release
  * to cause reindexing, especially if the file is shared by
  * several releases
  */
-drop trigger if exists %DB_tbl_prefix%remove_release
-	on %DB_tbl_prefix%releases;
 drop function if exists %DB_tbl_prefix%decrel();
 create function %DB_tbl_prefix%decrel()
 	returns trigger
@@ -370,8 +387,6 @@ create table if not exists %DB_tbl_prefix%symbols
  * for a definition
  * (to be used in triggers).
  */
-drop trigger if exists %DB_tbl_prefix%remove_definition
-	on %DB_tbl_prefix%definitions;
 drop function if exists %DB_tbl_prefix%decdecl();
 create function %DB_tbl_prefix%decdecl()
 	returns trigger
@@ -404,8 +419,6 @@ create function %DB_tbl_prefix%decdecl()
  * for a usage
  * (to be used in triggers).
  */
-drop trigger if exists %DB_tbl_prefix%remove_usage
-	on %DB_tbl_prefix%usages;
 drop function if exists %DB_tbl_prefix%decusage();
 create function %DB_tbl_prefix%decusage()
 	returns trigger

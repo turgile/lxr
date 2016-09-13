@@ -71,32 +71,18 @@ sub write_open {
 #	over auto commit.
 	$self->{dbh}{'AutoCommit'} = 0;
 
-	$self->{'purge_all'} = undef;	# Prevent parsing the common one
-	$self->{'purge_definitions'} =
-		$self->{dbh}->prepare("delete from ${prefix}definitions");
-	$self->{'purge_usages'} =
-		$self->{dbh}->prepare("delete from ${prefix}usages");
-	$self->{'purge_langtypes'} =
-		$self->{dbh}->prepare("delete from ${prefix}langtypes");
-	$self->{'purge_symbols'} =
-		$self->{dbh}->prepare("delete from ${prefix}symbols");
-	$self->{'purge_releases'} =
-		$self->{dbh}->prepare("delete from ${prefix}releases");
-	$self->{'purge_status'} =
-		$self->{dbh}->prepare("delete from ${prefix}status");
-	$self->{'purge_files'} =
-		$self->{dbh}->prepare("delete from ${prefix}files");
-	$self->{'purge_times'} =
-		$self->{dbh}->prepare("delete from ${prefix}times");
-
 #	Since SQLite has no auto-incrementing counter,
 #	we simulate them in specific one-record tables.
 #	These counters provide unique record ids for
 #	files, symbols and language types.
-
 	$self->uniquecountersinit($prefix);
 	# The final $x_num will be saved in write_close before disconnecting
 
+#	'purge_all' is not used but must not be prepare'd in the parent object,
+#	otherwise TRUNCATE TABLE statement will cause an error because SQLite
+#	has no such statement.
+#	The generic transaction must be replaced by individual DELETE on each table.
+	$index->{'purge_all'} = 1;
 	$self->SUPER::write_open();
 }
 
@@ -104,35 +90,64 @@ sub write_close {
 	my ($self) = @_;
 
 	$self->uniquecounterssave();
-	$self->{dbh}->commit;
-
-	$self->{'purge_definitions'} = undef;
-	$self->{'purge_usages'} = undef;
-	$self->{'purge_langtypes'} = undef;
-	$self->{'purge_symbols'} = undef;
-	$self->{'purge_releases'} = undef;
-	$self->{'purge_status'} = undef;
-	$self->{'purge_files'} = undef;
-	$self->{'purge_times'} = undef;
+	$self->SUPER::write_close();
 }
 
 sub purgeall {
 	my ($self) = @_;
 
-# Not really necessary, but nicer for debugging
-	$self->uniquecountersreset(-1);
-	$self->uniquecounterssave();
-	$self->uniquecountersreset(0);
+	my $dbname = $config->{'dbname'};
+	$dbname =~ s/^.*dbname=//;
+	$dbname =~ s/;.*$//;
+	my $prefix = $config->{'dbprefix'};
+	my $ttc = $self->{dbh}->prepare
+			( 'select count(*)  from sqlite_master'
+			. ' where type=\'table\''
+			. ' and not name like \'sqlite_%\''
+			);
+	$ttc->execute();
+	my ($tablecount) = $ttc->fetchrow_array();
+	$ttc = undef;
+#	If DB is fully dedicated to this tree,
+#	drop DB and reconstruct it.
+#	It may be faster than prunig tables.
+	if ($LXR::Index::schema_table_count == $tablecount) {
+		$self->write_close();
+		$self->final_cleanup();
+		unlink $dbname;
+		# Database is fully unlocked, we can launch scripts against it
+		$dbname = substr($dbname, 1);
+		$dbname =~ s!/!@!g;
+# 		print STDERR	# uncomment if trace of next statement needed
+		`NO_USER=1 ./${LXR::Index::db_script_dir}s:${dbname}:${prefix}.sh`;
+		# Recoonect
+		$self->{dbh} = DBI->connect	( $config->{'dbname'}
+									, {'AutoCommit' => 0}
+									)
+			or die "Can't open connection to database: $DBI::errstr\n";
+		# Reconfigure prepared transactions
+		$self->read_open();
+		$self->write_open();
+	} else {
+#	DB hosts several trees. Since we do not know if the other trees
+#	should be purged, purge only the tables related to this tree.
 
-	$self->{'purge_definitions'}->execute();
-	$self->{'purge_usages'}->execute();
-	$self->{'purge_langtypes'}->execute();
-	$self->{'purge_symbols'}->execute();
-	$self->{'purge_releases'}->execute();
-	$self->{'purge_status'}->execute();
-	$self->{'purge_files'}->execute();
-	$self->{'purge_times'}->execute();
-	$self->{dbh}->commit;
+# Not really necessary, but nicer for debugging
+		$self->uniquecountersreset(-1);
+		$self->uniquecounterssave();
+		$self->uniquecountersreset(0);
+
+		my $prefix = $config->{'dbprefix'};
+		$self->{dbh}->do("delete from ${prefix}definitions");
+		$self->{dbh}->do("delete from ${prefix}usages");
+		$self->{dbh}->do("delete from ${prefix}langtypes");
+		$self->{dbh}->do("delete from ${prefix}symbols");
+		$self->{dbh}->do("delete from ${prefix}releases");
+		$self->{dbh}->do("delete from ${prefix}status");
+		$self->{dbh}->do("delete from ${prefix}files");
+		$self->{dbh}->do("delete from ${prefix}times");
+		$self->{dbh}->commit;
+	}
 }
 
 # sub final_cleanup {
