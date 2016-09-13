@@ -36,6 +36,7 @@ use LXR::Common;
 use LXR::Template;
 
 my $totaltime;
+my $inprogress;
 
 =head2 C<duration ($start, $end)>
 
@@ -69,11 +70,19 @@ sub duration {
 	if (0 > $start) {
 	return '<span class=error>skipped</span>'
 	}
+	if	(	0 == $end
+		&&	-2 == $inprogress
+		) {
+			return '<em>to be done</em>';
+	}
 	if (0 > $end) {
 		$end = -$end;
-		$flag = '<span class=error>!</span> ';
+		$flag = '<span class=error>!</span>&nbsp;';
 	}
 	$end -= $start;
+	if	(0 > $end) {
+		return $flag . '<span class=error>crashed</span>'
+	}
 	$seconds = $end % 60;
 	$end = ($end - $seconds) / 60;
 	$minutes = $end % 60;
@@ -245,8 +254,7 @@ sub perffpurgeexpand {
 	$index->{'times_versions'} =
 		$index->{dbh}->prepare
 			( 'select releaseid from '.$config->{'dbprefix'}.'times'
-			  . ' where releaseid = ' . "''"
-			  . ' and reindex = 1'
+			  . ' where releaseid = \'\' and reindex = 1'
 			);
 	$index->{'times_versions'}->execute();
 	if (($releaseid) = $index->{'times_versions'}->fetchrow_array()) {
@@ -294,7 +302,8 @@ my $templ;
 my $errorsig = "<!-- ! -->";
 
 httpinit;
-makeheader('perf');
+($inprogress) = indexstate();
+makeheader(-2 == $inprogress ? 'perfrefresh' : 'perf');
 $templ = gettemplate	( 'htmlperf'
 						, $errorsig
 						, ''

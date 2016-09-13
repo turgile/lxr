@@ -466,6 +466,11 @@
 }
 
 /** individual cell formatting for performance data **/
+  .perfcomment
+{ padding: 0
+; text-align: center
+; font-size: 10pt
+}
 /* indexed version */
   TD.perfversion
 { padding: 0 1em 0 0
@@ -488,6 +493,7 @@
 /* total duration */
   TD.perftotal
 { text-align: right
+; font-style: italic
 ; font-weight: bold
 ; padding: 0 1em
 }

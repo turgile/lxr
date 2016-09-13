@@ -554,7 +554,7 @@ sub titleexpand {
 		my $s = $HTTP->{'param'}{'_string'};
 		$ret = $config->{'treename'} .'/'. $config->sourcerootname . ' general search'
 				. ($s ? ": $s" : '');
-	} elsif ($who eq 'perf') {
+	} elsif (substr($who, 0, 4) eq 'perf') {
 		$ret = $config->{'treename'} . ' indexation timings';
 	}
 	$ret =~ s/&/&amp;/g;
@@ -1357,7 +1357,7 @@ sub varbtnaction {
 				  : ''
 				  )
 				. '">';
-	} elsif ($who eq 'perf') {
+	} elsif (substr($who, 0, 4) eq 'perf') {
 		$action = 'href="'
 				. $config->{'virtroot'}
 				. 'perf'
