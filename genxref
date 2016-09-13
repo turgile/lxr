@@ -418,7 +418,11 @@ foreach my $treedescr (@config) {
 									, $virtroot
 									, $treedescr->{'treename'}
 									);
-		print STDERR "\n${CSI}44m${VTwhite}Processing $url${VTnorm}\n";
+		$url = $host . $virtroot;
+		print STDERR "\n${CSI}44m${VTwhite}Processing $url${VTnorm}";
+		print STDERR " == ${CSI}41m${VTwhite}tree $treedescr->{'treename'}${VTnorm}\n"
+			if $treedescr->{'treename'};
+		print STDERR "\n";
 	}
 
 	die("${VTred}No matching configuration${VTnorm}") unless exists($config->{'sourceroot'});
@@ -498,11 +502,12 @@ foreach my $treedescr (@config) {
 	if ($files->isa('LXR::Files::CVS') && scalar(@versions)<=0) {
 		$versioninprogress = 'CVS all versions';
 		print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
-		$wtimes[0] = time();
-		$index->purgeall;
+		$index->purgeall();
+		$index->saveperformance('', 0 ,@wtimes);	# rewrite since it may have been erased
 		print STDERR &VTCUU(1), &VTCHA(25), &VTEL(0), "${VTgreen}Done${VTnorm}\n";
 		$wtimes[1] = time();
 		$wtimes[2] = $wtimes[1];	# no free-text search with VCS
+		$index->saveperformance($versioninprogress, $reindexmode, @wtimes);
 		$$LXR::Common::HTTP{'param'}{'_showattic'} = 1;
 		$printdirbanner = 1;
 		$milestone = 3;
@@ -512,6 +517,7 @@ foreach my $treedescr (@config) {
 								, '/'
 								);
 		$wtimes[3] = time();
+		$index->saveperformance($versioninprogress, $reindexmode, @wtimes);
 		$printdirbanner = 1;
 		$milestone = 4;
 		$autoversionflag++ if $autoversionflag;	# Don't do it again
@@ -525,9 +531,10 @@ foreach my $treedescr (@config) {
 	# Indexing summary for this version
 		STDERR->autoflush(1);
 		print "\n";
-		print  "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}"
-				, ' == '
-				, "${CSI}41m${VTwhite}all versions in CVS ${VTnorm}\n" ;
+		print "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}";
+		print " == ${CSI}41m${VTwhite}tree $config->{'treename'}${VTnorm}"
+			if $config->{'treename'};
+		print " == ${CSI}41m${VTwhite}all versions in CVS ${VTnorm}\n" ;
 		print '    Purge              : ', elapsed($wtimes[1]-$wtimes[0]), "\n";
 		print '    Free-text indexing : ', elapsed($wtimes[2]-$wtimes[1]), "\n";
 		print '    Definitions parse  : ', elapsed($wtimes[3]-$wtimes[2]), "\n";
@@ -558,6 +565,7 @@ foreach my $treedescr (@config) {
 			if	(exists($option{'allversions'})) {
 				print STDERR "\nFull database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 				$index->purgeall;
+				$index->saveperformance('', 0 ,@wtimes);	# rewrite since it may have been erased
 				$wtimes[1] = time();
 				$wtimes[2] = $wtimes[1];
 				$wtimes[3] = $wtimes[2];
@@ -608,9 +616,10 @@ foreach my $treedescr (@config) {
 				$wtimes[0] = time();
 				$milestone = 1;
 			}
-			print STDERR "\n${CSI}44m${VTwhite}Processing $url ${VTnorm}"
-					, ' == '
-					, "${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
+			print STDERR "\n${CSI}44m${VTwhite}Processing $url ${VTnorm}";
+			print STDERR " == ${CSI}41m${VTwhite}tree ".$config->{'treename'}.${VTnorm}
+				if $config->{'treename'};
+			print STDERR " == ${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
 			if ($dopurge) {
 				print STDERR "\nSelective database purge ... ${VTyellow}${VTslow}in progress${VTnorm}\n";
 				$index->purge($version);
@@ -620,6 +629,7 @@ foreach my $treedescr (@config) {
 				cleanindex($version);
 			}
 			$wtimes[1] = time();
+			$index->saveperformance($version, $reindexmode, @wtimes);
 			if ($files->isa('LXR::Files::Plain')) {
 				$milestone = 2;
 				if ($foundglimpse > 0 || $foundswishe > 0) {
@@ -633,6 +643,7 @@ foreach my $treedescr (@config) {
 				print STDERR "${VTyellow}Free-text search setup suppressed for VCS storage${VTnorm}\n";
 				$wtimes[2] = $wtimes[1];
 			}
+			$index->saveperformance($version, $reindexmode, @wtimes);
 			$printdirbanner = 1;
 			$milestone = 3;
 			directorytreetraversal	( \&Tagger::processfile
@@ -641,6 +652,7 @@ foreach my $treedescr (@config) {
 									, '/'
 									);
 			$wtimes[3] = time();
+			$index->saveperformance($version, $reindexmode, @wtimes);
 			$printdirbanner = 1;
 			$milestone = 4;
 			directorytreetraversal	( \&Tagger::processrefs
@@ -652,9 +664,10 @@ foreach my $treedescr (@config) {
 			$index->saveperformance($version, $reindexmode, @wtimes);
 
 	# Indexing summary for this version
-			print  "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}"
-					, ' == '
-					, "${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
+			print "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}";
+			print " == ${CSI}41m${VTwhite}tree $config->{'treename'}${VTnorm}"
+			if $config->{'treename'};
+			print " == ${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
 			print '    Purge              : ', elapsed($wtimes[1]-$wtimes[0]), "\n";
 			print '    Free-text indexing : ', elapsed($wtimes[2]-$wtimes[1]), "\n";
 			print '    Definitions parsing: ', elapsed($wtimes[3]-$wtimes[2]), "\n";
@@ -664,7 +677,7 @@ foreach my $treedescr (@config) {
 	delete $SIG{__DIE__};
 	$index->{dbh}->do
 			( 'delete from '.$config->{'dbprefix'}.'times'
-			. ' where releaseid = ' . "''" . ' and reindex = 0'
+			. ' where releaseid = \'\' and reindex = 0'
 			);
 	$index->write_close();
 	$index->final_cleanup();
@@ -697,8 +710,11 @@ sub abortcleanup {
 		$wtimes[$milestone] = $wtimes[$milestone-1];
 	}
 	$index->saveperformance($versioninprogress, $reindexmode, @wtimes);
-	$index->{'indexing_complete'}->execute();
-	$index->{'indexing_complete'} = undef;
+	$index->{dbh}->do
+			( 'delete from '.$config->{'dbprefix'}.'times'
+			. ' where releaseid = \'\' and reindex = 0'
+			);
+	$index->write_close();
 	$index->final_cleanup();
 	die;
 }
