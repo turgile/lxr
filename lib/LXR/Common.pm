@@ -287,7 +287,7 @@ sub _edittime {
 
 =head2 C<indexstate ()>
 
-Function C<indexstate> the most recent indexation time for the current
+Function C<indexstate> returns the most recent indexation time for the current
 tree or 0 if it is not indexed yet, -1 if performance data is incompatible,
 -2 if indexing in progress.
 
@@ -755,7 +755,7 @@ sub fixpaths {
 
 =head2 C<httpminimal ()>
 
-Function C<printhttp> ouputs minimal HTTP headers.
+Function C<httpminimal> ouputs minimal HTTP headers.
 
 =cut
 
