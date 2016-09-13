@@ -315,7 +315,8 @@ C<'parmgroupnr'>.
 my $errorsig = "<!-- ! -->";
 my $templ;
 
-httpinit;
+httpinit();
+std_http_headers();
 
 my $who = 'showconfig';
 my @pgs = $config->readconfig();

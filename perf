@@ -301,8 +301,12 @@ which allows to switch to other scripts with variables set as desired.
 my $templ;
 my $errorsig = "<!-- ! -->";
 
-httpinit;
+httpinit();
 ($inprogress) = indexstate();
+if (-2 == $inprogress) {
+	print 'Cache-Control: no-cache', "\n";	# special header for "monitoring" perf
+}
+std_http_headers();
 makeheader(-2 == $inprogress ? 'perfrefresh' : 'perf');
 $templ = gettemplate	( 'htmlperf'
 						, $errorsig

@@ -935,6 +935,7 @@ for the real job.
 =cut
 
 httpinit;
+std_http_headers();
 
 if (exists($config->{'filter'}) && $pathname !~ $config->filter) {
 	makeheader('source');

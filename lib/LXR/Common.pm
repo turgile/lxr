@@ -51,7 +51,7 @@ our @EXPORT = qw(
 	&_edittime
 	&indexstate
 	&urlargs &nonvarargs &fileref &diffref &idref &incref
-	&httpinit &httpclean
+	&std_http_headers &httpinit &httpclean
 );
 
 require Local;
@@ -144,7 +144,7 @@ sub warning {
 	print(STDERR '[', scalar(localtime), "] warning: $c: $msg\n");
 	if ($wwwdebug) {
 		if (!$HTTP_inited) {
-			httpminimal();
+			minimal_http_headers();
 		}
 		if (!$HTMLheadOK) {
 			print '<html><head><title>No LXR Page Header Warning!</title>', "\n";
@@ -216,7 +216,7 @@ sub fatal {
 	# If HTTP is not yet initialised, emit a minimal set of headers
 	if ($wwwdebug) {
 		if (!$HTTP_inited) {
-			httpminimal();
+			minimal_http_headers();
 			print '<html><head><title>LXR Fatal Error!</title>', "\n";
 			print '<base href="', $HTTP->{'host_access'}, $HTTP->{'script_path'}, "/\">\n";
 		# Next line in the hope situation is not too bad
@@ -753,30 +753,31 @@ sub fixpaths {
 }
 
 
-=head2 C<httpminimal ()>
+=head2 C<minimal_http_headers ()>
 
-Function C<httpminimal> ouputs minimal HTTP headers.
+Function C<minimal_http_headers> ouputs minimal HTTP headers.
 
 =cut
 
-sub httpminimal {
+sub minimal_http_headers {
 	print 'Content-Type: text/html; charset=utf-8', "\n";
 	#Since this a transient error, don't keep it in cache
-	print 'Expires: Thu, 01 Jan 1970 00:00:00 GMT', "\n";
+	print 'Cache-Control: no-cache', "\n";
 	print "\n";
 	$HTTP_inited = 1;
 }
 
 
-=head2 C<printhttp ()>
+=head2 C<std_http_headers ()>
 
-Function C<printhttp> ouputs the HTTP headers.
+Function C<std_http_headers> ouputs the HTTP headers and a blank line
+to switch to content (body) mode.
 
 Presently, only a Last-Modified and a Content-Type header are output.
 
 =cut
 
-sub printhttp {
+sub std_http_headers {
 
 	# Print out a Last-Modified date that is the larger of:
 	#	- the underlying file that we are presenting
@@ -938,7 +939,7 @@ sub httpinit {
 						, $script_path
 						, $HTTP->{'path_root'}
 						);
-		httpminimal;
+		minimal_http_headers;
 		LXR::Template::makeerrorpage('htmlfatal');
 	# There is a race condition under thttpd between STDOUT and STDERR
 	# causing debug information (sent to STDOUT) to be printed before
@@ -999,7 +1000,6 @@ sub httpinit {
 	$pathname   =~ m/(.*)/;
 	$pathname   = $1;	# untaint for future use
 
-	printhttp;
 	$wwwdebug = $olddebug;	# Safe now
 }
 
