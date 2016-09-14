@@ -25,6 +25,7 @@ use lib 'lib', 'scripts';
 use Fcntl;
 use Getopt::Long qw(:config gnu_getopt);
 use IO::Handle;
+use File::Path qw(make_path remove_tree);
 use File::MMagic;
 
 use LXR::Files;
@@ -832,11 +833,12 @@ sub gensearch {
 
 	if ($config->{'glimpsedir'} && $config->{'glimpseindex'}) {
 
-		$string = $config->{'glimpsedir'} . '/' . $releaseid;
-		mkdir $string;
-		system("chmod 755 $string");   # TODO - fix Unix specific call?
+		my $indexdir = $config->{'glimpsedir'} . '/' . $releaseid;
+		my $indextmp = $config->{'glimpsedir'} . '/%@%glix%@%/';
+		remove_tree($indextmp);
+		make_path($indextmp, {mode => 0755});
 		# Create the exclusion file only if it does not exist
-		$string .= '/.glimpse_exclude';
+		$string = $indextmp . '.glimpse_exclude';
 		if	(	exists($config->{'ignoredirs'})
 			&&	!-e $string
 			) {
@@ -855,11 +857,25 @@ sub gensearch {
 			}
 		}
 		my $glimpse = IO::Handle->new();
+		my $glixopts;
+		if (exists($config->{'glimpseindexopts'})) {
+			$glixopts = $config->{'glimpseindexopts'};
+		} else {
+			$glixopts = '-o -n -B';	# small index, numbers, large hashing
+		};
+		$glixopts =~ s/-+/-/g;		# make sure a single - at beginning
+		$glixopts =~ s/-[RIFa]//g;	# remove unwanted options
+		$glixopts =~ s/-( |$)//g;	# remove orphan dashes
+		$glixopts =~ s/ +/ /g;		# merge spaces
+		if ($glixopts =~ m/^\s*$/) {
+			$glixopts = '-o -n -B';
+		}
+		$glixopts =~ s/^-*/-/;
 		my $pid = open($glimpse, '|-');
 		if ($pid == 0) {
 			exec( $config->{'glimpseindex'}
-				, '-n', '-o', '-H'
-				, $config->{'glimpsedir'} . '/' . $releaseid
+				, split(' ', $glixopts)
+				, '-H', $indextmp
 				, $config->{'sourceroot'} . '/' . $releaseid
 				);
 			print(STDERR "Couldn't exec " . $config->{'glimpseindex'} . ": $!\n");
@@ -868,8 +884,13 @@ sub gensearch {
 		$glimpse->close();
 
 		# Need to chmod the glimpse files so everybody can read them.
-		$string = $config->{'glimpsedir'} . '/' . $releaseid . '/.glimpse*';
-		system("chmod 644 $string");
+		system('chmod 644 '. $indextmp . '.glimpse*');
+		print 'Permissions changed to rw-r--r--', "\n";
+
+		my $del_locn = $config->{'glimpsedir'}.'/%@%delete%@%me%@%/';
+		system('mv', $indexdir, $del_locn);
+		system('mv', $indextmp, $indexdir);
+		remove_tree($del_locn);
 	}
 
 	if ($config->{'swishdir'} && $config->{'swishbin'}) {

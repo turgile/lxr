@@ -55,6 +55,12 @@
 #@U	, 'glimpsebin'     => '%glimpse%'
 #@U	, 'glimpseindex'   => '%glimpseindex%'
 #@U	, 'glimpsedirbase' => '%glimpsedirbase%'
+	, 'glimpseindexopts'	=>	'-o -n -B'	# "standard" options
+			# You may use -b for a bigger (x4) index instead of -o
+			# but there is no net advantage in query speed
+			# Option -f causes incremental indexing, but it is
+			# recommended to periodically run full indexing to
+			# clean the index.
 		#- Location of SWISH-E binary
 		#- e.g.: , 'swishbin' => '/usr/local/bin/swish-e'
 #@U	, 'swishbin'     => '%swish%'
