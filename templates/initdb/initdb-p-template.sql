@@ -152,10 +152,13 @@ create sequence %DB_tbl_prefix%typenum;
 /*@ENDIF*/
 
 drop table if exists %DB_tbl_prefix%files cascade;
+drop index if exists %DB_tbl_prefix%filelookup;
 drop table if exists %DB_tbl_prefix%symbols cascade;
 drop table if exists %DB_tbl_prefix%definitions cascade;
+drop index if exists %DB_tbl_prefix%i_definitions;
 drop table if exists %DB_tbl_prefix%releases cascade;
 drop table if exists %DB_tbl_prefix%usages cascade;
+drop index if exists %DB_tbl_prefix%i_usages;
 drop table if exists %DB_tbl_prefix%status cascade;
 drop table if exists %DB_tbl_prefix%langtypes cascade;
 drop table if exists %DB_tbl_prefix%times cascade;
@@ -199,6 +202,19 @@ drop trigger if exists %DB_tbl_prefix%remove_file
 /*- - - - - - - - - - - - - - - - - - - - - - - - -*/
 /*- - - - - - - - - - - - - - - - - - - - - - - - -*/
 /*@XQT echo "*** PostgreSQL - Configuring tables %DB_tbl_prefix% in database %DB_name%"*/
+/*-
+-*-	Special initialisation mandatory for PostgreSQL < 9.5
+-*- For higher versions, enable the "create index if not exists" statements.
+-*/
+/*@XQT if (( NO_DB != 0 || P_DB_%DB_name% != 0 )) ; then */
+/*@ADD initdb/psql-command.sql*/
+drop index if exists %DB_tbl_prefix%filelookup;
+drop index if exists %DB_tbl_prefix%i_definitions;
+drop index if exists %DB_tbl_prefix%i_usages;
+/*@XQT END_OF_SQL*/
+/*@XQT fi*/
+/*- End of special initialisation -*/
+
 /*@ADD initdb/psql-command.sql*/
 /* Base version of files */
 /*	revision:	a VCS generated unique id for this version
