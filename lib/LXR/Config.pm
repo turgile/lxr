@@ -30,7 +30,7 @@ package LXR::Config;
 
 use strict;
 use File::MMagic;
-use File::Path;
+use File::Path qw(make_path);
 
 use LXR::Common;
 
@@ -1302,6 +1302,8 @@ a I<string> containing the directory path.
 
 =head3 Algorithm
 
+"Manual" algorithm replaced by a call to C<File::Path::make_path()>.
+
 Every component of the path is checked from left to right.
 Both OS-absolute or relative paths are accepted, though the
 latter form would probably not make sense in LXR context.
@@ -1310,15 +1312,19 @@ latter form would probably not make sense in LXR context.
 
 sub _ensuredirexists {
 	my $chkdir = shift;
-	my $dir;
-	while ($chkdir =~ s:(^/?[^/]+)::) {
-		$dir .= $1;
-		if(!-d $dir) {
-			mkpath($dir)
-			or die "Couldn't make the directory $dir: ?!";
-			chmod 0777, $dir;
-		}
-	}  
+	if (! -d $chkdir) {
+		make_path ($chkdir)
+		or die "Couldn't make the directory $chkdir: ?!";
+	}
+# 	my $dir;
+# 	while ($chkdir =~ s:(^/?[^/]+)::) {
+# 		$dir .= $1;
+# 		if(!-d $dir) {
+# 			mkpath($dir)
+# 			or die "Couldn't make the directory $dir: ?!";
+# 			chmod 0777, $dir;
+# 		}
+# 	}
 }
 
 
