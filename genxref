@@ -829,34 +829,10 @@ sub feedswish {
 
 sub gensearch {
 	my ($releaseid) = @_;
-	my $string;
 
 	if ($config->{'glimpsedir'} && $config->{'glimpseindex'}) {
 
-		my $indexdir = $config->{'glimpsedir'} . '/' . $releaseid;
-		my $indextmp = $config->{'glimpsedir'} . '/%@%glix%@%/';
-		remove_tree($indextmp);
-		make_path($indextmp, {mode => 0755});
-		# Create the exclusion file only if it does not exist
-		$string = $indextmp . '.glimpse_exclude';
-		if	(	exists($config->{'ignoredirs'})
-			&&	!-e $string
-			) {
-			if (open (EXCLUDE, '>', $string)) {
-				foreach (@{$config->{'ignoredirs'}}) {
-					print EXCLUDE '/', $_, "/\n"
-				}
-				close(EXCLUDE);
-			} else {
-				print STDERR $VTred , "Can't create "
-					, $VTnorm, $VTbold, $string
-					, $VTnorm, "\n"
-					, $VTyellow, 'No automatic directory exclusion from parameter'
-					, $VTnorm, $VTbold, "'ignoredirs'"
-					, $VTnorm, "\n";
-			}
-		}
-		my $glimpse = IO::Handle->new();
+		# Canonize options
 		my $glixopts;
 		if (exists($config->{'glimpseindexopts'})) {
 			$glixopts = $config->{'glimpseindexopts'};
@@ -864,13 +840,48 @@ sub gensearch {
 			$glixopts = '-o -n -B';	# small index, numbers, large hashing
 		};
 		$glixopts =~ s/-+/-/g;		# make sure a single - at beginning
-		$glixopts =~ s/-[RIFa]//g;	# remove unwanted options
+		$glixopts =~ s/-[RIFfa]//g;	# remove unwanted or offending options
 		$glixopts =~ s/-( |$)//g;	# remove orphan dashes
 		$glixopts =~ s/ +/ /g;		# merge spaces
 		if ($glixopts =~ m/^\s*$/) {
 			$glixopts = '-o -n -B';
 		}
 		$glixopts =~ s/^-*/-/;
+
+		# Determine indexation mode: full or incremental
+
+		my $indexdir = $config->{'glimpsedir'} . '/' . $releaseid;
+		my $indextmp = $config->{'glimpsedir'} . '/%@%glix%@%/';
+		remove_tree($indextmp);
+		if (! exists($option{'reindexall'})) {
+			$glixopts .= ' -f';
+			system('cp', '-r', , $indexdir, $indextmp);
+		} else {
+			make_path($indextmp, {mode => 0755});
+		}
+
+		# Create the exclusion file only if it does not exist
+		my $exclude = $indextmp . '.glimpse_exclude';
+		if	(	exists($config->{'ignoredirs'})
+			&&	!-e $exclude
+			) {
+			if (open (EXCLUDE, '>', $exclude)) {
+				foreach (@{$config->{'ignoredirs'}}) {
+					print EXCLUDE '/', $_, "/\n"
+				}
+				close(EXCLUDE);
+			} else {
+				print STDERR $VTred , "Can't create "
+					, $VTnorm, $VTbold, $exclude
+					, $VTnorm, "\n"
+					, $VTyellow, 'No automatic directory exclusion from parameter'
+					, $VTnorm, $VTbold, "'ignoredirs'"
+					, $VTnorm, "\n";
+			}
+		}
+
+		# Do it now
+		my $glimpse = IO::Handle->new();
 		my $pid = open($glimpse, '|-');
 		if ($pid == 0) {
 			exec( $config->{'glimpseindex'}
@@ -887,6 +898,7 @@ sub gensearch {
 		system('chmod 644 '. $indextmp . '.glimpse*');
 		print 'Permissions changed to rw-r--r--', "\n";
 
+		# Permute indexes
 		my $del_locn = $config->{'glimpsedir'}.'/%@%delete%@%me%@%/';
 		system('mv', $indexdir, $del_locn);
 		system('mv', $indextmp, $indexdir);
