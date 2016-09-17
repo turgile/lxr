@@ -138,12 +138,14 @@
 	, 'htmlsearch'		=> '%LXRroot%/templates/html/html-search-%search_engine%.html'
 	, 'htmlconfig'		=> '%LXRroot%/templates/html/html-config.html'
 	, 'htmlperf'		=> '%LXRroot%/templates/html/html-perf.html'
+	, 'perfrefreshhead'	=> ''%LXRroot%/templates/html/refresh-head-btn-smaller.html'
 
-		# htmlhead and htmltail can be customised for the various
-		# LXR operations. Just replace html by source (listing file),
-		# sourcedir (displaying directory), diff (difference markup),
+		# Examples of head area customisation for source (listing file),
+		# and sourcedir (displaying directory). Can be done for others
+		# by creating a parameter '<script>head' or '<script>tail'
+		# where <script> is source, sourcedir, diff (difference markup),
 		# ident (identifier search), search (free-text search)
-		# as below (which changes nothing):
+		# or perf (performance monitoring):
 #	, 'sourcehead'		=> '%LXRroot%/templates/html/html-head.html'
 #	, 'sourcedirhead'	=> '%LXRroot%/templates/html/html-head.html'
 
@@ -227,8 +229,7 @@
 		# In case your LXR installation controls several trees,
 		# put here what you consider common parameters between
 		# your source trees.
-		# A parameter is "common" if its value must be simultaneously
-		# adjusted in every tree.
+		# A parameter is "common" if its value is the same in every tree.
 #@IF	%_shared%
 #@	IF	'H' eq "%_routing%" || 'P' eq "%_routing%" || 'A' eq "%_routing%"
 #@		IF	%_commonvirtroot%
@@ -238,8 +239,9 @@
 #@		ENDIF
 #@	ENDIF
 #@ENDIF
+#@IF	'E' eq "%_routing%"
 
-		# Pattern for extracting tree name from URL, since all
+		# DEPRECATED tree name extraction from URL, since all
 		# trees are usually served from the same physical server.
 #@IF	'E' ne "%_routing%"
 		# Meaningful only in multiple trees context. Example for
@@ -251,6 +253,7 @@
 #@	IF	'b' ne "%_virtrootpolicy%"
 		##### REPLACE WITH YOUR OWN METHOD #####
 #@	ENDIF
+#@ENDIF
 #@ENDIF
 
 #@IF	!%_dbuser%
