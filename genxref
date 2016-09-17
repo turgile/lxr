@@ -855,9 +855,10 @@ sub gensearch {
 		remove_tree($indextmp);
 		if (! exists($option{'reindexall'})) {
 			$glixopts .= ' -f';
-			system('cp', '-r', , $indexdir, $indextmp);
+			system('cp', '-r', $indexdir, $indextmp);
 		} else {
 			make_path($indextmp, {mode => 0755});
+			system('cp', $indexdir.'.glimpse_exclude', $indextmp);
 		}
 
 		# Create the exclusion file only if it does not exist
