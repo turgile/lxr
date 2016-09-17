@@ -1009,8 +1009,6 @@ while (1) {
 	}
 	open(SOURCE, '<', ${input})
 	or die("${VTred}ERROR:${VTnorm} couldn't open script template file \"${input}\"\n");
-# 	open(DEST, '>>', "${confdir}/${scriptout}")
-# 	or die("${VTred}ERROR:${VTnorm} couldn't open output file \"${confdir}/$scriptout\"\n");
 	my $dbscript = $markers{'%DB_name%'};
 	if ('s' eq $dbengine) {	# SQLite DB name is a file path
 		$dbscript = substr($dbscript, 1);
