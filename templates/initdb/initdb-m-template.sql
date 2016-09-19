@@ -75,7 +75,7 @@
 #       user rights.
 
 /*@IF	%_dbuser% */
-/*@	XQT if (( NO_USER == 0 && M_U_%DB_user% == 0 )) ; then */
+/*@	XQT if [ ${NO_USER:-0} -eq 0 -a ${M_U_%DB_user%:-0} -eq 0 ] ; then */
 /*@	XQT echo "*** MySQL - Creating global user %DB_user%"*/
 /*@	XQT mysql -u root -p <<END_OF_USER*/
 drop user if exists '%DB_user%'@'localhost';
@@ -88,7 +88,7 @@ grant all on *.* to '%DB_user%'@'localhost';
 /*@	XQT fi */
 /*@ENDIF	%_dbuser% */
 /*@IF	%_dbuseroverride% */
-/*@	XQT if (( M_U_%DB_tree_user% -lt 1 )) ; then */
+/*@	XQT if [ ${M_U_%DB_tree_user%:-0} -lt 1 ] ; then */
 /*@	XQT mysql -u root -p <<END_OF_USER*/
 drop user if exists '%DB_tree_user%'@'localhost';
 /*@	XQT END_OF_USER*/
@@ -103,7 +103,7 @@ grant all on *.* to '%DB_tree_user%'@'localhost';
 /*--*/
 /*--*/
 
-/*@XQT if (( NO_DB == 0 && M_DB_%DB_name% == 0 )) ; then */
+/*@XQT if [ ${NO_DB:-0} -eq 0 -a ${M_DB_%DB_name%:-0} -eq 0 ] ; then */
 /*-		Create databases under LXR user
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
 /*@IF	%_globaldb% */
@@ -404,7 +404,8 @@ create trigger %DB_tbl_prefix%remove_usage
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table if not exists %DB_tbl_prefix%times
+drop table if exists %DB_tbl_prefix%times;
+create table %DB_tbl_prefix%times
 	( releaseid varbinary(255)
 	, reindex   int
 	, starttime int

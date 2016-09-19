@@ -30,7 +30,7 @@
 #
 ###
 /*@XQT echo "*** Oracle - Database creation (!!! untested !!!) ***" */
-/*@XQT if (( NO_DB == 0 )) ; then */
+/*@XQT if [ ${NO_DB:-0} -eq 0 ] ; then */
 /*@XQT sqlplus <<END_OF_TABLES*/
 -- ***
 -- *** CAUTION -CAUTION - CAUTION ***
@@ -343,7 +343,8 @@ commit;
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table if not exists %DB_tbl_prefix%times
+drop table if exists %DB_tbl_prefix%times;
+create table %DB_tbl_prefix%times
 	( releaseid varchar(255)
 	, reindex   ,umber
 	, starttime number

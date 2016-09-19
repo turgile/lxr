@@ -50,7 +50,7 @@
 #       If you need them, manually configure your role properties
 
 /*@IF		%_dbuser%*/
-/*@	XQT if (( NO_USER == 0 && P_U_%DB_user% == 0 )) ; then */
+/*@	XQT if [ ${NO_USER:-0} -eq 0 -a ${P_U_%DB_user%:-0} -eq 0 ] ; then */
 /*@	XQT echo "*** PostgreSQL - Creating global user %DB_user%"*/
 /*@	XQT echo "Note: deletion of user below fails if it owns databases"*/
 /*@	XQT echo "      and other objects."*/
@@ -63,7 +63,7 @@
 /*@	XQT fi */
 /*@ENDIF		%_dbuser%*/
 /*@IF	%_dbuseroverride% */
-/*@	XQT if (( NO_USER == 0 && P_U_%DB_tree_user% == 0 )) ; then */
+/*@	XQT if [ ${NO_USER:-0} -eq 0 -a ${P_U_%DB_tree_user%:-0} -eq 0 ] ; then */
 /*@	XQT echo "*** PostgreSQL - Creating tree user %DB_tree_user%"*/
 /*@	XQT echo "Note: deletion of user below fails if it owns databases"*/
 /*@	XQT echo "      and other objects."*/
@@ -88,7 +88,7 @@
 /*-		Create databases under LXR user
 		but it prevents from deleting user if databases exist
 -*//*- to activate place "- * /" at end of line (without spaces) -*/
-/*@XQT if (( NO_DB == 0 && P_DB_%DB_name% == 0 )) ; then */
+/*@XQT if [ ${NO_DB:-0} -eq 0 -a ${P_DB_%DB_name%:-0} -eq 0 ] ; then */
 /*@IF	%_globaldb% */
 /*@	XQT echo "*** PostgreSQL - Creating global database %DB_name%"*/
 /*@	XQT dropdb     -U %DB_user% %DB_name%*/
@@ -173,7 +173,7 @@ drop table if exists %DB_tbl_prefix%times cascade;
  *- Therefore we add an intermediaite step before dropping the
  *- tables.
 -*/
-/*@XQT if (( NO_DB != 0 )) ; then */
+/*@XQT if [ ${NO_DB:-0} -ne 0 ] ; then */
 /*@XQT echo "*** PostgreSQL - Erasing triggers in database %DB_name%"*/
 /*@ADD initdb/psql-command.sql*/
 drop trigger if exists %DB_tbl_prefix%remove_definition
@@ -206,7 +206,7 @@ drop trigger if exists %DB_tbl_prefix%remove_file
 -*-	Special initialisation mandatory for PostgreSQL < 9.5
 -*- For higher versions, enable the "create index if not exists" statements.
 -*/
-/*@XQT if (( NO_DB != 0 || P_DB_%DB_name% != 0 )) ; then */
+/*@XQT if [ ${NO_DB:-0} -ne 0 -o ${P_DB_%DB_name%:-0} -ne 0 ] ; then */
 /*@ADD initdb/psql-command.sql*/
 drop index if exists %DB_tbl_prefix%filelookup;
 drop index if exists %DB_tbl_prefix%i_definitions;
@@ -582,7 +582,8 @@ create trigger %DB_tbl_prefix%remove_usage
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table if not exists %DB_tbl_prefix%times
+drop table if exists %DB_tbl_prefix%times;
+create table %DB_tbl_prefix%times
 	( releaseid bytea
 	, reindex   int
 	, starttime int

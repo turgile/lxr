@@ -33,7 +33,7 @@
 /*--*/
 /*@DEFINE DBN="%DB_name%" */
 /*@CANONR,DBN [^\w],_*/
-/*@XQT if (( NO_DB == 0 && S_DB_%DBN% == 0 )) ; then */
+/*@XQT if [ ${NO_DB:-0} -eq 0 -a S_DB_%DBN% -eq 0 ] ; then */
 /*@XQT echo "*** SQLite -  Creating database %DB_name%"*/
 /*@XQT sqlite3 %DB_name% <<END_OF_CREATE*/
 drop table if exists %DB_tbl_prefix%files;
@@ -265,7 +265,8 @@ create trigger %DB_tbl_prefix%remove_usage
  *	defnend  :	definitions collection end time
  *	usageend :	usages collection end time
  */
-create table if not exists %DB_tbl_prefix%times
+drop table if exists %DB_tbl_prefix%times;
+create table %DB_tbl_prefix%times
 	( releaseid varchar(255)
 	, reindex   int
 	, starttime int
