@@ -138,7 +138,7 @@
 	, 'htmlsearch'		=> '%LXRroot%/templates/html/html-search-%search_engine%.html'
 	, 'htmlconfig'		=> '%LXRroot%/templates/html/html-config.html'
 	, 'htmlperf'		=> '%LXRroot%/templates/html/html-perf.html'
-	, 'perfrefreshhead'	=> ''%LXRroot%/templates/html/refresh-head-btn-smaller.html'
+	, 'perfrefreshhead'	=> '%LXRroot%/templates/html/refresh-head-btn-smaller.html'
 
 		# Examples of head area customisation for source (listing file),
 		# and sourcedir (displaying directory). Can be done for others
