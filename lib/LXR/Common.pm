@@ -70,8 +70,12 @@ our $identifier;
 our $HTTP;
 our $HTMLheadOK;
 
-# Debugging flag - MUST be set to zero before public release
+# Debugging flag - MUST be set to one to be immune against missing headers
 my $wwwdebug = 1;
+# In case something goes wrong very early, the debugging routines below emit
+# HTTP headers so that a browser sees a standard HTTP/HTML stream.
+# It can be set to zero but gain is really negligible and if header template
+# cannot be found, we'll get 'did not send HTTP headers' error!
 
 # Initial value of temp file counter (see sub tmpcounter below)
 my $tmpcounter = 23;
@@ -876,6 +880,7 @@ sub httpinit {
 	$SIG{__WARN__} = \&warning;
 	$SIG{__DIE__}  = \&fatal;
 	$HTTP_inited = undef;
+	$HTMLheadOK = undef;
 	my $olddebug = $wwwdebug;
 	$wwwdebug = 1;	# Display something for early errors
 					# instead of leaving user with a blank screen

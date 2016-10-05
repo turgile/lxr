@@ -662,7 +662,6 @@ sub printdir {
 
 	$templ = gettemplate
 				( 'htmldir'
-				, ''
 				, "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n"
 				);
 

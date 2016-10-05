@@ -521,7 +521,6 @@ sub search {
 
 	$templ = gettemplate	( 'htmlsearch'
 							, $errorsig
-							, ''
 							);
 	if ($templ =~ m/^$errorsig/) {
 		die "Free-text search not available without 'htmlsearch' template\n";

@@ -52,14 +52,13 @@ use LXR::Config;
 use LXR::Files;
 
 
-=head2 C<gettemplate ($who, $prefix, $suffix)>
+=head2 C<gettemplate ($who, $surrogate)>
 
 Function C<gettemplate> returns the contents of the designated
 template.
 In case the template name has not been defined in lxr.conf or
 if the target file does not exist,
-an alternate template is generated based on default values
-supplied by the arguments.
+an replacement template is returned.
 
 =over
 
@@ -67,13 +66,9 @@ supplied by the arguments.
 
 a I<string> containing the template name
 
-=item 1 C<$prefix>
+=item 1 C<$surrogate>
 
-a I<string> containing the head of the alternate template
-
-=item 1 C<$suffix>
-
-a I<string> containing the tail of the alternate template
+a I<string> containing the replacement template
 
 =back
 
@@ -91,9 +86,9 @@ and get caught elsewhere.
 =cut
 
 sub gettemplate {
-my ($who, $prefix, $suffix) = @_;
+my ($who, $surrogate) = @_;
 
-	my $template = $prefix;
+	my $template = $surrogate;
 	if (exists $config->{$who}) {
 		if (open(TEMPL, $config->{$who})) {
 			local ($/) = undef;
@@ -104,11 +99,9 @@ my ($who, $prefix, $suffix) = @_;
 				. $config->{$who}
 				. "' does not exist\n"
 				);
-			$template .= $suffix;
 		}
 	} else {
 		warn( "Template '$who' is not defined\n");
-		$template .= $suffix;
 	}
 	return $template
 }
@@ -1636,8 +1629,7 @@ sub makeheader {
 
 	$template = gettemplate
 					( $tmplname
-					, "<hr>\n"
-					, "<p class='error'>Trying to display \$pathname</p>\n"
+					, "<p class='error'>No header found while trying to display \$pathname</p>\n"
 					);
 	$HTMLheadOK = 1;
 
@@ -1716,7 +1708,6 @@ sub makefooter {
 
 	$template = gettemplate
 					( $tmplname
-					, "<hr>\n"
 					, "\n<hr>\n</body></html>\n"
 					);
 
@@ -1788,7 +1779,7 @@ sub makeerrorpage {
 	$template = gettemplate
 					( $who
 					, "<html><body><hr>\n"
- 					,  "<hr>\n"
+						. "<hr>\n"
 						. "<h1 style='text-align:center'>Unrecoverable Error</h1>\n"
 						. "<p>Source-tree &gt;&gt; \$target &lt;&lt; unknown</p>\n"
 						. "</body></html>\n"

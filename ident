@@ -552,7 +552,6 @@ sub printident {
 
 	$templ = gettemplate	( 'htmlident'
 							, $errorsig
-							, ''
 							);
 	if ($templ =~ m/^$errorsig/) {
 		die "Identifier search not available without 'htmlident' template\n";

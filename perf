@@ -310,10 +310,9 @@ std_http_headers();
 makeheader('perf', (-2 == $inprogress ? 'perfrefresh' : 'perf'));
 $templ = gettemplate	( 'htmlperf'
 						, $errorsig
-						, ''
 						);
 if ($templ =~ m/^$errorsig/) {
-	die "Performance dump not available without 'htmlident' template\n";
+	die "Performance dump not available without 'htmlperf' template\n";
 }
 $totaltime = 0;
 print(expandtemplate

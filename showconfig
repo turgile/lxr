@@ -326,7 +326,6 @@ my $which = $HTTP->{'param'}{'_parmgroup'}
 makeheader($who);
 $templ = gettemplate	( 'htmlconfig'
 						, $errorsig
-						, ''
 						);
 if ($templ =~ m/^$errorsig/) {
 	die "Can't display configuration without 'htmlconfig' template\n";
