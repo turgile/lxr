@@ -336,22 +336,18 @@ commit;
 
 /* Statistics */
 /*	releaseid:	"public" release tag
- *	reindex  :	reundex-all flag
- *	starttime:	indexation start time
- *	purgeend :	DB purge end time
- *	textend  :	plain-text indexing end time
- *	defnend  :	definitions collection end time
- *	usageend :	usages collection end time
+ *	reindex  :	reindex-all flag
+ *	stepname :	step name
+ *	starttime:	step start time
+ *	endtime  :	step end time
  */
 drop table if exists %DB_tbl_prefix%times;
 create table %DB_tbl_prefix%times
 	( releaseid varchar(255)
-	, reindex   ,umber
-	, starttime number
-	, purgeend  number
-	, textend   number
-	, defnend   number
-	, usageend  number
+	, reindex   int
+	, stepname  char(1)
+	, starttime int
+	, endtime   int
 	);
 
 commit;

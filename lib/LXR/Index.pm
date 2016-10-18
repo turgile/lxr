@@ -282,9 +282,10 @@ sub read_open {
 	if (!$index->{'times_select'}) {
 		$index->{'times_select'} =
 			$index->{dbh}->prepare
-				( "select * from ${prefix}times"
+				( "select starttime, endtime from ${prefix}times"
 				. ' where releaseid = ?'
 				. ' and reindex = ?'
+				. ' and stepname = ?'
 				);
 	}
 }
@@ -463,8 +464,8 @@ sub write_open {
 		$index->{'times_insert'} =
 			$index->{dbh}->prepare
 				( "insert into ${prefix}times"
-				. ' (releaseid, reindex, starttime, purgeend, textend, defnend, usageend)'
-				. ' values (?, ?, ?, ?, ?, ?, ?)'
+				. ' (releaseid, reindex, stepname, starttime, endtime)'
+				. ' values (?, ?, ?, ?, ?)'
 				);
 	}
 	if (!$index->{'times_update'}) {
@@ -472,11 +473,10 @@ sub write_open {
 			$index->{dbh}->prepare
 				( "update ${prefix}times"
 				. ' set starttime = ?'
-				. ', purgeend = ?, textend = ?'
-				. ', defnend = ?, usageend = ?'
-				. ', reindex = ?'
+				. ', endtime = ?'
 				. ' where releaseid = ?'
 				. ' and reindex = ?'
+				. ' and stepname = ?'
 				);
 	}
 
@@ -1890,9 +1890,21 @@ C<saveperformance> writes genxref's milestone times to the DB.
 
 the release (or version) for which performance data should be saved
 
-=item 2 C<@wtimes>
+=item 2 C<$reindex>
 
-an I<integer> array containing the milestone times
+full reindex flag
+
+=item 3 C<$step>
+
+a single-character I<string> identifying the step
+
+=item 4 C<$starttime>
+
+the starting time of the step (in seconds)
+
+=item 5 C<$endtime>
+
+the completion time of the step (in seconds)
 
 =back
 
@@ -1922,20 +1934,19 @@ B<Requires:>
 =cut
 
 sub saveperformance {
-	my ($self, $releaseid, $reindex, @wtimes) = @_;
+	my ($self, $releaseid, $reindex, $stepname, $starttime, $endtime) = @_;
 	my @recorded;
 
-	$#wtimes = 4;	# make sure array has 5 elements
-	$self->{'times_select'}->execute($releaseid, $reindex);
+	$self->{'times_select'}->execute($releaseid, $reindex, $stepname);
 	@recorded = $self->{'times_select'}->fetchrow_array();
 # opt	$self->{'times_select'}->finish();
 	if ($#recorded < 0) {
-		$self->{'times_insert'}->execute($releaseid, $reindex, @wtimes);
+		$self->{'times_insert'}->execute
+			($releaseid, $reindex, $stepname, $starttime, $endtime);
 	} else {
 		$self->{'times_update'}->execute
-			(@wtimes, $reindex, $releaseid, $reindex);
+			($starttime, $endtime, $releaseid, $reindex, $stepname);
 	}
-	$self->forcecommit();
 }
 
 =head2 C<getperformance ($releaseid)>
@@ -1961,10 +1972,10 @@ B<Requires:>
 =cut
 
 sub getperformance {
-	my ($self, $releaseid, $reindex) = @_;
+	my ($self, $releaseid, $reindex, $stepname) = @_;
 	my @recorded;
 
-	$self->{'times_select'}->execute($releaseid, $reindex);
+	$self->{'times_select'}->execute($releaseid, $reindex, $stepname);
 	@recorded = $self->{'times_select'}->fetchrow_array();
 # opt	$self->{'times_select'}->finish();
 	return @recorded;

@@ -1441,27 +1441,27 @@ are scanned to deduce the state.
 =cut
 
 sub displayindexstate {
-	my ($indexdate, $crash) = indexstate();
+	my ($who) = @_;
+	my ($indexdate, $start, $crash) = indexstate($who);
 
 	if (0 == $indexdate) {
 		return '<p class="indexstate error">This version has not been indexed</p>' . "\n";
 	}
 	if (-1 == $indexdate) {
-		return '<p class="indexstate error">Incompatible indexation performance data</p>' . "\n";
-	}
-	if (-2 == $indexdate) {
-		return '<p class="indexstate warning">Indexing started on '
-			. _edittime($crash)
-			. ' still in progress</p>' . "\n";
-	}
-	if (defined($crash)) {
 		return '<p class="indexstate error">Indexation started on '
-			. _edittime($indexdate)
+			. _edittime($start)
 			. ' crashed on '
 			. _edittime($crash)
 			. ' (all times in UTC)</p>' . "\n"
 	}
-	return '<p class=indexstate>Last indexation on '
+	if (-2 == $indexdate) {
+		return '<p class="indexstate warning">Indexing started on '
+			. _edittime($start)
+			. ' (UTC) still in progress</p>' . "\n";
+	}
+	if (defined($crash)) {
+	}
+	return '<p class=indexstate>Last indexation completed on '
 		. _edittime($indexdate)
 		. ' UTC</p>' . "\n";
 }

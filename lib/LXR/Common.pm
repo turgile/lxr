@@ -292,45 +292,84 @@ sub _edittime {
 =head2 C<indexstate ()>
 
 Function C<indexstate> returns the most recent indexation time for the current
-tree or 0 if it is not indexed yet, -1 if performance data is incompatible,
+tree or 0 if it is not indexed yet, -1 if indexing crashed,
 -2 if indexing in progress.
+
+=over
+
+=item 1 C<$thetime>
+
+an I<integer> containing an UTC time in seconds since the epoch
+
+=back
 
 =head3 Algorithm
 
 The I<times> table records pertaining to the current version of
-the tree are read in and the various I<genxref>'s milestone dates
-are scanned to deduce the state.
+the tree are read in: first the global "in-progress" sentinel record,
+then either the I<genxref>'s free-text indexing or declaration parsing
+dates.
+
+If the "in-progress" record is still there,
+I<genxref> is still working or crashed (depending on the sign of end time).
+
+If no date record was retrieved, the tree has not been indexed.
+Otherwise, the termination time of the usage collection step is returned.
+Incremental indexing takes precedence over full reindexing
+because incremental times are erased when full reindexation takes place.
 
 =cut
 
 sub indexstate {
+	my ($who) = @_;
 	my (@milestones_f, @milestones_i);
-	my @milestones;
 
-	@milestones = $index->getperformance('', 0);	# indexing in progress flag
-	if ($#milestones > 0) {
-		return (-2, $milestones[2]);
+	my ($starttime, $endtime)
+		= $index->getperformance('', 0, '');	# indexing in progress flag
+
+	if	(	'perf' eq $who
+		&&	defined($starttime)
+		) {
+		if (0 == $endtime) {
+			return (-2, $starttime);	# still in progress
+		}
+		if (0 > $endtime) {
+			return (-1, $starttime, -$endtime);	# crashed
+		}
 	}
-	@milestones_f = $index->getperformance($releaseid, 1);	# full indexing
-	@milestones_i = $index->getperformance($releaseid, 0);	# incremental indexing
+
+	if ('search' eq $who) {
+		$who = 'T';
+	} else {
+		$who = 'U';
+	}
+	@milestones_f = $index->getperformance($releaseid, 1, $who);	# full indexing
+	@milestones_i = $index->getperformance($releaseid, 0, $who);	# incremental indexing
 	if	(	$#milestones_f < 0
 		&&	$#milestones_i < 0
 		) {
-		return (0, undef);
+		if	(defined($starttime)) {
+			if (0 == $endtime) {
+				return (-2, $starttime);	# still in progress
+			}
+			if (0 > $endtime) {
+				return (-1, $starttime, -$endtime);	# crashed
+			}
+		}
+		return 0;	# not indexed
 	}
-	@milestones = @milestones_f;
-	if ($#milestones < 0) {
-		@milestones = @milestones_i;
-	} elsif ($milestones[2] < $milestones_i[2]) {
-		@milestones = @milestones_i;
+	my $indextime = $milestones_i[1] ? $milestones_i[1] : $milestones_f[1];
+	if	(	0 == $indextime
+		&&	defined($starttime)
+		) {
+		if (0 == $endtime) {
+			return (-2, $starttime);	# still in progress
+		}
+		if (0 > $endtime) {
+			return (-1, $starttime, -$endtime);	# crashed
+		}
 	}
-	if ($#milestones != 6) {
-		return (-1, undef)
-	}
-	if (0 > $milestones[6]) {
-		return ($milestones[2],-$milestones[6])
-	}
-	return ($milestones[6], undef);
+	return $milestones_f[1];
 }
 
 

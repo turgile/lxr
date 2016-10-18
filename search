@@ -593,7 +593,7 @@ sub search {
 
 			, 'results'     => sub { printresults(@_, $searchtext, @results) }
 			, 'resultcount' => sub { return scalar @results }
-			, 'indexstate'	=> \&displayindexstate
+			, 'indexstate'	=> sub { displayindexstate('search') }
 			)
 		);
 }

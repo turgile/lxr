@@ -19,7 +19,7 @@
 -->
 <h2>Tree indexation performance</h2>
 <ul>
-	<li>Durations marked with <strong><code class=error>!</code></strong>
+	<li>Durations marked with <strong class=error>*</strong>
 	denote steps which crashed.</li>
 	<li>Measurement accuracy is one second,
 	consequently figures for very short durations may not be meaningful
@@ -37,6 +37,7 @@ $perffullpurge{<p>Last full database purge (<code>--reindexall</code>) on $perfd
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
+			<th class=perfelapsed>Elapsed</th>
 		</tr>
 	</thead>
 	<tfoot>
@@ -48,6 +49,7 @@ $perffullpurge{<p>Last full database purge (<code>--reindexall</code>) on $perfd
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
+			<th class=perfelapsed>Elapsed</th>
 		</tr>
 	</tfoot>
 	<tbody>
@@ -59,11 +61,13 @@ $perffull{		<tr class=$lineclass>
 			<td class=perfdefn>$perfdefn</td>
 			<td class=perfrefs>$perfrefs</td>
 			<td class=perftotal>$perftotal</td>
+			<td class=perfelapsed>$perfelapsed</td>
 		</tr>
 }	</tbody>
 </table>
 <p>Approximate time to fully reindex the tree
-(not counting global database purge but including individual partial purges): $perftotal
+(not counting global database purge but including individual partial purges): $perfelapsed
+<br>Total serial execution time: $perftotal</p>
 <h3>Incremental update timings</h3>
 <table class=perfcontent>
 	<thead>
@@ -75,6 +79,7 @@ $perffull{		<tr class=$lineclass>
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
+			<th class=perfelapsed>Elapsed</th>
 		</tr>
 	</thead>
 	<tfoot>
@@ -86,6 +91,7 @@ $perffull{		<tr class=$lineclass>
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
+			<th class=perfelapsed>Elapsed</th>
 		</tr>
 	</tfoot>
 	<tbody>
@@ -97,6 +103,7 @@ $perfinc{		<tr class=$lineclass>
 			<td class=perfdefn>$perfdefn</td>
 			<td class=perfrefs>$perfrefs</td>
 			<td class=perftotal>$perftotal</td>
+			<td class=perfelapsed>$perfelapsed</td>
 		</tr>
 }	</tbody>
 </table>

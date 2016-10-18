@@ -35,7 +35,8 @@ versions of the tree.
 use LXR::Common;
 use LXR::Template;
 
-my $totaltime;
+my $totalserialtime;
+my $totalelapsed;
 my $inprogress;
 
 =head2 C<duration ($start, $end)>
@@ -67,22 +68,20 @@ sub duration {
 	my ($start, $end) = @_;
 	my ($flag, $seconds, $minutes);
 
-	if (0 > $start) {
-	return '<span class=error>skipped</span>'
+	if (! defined($start)) {
+		return '<em>skipped</em>'
 	}
-	if	(	0 == $end
-		&&	-2 == $inprogress
-		) {
-			return '<em>to be done</em>';
+	if (0 == $end) {
+		if (-2 == $inprogress) {
+			return '<em>in progress</em>';
+		}
+		return '<span class=error>crashed</span>&nbsp;';
 	}
 	if (0 > $end) {
 		$end = -$end;
-		$flag = '<span class=error>!</span>&nbsp;';
+		$flag = '<strong class=error>*</strong>&nbsp;';
 	}
 	$end -= $start;
-	if	(0 > $end) {
-		return $flag . '<span class=error>crashed</span>'
-	}
 	$seconds = $end % 60;
 	$end = ($end - $seconds) / 60;
 	$minutes = $end % 60;
@@ -149,26 +148,63 @@ sub onelineexpand {
 	my $direx = '';
 	my $line  = 1;
 	my $releaseid;
-	my @perfdata;
+	my ($purgestart, $purgeend);
+	my ($textstart, $textend);
+	my ($dclstart, $dclend);
+	my ($refstart, $refend);
+	my $onestep;
+	my $steptotal;
+	my $crashed;
+	my $stepterm;
 
 	foreach $releaseid (@versions) {
-		@perfdata = $index->getperformance($releaseid, $reindex);
-		$totaltime += $perfdata[6] - $perfdata[2];
+		($purgestart, $purgeend) = $index->getperformance($releaseid, $reindex, 'P');
+		($textstart, $textend) = $index->getperformance($releaseid, $reindex, 'T');
+		($dclstart, $dclend) = $index->getperformance($releaseid, $reindex, 'D');
+		($refstart, $refend) = $index->getperformance($releaseid, $reindex, 'U');
+		$steptotal = 0;
+		$crashed = 0;
+		if (defined($purgestart)) {
+			$onestep = $purgeend - $purgestart;
+			$steptotal += $onestep if 0 < $onestep;
+			$crashed = 1 if 0 > $purgeend;
+		}
+		if (defined $textstart) {
+			$onestep = $textend - $textstart;
+			$steptotal += $onestep if 0 < $onestep;
+			$crashed = 1 if 0 > $textend;
+		}
+		if (defined $dclstart) {
+			$onestep = $dclend - $dclstart;
+			$steptotal += $onestep if 0 < $onestep;
+			$crashed = 1 if 0 > $dclend;
+		}
+		if (defined $refstart) {
+			$onestep = $refend - $refstart;
+			$steptotal += $onestep if 0 < $onestep;
+			$crashed = 1 if 0 > $refend;
+		}
+		$totalserialtime += $steptotal;
+		$steptotal = -$steptotal if $crashed;
+		$stepterm = $textend>$refend ? $textend : $refend;
+		$stepterm = 0 if ! defined $stepterm;
+		$stepterm = -$stepterm if $crashed;
+		if	(	defined($purgestart)
+			&&	0 < $stepterm
+			) {
+			$totalelapsed += $stepterm - $purgestart;
+		}
 		$direx .= expandtemplate
 			(	$templ
 			,	( 'lineclass' => sub { rowclass(@_, $line++) }
-				, 'perfversion' => sub { $perfdata[0] }
-				, 'perfdate' => sub { _edittime($perfdata[2]) }
-				, 'perfpurge' => sub { duration($perfdata[2], $perfdata[3]) }
-				, 'preffreetext' => sub { duration($perfdata[3], $perfdata[4]) }
-				, 'perfdefn'=> sub { duration($perfdata[4], $perfdata[5]) }
-				, 'perfrefs' => sub { duration($perfdata[5], $perfdata[6]) }
-				, 'perftotal' => sub { if (0 > $perfdata[6]) {
-											'<span class=error>Crashed!</span>'
-										} else {
-											duration($perfdata[2], $perfdata[6])
-										}
-									}
+				, 'perfversion' => sub { $releaseid }
+				, 'perfdate' => sub { _edittime($purgestart) }
+				, 'perfpurge' => sub { duration($purgestart, $purgeend) }
+				, 'preffreetext' => sub { duration($textstart, $textend) }
+				, 'perfdefn'=> sub { duration($dclstart, $dclend) }
+				, 'perfrefs' => sub { duration($refstart, $refend) }
+				, 'perftotal' => sub { duration(0, $steptotal) }
+				, 'perfelapsed' => sub { duration($purgestart, $stepterm) }
 				)
 			);
 	}
@@ -211,6 +247,7 @@ sub perfdataexpand {
 		$index->{dbh}->prepare
 			( 'select releaseid from '.$config->{'dbprefix'}.'times'
 			  . ' where reindex = '.$reindex
+			  . ' and stepname = \'D\''
 			  . ' order by releaseid desc'
 			);
 	$index->{'times_versions'}->execute();
@@ -218,7 +255,7 @@ sub perfdataexpand {
 		push(@versions, $releaseid) unless $releaseid eq ''
 	}
 	$index->{'times_versions'} = undef;
-	$totaltime = 0;
+	$totalserialtime = 0;
 	return onelineexpand($templ, $reindex, @versions);
 }
 
@@ -261,30 +298,8 @@ sub perffpurgeexpand {
 		push(@versions, $releaseid)
 	}
 	$index->{'times_versions'} = undef;
-	$totaltime = 0;
+	$totalserialtime = 0;
 	return onelineexpand($templ, 1, @versions);
-}
-
-
-=head2 C<gettotaltime ()>
-
-Auxiliary function C<gettotaltime> returns the total elapsed time
-over all version indexations (as the sum of individual total
-elapsed times).
-
-Due to I<Perl> binding rules for variables (at time of
-C<sub> definition), global variable C<$totaltime> cannot be
-simply referenced in the calling argument list of function
-for C<perftotal> because it would capture the value at
-definition time, namely 0.
-
-By using a function, we insure we always get the current
-value at time of call.
-
-=cut
-
-sub gettotaltime {
-	return $totaltime;
 }
 
 
@@ -302,7 +317,7 @@ my $templ;
 my $errorsig = "<!-- ! -->";
 
 httpinit();
-($inprogress) = indexstate();
+($inprogress) = indexstate('perf');
 if (-2 == $inprogress) {
 	print 'Cache-Control: no-cache', "\n";	# special header for "monitoring" perf
 }
@@ -314,13 +329,15 @@ $templ = gettemplate	( 'htmlperf'
 if ($templ =~ m/^$errorsig/) {
 	die "Performance dump not available without 'htmlperf' template\n";
 }
-$totaltime = 0;
+$totalserialtime = 0;
+$totalelapsed = 0;
 print(expandtemplate
 		( $templ
 		,	( 'perffull' => sub { perfdataexpand(@_, 1) }
 			, 'perfinc' => sub { perfdataexpand(@_, 0) }
 			, 'perffullpurge' => sub { perffpurgeexpand(@_) }
-			, 'perftotal'=> sub { duration(0, gettotaltime()) }
+			, 'perftotal' => sub { duration(0, $totalserialtime) }
+			, 'perfelapsed' => sub { duration(0, $totalelapsed) }
 			)
 		)
 );

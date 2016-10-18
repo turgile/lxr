@@ -490,8 +490,9 @@
 { text-align: right
 ; padding: 0 1em
 }
-/* total duration */
+/* total durations */
   TD.perftotal
+, TD.perfelapsed
 { text-align: right
 ; font-style: italic
 ; font-weight: bold

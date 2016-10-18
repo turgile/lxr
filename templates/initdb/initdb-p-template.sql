@@ -575,22 +575,18 @@ create trigger %DB_tbl_prefix%remove_usage
 
 /* Statistics */
 /*	releaseid:	"public" release tag
- *	reindex  :	reundex-all flag
- *	starttime:	indexation start time
- *	purgeend :	DB purge end time
- *	textend  :	plain-text indexing end time
- *	defnend  :	definitions collection end time
- *	usageend :	usages collection end time
+ *	reindex  :	reindex-all flag
+ *	stepname :	step name
+ *	starttime:	step start time
+ *	endtime  :	step end time
  */
 drop table if exists %DB_tbl_prefix%times;
 create table %DB_tbl_prefix%times
 	( releaseid bytea
 	, reindex   int
+	, stepname  char(1)
 	, starttime int
-	, purgeend  int
-	, textend   int
-	, defnend   int
-	, usageend  int
+	, endtime   int
 	);
 
 /*
