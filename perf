@@ -75,7 +75,9 @@ sub duration {
 		if (-2 == $inprogress) {
 			return '<em>in progress</em>';
 		}
-		return '<span class=error>crashed</span>&nbsp;';
+		if (0 != $start) {
+			return '<span class=error>crashed</span>&nbsp;';
+		}
 	}
 	if (0 > $end) {
 		$end = -$end;
@@ -164,11 +166,11 @@ sub onelineexpand {
 		($refstart, $refend) = $index->getperformance($releaseid, $reindex, 'U');
 		$steptotal = 0;
 		$crashed = 0;
-		if (defined($purgestart)) {
+# 		if (defined($purgestart)) {
 			$onestep = $purgeend - $purgestart;
 			$steptotal += $onestep if 0 < $onestep;
 			$crashed = 1 if 0 > $purgeend;
-		}
+# 		}
 		if (defined $textstart) {
 			$onestep = $textend - $textstart;
 			$steptotal += $onestep if 0 < $onestep;
@@ -189,9 +191,7 @@ sub onelineexpand {
 		$stepterm = $textend>$refend ? $textend : $refend;
 		$stepterm = 0 if ! defined $stepterm;
 		$stepterm = -$stepterm if $crashed;
-		if	(	defined($purgestart)
-			&&	0 < $stepterm
-			) {
+		if (0 < $stepterm) {
 			$totalelapsed += $stepterm - $purgestart;
 		}
 		$direx .= expandtemplate
@@ -336,8 +336,20 @@ print(expandtemplate
 		,	( 'perffull' => sub { perfdataexpand(@_, 1) }
 			, 'perfinc' => sub { perfdataexpand(@_, 0) }
 			, 'perffullpurge' => sub { perffpurgeexpand(@_) }
-			, 'perftotal' => sub { duration(0, $totalserialtime) }
-			, 'perfelapsed' => sub { duration(0, $totalelapsed) }
+			, 'perftotal' => sub {
+					if (0 < $totalserialtime) {
+						duration(0, $totalserialtime)
+					} else {
+						'<em>not available</em>'
+					}
+									}
+			, 'perfelapsed' => sub {
+					if (0 < $totalelapsed) {
+						duration(0, $totalelapsed)
+					} else {
+						'<em>not available</em>'
+					}
+									}
 			)
 		)
 );

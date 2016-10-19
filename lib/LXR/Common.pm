@@ -369,7 +369,7 @@ sub indexstate {
 			return (-1, $starttime, -$endtime);	# crashed
 		}
 	}
-	return $milestones_f[1];
+	return $indextime;
 }
 
 
