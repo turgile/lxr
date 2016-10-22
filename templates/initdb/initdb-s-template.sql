@@ -33,7 +33,7 @@
 /*--*/
 /*@DEFINE DBN="%DB_name%" */
 /*@CANONR,DBN [^\w],_*/
-/*@XQT if [ ${NO_DB:-0} -eq 0 -a S_DB_%DBN% -eq 0 ] ; then */
+/*@XQT if [ ${NO_DB:-0} -eq 0 -a ${S_DB_%DBN%:-0} -eq 0 ] ; then */
 /*@XQT echo "*** SQLite -  Creating database %DB_name%"*/
 /*@XQT sqlite3 %DB_name% <<END_OF_CREATE*/
 drop table if exists %DB_tbl_prefix%files;
