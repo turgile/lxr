@@ -584,7 +584,7 @@ for the real job.
 =cut
 
 httpinit();
-std_http_headers();
+std_http_headers('ident');
 makeheader('ident');
 $defonly = 1 if	($HTTP->{'param'}{'_identdefonly'}
 				||	(  $config->{'identdefonly'}

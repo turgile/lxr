@@ -406,7 +406,7 @@ for the real job.
 =cut
 
 httpinit();
-std_http_headers();
+std_http_headers('diff');
 
 makeheader('diff');
 my @dargs;

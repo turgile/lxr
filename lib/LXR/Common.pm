@@ -289,7 +289,7 @@ sub _edittime {
 }
 
 
-=head2 C<indexstate ()>
+=head2 C<indexstate ($who)>
 
 Function C<indexstate> returns the most recent indexation time for the current
 tree or 0 if it is not indexed yet, -1 if indexing crashed,
@@ -297,9 +297,11 @@ tree or 0 if it is not indexed yet, -1 if indexing crashed,
 
 =over
 
-=item 1 C<$thetime>
+=item 1 C<$who>
 
-an I<integer> containing an UTC time in seconds since the epoch
+a I<string> containing the main script name
+(used to avoid to retrieve records unrelated to present script,
+mainly in the I<perf> case)
 
 =back
 
@@ -811,16 +813,30 @@ sub minimal_http_headers {
 }
 
 
-=head2 C<std_http_headers ()>
+=head2 C<std_http_headers ($who)>
 
 Function C<std_http_headers> ouputs the HTTP headers and a blank line
 to switch to content (body) mode.
 
+=over
+
+=item 1 C<$who>
+
+an optional I<string> containing the main script name
+
+=back
+
 Presently, only a Last-Modified and a Content-Type header are output.
+
+If C<$who> is undefined, current time is used in the Last-Modified header
+which is an elegant way to tell the browser to refresh its cache.
+This is useful for "dynamic" views like I<perf> or I<showconfig>.
 
 =cut
 
 sub std_http_headers {
+	my ($who) = @_;
+	my $time;
 
 	# Print out a Last-Modified date that is the larger of:
 	#	- the underlying file that we are presenting
@@ -834,16 +850,20 @@ sub std_http_headers {
 	# For prior implementation, see git history; there has been many hesitations
 	# about it.
 
-	my $time = $files->getfiletime($pathname, $releaseid);
-	my $time2 = (stat($config->{'confpath'}))[9];
-	$time = $time2 if !defined $time || $time2 > $time;
-	($time2) = indexstate();
-	$time = $time2 if $time2 > $time;
-	if ('/' ne substr($pathname, -1)) {
-		$time2 = $index->filetimestamp	( $pathname
-										, $files->filerev($pathname, $releaseid)
-										);
+	if (defined $who) {
+		$time = $files->getfiletime($pathname, $releaseid);
+		my $time2 = (stat($config->{'confpath'}))[9];
+		$time = $time2 if !defined $time || $time2 > $time;
+		($time2) = indexstate($who);
 		$time = $time2 if $time2 > $time;
+		if ('/' ne substr($pathname, -1)) {
+			$time2 = $index->filetimestamp	( $pathname
+											, $files->filerev($pathname, $releaseid)
+											);
+			$time = $time2 if $time2 > $time;
+		}
+	} else {
+		$time = time();
 	}
 
 	if ($time > 0) {

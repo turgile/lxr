@@ -607,7 +607,7 @@ for the real job.
 =cut
 
 httpinit();
-std_http_headers();
+std_http_headers('search');
 makeheader('search');
 if ($files->isa('LXR::Files::Plain')) {
 	if	(	$config->{'glimpsebin'}
