@@ -20,6 +20,15 @@
 #
 ###############################################
 
+# ajl 2016-10-26
+# NOTE: this file contains lines commented out with a #MT prefix.
+#	These lines are part of an experiment to perform simultaneously
+#	free-text indexing and definition/usage collection.
+#	Results showed that the processes where competing for the I/O bus
+#	(file reads, provate file writes and DB I/O) and finally were
+#	slowed down waiting for data.
+#	Code is left here in case some new idea would remove the culprit.
+
 use strict;
 use lib 'lib', 'scripts';
 use Fcntl;
@@ -49,6 +58,7 @@ GetOptions	(\%option
 			, 'reindexall'
 			, 'checkonly'
 			, 'accept'
+#MT 			, 'S'
 			, 'T'
 			, 'novacuum'
 			, 'U'
@@ -88,6 +98,7 @@ Valid options are:
                      cross-references (mainly for PostgreSQL because it sollicits
                      password from the user preventing unattended operation;
                      VACUUM can always be launched manually)
+  -U                 Same as --vacuum, but only for PostgreSQL databases
   
 Report bugs at http://sourceforge.net/projects/lxr/.
 END_HELP
@@ -388,6 +399,7 @@ my ($purgestart, $purgeend);
 my ($textstart, $textend);
 my ($dclstart, $dclend);
 my ($refstart, $refend);
+#MT my $childpid;
 
 my %binaryfiles;
 
@@ -620,6 +632,7 @@ foreach my $treedescr (@config) {
 		}
 
 		foreach my $version (@versions) {
+#MT			$childpid = undef;
 			$versioninprogress = $version;
 			print STDERR "\n${CSI}44m${VTwhite}Processing $url ${VTnorm}";
 			print STDERR " == ${CSI}41m${VTwhite}tree ".$config->{'treename'}.${VTnorm}
@@ -639,54 +652,72 @@ foreach my $treedescr (@config) {
 			}
 			$purgeend = time();
 			$index->saveperformance($version, $reindexmode, $milestone, $purgestart, $purgeend);
-			$milestone = 'T';
-			$textstart = time();
-			$index->saveperformance($version, $reindexmode, $milestone, $textstart, 0);
+			$textend = 0;
 			if ($files->isa('LXR::Files::Plain')) {
-				$stepstart = $textstart;
 				if ($foundglimpse > 0 || $foundswishe > 0) {
-					gensearch($version);
+					$milestone = 'T';
+					$textstart = time();
+					$stepstart = $textstart;
+					$index->saveperformance($version, $reindexmode, $milestone, $textstart, 0);
+#MT					$childpid =
+						gensearch	( $version
+#MT									, \&childexit
+									);
+					$textend = time();
+			# ATTENTION: if multi-threading code is reenabled, following line must
+			#		be commented out
+				$index->saveperformance($version, $reindexmode, 'T', $textstart, $textend);
 				} else {
 					print STDERR "${VTyellow}Free-text search disabled${VTnorm}\n";
 				}
-				print STDERR "\n";
 			} else {
 				print STDERR "${VTyellow}Free-text search setup suppressed for VCS storage${VTnorm}\n";
 			}
-			$textend = time();
-			$index->saveperformance($version, $reindexmode, $milestone, $textstart, $textend);
 			$printdirbanner = 1;
 			$milestone = 'D';
 			$dclstart = time();
 			$stepstart = $dclstart;
-			$index->saveperformance($versioninprogress, $reindexmode, $milestone, $dclstart, 0);
+			$index->saveperformance($version, $reindexmode, $milestone, $dclstart, 0);
 			directorytreetraversal	( \&Tagger::processfile
 									, $version
 									, ''
 									, '/'
 									);
 			$dclend = time();
-			$index->saveperformance($versioninprogress, $reindexmode, $milestone, $dclstart, $dclend);
+			$index->saveperformance($version, $reindexmode, $milestone, $dclstart, $dclend);
 			$printdirbanner = 1;
 			$milestone = 'U';
 			$refstart = time();
 			$stepstart = $refstart;
-			$index->saveperformance($versioninprogress, $reindexmode, $milestone, $refstart, 0);
+			$index->saveperformance($version, $reindexmode, $milestone, $refstart, 0);
 			directorytreetraversal	( \&Tagger::processrefs
 									, $version
 									, ''
 									, '/'
 									);
 			$refend = time();
-			$index->saveperformance($versioninprogress, $reindexmode, $milestone, $refstart, $refend);
+			$index->saveperformance($version, $reindexmode, $milestone, $refstart, $refend);
 
+#MT 			if ($childpid > 0) {
+#MT 				waitpid($childpid, 0);
+#MT 				delete $SIG{'USR1'};
+#MT 			}
+#MT			if (0 != $textend) {
+#MT				$index->saveperformance($version, $reindexmode, 'T', $textstart, $textend);
+#MT			}
 	# Indexing summary for this version
 			print "\n${CSI}44m${VTwhite}Summary for $url ${VTnorm}";
 			print " == ${CSI}41m${VTwhite}tree $config->{'treename'}${VTnorm}"
-			if $config->{'treename'};
+				if $config->{'treename'};
 			print " == ${CSI}41m${VTwhite}Version $version ${VTnorm}\n" ;
 			print '    Purge              : ', elapsed($purgeend-$purgestart), "\n";
-			print '    Free-text indexing : ', elapsed($textend-$textstart), "\n";
+			print '    Free-text indexing : ';
+			if (0 == $textend) {
+				print $VTyellow, 'skipped', $VTnorm;
+			} else {
+				print elapsed($textend-$textstart);
+			}
+			print "\n";
 			print '    Definitions parsing: ', elapsed($dclend-$dclstart), "\n";
 			print '    References parsing : ', elapsed($refend-$refstart), "\n";
 			print '    ...Total duration..: ', elapsed(time()-$purgestart), "\n";
@@ -723,13 +754,30 @@ foreach my $treedescr (@config) {
 ###
 
 sub abortcleanup {
+	my $abrtend;
 	delete $SIG{__DIE__};	# avoid recursive trap
 	$index->saveperformance($versioninprogress, $reindexmode, $milestone, $stepstart, -time());
 	$index->saveperformance('', 0, '', $starttime, -time());
+#MT 	($textstart, $abrtend) = $index->getperformance($versioninprogress, $reindexmode, 'T');
+#MT 	if	(	defined $textstart
+#MT 		&&	0 == $abrtend
+#MT 		) {
+#MT 		$index->saveperformance	( $versioninprogress
+#MT 								, $reindexmode
+#MT 								, 'T'
+#MT 								, $textstart
+#MT 								, $textend ? $textend : -time()
+#MT 								);
+#MT 	}
 	$index->write_close();
 	$index->final_cleanup();
-	die;
+	die $!;
 }
+
+#MT sub childexit {
+#MT 	$textend = time();
+#MT 	delete $SIG{'USR1'};
+#MT }
 
 sub dirbannerprint {
 	my ($head, $releaseid, $dirname, $filename) = @_;
@@ -839,7 +887,36 @@ sub feedswish {
 }
 
 sub gensearch {
-	my ($releaseid) = @_;
+	my $releaseid = shift;
+#MT	my $cldhandler = shift;
+
+#MT # Since using DBI in multi-threading is very hard to get it right,
+#MT # it is easier to temporarily close the connection to the DB and
+#MT # reopen it later when we really need it.
+#MT	$index->write_close();
+#MT	$index->final_cleanup();
+#MT	my $pid;
+#MT	my $parentpid = $$;
+#MT	$pid = fork() if !$option{'S'};
+#MT	if (defined $pid) {
+#MT		if (0 != $pid) {
+#MT			$SIG{'USR1'} = $cldhandler;
+#MT		# This is the parent: restore DB connection
+#MT			$index = LXR::Index->new($config);
+#MT			$index->write_open();
+#MT			return $pid ;
+#MT		}
+#MT		# Remove the signal handlers because DB connection is down
+#MT		delete $SIG{__DIE__};
+#MT		$SIG{'INT'} = 'DEFAULT';
+#MT	} else {
+#MT		# We did not fork, reopen DB connection
+#MT		$index = LXR::Index->new($config);
+#MT		$index->write_open();
+#MT	}
+
+
+# In case we did not fork, continue with traditional sequential processing
 
 	if ($config->{'glimpsedir'} && $config->{'glimpseindex'}) {
 
@@ -895,18 +972,11 @@ sub gensearch {
 		}
 
 		# Do it now
-		my $glimpse = IO::Handle->new();
-		my $pid = open($glimpse, '|-');
-		if ($pid == 0) {
-			exec( $config->{'glimpseindex'}
+		system	( $config->{'glimpseindex'}
 				, split(' ', $glixopts)
 				, '-H', $indextmp
 				, $config->{'sourceroot'} . '/' . $releaseid
 				);
-			print(STDERR "Couldn't exec " . $config->{'glimpseindex'} . ": $!\n");
-			kill(9, $$);
-		}
-		$glimpse->close();
 
 		# Need to chmod the glimpse files so everybody can read them.
 		system('chmod 644 '. $indextmp . '.glimpse*');
@@ -940,6 +1010,13 @@ sub gensearch {
 		$swish->close();
 		$filelist->close();
 	}
+
+	print STDERR "\n";
+#MT	if (defined $pid) {
+#MT		kill(10, $parentpid);	# 10 = POSIX::SIGUSR1
+#MT		exit(0) ;
+#MT	}
+#MT	return $pid;
 }
 
 sub dump_versionset {
