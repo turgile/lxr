@@ -186,12 +186,15 @@ sub onelineexpand {
 			$steptotal += $onestep if 0 < $onestep;
 			$crashed = 1 if 0 > $refend;
 		}
-		$totalserialtime += $steptotal;
-		$steptotal = -$steptotal if $crashed;
-		$stepterm = $textend>$refend ? $textend : $refend;
-		$stepterm = 0 if ! defined $stepterm;
-		$stepterm = -$stepterm if $crashed;
-		if (0 < $stepterm) {
+		if ($crashed) {
+			$steptotal = -1;
+			$stepterm = -1;
+		} else {
+			$totalserialtime += $steptotal;
+			$stepterm = $textend>$refend ? $textend : $refend;
+			$stepterm = 0 if ! defined $stepterm;
+		}
+			if (0 < $stepterm) {
 			$totalelapsed += $stepterm - $purgestart;
 		}
 		$direx .= expandtemplate
@@ -303,6 +306,28 @@ sub perffpurgeexpand {
 }
 
 
+=head2 C<getserial ()> and C<getelapsed ()>
+
+These helper functions work around random adverse effect caused by a possible
+optimisation in I<mod_perl>.
+Transferring correct computed value of C<$totalserialtime> or C<$totalelapsed>
+to anonymous C<sub>s requires I<late binding>.
+It looks like sometimes <early binding> is used, leading to the variables
+initial value instead of fetching the current value.
+
+Replacing reference to the variables by a function seems to cure the problem.
+
+=cut
+
+sub getserial {
+	$totalserialtime
+}
+
+sub getelapsed {
+	$totalelapsed
+}
+
+
 =head2 Script entry point
 
 Selects the correct header and footer, retrieves the C<'htmlperf'> template
@@ -338,14 +363,14 @@ print(expandtemplate
 			, 'perffullpurge' => sub { perffpurgeexpand(@_) }
 			, 'perftotal' => sub {
 					if (0 < $totalserialtime) {
-						duration(0, $totalserialtime)
+						duration(0, getserial())
 					} else {
 						'<em>not available</em>'
 					}
 									}
 			, 'perfelapsed' => sub {
 					if (0 < $totalelapsed) {
-						duration(0, $totalelapsed)
+						duration(0, getelapsed())
 					} else {
 						'<em>not available</em>'
 					}
