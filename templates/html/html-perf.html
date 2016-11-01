@@ -37,7 +37,7 @@ $perffullpurge{<p>Last full database purge (<code>--reindexall</code>) on $perfd
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
-			<th class=perfelapsed>Elapsed</th>
+<!-- 			<th class=perfelapsed>Elapsed</th> -->
 		</tr>
 	</thead>
 	<tfoot>
@@ -49,7 +49,7 @@ $perffullpurge{<p>Last full database purge (<code>--reindexall</code>) on $perfd
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
-			<th class=perfelapsed>Elapsed</th>
+<!-- 			<th class=perfelapsed>Elapsed</th> -->
 		</tr>
 	</tfoot>
 	<tbody>
@@ -61,13 +61,32 @@ $perffull{		<tr class=$lineclass>
 			<td class=perfdefn>$perfdefn</td>
 			<td class=perfrefs>$perfrefs</td>
 			<td class=perftotal>$perftotal</td>
-			<td class=perfelapsed>$perfelapsed</td>
+<!-- 			<td class=perfelapsed>$perfelapsed</td> -->
 		</tr>
 }	</tbody>
 </table>
-<p>Approximate time to fully reindex the tree
-(not counting global database purge but including individual partial purges): $perfelapsed
-<br>Total serial execution time: $perftotal</p>
+<p>Approximate times to fully reindex the tree
+<br>(not counting global database purge but including individual partial purges)
+</p>
+<!--<p>Estimate for purely sequential execution is pessimistic
+when computed from a forked execution
+because system housekeeping for forking processes is kept in the sum.
+This housekeeping is not present in sequential execution.
+</p>-->
+<table class=perfestimate>
+	<tbody>
+		<tr>
+			<th>This execution
+<!-- 				<br>(forked if shorter than sequential) -->
+			</th>
+<!--			<td>$perfelapsed</td>
+		</tr>
+		<tr>
+			<th>Sequential execution upper bound</th>-->
+			<td>$perftotal</td>
+		</tr>
+	</tbody>
+</table>
 <h3>Incremental update timings</h3>
 <table class=perfcontent>
 	<thead>
@@ -79,7 +98,7 @@ $perffull{		<tr class=$lineclass>
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
-			<th class=perfelapsed>Elapsed</th>
+<!-- 			<th class=perfelapsed>Elapsed</th> -->
 		</tr>
 	</thead>
 	<tfoot>
@@ -91,7 +110,7 @@ $perffull{		<tr class=$lineclass>
 			<th class=perfdefn>Definitions</th>
 			<th class=perfrefs>References</th>
 			<th class=perftotal>Total</th>
-			<th class=perfelapsed>Elapsed</th>
+<!-- 			<th class=perfelapsed>Elapsed</th> -->
 		</tr>
 	</tfoot>
 	<tbody>
@@ -103,7 +122,7 @@ $perfinc{		<tr class=$lineclass>
 			<td class=perfdefn>$perfdefn</td>
 			<td class=perfrefs>$perfrefs</td>
 			<td class=perftotal>$perftotal</td>
-			<td class=perfelapsed>$perfelapsed</td>
+<!-- 			<td class=perfelapsed>$perfelapsed</td> -->
 		</tr>
 }	</tbody>
 </table>
