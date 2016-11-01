@@ -277,7 +277,7 @@ sub expandtemplate {
 	# and apply replacement rule
 	# optional argument----+------+
 	#                      v      v
-	$templ =~ s/(\$(\w+)(\{([^\}]*)\}|))/{
+	$templ =~ s/(\$(\w+)(\{([^\}]*)\}|)?)/{
 		if (defined($expfun = $expfunc{$2})) {
 			if ($3 eq '') {
 				&$expfun(undef);
