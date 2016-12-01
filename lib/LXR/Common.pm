@@ -125,7 +125,7 @@ B<Note:>
 
 =item
 
-I<Since it proved a valuable debuging aid, the function has been modified
+I<Since it proved a valuable debugging aid, the function has been modified
 so that it can be used very early in LXR initialisation.
 Variable C<$HTMLheadOK> tells if the "standard" header part of the
 page has already been sent to screen.
