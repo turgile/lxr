@@ -1426,11 +1426,19 @@ sub varexpand {
 }
 
 
-=head2 C<displayindexstate ()>
+=head2 C<displayindexstate ($who)>
 
 Function C<displayindexstate> is a "$variable" substitution function.
 It returns a HTML <p> element containing the indexing state of
 the current version.
+
+=over
+
+=item 1 C<$who>
+
+a I<string> containing the caller script name
+
+=back
 
 =head3 Algorithm
 
