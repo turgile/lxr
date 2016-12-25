@@ -42,20 +42,28 @@ Method C<new> creates a new language object.
 
 =over
 
-=item 1 C<$writeDB>
+=item 1
+
+C<$writeDB>
 
 a I<boolean> I<integer> requesting to store language properties
 (huyman-readable type description) into the database
 
-=item 2 C<$pathname>
+=item 2
+
+C<$pathname>
 
 a I<string> containing the name of the file to parse
 
-=item 3 C<$releaseid>
+=item 3
+
+C<$releaseid>
 
 a I<string> containing the release (version) of the file to parse
 
-=item 4 C<$lang>
+=item 4
+
+C<$lang>
 
 a I<string> which is the I<key> for the specification I<hash>
 C<'langmap'> in file I<generic.conf>
@@ -90,11 +98,15 @@ Method C<processinclude> is invoked to process a Pascal I<include> directive.
 
 =over
 
-=item 1 C<$frag>
+=item 1
+
+C<$frag>
 
 a I<reference to a string> containing the directive
 
-=item 1 C<$dir>
+=item 2
+
+C<$dir>
 
 an optional I<string> containing a preferred directory for the include'd file
 

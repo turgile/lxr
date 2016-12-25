@@ -46,12 +46,16 @@ time difference between its arguments.
 
 =over
 
-=item 1 C<$start>
+=item 1
+
+C<$start>
 
 an I<integer> containing the number of seconds since the epoch for
 the beginning of the interval
 
-=item 2 C<$end>
+=item 2
+
+C<$end>
 
 an I<integer> containing the number of seconds since the epoch for
 the end of the interval
@@ -100,11 +104,15 @@ It returns a CSS class name depending on line parity.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 2 C<$line>
+=item 2
+
+C<$line>
 
 an I<integer> containing the line number of the display
 
@@ -126,15 +134,21 @@ second argument.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template
 
-=item 2 C<$reindex>
+=item 2
+
+C<$reindex>
 
 the full reindex flag as 0 or 1 to select the proper values
 
-=item 3 C<@versions>
+=item 3
+
+C<@versions>
 
 an I<array> containing the versions (release-ids) for which
 performance data must be edited.
@@ -223,11 +237,15 @@ It returns its template argument expanded for every line in the DB selection.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template
 
-=item 2 C<$reindex>
+=item 2
+
+C<$reindex>
 
 the full reindex flag as 0 or 1 to select the proper values
 
@@ -272,7 +290,9 @@ corresponding to a full purge (column C<releaseid> is a I<null> string).
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template
 
@@ -312,7 +332,7 @@ These helper functions work around random adverse effect caused by a possible
 optimisation in I<mod_perl>.
 Transferring correct computed value of C<$totalserialtime> or C<$totalelapsed>
 to anonymous C<sub>s requires I<late binding>.
-It looks like sometimes <early binding> is used, leading to the variables
+It looks like sometimes I<early binding> is used, leading to the variables
 initial value instead of fetching the current value.
 
 Replacing reference to the variables by a function seems to cure the problem.

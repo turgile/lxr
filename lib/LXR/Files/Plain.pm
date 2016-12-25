@@ -138,11 +138,15 @@ C<realfilename> returns the true original name of the file.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -160,8 +164,8 @@ B<Note:>
 
 =item
 
-If "standard" file copy is desired, comment out the method
-B<AND> C<releaserealfilename>.
+I<If "standard" file copy is desired, comment out the method
+B<AND> C<releaserealfilename>.>
 
 =back
 
@@ -180,7 +184,9 @@ C<releaserealfilename> protects againt file erasure.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 a I<string> containing the filename
 
@@ -204,11 +210,15 @@ real full OS-absolute path.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -226,7 +236,7 @@ B<Note:>
 
 =item
 
-This function should not be used outside this module.
+I<This function should not be used outside this module.>
 
 =back
 

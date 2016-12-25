@@ -33,16 +33,16 @@ B<Note:>
 
 =item
 
-GIT.pm was initially based on library Git.pm module.
-Unhappily, it systematically errored out with I<"Insecure
-dependency in &hellip;"> and was unusable.
+I<GIT.pm was initially based on library Git.pm module.
+Unfortunately, it systematically errored out with I<"Insecure
+dependency in &hellip;"> and was unusable.>
 
-Since it was inconvenient to chase all occurrences of arguments
+I<Since it was inconvenient to chase all occurrences of arguments
 to untaint them, it was considered easier to rewrite an interface
-method to git commands and untaint there.
+method to git commands and untaint there.>
 
-It is likely that it is less versatile and clean than the library
-module, but at least it works for LXR.
+I<It is likely that it is less versatile and clean than the library
+module, but at least it works for LXR.>
 
 =back
 
@@ -350,11 +350,15 @@ C<_git_cmd> returns a handle to a pipe where the command outputs its result.
 
 =over
 
-=item 1 C<$cmd>
+=item 1
+
+C<$cmd>
 
 a I<string> containing the Git command
 
-=item 1 C<@args>
+=item 2
+
+C<@args>
 
 a I<list> containing the command arguments
 
@@ -398,11 +402,15 @@ result is expected.
 
 =over
 
-=item 1 C<$cmd>
+=item 1
+
+C<$cmd>
 
 a I<string> containing the Git command
 
-=item 1 C<@args>
+=item 2
+
+C<@args>
 
 a I<list> containing the command arguments
 
@@ -418,10 +426,10 @@ B<Note:>
 
 =item
 
-Pipe is closed before returning BUT close status is not checked
+I<Pipe is closed before returning BUT close status is not checked
 despite all warnings in perldoc. It is expected that the
 result line will be empty or undefined if something goes
-wrong with the pipe.
+wrong with the pipe.>
 
 =back
 

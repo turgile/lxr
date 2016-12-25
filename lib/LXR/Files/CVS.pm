@@ -301,7 +301,7 @@ sub getfilehandle {
 	return $fileh;
 }
 
-#	Unhappily, computing the file size requires reading it.
+#	Unfortunately, computing the file size requires reading it.
 sub getfilesize {
 	my ($self, $filename, $releaseid) = @_;
 
@@ -346,11 +346,15 @@ real full OS-absolute path.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -368,7 +372,7 @@ B<Note:>
 
 =item
 
-This function should not be used outside this module.
+I<This function should not be used outside this module.>
 
 =back
 
@@ -420,15 +424,21 @@ version.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 a I<string> containing the filename
 
-=item 1 C<$release1>
+=item 2
+
+C<$release1>
 
 a I<string> containing the source version
 
-=item 1 C<$release2>
+=item 3
+
+C<$release2>
 
 a I<string> containing the final version
 
@@ -485,11 +495,15 @@ C<dirempty> returns 1 (I<true>) if the directory is empty,
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -546,7 +560,9 @@ C<cleanstring> returns its argument with all "dangerous" characters removed.
 
 =over
 
-=item 1 C<$in>
+=item 1
+
+C<$in>
 
 I<String> to clean
 
@@ -583,7 +599,9 @@ file.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 A I<string> containing the filename
 
@@ -625,7 +643,9 @@ file.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 A I<string> containing the filename
 
@@ -655,9 +675,13 @@ C<byrevision> is an auxiliary compare function for C<sort>.
 
 =over
 
-=item 1 C<$a>
+=item 1
 
-=item 1 C<$b>
+C<$a>
+
+=item 2
+
+C<$b>
 
 I<Strings> to compare (CVS revision numbers)
 
@@ -692,7 +716,9 @@ contained in the CVS difference file C<$filename>.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 A I<string> containing the filename
 

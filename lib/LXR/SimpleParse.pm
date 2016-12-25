@@ -21,7 +21,7 @@
 
 This module is the elementary parser in charge of splitting the
 source file into homogeneous regions (i.e. fragments defined by
-'spec's in generic.conf).
+C<'spec'>s in I<generic.conf>).
 
 =cut
 
@@ -64,21 +64,27 @@ and builds the detection regexps.
 
 =over
 
-=item 1 C<$fileh>
+=item 1
+
+C<$fileh>
 
 a I<filehandle> for the source file
 
-=item 1 C<$tabhint>
+=item 2
+
+C<$tabhint>
 
 hint for the tab width (defaults to 8 if not defined)
 
 Actual value can be given in an emacs-style comment as the first
 line of the file.
 
-=item 1 C<@blksep>
+=item 3
+
+C<@blksep>
 
 an I<array> of references to I<hashes> defining the different
-categories for this languages (see C<generic.conf>)
+categories for this languages (see I<generic.conf>)
 
 =back
 
@@ -135,11 +141,15 @@ C<untabify> replaces TAB characters by spaces.
 
 =over
 
-=item 1 C<$line>
+=item 1
+
+C<$line>
 
 I<string> to untabify
 
-=item 1 C<$tab>
+=item 2
+
+C<$tab>
 
 number of spaces for a TAB (defaults to 8 if not defined)
 
@@ -171,20 +181,24 @@ Returned value is a list: C<($btype, $frag)>.
 
 =over
 
-=item 1 C<$btype>
+=item 1
+
+C<$btype>
 
 a I<string> giving the category name
 
-=item 1 C<$frag>
+=item 2
+
+C<$frag>
 
 a I<string> containing the region
 
-Note thet the "region" may span several lines.
+Note that the "region" may span several lines.
 
 =back
 
 C<nextfrag> implements the LXR parser. It is critical for global
-performance. Unhappily, two factors put a heavy penalty on it:
+performance. Unfortunately, two factors put a heavy penalty on it:
 
 1- Perl is an interpreted language,
 
@@ -200,7 +214,7 @@ dominated by HTML editing).>
 
 =item
 
-I<Raw speed can be seen during C<genxref> where the full tree is
+I<Raw speed can be seen during I<genxref> where the full tree is
 parsed. It could be worth to replace the parser by a compiled
 deterministic FSA version.>
 
@@ -383,7 +397,9 @@ scanning by the next call to C<nextfrag>.
 
 =over
 
-=item 1 C<$frag>
+=item 1
+
+C<$frag>
 
 I<string> to scan next
 
@@ -399,9 +415,9 @@ B<Caveat:>
 
 =item
 
-When using this sub, pay special attention to the order of
+I<When using this sub, pay special attention to the order of
 requests so that you do not create permutations of source
-sequences: it is a stack (LIFO)!
+sequences: it is a stack (LIFO)!>
 
 =back
 

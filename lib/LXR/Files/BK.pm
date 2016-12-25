@@ -33,7 +33,7 @@ B<Caveat:>
 
 As BitKeeper is proprietary software since 2005, this package is
 in the state it reached at that date, apart from commenting,
-sorting the methods to match Files.pm order, removal of C<getfile>
+sorting the methods to match I<Files.pm> order, removal of C<getfile>
 (which is abstract enough to be coded in the super class).
 
 =back

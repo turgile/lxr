@@ -50,11 +50,11 @@ B<Note:>
 
 =item
 
-The reason for using this function is not clear.
-It has been commented out without adverse effect.
+I<The reason for using this function is not clear.
+It has been commented out without adverse effect.>
 
-Being very short, it could be inlined (only one usage!)
-if it needs to be reenabled.
+I<Being very short, it could be inlined (only one usage!)
+if it needs to be reenabled.>
 
 =back
 
@@ -66,18 +66,22 @@ if it needs to be reenabled.
 # }
 
 
-=head2 C<htmljust ($s, $l)>
+=head2 C<htmljust ($s, $w)>
 
 Function C<htmljust> returns an HTML string justified to exactly
 a fixed number of screen positions.
 
 =over
 
-=item 1 C<$s>
+=item 1
+
+C<$s>
 
 a I<string> containing an HTML sequence
 
-=item 1 C<$w>
+=item 2
+
+C<$w>
 
 an I<integer> defining the justification width
 
@@ -139,7 +143,9 @@ Procedure C<printdiff> is the main driver for difference display
 
 =over
 
-=item 1 C<@dargs>
+=item 1
+
+C<@dargs>
 
 an I<array> containing the C<'variables'> values for the reference version
 
@@ -152,7 +158,7 @@ Current values are then transfered into these so-called I<remembered>
 values and user is requested to choose another version.
 
 On second entry, both current values (I<var_name>C<=>...) and
-remembered values (C<~>I~<var_name>C<=>...) are present in the
+remembered values (C<~>I<var_name>C<=>...) are present in the
 query arguments.
 The latter values designate the reference version (in the right pane);
 the former values the "new" version (in the left pane).

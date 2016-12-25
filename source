@@ -49,11 +49,15 @@ which prevents from inserting HTML elements in the "description".
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the HTML element without delimiters
 
-=item 1 C<$path>
+=item 2
+
+C<$path>
 
 a I<string> containing the path of the icon file
 
@@ -83,21 +87,27 @@ sub iconlink {
 =head2 C<diricon ($templ, $node, $dir)>
 
 Function C<diricon> is a "$variable" substitution function.
-It returns an HTML-string containing an C<E<lt>AE<gt>> block
-surrounding an C<E<lt>IMGE<gt>> tag for a folder icon.
+It returns an HTML-string containing an C<E<lt> A E<gt>> block
+surrounding an C<E<lt> IMG E<gt>> tag for a folder icon.
 The link allows to jump to the directory.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the directory
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -140,20 +150,26 @@ sub diricon {
 =head2 C<dirname ($templ, $node, $dir)>
 
 Function C<dirname> is a "$variable" substitution function.
-It returns an HTML-string containing an C<E<lt>AE<gt>> tag
+It returns an HTML-string containing an C<E<lt> A E<gt>> tag
 linking to the directory.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the directory
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -175,21 +191,27 @@ sub dirname {
 =head2 C<fileicon ($templ, $node, $dir)>
 
 Function C<fileicon> is a "$variable" substitution function.
-It returns an HTML-string containing an C<E<lt>AE<gt>> block
-surrounding an C<E<lt>IMGE<gt>> tag for a file icon.
+It returns an HTML-string containing an C<E<lt> A E<gt>> block
+surrounding an C<E<lt> IMG E<gt>> tag for a file icon.
 The link allows to jump to the file.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the file
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -266,20 +288,26 @@ sub fileicon {
 =head2 C<filename ($templ, $node, $dir)>
 
 Function C<filename> is a "$variable" substitution function.
-It returns a HTML-string containing an C<E<lt>AE<gt>> tag
+It returns a HTML-string containing an C<E<lt> A E<gt>> tag
 linking to the file.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the file
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -301,15 +329,21 @@ where appropriate.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (i.e. the function argument)
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the file
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -366,15 +400,21 @@ last-modification date.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the file
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -401,15 +441,21 @@ indexation date by I<genxref>.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the file
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
@@ -444,19 +490,27 @@ MUST return the string "&nbsp;" to keep the table looking pretty.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the name of the file
 
-=item 1 C<$dir>
+=item 3
+
+C<$dir>
 
 a I<string> containing the name of the parent directory
 
-=item 1 C<$releaseid>
+=item 4
+
+C<$releaseid>
 
 a I<string> containing the version name
 
@@ -495,11 +549,15 @@ It returns a CSS class name depending on line parity.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (empty for a "variable")
 
-=item 1 C<$line>
+=item 2
+
+C<$line>
 
 an I<integer> containing the line number of the display
 
@@ -521,11 +579,15 @@ the directory.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template
 
-=item 1 C<$dir>
+=item 2
+
+C<$dir>
 
 a I<string> containing the directory name
 
@@ -644,7 +706,9 @@ and launches template expansion.
 
 =over
 
-=item 1 C<$dir>
+=item 1
+
+C<$dir>
 
 a I<string> containing the directory name
 
@@ -679,20 +743,26 @@ sub printdir {
 
 =head2 C<next_annot ($currev, $r, $bg)>
 
-Function C<next_annot> returns an HTML C<E<lt>SPANE<gt>> block
+Function C<next_annot> returns an HTML C<E<lt> SPAN E<gt>> block
 containing revision and author information for the next file line.
 
 =over
 
-=item 1 C<$currev>
+=item 1
+
+C<$currev>
 
 a I<string> containing the requested version for the file
 
-=item 1 C<$r>
+=item 2
+
+C<$r>
 
 a I<reference> to a I<string> containing the revision of the previous line
 
-=item 1 C<$bg>
+=item 3
+
+C<$bg>
 
 a I<reference> to a flag toggling between 0 and 1
 
@@ -810,7 +880,9 @@ Procedure C<printfile> is the main driver for node display.
 
 =over
 
-=item 1 C<$dir>
+=item 1
+
+C<$raw>
 
 a I<"boolean"> requesting I<raw mode> if non zero
 

@@ -17,8 +17,6 @@
 
 #############################################################
 
-# =encoding utf8	Not recognised??
-
 =head1 Markup module
 
 This module is the markup engine in charge of highlighting the
@@ -39,7 +37,6 @@ our @EXPORT = qw(
 	&freetextmarkup
 	&markupfile
 );
-# our @EXPORT_OK = qw();
 
 require Local;
 require LXR::SimpleParse;
@@ -50,16 +47,20 @@ use LXR::Common;
 
 =head2 C<markupstring ($string, $virtp)>
 
-Function C<markupstring> returns $string after marking up some items
+Function C<markupstring> returns C<$string> after marking up some items
 deemed "interesting" (e-mail addresses, URLs, files, identifiers, ...).
 
 =over
 
-=item 1 C<$string>
+=item 1
+
+C<$string>
 
 a I<string> to mark up
 
-=item 1 C<$virtp>
+=item 2
+
+C<$virtp>
 
 a I<string> containing the HTML-path for the directory of files
 
@@ -69,7 +70,7 @@ directory
 =back
 
 This is a smaller version of sub C<markupfile> meant for marking up the
-descriptions in source directory listings (see Local.pm).
+descriptions in source directory listings (see I<Local.pm>).
 
 =cut
 
@@ -116,13 +117,15 @@ sub markupstring {
 
 =head2 C<is_linkworthy ($string)>
 
-Function C<is_linkworthy> returns true if $string is in the identifier DB
+Function C<is_linkworthy> returns true if C<$string> is in the identifier DB
 and seems to be used as an identifier (not just some word that happens to
 have been used as a variable name somewhere).
 
 =over
 
-=item 1 C<$string>
+=item 1
+
+C<$string>
 
 a I<string> containing the symbol to check
 
@@ -172,14 +175,16 @@ with a NUL (\0).
 
 =over
 
-=item 1 C<$string>
+=item 1
+
+C<$string>
 
 a I<string> to tag
 
 =back
 
 This sub is called before editing (highlighting) the string argument
-so that we can later distinguish between original litteral HTML special
+so that we can later distinguish between original literal HTML special
 characters and those added as part of HTML tags.
 
 =cut
@@ -196,7 +201,9 @@ and HTML-quote them.
 
 =over
 
-=item 1 C<$string>
+=item 1
+
+C<$string>
 
 a I<string> to untag
 
@@ -204,11 +211,8 @@ a I<string> to untag
 
 This sub is called as the last step of editing (highlighting) before
 emitting the string as HTML stream.
-The originally litteral special HTML characters are replaced by their
+The originally literal special HTML characters are replaced by their
 entity name equivalent.
-
-At the same time, the "start of line" marker added by sub C<nextfrag> is
-also removed to revert to the original source text.
 
 =cut
 
@@ -225,7 +229,9 @@ Function C<freetextmarkup> creates links in its argument for URLs and e-mail add
 
 =over
 
-=item 1 C<$string>
+=item 1
+
+C<$string>
 
 a I<string> to edit
 
@@ -249,20 +255,25 @@ Function C<markupfile> is the edition driver.
 
 =over
 
-=item 1 C<$fileh>
+=item 1
+
+C<$fileh>
 
 a I<filehandle> for the source file
 
-=item 1 C<$outfun>
+=item 2
+
+C<$outfun>
 
 a reference to a I<sub> which outputs the HTML stream
 
 =back
 
-This sub calls the parser to split the source file into homogeneous
-fragments which are highlighted by various specialized support routines.
+The parser is repeatedly called to split the source file into homogeneous
+fragments which are highlighted by one of the preceding specialized support
+routines.
 
-Sub C<&outfun> is called to output the HTML stream.
+Sub C<&$outfun> is called to output the HTML stream.
 Use of a subroutine allows to do the highlighting with C<markupfile> in
 every context (single file display by I<source> or dual file display
 by I<diff>).

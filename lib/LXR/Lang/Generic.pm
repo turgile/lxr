@@ -50,20 +50,28 @@ Method C<new> creates a new language object.
 
 =over
 
-=item 1 C<$writeDB>
+=item 1
+
+C<$writeDB>
 
 a I<boolean> I<integer> requesting to store language properties
 (huyman-readable type description) into the database
 
-=item 2 C<$pathname>
+=item 2
+
+C<$pathname>
 
 a I<string> containing the name of the file to parse
 
-=item 3 C<$releaseid>
+=item 3
+
+C<$releaseid>
 
 a I<string> containing the release (version) of the file to parse
 
-=item 4 C<$lang>
+=item 4
+
+C<$lang>
 
 a I<string> which is the I<key> for the specification I<hash>
 C<'langmap'> in file I<generic.conf>
@@ -129,7 +137,9 @@ descriptions from configuration file.
 
 =over
 
-=item 1 C<$writeDB>
+=item 1
+
+C<$writeDB>
 
 a I<boolean> I<integer> requesting to store language properties
 (huyman-readable type description) into the database
@@ -138,27 +148,33 @@ a I<boolean> I<integer> requesting to store language properties
 
 Sets in global variable C<$config_contents> a reference to a I<hash>
 equivalent to the configuration file.
-The diffrences are:
+The differences are:
 
 =over
 
-=item 1 Keywords are uppercased is language is case-insensitive.
+=item
 
-=item 1 Keywords are stored in a I<hash> instead of an array to
+Keywords are uppercased if language is case-insensitive.
+
+=item
+
+Keywords are stored in a I<hash> instead of an array to
 speed up later retrieval (avoiding linear search and its quadratic
 average time)
 
-=item 1 Human-readable text for type is replaced by a record-id
+=item
+
+Human-readable text for type is replaced by a record-id
 in the database where text is recorded.
 
 =back
 
-Loading the file and transformung if is only executed once,
+Loading the file and transforming it is only executed once,
 saving the overhead of processing the config file each time.
 
 However, The mapping between I<ctags> tags and their human readable
 counterpart is stored in every database for every language.
-The mapping, as a table index in the DB, is keptin a new I<hash> C<'typeid'>.
+The mapping, as a table index in the DB, is kept in a new I<hash> C<'typeid'>.
 
 =cut
 
@@ -228,25 +244,35 @@ the definitions in a file.
 
 =over
 
-=item 1 C<$name>
+=item 1
+
+C<$name>
 
 a I<string> containing the LXR file name
 
-=item 1 C<$path>
+=item 2
+
+C<$path>
 
 a I<string> containing the OS file name
 
 When files are stored in VCSes, C<$path> is the name of a temporary file.
 
-=item 1 C<$fileid>
+=item 3
+
+C<$fileid>
 
 an I<integer> containing the internal DB id for the file/revision
 
-=item 1 C<$index>
+=item 4
+
+C<$index>
 
 a I<reference> to the index (DB) object
 
-=item 1 C<$config>
+=item 5
+
+C<$config>
 
 a I<reference> to the configuration objet
 
@@ -336,25 +362,35 @@ the references in a file.
 
 =over
 
-=item 1 C<$name>
+=item 1
+
+C<$name>
 
 a I<string> containing the LXR file name
 
-=item 1 C<$path>
+=item 2
+
+C<$path>
 
 a I<string> containing the OS file name
 
 When files are stored in VCSes, C<$path> is the name of a temporary file.
 
-=item 1 C<$fileid>
+=item 3
+
+C<$fileid>
 
 an I<integer> containing the internal DB id for the file/revision
 
-=item 1 C<$index>
+=item 4
+
+C<$index>
 
 a I<reference> to the index (DB) object
 
-=item 1 C<$config>
+=item 5
+
+C<$config>
 
 a I<reference> to the configuration objet
 
@@ -439,7 +475,7 @@ sub referencefile {
 
 =head2 C<parsespec ()>
 
-Method C<parsespec> returns the list of category specification for
+Method C<parsespec> returns the list of category specifications for
 this language.
 
 The language specification is a list of I<hashes> describing the
@@ -465,7 +501,9 @@ present in the language-specific I<hash> C<'flags'>.
 
 =over
 
-=item 1 C<$flag>
+=item 1
+
+C<$flag>
 
 a I<string> containing the flag name
 
@@ -489,11 +527,15 @@ Method C<processinclude> is invoked to process a generic I<include> directive.
 
 =over
 
-=item 1 C<$frag>
+=item 1
+
+C<$frag>
 
 a I<string> containing the directive
 
-=item 1 C<$dir>
+=item 2
+
+C<$dir>
 
 an optional I<string> containing a preferred directory for the include'd file
 
@@ -518,15 +560,25 @@ allowing to split the include instruction or directive into 5 components:
 
 =over
 
-=item 1 directive name
+=item 1
 
-=item 1 spacer
+directive name
 
-=item 1 left delimiter (may be void for some languages)
+=item 2
 
-=item 1 included object
+spacer
 
-=item 1 right delimiter (may be void for some languages)
+=item 3
+
+left delimiter (may be void for some languages)
+
+=item 4
+
+included object
+
+=item 5
+
+right delimiter (may be void for some languages)
 
 =back
 
@@ -542,7 +594,7 @@ transforming language syntax into file designation. Elaborate
 path processing is available with> C<'incprefix'>I<,> C<'ignoredirs'>
 I< and >C<'maps'> I<processed by the link builder.>
 
-When done, C<E<lt>AE<gt>> links to the file and all intermediate
+When done, C<E<lt> A E<gt>> links to the file and all intermediate
 directories are build.
 
 =back
@@ -553,8 +605,8 @@ B<Note:>
 
 =item
 
-If no C<'include'> I<hash> is defined for this language, an internal
-C<'directive'> matching C/C++ and Perl syntax is used.
+I<If no C<'include'> I<hash> is defined for this language, an internal
+C<'directive'> matching C/C++ and Perl syntax is used.>
 
 =back
 
@@ -692,7 +744,9 @@ Method C<processcode> is invoked to process the fragment as generic code.
 
 =over
 
-=item 1 C<$code>
+=item 1
+
+C<$code>
 
 a I<string> to mark
 
@@ -753,7 +807,9 @@ the language-specific C<'reserved'> list.
 
 =over
 
-=item 1 C<$frag>
+=item 1
+
+C<$frag>
 
 a I<string> containing the word to check
 
@@ -793,7 +849,9 @@ from language description C<{'langmap'}{'language'}>.
 
 =over
 
-=item 1 C<$item>
+=item 1
+
+C<$item>
 
 a I<string> containing the name of the looked for sub-hash
 

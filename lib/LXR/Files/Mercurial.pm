@@ -283,7 +283,9 @@ file.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 A I<string> containing the filename
 
@@ -322,7 +324,9 @@ file.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 A I<string> containing the filename
 
@@ -356,7 +360,9 @@ contained in the Mercurial log for file C<$filename>.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 A I<string> containing the filename
 

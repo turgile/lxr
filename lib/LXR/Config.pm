@@ -47,7 +47,9 @@ Method C<new> creates a new configuration object.
 
 =over
 
-=item 1 C<@parms>
+=item 1
+
+C<@parms>
 
 the paramaters I<array> (just passed "as is" to C<_initialize>)
 
@@ -97,11 +99,11 @@ B<Note:>
 
 =item
 
-This method should only be used in cases when it is relevant to
+I<This method should only be used in cases when it is relevant to
 make distinction between the different blocks (such as I<showconfig>
 or the need to create links to other trees).
 In all other circumstances, the configuration file should only be
-accessed through the public methods.
+accessed through the public methods.>
 
 =back
 
@@ -133,7 +135,9 @@ file as a list of "words" ("words" are delimited by spaces).
 
 =over
 
-=item 1 C<$file>
+=item 1
+
+C<$file>
 
 a I<string> containing the file name, relative to the LXR root
 directory or absolute
@@ -146,10 +150,10 @@ B<Note:>
 
 =item
 
-This is not a "method", it is a standard function.
+I<This is not a "method", it is a standard function.
 Its main goal is to provide an easy way to initialize the
 configuration C<'variables'> by reading the set of values from
-a text file.
+a text file.>
 
 =back
 
@@ -176,16 +180,22 @@ Internal method C<_initialize> does the real object initialization.
 
 =over
 
-=item 1 C<$host>
+=item 1
+
+C<$host>
 
 a I<string> containing the host name
 
-=item 1 C<$script_path>
+=item 2
+
+C<$script_path>
 
 a I<string> containing the hierarchical web path to the script
 (truncated at the invoking script)
 
-=item 1 C<$firstseg>
+=item 3
+
+C<$firstseg>
 
 a I<string> containing the first segment of the path into the
 source-trees, possibly the tree name
@@ -193,7 +203,9 @@ source-trees, possibly the tree name
 
 I<CAUTION! It may also be a first-level directory!>
 
-=item 1 C<$confpath>
+=item 4
+
+C<$confpath>
 
 a I<string> containing the path of an alternate configuration file
 (either relative to the LXR root directory or absolute)
@@ -211,11 +223,11 @@ B<CAVEAT!>
 
 =item
 
-This C<sub> is also used by C<genxref>.
+I<This C<sub> is also used by C<genxref>.
 C<genxref> is an ordinary script, operating in OS environment.
-Remember then that HTTP environment does not exists
+Remember then that HTTP environment does not exist
 and there is no URL.
-Consequently, the last two arguments must be explicitly given.
+Consequently, the last two arguments must be explicitly given.>
 
 =back
 
@@ -567,19 +579,23 @@ FINAL:
 
 =head2 C<treeurl ($group, $global)>
 
-Method C<treeurl> returns an URL for the tree described by
+Method C<treeurl> returns a URL for the tree described by
 parameter group C<$group>.
 This URL tries to match the present hostname used to invoke LXR.
 
 =over
 
-=item 1 C<$group>
+=item 1
+
+C<$group>
 
 a I<reference> to the tree-specific parameter group
 
-=item 1 C<$global>
+=item 2
 
-a I<reference>to the global parameter group to provide default values
+C<$global>
+
+a I<reference> to the global parameter group to provide default values
 for parameters not present in the tree-specific group
 
 =back
@@ -587,7 +603,7 @@ for parameters not present in the tree-specific group
 =head3 Algorithm
 
 Parameters C<'host_names'> and C<'virtroot'> are retrieved to build
-an URL to launch LXR on that tree.
+a URL to launch LXR on that tree.
 
 It compares the hosts (in a list composed of C<'host_names'> from
 the tree-specific or global parameter group) + C<'virtroot'> to
@@ -608,14 +624,18 @@ B<Potential problems:>
 
 =over
 
-=item 1 Presently, only parameter C<'host_names'> is used
+=item *
+
+Presently, only parameter C<'host_names'> is used
 because the automatic configurator does not use C<'baseurl'>
 nor C<'baseurl_aliases'>, which are deprecated.
 
 If file I<lxr.conf> is C<'baseurl'> based, the returned URL will
 contain garbage.
 
-=item 1 The LXR server may be accessed simultaneously under different names,
+=item *
+
+The LXR server may be accessed simultaneously under different names,
 e.g. C<localhost> on the computer, a short name on the LAN and a full
 URL from the Net.
 
@@ -727,11 +747,15 @@ Method C<variable> returns the current value of the designated variable.
 
 =over
 
-=item 1 C<$var>
+=item 1
+
+C<$var>
 
 a I<string> containing the name of the variable
 
-=item 1 C<$val>
+=item 2
+
+C<$val>
 
 optional value; if present, replaces the current value
 
@@ -756,7 +780,9 @@ Method C<vardefault> returns the default value of the designated variable.
 
 =over
 
-=item 1 C<$var>
+=item 1
+
+C<$var>
 
 a I<string> containing the name of the variable
 
@@ -788,11 +814,15 @@ Method C<vardescription> returns the description of the designated variable.
 
 =over
 
-=item 1 C<$var>
+=item 1
+
+C<$var>
 
 a I<string> containing the name of the variable
 
-=item 1 C<$val>
+=item 2
+
+C<$val>
 
 optional value; if present, replaces the description
 
@@ -804,9 +834,9 @@ B<Note:>
 
 =item
 
-Don't be confused! The word "description" is human semantic meaning
+I<Don't be confused! The word "description" is human semantic meaning
 for this data. It is stored in the C<'name'> element of the hash
-representing the variable and its state.
+representing the variable and its state.>
 
 =back
 
@@ -827,7 +857,9 @@ Method C<varrange> returns the set of values of the designated variable.
 
 =over
 
-=item 1 C<$var>
+=item 1
+
+C<$var>
 
 a I<string> containing the name of the variable
 
@@ -853,7 +885,9 @@ C<$xxx> replaced by the current value of variable C<'xxx'>.
 
 =over
 
-=item 1 C<$exp>
+=item 1
+
+C<$exp>
 
 a I<string> to expand
 
@@ -877,7 +911,9 @@ variable C<'xxx'>.
 
 =over
 
-=item 1 C<$var>
+=item 1
+
+C<$var>
 
 a I<string> containing the configuration parameter name
 
@@ -910,7 +946,9 @@ Magical Perl method C<AUTOLOAD> to instantiate unknown barewords.
 
 =over
 
-=item 1 C<@parms>
+=item 1
+
+C<@parms>
 
 optional arguments I<array> passed to instantiated function
 
@@ -947,11 +985,15 @@ the C<'maps'> rules.
 
 =over
 
-=item 1 C<$path>
+=item 1
+
+C<$path>
 
 a I<string> containing the path to transform
 
-=item 1 C<@args>
+=item 2
+
+C<@args>
 
 an I<array> containing strings of the form var=value forcing
 a context in which the C<'maps'> rules are applied
@@ -964,9 +1006,9 @@ B<Note:>
 
 =item
 
-The rules are applied once only in the path.
+I<The rules are applied once only in the path.
 Should they be globally applied (with flag C<g> on the regexp)?
-Does this make sense?
+Does this make sense?>
 
 =back
 
@@ -1010,11 +1052,15 @@ C<mappath> with a new set of variables values.
 
 =over
 
-=item 1 C<$path>
+=item 1
+
+C<$path>
 
 a I<string> containing the file path to "invert".
 
-=item 1 C<@args>
+=item 2
+
+C<@args>
 
 an I<array> containing strings of the form var=value defining
 the context in which the C<'maps'> rules were applied.
@@ -1036,11 +1082,11 @@ B<Note:>
 
 =item
 
-From a theoretical point of view, this problem has no general
+I<From a theoretical point of view, this problem has no general
 solution. It can be solved only under restrictive conditions,
 i.e. information has not been irremediably lost after rule
 application (consider what happens if you completely remove
-a path fragment and its delimiter).
+a path fragment and its delimiter).>
 
 =back
 
@@ -1050,11 +1096,15 @@ transformed I<replacement> C<=E<gt> > transformed I<pattern>
 
 =over
 
-=item 1 transformed I<replacement>
+=item *
+
+transformed I<replacement>
 
 =over
 
-=item 1 C<$num> elements become C<.+?>, i.e. "match something, but not
+=item 1
+
+C<$num> elements become C<.+?>, i.e. "match something, but not
 too much" to avoid "swallowing" what is described after this
 sub-pattern.
 
@@ -1064,28 +1114,36 @@ B<Note:>
 
 =item
 
-It could be possible to be more specific through parsing this
+I<It could be possible to be more specific through parsing this
 original pattern and analysing the associated parenthesised
 sequence.
 However, this could be time-expensive and the final advantage
 might not be worth the trouble.
 Even the known C<'maps'> rules for kernel cross-referencing
-do not use C<$num>.
+do not use C<$num>.>
 
 =back
 
-=item 1 C<$var> are replaced by the designated variable value.
+=item 2
 
-=item 1 If the original pattern had C<^> (start) or C<$> (end)
+C<$var> are replaced by the designated variable value.
+
+=item 3
+
+If the original pattern had C<^> (start) or C<$> (end)
 position anchors, these are transfered.
 
 =back
 
-=item 1 transformed I<pattern>
+=item *
+
+transformed I<pattern>
 
 =over
 
-=item 1 Optional quantifiers C<?> or C<*> (and variants
+=item 1
+
+Optional quantifiers C<?> or C<*> (and variants
 suffixed with C<?> or C<+>)
 
 If there is one, process the sequence from beginning to the
@@ -1099,12 +1157,12 @@ B<Caveat:>
 
 =item
 
-When a character is checked, care is taken to cope with
+I<When a character is checked, care is taken to cope with
 C<\>-I<escaped> characters but no effort is done to manage
 longer escape sequences such as C<\000>, C<\x00> or any other
 multi-character sequence.
 Consequently, the above transformation WILL FAIL if any such
-sequence is present in the original pattern.
+sequence is present in the original pattern.>
 
 =back
 
@@ -1112,19 +1170,25 @@ I<The sub-pattern is entirely removed because the corresponding
 string can be omitted from the file path. We then do not bother
 with creating a sensible string since it is optional.>
 
-=item 1 Repeating quantifier C<+> (and variants
+=item 2
+
+Repeating quantifier C<+> (and variants
 suffixed with C<?> or C<+>)
 
 Quantifier is merely removed to leave a single occurrence of
 the matching string.
 
-=item 1 C<(> C<)> groups
+=item 3
+
+C<(> C<)> groups
 
 Proceeding from innermost group to outermost, the first alternative
 is kept and the others deleted. The parentheses, now useless
 and, matter of fact, harmful, are erased.
 
-=item 1 C<[> C<]> character ranges
+=item 4
+
+C<[> C<]> character ranges
 
 Only the first character is kept.
 
@@ -1132,7 +1196,9 @@ I<If the specification is an exclusion range C<[^ E<hellip> ]>,
 the range is replaced by character C<%>, without further parsing,
 in the hope it does not appear in the range.>
 
-=item 1 C<\> escaped characters
+=item 5
+
+C<\> escaped characters
 
 Depending on the character, the sequence is erased, replaced by
 a conventional character (think of character classes) or by the
@@ -1144,14 +1210,14 @@ B<Caveat:>
 
 =item
 
-No effort is done to manage longer escape sequences such as
+I<No effort is done to manage longer escape sequences such as
 C<\000>, C<\x00> or any other multi-character sequence on the
 ground that this escape sequence is also valid in the replacement
-part of an C<s///> instruction.
+part of an C<s///> instruction.>
 
-However some multi-character sequences (e.g. C<\P>) are not valid
+I<However some multi-character sequences (e.g. C<\P>) are not valid
 and will ruin the "inverse" rule but they are thought to be rather
-rare in LXR context.
+rare in LXR context.>
 
 =back
 
@@ -1294,7 +1360,9 @@ and creates it if not in a way similar to "C<mkdir -p>".
 
 =over
 
-=item 1 C<$chkdir>
+=item 1
+
+C<$chkdir>
 
 a I<string> containing the directory path.
 
@@ -1316,15 +1384,6 @@ sub _ensuredirexists {
 		make_path ($chkdir)
 		or die "Couldn't make the directory $chkdir: ?!";
 	}
-# 	my $dir;
-# 	while ($chkdir =~ s:(^/?[^/]+)::) {
-# 		$dir .= $1;
-# 		if(!-d $dir) {
-# 			mkpath($dir)
-# 			or die "Couldn't make the directory $dir: ?!";
-# 			chmod 0777, $dir;
-# 		}
-# 	}
 }
 
 

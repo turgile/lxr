@@ -37,20 +37,12 @@ It dispatches to the specific constructor based on its first argument.
 
 =over
 
-=item 1 C<$config>
+=item 1
+
+C<$config>
 
 a I<reference> to the I<hash> containing configuration parameters for this
 tree
-
-=over
-
-B<Note:>
-
-=item Perl threads are rather restrictive on the kind of data in
-shared variables; it is thus better not to rely on "global" variables
-and store a pointer to "global" data inside the object.
-
-=back
 
 =back
 
@@ -100,11 +92,15 @@ C<getdir> returns a directory content in an array.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -129,11 +125,15 @@ C<getfile> returns a file content in a string.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -165,11 +165,15 @@ C<getannotations> returns the annotations for the designated file.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -178,7 +182,7 @@ be found
 
 An I<annotation> is whatever auxiliary line information kept in
 the repository. There is none in plain files. It is the revision
-number the line was entered in CVS. It is the release-id in GIT.
+number the line was entered in CVS. It is the commit-id in GIT.
 
 Function result is an empty list if there is no annotation or
 annotation retrieval is barred by lxr.conf.
@@ -189,11 +193,11 @@ B<IMPORTANT NOTICE:>
 
 =item
 
-Starting with release 1.1, this method should only be used for
+I<Starting with release 1.1, this method should only be used for
 internal needs of the derived classes because annotation editing
-has been drastically changed in script I<source>.
+has been drastically changed in script I<source>.>
 
-The externally visible method is C<getnextannotation>.
+I<The externally visible method is C<getnextannotation>.>
 
 =back
 
@@ -211,11 +215,15 @@ in the designated file.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -224,7 +232,7 @@ be found
 
 An I<annotation> is whatever auxiliary line information kept in
 the repository. There is none in plain files. It is the revision
-number the line was entered in CVS. It is the release-id in GIT.
+number the line was entered in CVS. It is the commit-id in GIT.
 
 Function result is undefined if there is no more annotation or
 annotation retrieval is barred by lxr.conf.
@@ -245,11 +253,15 @@ new length.
 
 =over
 
-=item 1 C<$string>
+=item 1
+
+C<$string>
 
 a I<reference> to a I<string> containing the annotation
 
-=item 1 C<$len>
+=item 2
+
+C<$len>
 
 an I<integer> containing the desired length
 
@@ -280,16 +292,22 @@ C<getauthor> returns the author of the designated revision.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
 
-=item 1 C<$annotation>
+=item 3
+
+C<$annotation>
 
 the I<annotation> (see sub C<getannotations>) whose author is
 looked for
@@ -300,11 +318,11 @@ B<Caveat:>
 
 =item
 
-Since VCSs have different ways of identifying file versions,
+I<Since VCSs have different ways of identifying file versions,
 C<$releaseid> cannot be used.
 A prior call to C<getannotations> is needed to associate first
 the file and its version.
-Next the annotation for the current line is used to get the author.
+Next the annotation for the current line is used to get the author.>
 
 =back
 
@@ -325,11 +343,15 @@ C<filerev> returns the latest revision for the file.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -362,16 +384,22 @@ the C<:utf8> layer to become a true "binary" access.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 2 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
 
-=item 3 C<$withannot>
+=item 3
+
+C<$withannot>
 
 "true" if annotations are also collected
 
@@ -400,11 +428,15 @@ C<getfilesize> returns the file size in bytes.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -428,11 +460,15 @@ C<getfiletime> returns the file last modification time.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -457,11 +493,15 @@ is a directory.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -469,8 +509,8 @@ be found
 =back
 
 Since testing for a directory is rather time-consuming,
-arrange to "canonise" paths at the end of httpinit so that
-directories always end with C</>. Test will done only once,
+arrange to "canonise" paths at the end of C<httpinit> so that
+directories always end with C</>. Test will be done only once,
 eventually adding C</> suffix.
 Afterwards, all is needed is test for the trailing slash.
 
@@ -494,11 +534,15 @@ is a file.
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -537,11 +581,15 @@ content as the designated path (or undef).
 
 =over
 
-=item 1 C<$pathname>
+=item 1
+
+C<$pathname>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) in which C<$pathname> is expected to
 be found
@@ -557,8 +605,8 @@ B<Note:>
 
 =item
 
-Override this method if repository is made of plain files
-which can be accessed without the copy operation.
+I<Override this method if repository is made of plain files
+which can be accessed without the copy operation.>
 
 =back
 
@@ -590,7 +638,9 @@ C<releaserealfilename> erases the file created by C<realfilename>.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 a I<string> containing the filename
 
@@ -606,9 +656,9 @@ B<Caveat:>
 
 =item
 
-If you have overridden C<realfilename>, be sure to override also
+I<If you have overridden C<realfilename>, be sure to override also
 this method to revert accurately what you have done, otherwise
-you risk destroying a valid source-tree file.
+you risk destroying a valid source-tree file.>
 
 =back
 
@@ -631,11 +681,15 @@ parameters C<'ignoredirs'> and C<'filterdirs'>.
 
 =over
 
-=item 1 C<$path>
+=item 1
+
+C<$path>
 
 a I<string> containing the LXR full path for the parent directory
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the last directory element
 
@@ -689,11 +743,15 @@ parameters C<'ignorefiles'> and C<'filterfiles'>.
 
 =over
 
-=item 1 C<$path>
+=item 1
+
+C<$path>
 
 a I<string> containing the LXR full path for the parent directory
 
-=item 1 C<$node>
+=item 2
+
+C<$node>
 
 a I<string> containing the file name
 

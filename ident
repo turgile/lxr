@@ -51,7 +51,7 @@ my $bad_refs;
 Function C<varinputs> is a "$variable" substitution function.
 It returns a string which is a concatenation of tags
 
-C<E<lt>input type="hidden" name=">I<variable_name>C<" value=">I<variable_value>C<"E<gt>>
+C<E<lt> input type="hidden" name=">I<variable_name>C<" value=">I<variable_value>C<" E<gt>>
 
 one for each variable defined in configuration parameter C<'variables'>.
 
@@ -81,7 +81,9 @@ Function C<countfiles> returns the number of files for the references.
 
 =over
 
-=item 1 C<$refs>
+=item 1
+
+C<$refs>
 
 a I<reference> to an array containing the references
 
@@ -114,7 +116,9 @@ Otherwise, it returns an empty string.
 
 =over
 
-=item 1 C<$file>
+=item 1
+
+C<$file>
 
 a I<string> containing the filename to check
 
@@ -156,7 +160,9 @@ Otherwise, it returns an empty string.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (i.e. argument)
 
@@ -185,19 +191,27 @@ C<fileref> to handle the case of negative line numbers.
 
 =over
 
-=item 1 C<$desc>
+=item 1
+
+C<$desc>
 
 a I<string> containing the visible text for the link
 
-=item 1 C<$cc>
+=item 2
+
+C<$css>
 
 a I<string> containing HTML C<class> attribute
 
-=item 1 C<$path>
+=item 3
+
+C<$path>
 
 a I<string> containing the file name for the link
 
-=item 1 C<$desc>
+=item 4
+
+C<$line>
 
 an I<integer> equal to the line number
 
@@ -230,11 +244,15 @@ C<$refs>.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (i.e. argument)
 
-=item 1 C<$refs>
+=item 2
+
+C<$refs>
 
 a I<reference> to an array containing the usages
 
@@ -353,7 +371,9 @@ if the left argument precedes, is equal or follows the right argument.
 
 =over
 
-=item 1 C<$a>, C<$b>
+=item 1
+
+C<$a>, C<$b>
 
 I<references> to the arrays to compare
 
@@ -369,8 +389,8 @@ B<Note:>
 
 =item
 
-For usages, the last two element do no exist.
-The comparison stops after the first two steps.
+I<For usages, the last two element do no exist.
+The comparison stops after the first two steps.>
 
 =back
 
@@ -398,7 +418,9 @@ expanded argument applied to every declaration.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (i.e. argument)
 
@@ -473,7 +495,9 @@ expanded argument applied to every usage.
 
 =over
 
-=item 1 C<$templ>
+=item 1
+
+C<$templ>
 
 a I<string> containing the template (i.e. argument)
 

@@ -59,7 +59,9 @@ It dispatches to the specific constructor based on its argument.
 
 =over
 
-=item 1 C<$dbname>
+=item 1
+
+C<$dbname>
 
 a I<string> containing the condiguration parameter C<'dbname'>
 describing the engine and the characteristics of the DB
@@ -150,7 +152,7 @@ The separation between read and write transactions is two-fold.
 First, it ensures that faulty code will not corrupt the database
 when the write transactions have not been enabled.
 Second, it improves initialisation speed and decreases memory footprint
-when only browsing the tree..
+when only browsing the tree.
 
 =cut
 
@@ -301,7 +303,7 @@ The separation between read and write transactions is two-fold.
 First, it ensures that faulty code will not corrupt the database
 when the write transactions have not been enabled.
 Second, it improves initialisation speed and decreases memory footprint
-when only browsing the tree..
+when only browsing the tree.
 
 =cut
 
@@ -535,7 +537,9 @@ I<This is a C<new> extension method for derived object usage.>
 
 =over
 
-=item 1 C<$prefix>
+=item 1
+
+C<$prefix>
 
 a I<string> containing the database table prefix
 
@@ -546,7 +550,7 @@ for fields with C<unique> attributes unstead of the built-in features.
 It comes from the fact that the used (incremented) value is not written
 back immediately to disk (fewer commits).
 
-This trick is valid because e write to the DB only at I<genxref> time
+This trick is valid because we write to the DB only at I<genxref> time
 and DB loading is B<single thread>.
 
 B<CAUTION!>
@@ -600,11 +604,15 @@ after the latest I<genxref> indexation.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 1 C<$revision>
+=item 2
+
+C<$revision>
 
 the revision for the file
 
@@ -620,12 +628,17 @@ B<Requires:>
 
 =over
 
-=item * C<files_select>
+=item *
 
-=item * C<files_insert>
+C<files_select>
 
-=item * C<status_insert>
-B<I<(>C<fileid> I<only)>>
+=item *
+
+C<files_insert>
+
+=item *
+
+C<status_insert> B<I<(>C<fileid> I<only)>>
 
 =back
 
@@ -667,7 +680,9 @@ C<getallfilesinit> prepares things for C<nextfile>.
 
 =over
 
-=item 1 C<$releaseid>
+=item 1
+
+C<$releaseid>
 
 the release (or version) for which all recorded files should be returned
 
@@ -680,7 +695,9 @@ B<Requires:>
 
 =over
 
-=item * C<allfiles_select>
+=item *
+
+C<allfiles_select>
 
 =back
 
@@ -704,7 +721,9 @@ B<Requires:>
 
 =over
 
-=item * Previous initialisation by C<getallfilesinit>
+=item *
+
+Previous initialisation by C<getallfilesinit>
 
 =back
 
@@ -724,11 +743,15 @@ C<$fileid> as part of C<$releaseid>.
 
 =over
 
-=item 1 C<$fileid>
+=item 1
+
+C<$fileid>
 
 an I<integer> representing a file in the DB
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) containing the file
 
@@ -738,9 +761,13 @@ B<Requires:>
 
 =over
 
-=item * C<releases_select>
+=item *
 
-=item * C<releases_insert>
+C<releases_select>
+
+=item *
+
+C<releases_insert>
 
 =back
 
@@ -777,11 +804,15 @@ base revision.
 
 =over
 
-=item 1 C<$fid>
+=item 1
+
+C<$fid>
 
 the unique id for a base revision file
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) containing the file
 
@@ -791,7 +822,9 @@ B<Requires:>
 
 =over
 
-=item * C<delete_one_release>
+=item *
+
+C<delete_one_release>
 
 =back
 
@@ -812,7 +845,9 @@ otherwise, it returns false.
 
 =over
 
-=item 1 C<$fileid>
+=item 1
+
+C<$fileid>
 
 an I<integer> representing a file in the DB
 
@@ -822,7 +857,9 @@ B<Requires:>
 
 =over
 
-=item C<status_select>
+=item
+
+C<status_select>
 
 =back
 
@@ -849,7 +886,9 @@ done outside LXR, indexing time is not updated.
 
 =over
 
-=item 1 C<$fileid>
+=item 1
+
+C<$fileid>
 
 an I<integer> representing a file in the DB
 
@@ -859,11 +898,17 @@ B<Requires:>
 
 =over
 
-=item * C<status_select>
+=item *
 
-=item * C<status_insert>
+C<status_select>
 
-=item * C<status_update>
+=item *
+
+C<status_insert>
+
+=item *
+
+C<status_update>
 
 =back
 
@@ -892,7 +937,9 @@ otherwise, it returns false.
 
 =over
 
-=item 1 C<$fileid>
+=item 1
+
+C<$fileid>
 
 an I<integer> representing a file in the DB
 
@@ -902,7 +949,9 @@ B<Requires:>
 
 =over
 
-=item * C<status_select>
+=item *
+
+C<status_select>
 
 =back
 
@@ -928,7 +977,9 @@ Indexing time is updated for user information.
 
 =over
 
-=item 1 C<$fileid>
+=item 1
+
+C<$fileid>
 
 an I<integer> representing a file in the DB
 
@@ -949,13 +1000,21 @@ B<Requires:>
 
 =over
 
-=item * C<status_select>
+=item *
 
-=item * C<status_insert>
+C<status_select>
 
-=item * C<status_update>
+=item *
 
-=item * C<status_update_timestamp>
+C<status_insert>
+
+=item *
+
+C<status_update>
+
+=item *
+
+C<status_update_timestamp>
 
 =back
 
@@ -984,11 +1043,15 @@ was parsed for references.
 
 =over
 
-=item 1 C<$filename>
+=item 1
+
+C<$filename>
 
 a I<string> containing the path relative to C<'sourceroot'>
 
-=item 2 C<$revision>
+=item 2
+
+C<$revision>
 
 the revision for the file
 
@@ -1001,7 +1064,9 @@ B<Requires:>
 
 =over
 
-=item * C<status_timestamp>
+=item *
+
+C<status_timestamp>
 
 =back
 
@@ -1028,11 +1093,15 @@ declarations for the symbol in this release.
 
 =over
 
-=item 1 C<$symname>
+=item 1
+
+C<$symname>
 
 the symbol name
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) containing the file
 
@@ -1042,7 +1111,9 @@ B<Requires:>
 
 =over
 
-=item * C<definitions_select>
+=item *
+
+C<definitions_select>
 
 =back
 
@@ -1069,27 +1140,39 @@ C<setsymdeclaration> records a declaration in the DB.
 
 =over
 
-=item 1 C<$symname>
+=item 1
+
+C<$symname>
 
 the symbol name
 
-=item 1 C<$fileid>
+=item 2
+
+C<$fileid>
 
 the unique id which identifies a file AND a release
 
-=item 1 C<$line>
+=item 3
+
+C<$line>
 
 the line number of the declaration
 
-=item 1 C<$langid>
+=item 4
+
+C<$langid>
 
 an I<integer> key for the language
 
-=item 1 C<$type>
+=item 5
+
+C<$type>
 
 the type of the symbol
 
-=item 1 C<$relsym>
+=item 6
+
+C<$relsym>
 
 an optional relation to some other symbol
 
@@ -1099,7 +1182,9 @@ B<Requires:>
 
 =over
 
-=item * C<definitions_insert>
+=item *
+
+C<definitions_insert>
 
 =back
 
@@ -1137,11 +1222,15 @@ references to the symbol in this release.
 
 =over
 
-=item 1 C<$symname>
+=item 1
+
+C<$symname>
 
 the symbol name
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) containing the file
 
@@ -1151,7 +1240,9 @@ B<Requires:>
 
 =over
 
-=item * C<usages_select>
+=item *
+
+C<usages_select>
 
 =back
 
@@ -1178,15 +1269,21 @@ is already present (as a declaration).
 
 =over
 
-=item 1 C<$symname>
+=item 1
+
+C<$symname>
 
 the symbol name
 
-=item 1 C<$fileid>
+=item 2
+
+C<$fileid>
 
 the unique id which identifies a file AND a release
 
-=item 1 C<$line>
+=item 3
+
+C<$line>
 
 the line number of the declaration
 
@@ -1196,9 +1293,13 @@ B<Requires:>
 
 =over
 
-=item * C<symbols_byname>
+=item *
 
-=item * C<usages_insert>
+C<symbols_byname>
+
+=item *
+
+C<usages_insert>
 
 =back
 
@@ -1249,11 +1350,15 @@ I<false> (0) otherwise.
 
 =over
 
-=item 1 C<$symname>
+=item 1
+
+C<$symname>
 
 the symbol name
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) containing the file
 
@@ -1263,7 +1368,9 @@ B<Requires:>
 
 =over
 
-=item * C<symbols_byname>
+=item *
+
+C<symbols_byname>
 
 =back
 
@@ -1317,7 +1424,9 @@ Decrementing the reference count is only done when purging the database.
 
 =over
 
-=item 1 C<$symname>
+=item 1
+
+C<$symname>
 
 the symbol name
 
@@ -1327,9 +1436,13 @@ B<Requires:>
 
 =over
 
-=item * C<symbols_byname>
+=item *
 
-=item * C<symbols_insert>
+C<symbols_byname>
+
+=item *
+
+C<symbols_insert>
 
 =back
 
@@ -1364,7 +1477,9 @@ C<symname> returns the symbol name from a symbol id.
 
 =over
 
-=item 1 C<$symid>
+=item 1
+
+C<$symid>
 
 the unique id for a symbol
 
@@ -1374,7 +1489,9 @@ B<Requires:>
 
 =over
 
-=item * C<symbols_byid>
+=item *
+
+C<symbols_byid>
 
 =back
 
@@ -1399,11 +1516,15 @@ if the write flag is set.
 
 =over
 
-=item 1 C<$lang>
+=item 1
+
+C<$lang>
 
 the unique id for the language
 
-=item 1 C<$string>
+=item 2
+
+C<$string>
 
 the text for the declaration (from C<{'typemap'}{letter}> in a
 I<generic.conf> language description)
@@ -1414,9 +1535,13 @@ B<Requires:>
 
 =over
 
-=item * C<langtypes_select>
+=item *
 
-=item * C<langtypes_insert>
+C<langtypes_select>
+
+=item *
+
+C<langtypes_insert>
 
 =back
 
@@ -1522,7 +1647,9 @@ C<flushcache> flushes the internal symbol cache.
 
 =over
 
-=item 1 C<$full>
+=item 1
+
+C<$full>
 
 optional argument to force 0-count write back
 
@@ -1550,7 +1677,9 @@ B<Requires:>
 
 =over
 
-=item * C<symbols_setref>
+=item *
+
+C<symbols_setref>
 
 =back
 
@@ -1581,11 +1710,15 @@ Data associated to the designated file are erased from the tables.
 
 =over
 
-=item 1 C<$fid>
+=item 1
+
+C<$fid>
 
 the unique id for a base revision file
 
-=item 1 C<$releaseid>
+=item 2
+
+C<$releaseid>
 
 the release (or version) containing the file
 
@@ -1595,11 +1728,17 @@ B<Requires:>
 
 =over
 
-=item * C<related_symbols_select>
+=item *
 
-=item * C<delete_file_definitions>
+C<related_symbols_select>
 
-=item * C<delete_file_usages>
+=item *
+
+C<delete_file_definitions>
+
+=item *
+
+C<delete_file_usages>
 
 =back
 
@@ -1680,7 +1819,9 @@ I<Files> are implicitly deleted by a trigger from I<status> deletion.
 
 =over
 
-=item 1 C<$releaseid>
+=item 1
+
+C<$releaseid>
 
 the target release (or version)
 
@@ -1690,17 +1831,25 @@ B<Requires:>
 
 =over
 
-=item * C<delete_definitions>
+=item *
 
-=item * C<delete_usages>
+C<delete_definitions>
 
-=item * C<delete_symbols>
+=item *
 
-=item * C<delete_releases>
+C<delete_usages>
 
-=item * C<delete_unused_status>
+=item *
 
-which should also delete I<files> table
+C<delete_symbols>
+
+=item *
+
+C<delete_releases>
+
+=item *
+
+C<delete_unused_status> which should also delete I<files> table
 
 =back
 
@@ -1764,7 +1913,9 @@ B<Requires:>
 
 =over
 
-=item * C<purge_all>
+=item *
+
+C<purge_all>
 
 =back
 
@@ -1782,7 +1933,9 @@ C<uniquecountersreset> restarts the counters from 0.
 
 =over
 
-=item 1 C<$force>
+=item 1
+
+C<$force>
 
 an I<integer> used to force the C<$>I<xxx>C<ini> variables
 
@@ -1886,23 +2039,33 @@ C<saveperformance> writes genxref's milestone times to the DB.
 
 =over
 
-=item 1 C<$releaseid>
+=item 1
+
+C<$releaseid>
 
 the release (or version) for which performance data should be saved
 
-=item 2 C<$reindex>
+=item 2
+
+C<$reindex>
 
 full reindex flag
 
-=item 3 C<$step>
+=item 3
+
+C<$step>
 
 a single-character I<string> identifying the step
 
-=item 4 C<$starttime>
+=item 4
+
+C<$starttime>
 
 the starting time of the step (in seconds)
 
-=item 5 C<$endtime>
+=item 5
+
+C<$endtime>
 
 the completion time of the step (in seconds)
 
@@ -1923,11 +2086,17 @@ B<Requires:>
 
 =over
 
-=item * C<times_select>
+=item *
 
-=item * C<times_insert>
+C<times_select>
 
-=item * C<times_update>
+=item *
+
+C<times_insert>
+
+=item *
+
+C<times_update>
 
 =back
 
@@ -1955,7 +2124,9 @@ C<getperformance> retrieves genxref's milestone times from the DB.
 
 =over
 
-=item 1 C<$releaseid>
+=item 1
+
+C<$releaseid>
 
 the release (or version) for which performance data should be returned
 
@@ -1965,7 +2136,9 @@ B<Requires:>
 
 =over
 
-=item * C<times_select>
+=item *
+
+C<times_select>
 
 =back
 
