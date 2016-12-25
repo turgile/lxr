@@ -37,6 +37,7 @@ our @EXPORT = qw(
 	gettemplate
 	expandtemplate
 	varbtnaction
+	varexpand
 	urlexpand
 	displayindexstate
 	makeheader

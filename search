@@ -42,54 +42,6 @@ use LXR::Template;
 my $maxhits = 1000;
 
 
-=head2 C<varinputs ($templ)>
-
-Function C<varinputs> is a "$function" substitution function.
-It returns a string which is a concatenation of tags
-
-C<E<lt> input type="hidden" name=">I<variable_name>C<" value=">I<variable_value>C<" E<gt>>
-
-one for each variable defined in configuration parameter C<'variables'>.
-
-This is how the current state is forwarded to the next HTTP request..
-
-=over
-
-=item 1
-
-C<$templ>
-
-a I<string> containing the template (i.e. argument)
-
-=back
-
-=cut
-
-# NOTE:	ident contains a different implementation, which is semantically
-#		equivalent, but not substituable because there is an argument
-#		block (to be expanded) here, while there is none in ident.
-# TODO;	decide in favor of one or the other, so that this sub can
-#		be common factored into Template.pm
-
-sub varinputs {
-	my $templ = shift;
-	my $ret   = '';
-
-	foreach ($config->allvariables) {
-		if ($config->variable($_) ne $config->vardefault($_)) {
-			$ret .= expandtemplate
-						( $templ
-						,	( 'variable' => sub { $_ }
-							, 'value'    => sub { $config->variable($_) }
-							, 'varname'  => sub { $config->vardescription($_) }
-							)
-						);
-		}
-	}
-	return $ret;
-}
-
-
 =head2 C<filename_matches ($filetext, $advanced, $casesensitive, $file)>
 
 Function C<filename_matches> tells if search results for $file should
@@ -611,7 +563,7 @@ sub search {
 
 	print expandtemplate
 		( $templ
-		,	( 'variables'			=> \&varinputs
+		,	( 'variables'			=> \&varexpand
 			, 'searchtext'			=> sub { $_ = $searchtext; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 			, 'searchtext_escaped'	=> sub { $_ = $searchtext; s/&/&amp;/g; s/\"/&quot;/g; s/</&lt;/g; s/>/&gt;/g; return $_; }
 			, 'filetext_escaped'	=> sub { $_ = $filetext; s/\"/&quot;/g; return $_; }
