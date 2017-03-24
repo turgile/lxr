@@ -129,7 +129,7 @@ Options -Indexes
 			<IfModule prefork.c>
 				PerlHandler ModPerl::RegistryPrefork
 			</IfModule>
-			<IfModule worker.c>
+			<IfModule !prefork.c>
 				PerlHandler ModPerl::Registry
 			</IfModule>
 		</IfDefine>
