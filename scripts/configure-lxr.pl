@@ -901,7 +901,7 @@ END_TREE
 }
 
 if (!$addtree) {
-	open(GLOBAL, '>', "${confdir}/${scriptout}")
+	open(GLOBAL, '>', "${confdir}/${scriptout}");
 	print GLOBAL "#!/bin/sh\n";
 } else {
 	open(GLOBAL, '>>', "${confdir}/${scriptout}")
@@ -976,14 +976,14 @@ while (1) {
 	if (exists($markers{'%DB_tree_user%'})) {
 		if (exists($dbusersdict{$dbengine.$markers{'%DB_tree_user%'}})) {
 			if ($dbusersdict{$dbengine.$markers{'%DB_tree_user%'}} ne
-					$markers{'%DB_tree_password'}) {
+					$markers{'%DB_tree_password%'}) {
 				print "${VTred}ERROR:${VTnorm} user ${VTbold}$markers{'%DB_tree_user%'}${VTnorm} already exists with a different password!\n";
 				print "Configuration continues but it won't work.\n";
 			}
 		} else {
 			#	Tell other templates something changed
 			$markers{'%_dbuseroverride%'} = 1;
-			$dbusersdict{$dbengine.$markers{'%DB_tree_user%'}} = $markers{'%DB_tree_password'};
+			$dbusersdict{$dbengine.$markers{'%DB_tree_user%'}} = $markers{'%DB_tree_password%'};
 		}
 	}
 	#	New DB table prefix?
@@ -1082,7 +1082,7 @@ my $pwdf = "${confdir}/db-scripts.d/pgpass";
 if (!$addtree) {
 	unlink($pwdf);
 }
-my @pguser = map {substr($_, 1)} grep (m/^p/, keys %users);
+my @pguser = map {substr($_, 1)} grep (m/^p/, keys %dbusersdict);
 if (0 < scalar(@pguser)) {
 	my %olduserdict;
 	if (-f $pwdf) {
