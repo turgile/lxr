@@ -35,7 +35,7 @@ use VTescape;
 #
 ##############################################################
 
-my $version = '2.2';
+my $version = '2.3';
 
 #	Who am I? Strip directory path.
 my $cmdname = $0;
@@ -128,7 +128,7 @@ END_HELP
 if ($option{'version'}) {
 	print <<END_VERSION;
 ${cmdname} version $version
-(C) 2012-2016 A. J. Littoz
+(C) 2012-2017 A. J. Littoz
 This is free software under GPL v3 (or higher) licence.
 There is NO warranty, not even for MERCHANTABILITY nor
 FITNESS FOR A PARICULAR PURPOSE to the extent permitted by law.
@@ -673,21 +673,23 @@ $markers{'%DB_password%'} = $dbpass if $dbpass;
 $markers{'%DB_global_prefix%'} = $dbprefix if $dbprefix;
 
 $markers{'%search_engine%'} = 'glimpse';	# glimpse will have priority
+$markers{'%_no_freesearch%'} = 0;
 if (!$addtree) {
 	if	(  !defined($markers{'%glimpse%'})
 		&& !defined($markers{'%swish%'})
 		) {
 		print "${VTred}ERROR:${VTnorm} neither glimpse nor swish-e found in \$PATH!\n";
+# 		if ('y' eq get_user_choice
+# 				( 'Is your source tree stored in a VCS repository?'
+# 				, 2
+# 				, [ 'yes', 'no' ]
+# 				, [ 'y', 'n']
+# 				)
+# 			) {
+# 			print "Since free-text search is not compatible with VCSes, you can continue\n";
+# 			$markers{'%glimpse%'} = '/bin/true';	# disable free-text search
+# 		} elsif ('y' eq get_user_choice
 		if ('y' eq get_user_choice
-				( 'Is your source tree stored in a VCS repository?'
-				, 2
-				, [ 'yes', 'no' ]
-				, [ 'y', 'n']
-				)
-			) {
-			print "Since free-text search is not compatible with VCSes, you can continue\n";
-			$markers{'%glimpse%'} = '/bin/true';	# disable free-text search
-		} elsif ('y' eq get_user_choice
 				( 'Does one of them exist in a non standard directory?'
 				, 1
 				, [ 'yes', 'no' ]
@@ -695,7 +697,7 @@ if (!$addtree) {
 				)
 			) {
 			my $search = get_user_choice
-					( '--- Which is it?'
+					( '--- Which tool?'
 					, 1
 					, [ 'glimpse',   'swish-e' ]
 					, [ '%glimpse%', '%swish%' ]
@@ -725,6 +727,7 @@ if (!$addtree) {
 			print "${VTyellow}Sorry:${VTnorm} free-text search disabled\n";
 			$markers{'%glimpse%'} = '/bin/true';	# disable free-text search
 			$markers{'%glimpsedirbase%'} = '/tmp';	# only to silence config check
+			$markers{'%_no_freesearch%'} = 1;
 		}
 	}
 
@@ -757,6 +760,15 @@ if (!$addtree) {
 		) {
 		print "${VTred}REMINDER:${VTyellow} after this configuration step, open ${VTnorm}${VTbold}$confout${VTnorm}${VTyellow}\n";
 		print "and comment out one of 'glimpsebin' or 'swishbin'.${VTnorm}\n";
+	}
+} else {
+	if	(	defined $config->{'glimpsebin'}
+			&& $config->{'glimpsebin'} eq '/usr/bin/true'
+		||	defined $config->{'swishbin'}
+			&& $config->{'swishbin'} eq '/usr/bin/true'
+		||	defined $config->{'glimpsebin'} && defined $config->{'swishbin'}
+		) {
+		$markers{'%_no_freesearch%'} = 1;
 	}
 }
 

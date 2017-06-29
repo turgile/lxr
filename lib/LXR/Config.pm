@@ -520,10 +520,11 @@ FINAL:
 	# Set-up various directories as necessary
 	_ensuredirexists($self->{'tmpdir'});
 
-	if ($self->{'sourceroot'} !~ m/^\w+:/) {
+	if	(	$self->{'sourceroot'} !~ m/^\w+:/
+		||	exists $self->{'sourcetext'}
+		) {
 #	See if there is ambiguity on the free-text search engine
-#	only when tree is stored in plain files
-#	since free-text search is not operational with VCSes,
+#	only when it is potentially used
 		if (exists $self->{'glimpsebin'} && exists $self->{'swishbin'}) {
 			die "Both Glimpse and Swish have been specified in $confpath.\n"
 				."Please choose one of them by commenting out either glimpsebin or swishbin.\n";

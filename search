@@ -144,7 +144,11 @@ The remaining hits are returned in an array.
 
 sub glimpsesearch {
 	my ($searchtext, $filetext, $advanced, $casesensitive) = @_;
-	my $sourceroot = $config->{'sourceroot'} . '/' . $releaseid . '/';
+	my $sourceroot = $config->{$files->isa('LXR::Files::Plain')
+								? 'sourceroot'
+								: 'sourcetext'
+								}
+					. '/' . $releaseid . '/';
 
 	$ENV{'PATH'} = '/bin:/usr/local/bin:/usr/bin:/usr/sbin';
 	$! = '';
@@ -552,7 +556,8 @@ sub search {
 			warn "Freetext search engine required for file search, and no freetext search engine is configured\n";
 			return;
 		}
-		my $sourceroot = $config->{'sourceroot'} . '/' . $releaseid . '/';
+		my $sourceroot = $config->{$files->isa('LXR::Files::Plain') ? 'sourceroot' : 'sourcetext'}
+						. '/' . $releaseid . '/';
 		while (<$FILELISTING>) {
 			chomp;
 			s/^$sourceroot//;
@@ -596,7 +601,9 @@ for the real job.
 httpinit();
 std_http_headers('search');
 makeheader('search');
-if ($files->isa('LXR::Files::Plain')) {
+if	(	$files->isa('LXR::Files::Plain')
+	||	exists $config->{'sourcetext'}
+	) {
 	if	(	$config->{'glimpsebin'}
 			&& $config->{'glimpsebin'} =~ m!^(.*/)?true$!
 		||	$config->{'swishbin'}

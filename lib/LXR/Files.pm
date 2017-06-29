@@ -793,4 +793,40 @@ sub _ignorefiles {
 	return 0;
 }
 
+=head2 C<checkouttree ($ckoutdir, $releaseid)>
+
+C<checkouttree> checks out a complete tree for a version.
+
+=over
+
+=item 1
+
+C<$ckoutdir>
+
+a I<string> containing the top level directory into which
+version subdirectories are located
+
+=item 2
+
+C<$releaseid>
+
+the requested release (or version)
+
+=back
+
+It is pointless on plain files repository
+because files are already in text form.
+
+Function returns silently if the version cannot be checked out.
+
+=cut
+
+# NOTE: This sub is only used by genxref to extract a version
+#		from a repository.
+
+sub checkouttree {
+	my ($self, $ckoutdir, $releaseid) = @_;
+	warn  __PACKAGE__."::checkouttree not implemented. Parameters @_";
+}
+
 1;

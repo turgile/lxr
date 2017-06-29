@@ -274,6 +274,7 @@ sub check_tool {
 
 my $foundglimpse = 0;
 my $foundswishe = 0;
+my $textsearchdisabled = 1;
 
 my $ct = check_tool	( 'ectagsbin'
 					, 'ctags'
@@ -330,15 +331,18 @@ if ($foundglimpse == 0 && $foundswishe == 0) {
 	# glimpse has been forced, but glimpse is prefered if both
 	print "${VTyellow}Warning:${VTnorm} using existing ${VTbold}glimpse${VTnorm}\n";
 	delete $global->{'swishbin'} if ($global);
+	$textsearchdisabled = 0;
 	$failure |= 2;
 } elsif ($foundswishe == 1 && $foundglimpse <= 0) {
 	# swish-e has been forced, but glimpse is prefered if both
 	print "${VTyellow}Warning:${VTnorm} using existing ${VTbold}swish-e${VTnorm}\n";
 	delete $global->{'glimpsebin'} if ($global);
+	$textsearchdisabled = 0;
 	$failure |= 2;
 } elsif ($foundglimpse == 2) {
 	# Standard glimpse selection, but for the case of both
 	# engines present and swish-e has too low a version
+	$textsearchdisabled = 0;
 	if ($foundswishe == -1) {
 		print "${VTyellow}Warning:${VTnorm} forcing use of ${VTbold}glimpse${VTnorm}\n";
 		delete $global->{'swishbin'} if ($global);
@@ -347,6 +351,7 @@ if ($foundglimpse == 0 && $foundswishe == 0) {
 } elsif ($foundswishe == 2) {
 	# Standard swish-e selection, but for the case of both
 	# engines present and glimpse has too low a version
+	$textsearchdisabled = 0;
 	if ($foundglimpse == -1) {
 		print "${VTyellow}Warning:${VTnorm} forcing use of ${VTbold}swish-e${VTnorm}\n";
 	delete $global->{'glimpsebin'} if ($global);
@@ -653,25 +658,29 @@ foreach my $treedescr (@config) {
 			$purgeend = time();
 			$index->saveperformance($version, $reindexmode, $milestone, $purgestart, $purgeend);
 			$textend = 0;
-			if ($files->isa('LXR::Files::Plain')) {
-				if ($foundglimpse > 0 || $foundswishe > 0) {
-					$milestone = 'T';
-					$textstart = time();
-					$stepstart = $textstart;
-					$index->saveperformance($version, $reindexmode, $milestone, $textstart, 0);
-#MT					$childpid =
-						gensearch	( $version
-#MT									, \&childexit
-									);
-					$textend = time();
+			if ($textsearchdisabled) {
+				print STDERR "${VTyellow}Free-text search disabled${VTnorm}\n";
+			} elsif	(	$files->isa('LXR::Files::CVS')
+					||	$files->isa('LXR::Files::BK')
+					) {
+				print STDERR "${VTyellow}Free-text search setup suppressed for this VCS storage${VTnorm}\n";
+			} elsif	(	!$files->isa('LXR::Files::Plain')
+					&&	!exists $config->{'sourcetext'}
+					) {
+					print STDERR "${VTyellow}Free-text search not enabled on this tree${VTnorm}\n";
+			} else {
+				$milestone = 'T';
+				$textstart = time();
+				$stepstart = $textstart;
+				$index->saveperformance($version, $reindexmode, $milestone, $textstart, 0);
+#MT				$childpid =
+					gensearch	( $version
+#MT								, \&childexit
+								);
+				$textend = time();
 			# ATTENTION: if multi-threading code is reenabled, following line must
 			#		be commented out
 				$index->saveperformance($version, $reindexmode, 'T', $textstart, $textend);
-				} else {
-					print STDERR "${VTyellow}Free-text search disabled${VTnorm}\n";
-				}
-			} else {
-				print STDERR "${VTyellow}Free-text search setup suppressed for VCS storage${VTnorm}\n";
 			}
 			$printdirbanner = 1;
 			$milestone = 'D';
@@ -889,6 +898,26 @@ sub feedswish {
 sub gensearch {
 	my $releaseid = shift;
 #MT	my $cldhandler = shift;
+	my $textinput;
+
+	if ($files->isa('LXR::Files::Plain')) {
+		$textinput = $config->{'sourceroot'};
+	} else {
+		$textinput = $config->{'sourcetext'};
+		if	( !	(	-d $textinput
+				&&	-w $textinput
+				&&	-r $textinput
+				)
+			) {
+			print STDERR "${VTyellow}Free-text search skipped because 'sourcetext' directory\n";
+			print STDERR "($textinput) either does not exist or cannot be written to${VTnorm}\n";
+			return;
+		}
+		if (! -d $textinput.'/'.$releaseid ) {
+			mkdir $textinput.'/'.$releaseid;
+		}
+		$files->checkouttree($textinput, $releaseid);
+	}
 
 #MT # Since using DBI in multi-threading is very hard to get it right,
 #MT # it is easier to temporarily close the connection to the DB and
@@ -975,7 +1004,7 @@ sub gensearch {
 		system	( $config->{'glimpseindex'}
 				, split(' ', $glixopts)
 				, '-H', $indextmp
-				, $config->{'sourceroot'} . '/' . $releaseid
+				, $textinput . '/' . $releaseid
 				);
 
 		# Need to chmod the glimpse files so everybody can read them.

@@ -1143,6 +1143,7 @@ sub modeexpand {
 		$modeoff  = 'disabled';
 	} elsif
 		(	!$files->isa('LXR::Files::Plain')
+			&& !exists $config->{'sourcetext'}
 		||	$config->{'glimpsebin'}
 			&& $config->{'glimpsebin'} =~ m!^(.*/)?true$!
 		||	$config->{'swishbin'}
