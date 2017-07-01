@@ -344,22 +344,26 @@ sub isfile {
 #		GenXRef functions
 #
 
-sub checkouttree {
+sub exporttree {
 	my ($self, $ckoutdir, $releaseid) = @_;
 	my $orig_commit;
 
-	$orig_commit = $self->_git_oneline('rev-parse', '--short', 'HEAD');
+	$orig_commit = $self->_git_oneline
+		( 'rev-parse'
+		, '--symbolic-full-name'
+		, 'HEAD'
+		);
 	chomp $orig_commit;
 	$self->_git_oneline
 		( '--work-tree='.$ckoutdir.'/'.$releaseid
 		, 'checkout'
 		, '-f'
 		, '-q'
-		, '--detach'
 		, '--ignore-other-worktrees'
 		, $releaseid
+		, '--', '*'
 		);
-	$self->_git_oneline('reset', '--soft', $orig_commit);
+	$self->_git_oneline('reset', $orig_commit);
 }
 
 

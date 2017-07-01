@@ -793,9 +793,9 @@ sub _ignorefiles {
 	return 0;
 }
 
-=head2 C<checkouttree ($ckoutdir, $releaseid)>
+=head2 C<exporttree ($ckoutdir, $releaseid)>
 
-C<checkouttree> checks out a complete tree for a version.
+C<exporttree> exports a complete tree for a version.
 
 =over
 
@@ -824,9 +824,9 @@ Function returns silently if the version cannot be checked out.
 # NOTE: This sub is only used by genxref to extract a version
 #		from a repository.
 
-sub checkouttree {
+sub exporttree {
 	my ($self, $ckoutdir, $releaseid) = @_;
-	warn  __PACKAGE__."::checkouttree not implemented. Parameters @_";
+	warn  __PACKAGE__."::exporttree not implemented. Parameters @_";
 }
 
 1;
