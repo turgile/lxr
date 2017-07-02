@@ -404,4 +404,17 @@ sub parsehg {
 	close(HG);
 }
 
+
+#
+#		GenXRef functions
+#
+
+sub exporttree {
+	my ($self, $ckoutdir, $releaseid) = @_;
+	my $rev = $self->filerev('/', $releaseid);
+
+	print "revision # $rev\n";
+	`$$self{'hg-cmd'} archive -t files -r $rev $ckoutdir/$releaseid`;
+}
+
 1;
