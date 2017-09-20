@@ -247,6 +247,7 @@ my $tdbname;
 my $tdbuser;
 my $tdbpass;
 my $tdbprefix;
+my %deferred_markers;	# in case we precompute markers
 
 if ($verbose) {
 	print "\n";
@@ -296,6 +297,13 @@ END_NOCONF
 		print "       It does not make sense to add a tree in this mode.\n";
 		exit 1;
 	}
+	$deferred_markers{'%_no_freesearch%'} = 
+		(	defined $config[0]->{'glimpsebin'}
+			&& $config[0]->{'glimpsebin'} eq '/usr/bin/true'
+		||	defined $config[0]->{'swishbin'}
+			&& $config[0]->{'swishbin'} eq '/usr/bin/true'
+		||	defined $config[0]->{'glimpsebin'} && defined $config[0]->{'swishbin'}
+		);
 }
 
 if ($addtree != 1) {
@@ -762,14 +770,8 @@ if (!$addtree) {
 		print "and comment out one of 'glimpsebin' or 'swishbin'.${VTnorm}\n";
 	}
 } else {
-	if	(	defined $config->{'glimpsebin'}
-			&& $config->{'glimpsebin'} eq '/usr/bin/true'
-		||	defined $config->{'swishbin'}
-			&& $config->{'swishbin'} eq '/usr/bin/true'
-		||	defined $config->{'glimpsebin'} && defined $config->{'swishbin'}
-		) {
-		$markers{'%_no_freesearch%'} = 1;
-	}
+		# retrieve present freetext search status
+	$markers{'%_no_freesearch%'} = $deferred_markers{'%_no_freesearch%'};
 }
 
 ##############################################################
