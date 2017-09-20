@@ -120,7 +120,7 @@ QLOOP:
 			if ($multiline) {
 				print ":\n   ${VTyellow}", join("${VTnorm}\n   ${VTyellow}", @choices), "${VTnorm}\n";
 			} else {
-				print " [", join("${VTnorm}/${VTyellow}", @choices), "${VTnorm}]";
+				print " [${VTyellow}", join("${VTnorm}/${VTyellow}", @choices), "${VTnorm}]";
 			}
 		}
 		print " ${VTslow}${VTyellow}>${VTnorm} ";
