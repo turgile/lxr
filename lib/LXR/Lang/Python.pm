@@ -95,8 +95,10 @@ sub processinclude {
 	$path    = $file;
 
 	# Faster surrogates 'last'
-	$path =~ s@\.@/@g;					# Replace Python delimiters
-	$path =~ s@$@.py@ if $file ne '.';	# Add file extension
+	$path =~ s@\.@/@g;		# Replace Python delimiters
+	$path =~ s@^//@../@;	# Handle special case for parent directory
+	$path =~ s@$@.py@ if $file !~ m@^\.\.?$@;
+							# Add file extension except for known directories
 
 	# Create the hyperlinks
 	$link = &LXR::Common::incref($file, 'include', $path, $dir);
