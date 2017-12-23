@@ -95,8 +95,8 @@ sub processinclude {
 	$path    = $file;
 
 	# Faster surrogates 'last'
-	$path =~ s@\.@/@g;		# Replace Python delimiters
-	$path =~ s@$@.py@;		# Add file extension
+	$path =~ s@\.@/@g;					# Replace Python delimiters
+	$path =~ s@$@.py@ if $file ne '.';	# Add file extension
 
 	# Create the hyperlinks
 	$link = &LXR::Common::incref($file, 'include', $path, $dir);

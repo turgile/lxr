@@ -87,8 +87,8 @@ sub processinclude {
 		$path    = $file;
 
 		# Faster surrogates for 'global' and 'last'
-		$path =~ s@::@/@g;		# Replace Perl delimiters
-		$path =~ s@$@.pm@;		# Add file extension
+		$path =~ s@::@/@g;					# Replace Perl delimiters
+		$path =~ s@$@.pm@ if $file ne '::';	# Add file extension
 
 		# Create the hyperlinks
 		$link = $self->_linkincludedirs
