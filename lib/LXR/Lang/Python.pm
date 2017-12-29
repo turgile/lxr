@@ -95,14 +95,16 @@ sub processinclude {
 	$path    = $file;
 
 	# Transform Python path into OS path
-	$path =~ s@\.@\0@g;		# Replace Python delimiters (temporarily NULs)
-	while($path =~ s@^(\0*)\0\0@$1\0../@) {};	# Handle special path start
-	if ($path ne "\0") {;	# Erase excess Python delimiter
-		$path =~ s@^\0@@;
+	if ($file ne '.') {
+		$path =~ s@\.@\0@g;		# Replace Python delimiters (temporarily NULs)
+		while($path =~ s@^(\0*)\0\0@$1\0../@) {};	# Handle special path start
+		if ($path ne "\0") {;	# Erase excess Python delimiter
+			$path =~ s@^\0@@;
+		}
+		$path =~ s@\0@/@g;		# OS delimiters
+		$path =~ s@$@.py@ if substr($file,-1) ne '.';
+								# Add file extension except for obvious directories
 	}
-	$path =~ s@\0@/@g;		# OS delimiters
-	$path =~ s@$@.py@ if substr($file,-1) ne '.';
-							# Add file extension except for obvious directories
 
 	# Create the hyperlinks
 	$link = &LXR::Common::incref($file, 'include', $path, $dir);
