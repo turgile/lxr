@@ -346,34 +346,10 @@ sub isfile {
 
 sub exporttree {
 	my ($self, $ckoutdir, $releaseid) = @_;
-	my $isbare;
-	my $orig_commit;
 
-	$isbare = $self->_git_oneline
-		( 'rev-parse'
-		, '--is-bare-repository'
-		);
-	chomp $isbare;
-	if ('true' ne $isbare) {
-		$orig_commit = $self->_git_oneline
-			( 'rev-parse'
-			, '--symbolic-full-name'
-			, 'HEAD'
-			);
-		chomp $orig_commit;
-	}
-	$self->_git_oneline
-		( '--work-tree='.$ckoutdir.'/'.$releaseid
-		, 'checkout'
-		, '-f'
-		, '-q'
-		, '--ignore-other-worktrees'
-		, $releaseid
-		, '--', '*'
-		);
-	if ('true' ne $isbare) {
-		$self->_git_oneline('reset', $orig_commit);
-	}
+	my $gitcmd="git --git-dir=$$self{'rootpath'} archive --prefix=$releaseid/ $releaseid";
+	$gitcmd .= "|(cd $ckoutdir && tar -x --keep-newer-files --warning=none)";
+	`$gitcmd`;
 }
 
 

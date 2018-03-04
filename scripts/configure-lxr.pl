@@ -128,7 +128,7 @@ END_HELP
 if ($option{'version'}) {
 	print <<END_VERSION;
 ${cmdname} version $version
-(C) 2012-2017 A. J. Littoz
+(C) 2012-2018 A. J. Littoz
 This is free software under GPL v3 (or higher) licence.
 There is NO warranty, not even for MERCHANTABILITY nor
 FITNESS FOR A PARICULAR PURPOSE to the extent permitted by law.
@@ -247,6 +247,7 @@ my $tdbname;
 my $tdbuser;
 my $tdbpass;
 my $tdbprefix;
+my %deferred_markers;	# in case we precompute markers
 
 if ($verbose) {
 	print "\n";
@@ -296,6 +297,13 @@ END_NOCONF
 		print "       It does not make sense to add a tree in this mode.\n";
 		exit 1;
 	}
+	$deferred_markers{'%_no_freesearch%'} = 
+		(	defined $config[0]->{'glimpsebin'}
+			&& $config[0]->{'glimpsebin'} eq '/usr/bin/true'
+		||	defined $config[0]->{'swishbin'}
+			&& $config[0]->{'swishbin'} eq '/usr/bin/true'
+		||	defined $config[0]->{'glimpsebin'} && defined $config[0]->{'swishbin'}
+		);
 }
 
 if ($addtree != 1) {
@@ -679,16 +687,6 @@ if (!$addtree) {
 		&& !defined($markers{'%swish%'})
 		) {
 		print "${VTred}ERROR:${VTnorm} neither glimpse nor swish-e found in \$PATH!\n";
-# 		if ('y' eq get_user_choice
-# 				( 'Is your source tree stored in a VCS repository?'
-# 				, 2
-# 				, [ 'yes', 'no' ]
-# 				, [ 'y', 'n']
-# 				)
-# 			) {
-# 			print "Since free-text search is not compatible with VCSes, you can continue\n";
-# 			$markers{'%glimpse%'} = '/bin/true';	# disable free-text search
-# 		} elsif ('y' eq get_user_choice
 		if ('y' eq get_user_choice
 				( 'Does one of them exist in a non standard directory?'
 				, 1
@@ -762,14 +760,8 @@ if (!$addtree) {
 		print "and comment out one of 'glimpsebin' or 'swishbin'.${VTnorm}\n";
 	}
 } else {
-	if	(	defined $config->{'glimpsebin'}
-			&& $config->{'glimpsebin'} eq '/usr/bin/true'
-		||	defined $config->{'swishbin'}
-			&& $config->{'swishbin'} eq '/usr/bin/true'
-		||	defined $config->{'glimpsebin'} && defined $config->{'swishbin'}
-		) {
-		$markers{'%_no_freesearch%'} = 1;
-	}
+		# retrieve present freetext search status
+	$markers{'%_no_freesearch%'} = $deferred_markers{'%_no_freesearch%'};
 }
 
 ##############################################################
