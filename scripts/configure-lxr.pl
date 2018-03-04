@@ -128,7 +128,7 @@ END_HELP
 if ($option{'version'}) {
 	print <<END_VERSION;
 ${cmdname} version $version
-(C) 2012-2017 A. J. Littoz
+(C) 2012-2018 A. J. Littoz
 This is free software under GPL v3 (or higher) licence.
 There is NO warranty, not even for MERCHANTABILITY nor
 FITNESS FOR A PARICULAR PURPOSE to the extent permitted by law.
@@ -687,16 +687,6 @@ if (!$addtree) {
 		&& !defined($markers{'%swish%'})
 		) {
 		print "${VTred}ERROR:${VTnorm} neither glimpse nor swish-e found in \$PATH!\n";
-# 		if ('y' eq get_user_choice
-# 				( 'Is your source tree stored in a VCS repository?'
-# 				, 2
-# 				, [ 'yes', 'no' ]
-# 				, [ 'y', 'n']
-# 				)
-# 			) {
-# 			print "Since free-text search is not compatible with VCSes, you can continue\n";
-# 			$markers{'%glimpse%'} = '/bin/true';	# disable free-text search
-# 		} elsif ('y' eq get_user_choice
 		if ('y' eq get_user_choice
 				( 'Does one of them exist in a non standard directory?'
 				, 1
