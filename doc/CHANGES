@@ -4,6 +4,33 @@ which could impact your existing trees.
 If they result in an incompatibility, you must reindex your tree.
 
         =========================
+        LXR 2.2.1  -->  LXR 2.3.0
+        =========================
+
+Feature release, vulnerability fixed, bugs fixed.
+Manual slightly updated.
+
+Operational vulnerability (IMPORTANT)
+-------------------------
+Since release 1.0.0, a carefully crafted search string may be used to
+execute arbitrary shell commands on the server, no matter which search
+engine you installed.
+If your LXR server is accessible from the internet, you are urged to
+update to protect yourself. This can be done without the need to reindex
+the tree when there is no modification. Just save your lxr.conf and
+custom.d, substitute the new LXR root directory content, then restore
+lxr.conf and custom.d/. For more information, see INSTALL.
+
+search
+------
+May be enabled during configuration to allow free-text search when tree
+is stored in a source control management system (git, svn, hg, CVS).
+
+Python language
+---------------
+Improved handling of from/import statement
+
+        =========================
         LXR 2.2.0  -->  LXR 2.2.1
         =========================
 
