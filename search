@@ -162,7 +162,7 @@ sub glimpsesearch {
 				. ' -H '
 				. $config->{'glimpsedir'}.'/'.$releaseid
 		# The pattern to search for
-				." -y -n \"$searchtext\" 2>&1 |"
+				." -y -n '$searchtext' 2>&1 |"
 			)
 	or die "Glimpse subprocess died unexpextedly: $!\n";
 
@@ -287,7 +287,7 @@ sub swishsearch {
   my $swishCommand =  $config->{'swishbin'}
 					. ' -f ' . $swishIndex
 					. ' -s swishdocpath'
-					. ' -w "(' . $searchtext . ')"'
+					. " -w '($searchtext)'"
 					;
   my $ret = `$swishCommand`;
   my @result = grep { not /^[\#\.]/ } split(/\n/, $ret);
@@ -527,12 +527,15 @@ sub search {
 	my @results;
 	if ($searchtext ne '') {
 		my $escapedsearchtext = $searchtext;
-	# next line: protection against arbitrary command injection
-	#			prevent closing parameter string and inactivate
-	#			bash special characters
-	# NOTE: probably overkill but safe
-	#		should \ be included in the set? Seems to work as is
-		$escapedsearchtext =~ s/(['"|&;()[\]<>`!#])/\\$1/g;
+		# Protect us against arbitrary command injection:
+		# Since the pattern is enclosed within single quotes, remove any single
+		# quote from search text so that malicious user can't close the parameter
+		# and start a new command.
+		# NOTE: quote in pattern, even if escaped with \ does not seem to work
+		#		well; therefore it should not be a big loss of functionality.
+		#		The GLIMPSE engine is word based and it is very hard to search
+		#		for isolated non-alphameric characters. Here again, not a big loss.
+		$escapedsearchtext =~ s/'//g;
 		if ($config->{'glimpsebin'}) {
 			@results = glimpsesearch($escapedsearchtext, $filetext, $advanced, $casesensitive);
 		} elsif ($config->{'swishbin'} && $config->{'swishdir'}) {
