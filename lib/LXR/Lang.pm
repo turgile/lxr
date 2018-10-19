@@ -424,17 +424,17 @@ sub _linkincludedirs {
 	my ($sp, $l, $r);	# various separator positions
 	my $tail;
 
-	if (!defined($link)) {
-		if (index($path, '/') < 0) {
+	if	(	!defined($link)
+		&& index($path, '/') < 0
+		) {
 			$tail = $file;
-		} elsif (substr($path, -1) eq '/') {
+	} elsif (substr($path, -1) eq '/') {
 		# Path ends with /: it may be a directory or an HTTP request.
 		# Remove trailing / and do an initial processing.
-			chop($path);
-			$tail = $sep;
-			$file = substr($file, 0, rindex($file, $sep));
-			$link = incdirref($file, 'include', $path, $dir);
-		}
+		chop($path);
+		$tail = $sep;
+		$file = substr($file, 0, rindex($file, $sep));
+		$link = incdirref($file, 'include', $path, $dir);
 	}
 	# If incref or incdirref did not return a link to the file,
 	# explore however the path to see if directories are
