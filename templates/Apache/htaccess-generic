@@ -9,8 +9,8 @@
 #
 
 
-# Enable CGI script execution and use of symlinks
-Options ExecCGI FollowSymlinks
+# Enable use of symlinks
+Options FollowSymlinks
 
 <IfModule mod_version.c>
 	<IfVersion < 2.4>
@@ -98,7 +98,9 @@ Options -Indexes
 # ----------- LXR scripts configuration -----------
 #
 #
-<Files ~ (search|source|ident|diff|showconfig|perf)$>
+<FilesMatch "^(search|source|ident|diff|showconfig|perf)$">
+# Enable CGI script execution
+	Options +ExecCGI
 	<IfModule mod_version.c>
 		<IfVersion < 2.4>
 			Allow from all
@@ -124,13 +126,16 @@ Options -Indexes
 		# Configuration parameters changed between mod_perl versions:
 		<IfDefine MODPERL2>
 			PerlOptions +ParseHeaders
-		# Apache can dispatch execution according to 2 modes.
+		# Apache can dispatch execution according to 3 modes.
 		# mod_perl initialization differs slightly:
-			<IfModule prefork.c>
+			<IfModule mpm_prefork_module>
 				PerlHandler ModPerl::RegistryPrefork
 			</IfModule>
-			<IfModule !prefork.c>
+			<IfModule mpm_worker_module>
 				PerlHandler ModPerl::Registry
+			</IfModule>
+			<IfModule mpm_event_module>
+				SetHandler cgi-script
 			</IfModule>
 		</IfDefine>
 
@@ -146,4 +151,4 @@ Options -Indexes
 		SetHandler cgi-script
 	</IfModule>
 
-</Files>
+</FilesMatch>
