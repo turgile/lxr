@@ -1023,8 +1023,9 @@ sub gensearch {
 		if (-e $indexdir) {
 			system('mv', $indexdir, $del_locn);
 		}
-		system('mv', $indextmp, $indexdir);
+		system('mv', $indextmp.'/'.$releaseid, $indexdir);
 		remove_tree($del_locn);
+		remove_tree($indextmp);
 	}
 
 	if ($config->{'swishdir'} && $config->{'swishbin'}) {
