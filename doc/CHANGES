@@ -4,6 +4,42 @@ which could impact your existing trees.
 If they result in an incompatibility, you must reindex your tree.
 
         =========================
+        LXR 2.3.2  -->  LXR 2.3.3
+        =========================
+
+Bug fix release.
+
+Apache web server
+------
+event MPM worker is now installed and enabled by default. It was not handled
+by LXR, resulting in incorrect initialisation. This module is also not
+compatible with mod_perl, needing fall back to pure CGI processing.
+
+genxref
+-------
+A bug caused recursive inclusion of glimpse indexing DBs into its private
+directory, resulting in uncontrolled growth of indexing directory.
+
+        =========================
+        LXR 2.3.1  -->  LXR 2.3.2
+        =========================
+
+Bug fix release.
+
+Support for language parsers (Lang.pm)
+----------------------------
+Under some circumstances, language parsers pass to "include" suport routine
+non-sanitised arguments causing an infinite loop when trying to hyperlink
+elements of a path. This is frequently the case with Python.
+
+        =========================
+        LXR 2.3.0  -->  LXR 2.3.1
+        =========================
+
+Bug fix release.
+Vulnerability JVN#7258938 was not fully fixed, done in 2.3.1.
+
+        =========================
         LXR 2.2.1  -->  LXR 2.3.0
         =========================
 
