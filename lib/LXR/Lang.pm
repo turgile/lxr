@@ -432,8 +432,13 @@ sub _linkincludedirs {
 		# Path ends with /: it may be a directory or an HTTP request.
 		# Remove trailing / and do an initial processing.
 		chop($path);
-		$tail = $sep;
-		$file = substr($file, 0, rindex($file, $sep));
+		$tail = '';
+		# Protect against erroneous multiple separators
+		while (substr($path, -1) eq '/') {
+			chop($path);
+			$tail .= $sep;
+			$file = substr($file, 0, rindex($file, $sep));
+		};
 		$link = incdirref($file, 'include', $path, $dir);
 	}
 	# If incref or incdirref did not return a link to the file,
@@ -449,6 +454,12 @@ sub _linkincludedirs {
 		$tail = substr($file, $sp) . $tail;
 		$file = substr($file, 0, $sp);
 		$path =~ s!/[^/]+$!!;
+		# Protect against erroneous multiple separators
+		while (substr($path, -1) eq '/') {
+			chop($path);
+			$tail = $sep . $tail;
+			$file = substr($file, 0, rindex($file, $sep));
+		};
 		$link = incdirref($file, 'include', $path, $dir);
 	}
 	# A known directory (at least) has been found.
@@ -465,6 +476,12 @@ sub _linkincludedirs {
 			$sp = rindex ($file, $sep);
 			$file = substr($file, 0, $sp);
 			$path =~ s!/[^/]+$!!;
+		# Protect against erroneous multiple separators
+			while (substr($path, -1) eq '/') {
+				chop($path);
+				$tail = $sep . $tail;
+				$file = substr($file, 0, rindex($file, $sep));
+			};
 			$link = incdirref($file, 'include', $path, $dir);
 		}
 	}
