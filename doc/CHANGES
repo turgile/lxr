@@ -4,6 +4,18 @@ which could impact your existing trees.
 If they result in an incompatibility, you must reindex your tree.
 
         =========================
+        LXR 2.3.4  -->  LXR 2.3.5
+        =========================
+
+Bug fix release.
+
+genxref
+-------
+Bug fix in 2.3.3 did not cover all cases, resulting in failure to set up
+properly index databases for glimpse.  It may be wise to erase the glimpse
+databases directory and to reindex your trees.
+
+        =========================
         LXR 2.3.3  -->  LXR 2.3.4
         =========================
 
