@@ -971,15 +971,18 @@ sub gensearch {
 
 		# Determine indexation mode: full or incremental
 
-		my $indexdir = $config->{'glimpsedir'} . '/' . $releaseid;
+		my $indexdir = $config->{'glimpsedir'} . '/' . $releaseid . '/';
+		$indexdir =~ s://+:/:g;		# sanitize path
 		(my $relhier = $releaseid) =~ s:/[^/]+$:/:;
+		$relhier = '' if $releaseid !~ m:/:;
 		my $indextmp = $config->{'glimpsedir'}.'/'.$relhier.'%@%glix%@%/';
+		$indextmp =~ s://+:/:g;		# sanitize path
 		remove_tree($indextmp);
 		make_path($indextmp, {mode => 0755});
 		if	(! exists($option{'reindexall'})) {
 			$glixopts .= ' -f';
 			if (-e $indexdir) {
-				system('cp', '-r', $indexdir, $indextmp);
+				system('cp '.$indexdir.'.glimpse_* '.$indextmp);
 			}
 		} else {
 			if (-e $indexdir.'.glimpse_exclude') {
@@ -1020,10 +1023,11 @@ sub gensearch {
 
 		# Permute indexes
 		my $del_locn = $config->{'glimpsedir'}.'/'.$relhier.'%@%delete%@%me%@%/';
+		$del_locn =~ s://+:/:g;		# sanitize path
 		if (-e $indexdir) {
 			system('mv', $indexdir, $del_locn);
 		}
-		system('mv', $indextmp.'/'.$releaseid, $indexdir);
+		system('mv', $indextmp, $indexdir);
 		remove_tree($del_locn);
 		remove_tree($indextmp);
 	}
